@@ -1,0 +1,5 @@
+sqlalchemy==0.9.8
+#mysql-connector-python==2.0.2  # --allow-external mysql-connector-python
+# 4000 개 이상 가져올 때, 2013 에러 나서 PyMySQL로 교체.
+PyMySQL
+#csv
