@@ -56,8 +56,8 @@ MeCab의 사전 설정(dicrc)에서 다음과 같이 설정합니다.
     $ ./configure 
     $ make
     $ make check
-    $ su
-    # make install
+    $ sudo -s
+    # make install
 
 설치 방법은 MeCab와 동일하므로, 자세한 내용은 [MeCab 홈페이지](http://mecab.googlecode.com/svn/trunk/mecab/doc/index.html)를 참조하시기 바랍니다.
 
