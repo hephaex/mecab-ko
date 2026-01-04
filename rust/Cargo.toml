@@ -1,0 +1,70 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/mecab-ko-core",
+    "crates/mecab-ko-dict",
+    "crates/mecab-ko-hangul",
+    "crates/mecab-ko-cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+authors = ["hephaex <hephaex@gmail.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/hephaex/mecab-ko"
+homepage = "https://github.com/hephaex/mecab-ko"
+documentation = "https://docs.rs/mecab-ko"
+readme = "README.md"
+keywords = ["korean", "morphological-analysis", "nlp", "tokenizer", "mecab"]
+categories = ["text-processing", "science"]
+
+[workspace.dependencies]
+# Core dependencies
+thiserror = "1.0"
+anyhow = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+bincode = "1.3"
+
+# Compression
+lzma-rs = "0.3"
+zstd = "0.13"
+
+# Data structures
+fst = "0.4"
+byteorder = "1.5"
+memmap2 = "0.9"
+
+# CLI
+clap = { version = "4.4", features = ["derive"] }
+
+# Testing & Benchmarking
+criterion = { version = "0.5", features = ["html_reports"] }
+
+# Python bindings (optional)
+pyo3 = { version = "0.20", features = ["extension-module"] }
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+all = "warn"
+pedantic = "warn"
+nursery = "warn"
+# 엄격한 에러 처리
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.bench]
+lto = true
+codegen-units = 1

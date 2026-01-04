@@ -1,0 +1,30 @@
+[package]
+name = "mecab-ko-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation = "https://docs.rs/mecab-ko-core"
+readme = "README.md"
+description = "한국어 형태소 분석 핵심 엔진 - Lattice, Viterbi, 토크나이저"
+keywords = ["korean", "morphological-analysis", "viterbi", "nlp", "tokenizer"]
+categories = ["text-processing", "science"]
+
+[dependencies]
+mecab-ko-hangul = { path = "../mecab-ko-hangul" }
+mecab-ko-dict = { path = "../mecab-ko-dict" }
+thiserror.workspace = true
+serde.workspace = true
+
+[dev-dependencies]
+criterion.workspace = true
+
+[[bench]]
+name = "tokenizer_bench"
+harness = false
+
+[lints]
+workspace = true

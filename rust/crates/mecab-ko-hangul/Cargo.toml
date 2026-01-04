@@ -1,0 +1,26 @@
+[package]
+name = "mecab-ko-hangul"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation = "https://docs.rs/mecab-ko-hangul"
+readme = "README.md"
+description = "한글 처리 유틸리티 - 자모 분리/결합, 음절 처리, 정규화"
+keywords = ["korean", "hangul", "jamo", "unicode", "nlp"]
+categories = ["text-processing", "internationalization"]
+
+[dependencies]
+
+[dev-dependencies]
+criterion.workspace = true
+
+[[bench]]
+name = "hangul_bench"
+harness = false
+
+[lints]
+workspace = true

@@ -1,0 +1,24 @@
+[package]
+name = "mecab-ko-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "한국어 형태소 분석기 CLI 도구"
+keywords = ["korean", "morphological-analysis", "cli", "nlp"]
+categories = ["command-line-utilities", "text-processing"]
+
+[[bin]]
+name = "mecab-ko"
+path = "src/main.rs"
+
+[dependencies]
+mecab-ko-core = { path = "../mecab-ko-core" }
+clap.workspace = true
+anyhow.workspace = true
+
+[lints]
+workspace = true
