@@ -1,0 +1,114 @@
+name: Performance Benchmarks
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'rust/crates/**'
+      - 'rust/benches/**'
+      - 'rust/Cargo.toml'
+      - '.github/workflows/benchmark.yml'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'rust/crates/**'
+      - 'rust/benches/**'
+      - 'rust/Cargo.toml'
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  benchmark:
+    name: Run Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Checkout base branch
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch origin ${{ github.base_ref }}
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: rust/target
+          key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-bench-
+
+      - name: Run benchmarks
+        run: cargo bench --manifest-path rust/Cargo.toml --no-run
+
+      - name: Run benchmarks (PR comparison)
+        if: github.event_name == 'pull_request'
+        run: |
+          # Checkout base branch and run benchmarks
+          git stash
+          git checkout origin/${{ github.base_ref }}
+
+          echo "Running benchmarks on base branch..."
+          cargo bench --manifest-path rust/Cargo.toml -- --output-format bencher | tee /tmp/base-benchmark.txt
+
+          # Restore PR changes
+          git checkout -
+          git stash pop || true
+
+          echo "Running benchmarks on PR branch..."
+          cargo bench --manifest-path rust/Cargo.toml -- --output-format bencher | tee /tmp/pr-benchmark.txt
+
+      - name: Store benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: Cargo Benchmarks
+          tool: 'cargo'
+          output-file-path: /tmp/pr-benchmark.txt
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+        continue-on-error: true
+
+      - name: Comment with benchmark results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            const hasBaseResults = fs.existsSync('/tmp/base-benchmark.txt');
+            const hasPrResults = fs.existsSync('/tmp/pr-benchmark.txt');
+
+            let comment = '## Benchmark Results\n\n';
+
+            if (hasPrResults) {
+              comment += '### PR Branch\n```\n';
+              comment += fs.readFileSync('/tmp/pr-benchmark.txt', 'utf8');
+              comment += '\n```\n';
+            }
+
+            if (hasBaseResults && hasPrResults) {
+              comment += '\n### Comparison\nBenchmarks have been run. See benchmark comparison in the artifacts.\n';
+            }
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+        continue-on-error: true
+
+      - name: Upload benchmark artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmarks
+          path: |
+            /tmp/base-benchmark.txt
+            /tmp/pr-benchmark.txt
+          retention-days: 30

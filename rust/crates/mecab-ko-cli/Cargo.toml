@@ -7,6 +7,8 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 homepage.workspace = true
+documentation = "https://docs.rs/mecab-ko-cli"
+readme = "README.md"
 description = "한국어 형태소 분석기 CLI 도구"
 keywords = ["korean", "morphological-analysis", "cli", "nlp"]
 categories = ["command-line-utilities", "text-processing"]
@@ -17,8 +19,11 @@ path = "src/main.rs"
 
 [dependencies]
 mecab-ko-core = { path = "../mecab-ko-core" }
+mecab-ko-dict = { path = "../mecab-ko-dict" }
 clap.workspace = true
 anyhow.workspace = true
+serde_json.workspace = true
+serde.workspace = true
 
 [lints]
 workspace = true

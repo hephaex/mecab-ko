@@ -1,0 +1,35 @@
+[package]
+name = "mecab-ko-python"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation = "https://docs.rs/mecab-ko-python"
+readme = "README.md"
+description = "Python bindings for MeCab-Ko (Korean morphological analyzer)"
+keywords = ["korean", "morphological-analysis", "python", "nlp", "mecab"]
+categories = ["text-processing", "science"]
+
+[lib]
+name = "mecab_ko"
+crate-type = ["cdylib"]
+
+[dependencies]
+mecab-ko-core = { path = "../mecab-ko-core" }
+pyo3 = { workspace = true }
+
+# Python 바인딩에서는 일부 lint 완화
+[lints.rust]
+unsafe_code = "deny"
+missing_docs = "warn"
+
+[lints.clippy]
+all = "warn"
+pedantic = "warn"
+nursery = "warn"
+unwrap_used = "allow"
+expect_used = "allow"
+panic = "allow"

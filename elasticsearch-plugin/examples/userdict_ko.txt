@@ -1,0 +1,35 @@
+# MeCab-Ko User Dictionary Example
+#
+# Format: surface,cost
+# - surface: word to add to dictionary
+# - cost: lower values = higher priority (typically -100000 for important terms)
+#
+# Technology terms
+스마트폰,-100000
+아이폰,-100000
+갤럭시,-100000
+타블렛,-100000
+노트북,-100000
+
+# Company names
+구글,-100000
+네이버,-100000
+카카오,-100000
+삼성전자,-100000
+
+# Product names
+갤럭시노트,-100000
+아이패드,-100000
+맥북,-100000
+
+# Internet terms
+인스타그램,-100000
+페이스북,-100000
+유튜브,-100000
+트위터,-100000
+
+# Korean neologisms
+먹스타그램,-100000
+셀카,-100000
+리뷰,-100000
+커뮤니티,-100000

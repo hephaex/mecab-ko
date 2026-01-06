@@ -1,0 +1,53 @@
+{
+  "settings": {
+    "analysis": {
+      "tokenizer": {
+        "korean_tokenizer": {
+          "type": "mecab_ko_tokenizer",
+          "decompound_mode": "discard",
+          "user_dictionary": "userdict_ko.txt",
+          "output_unknown_unigrams": false
+        }
+      },
+      "filter": {
+        "korean_pos_filter": {
+          "type": "mecab_ko_part_of_speech",
+          "stoptags": ["J", "E", "SF", "SP", "SSC", "SSO", "SC", "SY"]
+        },
+        "korean_reading": {
+          "type": "mecab_ko_reading_form"
+        }
+      },
+      "analyzer": {
+        "custom_korean": {
+          "type": "custom",
+          "tokenizer": "korean_tokenizer",
+          "filter": [
+            "korean_pos_filter",
+            "lowercase"
+          ]
+        },
+        "korean_with_reading": {
+          "type": "custom",
+          "tokenizer": "korean_tokenizer",
+          "filter": [
+            "korean_reading",
+            "korean_pos_filter"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "text": {
+        "type": "text",
+        "analyzer": "custom_korean"
+      },
+      "text_with_reading": {
+        "type": "text",
+        "analyzer": "korean_with_reading"
+      }
+    }
+  }
+}

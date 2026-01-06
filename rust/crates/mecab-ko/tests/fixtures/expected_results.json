@@ -1,0 +1,72 @@
+[
+  {
+    "input": "사과와 바나나를 샀어요",
+    "expected_morphs": ["사과", "와", "바나나", "를", "사", "았", "어요"],
+    "expected_pos": [["사과", "NNG"], ["와", "JC"], ["바나나", "NNG"], ["를", "JKO"], ["사", "VV"], ["았", "EP"], ["어요", "EF"]],
+    "description": "Shopping sentence with nouns",
+    "category": "nouns"
+  },
+  {
+    "input": "서울대학교는 유명합니다",
+    "expected_morphs": ["서울대학교", "는", "유명", "하", "ㅂ니다"],
+    "expected_pos": [["서울대학교", "NNP"], ["는", "JX"], ["유명", "NNG"], ["하", "XSV"], ["ㅂ니다", "EF"]],
+    "description": "University name (proper noun)",
+    "category": "nouns"
+  },
+  {
+    "input": "김철수 씨가 왔습니다",
+    "expected_morphs": ["김철수", "씨", "가", "오", "았", "습니다"],
+    "expected_pos": [["김철수", "NNP"], ["씨", "NNB"], ["가", "JKS"], ["오", "VV"], ["았", "EP"], ["습니다", "EF"]],
+    "description": "Person name with honorific",
+    "category": "nouns"
+  },
+  {
+    "input": "컴퓨터 프로그래밍을 배웁니다",
+    "expected_morphs": ["컴퓨터", "프로그래밍", "을", "배우", "ㅂ니다"],
+    "expected_pos": [["컴퓨터", "NNG"], ["프로그래밍", "NNG"], ["을", "JKO"], ["배우", "VV"], ["ㅂ니다", "EF"]],
+    "description": "Technical nouns",
+    "category": "nouns"
+  },
+  {
+    "input": "대한민국 축구 국가대표팀",
+    "expected_morphs": ["대한민국", "축구", "국가대표팀"],
+    "expected_pos": [["대한민국", "NNP"], ["축구", "NNG"], ["국가대표팀", "NNG"]],
+    "description": "Compound noun phrase",
+    "category": "nouns"
+  },
+  {
+    "input": "그는 빠르게 달렸다",
+    "expected_morphs": ["그", "는", "빠르", "게", "달리", "었", "다"],
+    "expected_pos": [["그", "NP"], ["는", "JX"], ["빠르", "VA"], ["게", "EC"], ["달리", "VV"], ["었", "EP"], ["다", "EF"]],
+    "description": "Adverb with verb",
+    "category": "complex"
+  },
+  {
+    "input": "매우 아름다운 풍경이었습니다",
+    "expected_morphs": ["매우", "아름답", "은", "풍경", "이", "었", "습니다"],
+    "expected_pos": [["매우", "MAG"], ["아름답", "VA"], ["은", "ETM"], ["풍경", "NNG"], ["이", "VCP"], ["었", "EP"], ["습니다", "EF"]],
+    "description": "Adverb with adjective modifier",
+    "category": "complex"
+  },
+  {
+    "input": "비가 오면 우산을 쓰세요",
+    "expected_morphs": ["비", "가", "오", "면", "우산", "을", "쓰", "세요"],
+    "expected_pos": [["비", "NNG"], ["가", "JKS"], ["오", "VV"], ["면", "EC"], ["우산", "NNG"], ["을", "JKO"], ["쓰", "VV"], ["세요", "EP+EF"]],
+    "description": "Conditional sentence",
+    "category": "complex"
+  },
+  {
+    "input": "그녀는 노래를 잘 부릅니다",
+    "expected_morphs": ["그녀", "는", "노래", "를", "잘", "부르", "ㅂ니다"],
+    "expected_pos": [["그녀", "NP"], ["는", "JX"], ["노래", "NNG"], ["를", "JKO"], ["잘", "MAG"], ["부르", "VV"], ["ㅂ니다", "EF"]],
+    "description": "Subject with adverb and verb",
+    "category": "complex"
+  },
+  {
+    "input": "시험이 끝나고 집에 갔습니다",
+    "expected_morphs": ["시험", "이", "끝나", "고", "집", "에", "가", "았", "습니다"],
+    "expected_pos": [["시험", "NNG"], ["이", "JKS"], ["끝나", "VV"], ["고", "EC"], ["집", "NNG"], ["에", "JKB"], ["가", "VV"], ["았", "EP"], ["습니다", "EF"]],
+    "description": "Sequential actions",
+    "category": "complex"
+  }
+]

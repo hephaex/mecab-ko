@@ -1,0 +1,52 @@
+# Web Scraping & HTTP
+requests>=2.31.0,<3.0.0
+beautifulsoup4>=4.12.0,<5.0.0
+lxml>=4.9.0,<6.0.0
+httpx>=0.25.0,<1.0.0
+aiohttp>=3.9.0,<4.0.0
+
+# Rate Limiting & Politeness
+ratelimit>=2.2.1,<3.0.0
+backoff>=2.2.1,<3.0.0
+
+# Data Processing
+pandas>=2.1.0,<3.0.0
+numpy>=1.24.0,<2.0.0
+
+# Korean NLP
+konlpy>=0.6.0,<1.0.0
+hanja>=0.13.0,<1.0.0
+
+# Database
+sqlalchemy>=2.0.0,<3.0.0
+alembic>=1.12.0,<2.0.0
+
+# Configuration
+pyyaml>=6.0.0,<7.0.0
+python-dotenv>=1.0.0,<2.0.0
+pydantic>=2.5.0,<3.0.0
+pydantic-settings>=2.1.0,<3.0.0
+
+# Scheduling
+schedule>=1.2.0,<2.0.0
+apscheduler>=3.10.0,<4.0.0
+
+# Logging & Monitoring
+loguru>=0.7.0,<1.0.0
+
+# Social Media APIs (optional)
+tweepy>=4.14.0,<5.0.0  # Twitter/X
+praw>=7.7.0,<8.0.0  # Reddit
+
+# Testing
+pytest>=7.4.0,<8.0.0
+pytest-asyncio>=0.21.0,<1.0.0
+pytest-cov>=4.1.0,<5.0.0
+pytest-mock>=3.12.0,<4.0.0
+
+# Development
+black>=23.0.0,<25.0.0
+ruff>=0.1.0,<1.0.0
+mypy>=1.7.0,<2.0.0
+types-requests>=2.31.0
+types-pyyaml>=6.0.0

@@ -1,0 +1,28 @@
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "korean_analyzer": {
+          "type": "mecab_ko",
+          "decompound_mode": "mixed",
+          "stoptags": ["J", "E", "SF"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "title": {
+        "type": "text",
+        "analyzer": "korean_analyzer"
+      },
+      "content": {
+        "type": "text",
+        "analyzer": "korean_analyzer"
+      },
+      "author": {
+        "type": "keyword"
+      }
+    }
+  }
+}

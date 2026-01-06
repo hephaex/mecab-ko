@@ -1,0 +1,295 @@
+name: Documentation
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'rust/**'
+      - 'docs/**'
+      - '.github/workflows/docs.yml'
+      - 'Cargo.toml'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'rust/**'
+      - 'docs/**'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_VERSION: stable
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-rustdoc:
+    name: Build Rustdoc
+    runs-on: ubuntu-latest
+    outputs:
+      doc_path: rust/target/doc
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: rust/target
+          key: ${{ runner.os }}-cargo-doc-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-doc-
+
+      - name: Build rustdoc
+        run: cargo doc --manifest-path rust/Cargo.toml --no-deps --release
+        env:
+          RUSTDOCFLAGS: >-
+            -D warnings
+            --cfg docsrs
+            --html-in-header=doc-header.html
+
+      - name: Add redirect index.html
+        run: |
+          cat > rust/target/doc/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <title>MeCab-Ko Documentation</title>
+              <script>
+                window.location.replace('./mecab_ko/index.html');
+              </script>
+            </head>
+            <body>
+              <p><a href="./mecab_ko/index.html">Click here to go to the documentation</a></p>
+            </body>
+          </html>
+          EOF
+
+      - name: Upload rustdoc artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rustdoc
+          path: rust/target/doc
+          retention-days: 1
+
+  build-mdbook:
+    name: Build mdBook
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install mdBook
+        run: |
+          mkdir -p mdbook
+          cd mdbook
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain=none
+          cargo install mdbook --version 0.4.40
+
+      - name: Build mdBook
+        run: |
+          if [ -f docs/book/book.toml ]; then
+            mdbook build docs/book --dest-dir ../../site/book
+          else
+            echo "book.toml not found, creating minimal documentation"
+            mkdir -p site/book
+          fi
+
+      - name: Upload mdbook artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mdbook
+          path: site/book
+          retention-days: 1
+
+  combine-docs:
+    name: Combine Documentation
+    runs-on: ubuntu-latest
+    needs: [build-rustdoc, build-mdbook]
+    if: always()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download rustdoc artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: rustdoc
+          path: docs-combined/api
+
+      - name: Download mdbook artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mdbook
+          path: docs-combined/book
+
+      - name: Create documentation index
+        run: |
+          mkdir -p docs-combined
+          cat > docs-combined/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <title>MeCab-Ko Documentation</title>
+              <style>
+                * {
+                  margin: 0;
+                  padding: 0;
+                  box-sizing: border-box;
+                }
+                body {
+                  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                  min-height: 100vh;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  padding: 20px;
+                }
+                .container {
+                  background: white;
+                  border-radius: 10px;
+                  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+                  max-width: 800px;
+                  padding: 60px 40px;
+                  text-align: center;
+                }
+                h1 {
+                  color: #333;
+                  margin-bottom: 10px;
+                  font-size: 2.5em;
+                }
+                .subtitle {
+                  color: #666;
+                  font-size: 1.1em;
+                  margin-bottom: 40px;
+                }
+                .docs-grid {
+                  display: grid;
+                  grid-template-columns: 1fr 1fr;
+                  gap: 20px;
+                  margin-bottom: 40px;
+                }
+                .doc-card {
+                  background: #f8f9fa;
+                  border: 2px solid #e9ecef;
+                  border-radius: 8px;
+                  padding: 30px;
+                  text-decoration: none;
+                  transition: all 0.3s ease;
+                }
+                .doc-card:hover {
+                  border-color: #667eea;
+                  box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+                  transform: translateY(-5px);
+                }
+                .doc-card h2 {
+                  color: #667eea;
+                  font-size: 1.5em;
+                  margin-bottom: 10px;
+                }
+                .doc-card p {
+                  color: #666;
+                  font-size: 0.95em;
+                }
+                @media (max-width: 600px) {
+                  .docs-grid {
+                    grid-template-columns: 1fr;
+                  }
+                  h1 {
+                    font-size: 1.8em;
+                  }
+                  .container {
+                    padding: 40px 20px;
+                  }
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <h1>MeCab-Ko Documentation</h1>
+                <p class="subtitle">Korean morphological analyzer</p>
+
+                <div class="docs-grid">
+                  <a href="./api/mecab_ko/index.html" class="doc-card">
+                    <h2>API Reference</h2>
+                    <p>Rust API documentation with code examples and reference</p>
+                  </a>
+
+                  <a href="./book/index.html" class="doc-card">
+                    <h2>User Guide</h2>
+                    <p>Tutorial, usage examples, and comprehensive guides</p>
+                  </a>
+                </div>
+              </div>
+            </body>
+          </html>
+          EOF
+
+      - name: Upload combined documentation
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation
+          path: docs-combined
+          retention-days: 5
+
+  deploy-pages:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: combine-docs
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download documentation artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: documentation
+          path: ./docs-deploy
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './docs-deploy'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v3
+
+  docs-summary:
+    name: Documentation Summary
+    runs-on: ubuntu-latest
+    needs: [build-rustdoc, build-mdbook, combine-docs]
+    if: always()
+    steps:
+      - name: Check documentation build status
+        run: |
+          echo "=== Documentation Build Summary ==="
+          echo "Rustdoc build: ${{ needs.build-rustdoc.result }}"
+          echo "mdBook build: ${{ needs.build-mdbook.result }}"
+          echo "Documentation combination: ${{ needs.combine-docs.result }}"
+
+          if [ "${{ needs.build-rustdoc.result }}" == "failure" ] || [ "${{ needs.build-mdbook.result }}" == "failure" ]; then
+            echo "Documentation build failed!"
+            exit 1
+          else
+            echo "Documentation build completed successfully!"
+          fi

@@ -1,0 +1,46 @@
+[package]
+name = "mecab-ko-wasm"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation = "https://docs.rs/mecab-ko-wasm"
+readme = "README.md"
+description = "WebAssembly bindings for MeCab-Ko (Korean morphological analyzer)"
+keywords = ["korean", "morphological-analysis", "wasm", "nlp", "mecab"]
+categories = ["text-processing", "science", "wasm"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+mecab-ko-core = { path = "../mecab-ko-core" }
+wasm-bindgen = "0.2"
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Optional: For better error handling in WASM
+console_error_panic_hook = { version = "0.1", optional = true }
+wee_alloc = { version = "0.4", optional = true }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
+
+[features]
+default = ["console_error_panic_hook"]
+
+# WASM bindings에서는 일부 lint 완화
+[lints.rust]
+unsafe_code = "deny"
+missing_docs = "warn"
+
+[lints.clippy]
+all = "warn"
+pedantic = "warn"
+nursery = "warn"
+unwrap_used = "allow"
+expect_used = "allow"
+panic = "allow"

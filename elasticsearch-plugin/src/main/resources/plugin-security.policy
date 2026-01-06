@@ -1,0 +1,34 @@
+// Security policy for MeCab-Ko Elasticsearch Plugin
+//
+// This policy grants necessary permissions for:
+// - Native library loading (JNI)
+// - File system access for dictionaries
+// - Temporary file creation for native library extraction
+
+grant {
+    // Native library loading permissions
+    permission java.lang.RuntimePermission "loadLibrary.*";
+    permission java.lang.RuntimePermission "load";
+
+    // File I/O for dictionaries and native libraries
+    permission java.io.FilePermission "${user.home}/-", "read";
+    permission java.io.FilePermission "${ES_HOME}/config/-", "read";
+    permission java.io.FilePermission "${ES_HOME}/plugins/mecab-ko-analyzer/-", "read";
+
+    // Temporary directory for native library extraction
+    permission java.io.FilePermission "${java.io.tmpdir}/-", "read,write,delete";
+    permission java.io.FilePermission "/tmp/-", "read,write,delete";
+    permission java.io.FilePermission "/var/tmp/-", "read,write,delete";
+
+    // Required for temp file creation
+    permission java.util.PropertyPermission "java.io.tmpdir", "read";
+    permission java.util.PropertyPermission "os.name", "read";
+    permission java.util.PropertyPermission "os.arch", "read";
+
+    // JNI and native access
+    permission java.lang.RuntimePermission "accessDeclaredMembers";
+    permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
+
+    // Shutdown hook for cleanup
+    permission java.lang.RuntimePermission "shutdownHooks";
+};

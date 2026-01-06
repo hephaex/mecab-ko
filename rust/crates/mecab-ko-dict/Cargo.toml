@@ -19,6 +19,7 @@ thiserror.workspace = true
 serde.workspace = true
 bincode.workspace = true
 fst.workspace = true
+yada.workspace = true
 byteorder.workspace = true
 memmap2.workspace = true
 zstd.workspace = true

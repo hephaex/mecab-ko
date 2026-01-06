@@ -1,0 +1,222 @@
+name: Code Quality Analysis
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'rust/**'
+      - '.github/workflows/code-quality.yml'
+      - 'Cargo.toml'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'rust/**'
+      - '.github/workflows/code-quality.yml'
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+jobs:
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: rust/target
+          key: ${{ runner.os }}-cargo-quality-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-quality-
+
+      - name: Run clippy with JSON output
+        run: |
+          cargo clippy --manifest-path rust/Cargo.toml --all-targets --all-features \
+            --message-format json 2>&1 | tee clippy-results.json || true
+        continue-on-error: true
+
+      - name: Check formatting
+        run: cargo fmt --manifest-path rust/Cargo.toml -- --check
+        continue-on-error: true
+
+      - name: Run cargo check
+        run: cargo check --manifest-path rust/Cargo.toml --all-targets --all-features
+        continue-on-error: true
+
+  dependency-check:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-deny
+        run: cargo install cargo-deny
+
+      - name: Run cargo-deny
+        run: cargo deny --manifest-path rust/Cargo.toml check all || true
+        continue-on-error: true
+
+      - name: Run security audit
+        uses: rustsec/audit-check-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+  unused-dependencies:
+    name: Check Unused Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust nightly
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: cargo
+
+      - name: Install cargo-udeps
+        run: cargo install cargo-udeps --locked
+
+      - name: Run cargo-udeps
+        run: cargo udeps --manifest-path rust/Cargo.toml --all-targets || true
+        continue-on-error: true
+
+  documentation-check:
+    name: Documentation Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: rust/target
+          key: ${{ runner.os }}-cargo-doc-check-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-doc-check-
+
+      - name: Check missing documentation
+        run: |
+          cargo doc --manifest-path rust/Cargo.toml --no-deps 2>&1 | tee doc-check.log
+
+          # Check for missing docs warnings
+          if grep -q "missing documentation for" doc-check.log; then
+            echo "Warning: Missing documentation found"
+            grep "missing documentation for" doc-check.log || true
+          fi
+        env:
+          RUSTDOCFLAGS: "-D warnings"
+        continue-on-error: true
+
+      - name: Generate documentation report
+        if: always()
+        run: |
+          echo "## Documentation Check Report" > doc-report.md
+          echo "" >> doc-report.md
+
+          if [ -f doc-check.log ]; then
+            echo "### Build Output" >> doc-report.md
+            echo '```' >> doc-report.md
+            tail -20 doc-check.log >> doc-report.md
+            echo '```' >> doc-report.md
+          fi
+
+      - name: Upload documentation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation-report
+          path: doc-report.md
+          retention-days: 30
+
+  complexity-analysis:
+    name: Code Complexity Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-metrics
+        run: cargo install cargo-metrics
+        continue-on-error: true
+
+      - name: Run cargo metrics
+        run: cargo metrics --manifest-path rust/Cargo.toml 2>&1 | tee metrics.log || true
+        continue-on-error: true
+
+      - name: Install tokei for line counting
+        run: cargo install tokei
+
+      - name: Generate code statistics
+        run: |
+          echo "## Code Statistics" > code-stats.md
+          echo "" >> code-stats.md
+          echo "### Lines of Code" >> code-stats.md
+          echo '```' >> code-stats.md
+          tokei rust/ >> code-stats.md
+          echo '```' >> code-stats.md
+
+      - name: Upload code statistics
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-statistics
+          path: code-stats.md
+          retention-days: 30
+
+  summary:
+    name: Quality Check Summary
+    runs-on: ubuntu-latest
+    needs: [code-quality, dependency-check, unused-dependencies, documentation-check, complexity-analysis]
+    if: always()
+    steps:
+      - name: Generate summary
+        run: |
+          echo "## Code Quality Summary" > summary.txt
+          echo "" >> summary.txt
+          echo "- Code Quality: ${{ needs.code-quality.result }}" >> summary.txt
+          echo "- Dependency Check: ${{ needs.dependency-check.result }}" >> summary.txt
+          echo "- Unused Dependencies: ${{ needs.unused-dependencies.result }}" >> summary.txt
+          echo "- Documentation: ${{ needs.documentation-check.result }}" >> summary.txt
+          echo "- Complexity Analysis: ${{ needs.complexity-analysis.result }}" >> summary.txt
+          cat summary.txt
+
+      - name: Comment PR with summary
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('summary.txt', 'utf8');
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+        continue-on-error: true

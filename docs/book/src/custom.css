@@ -1,0 +1,267 @@
+/* MeCab-Ko Documentation Custom Styles */
+
+:root {
+    --primary-color: #667eea;
+    --secondary-color: #764ba2;
+    --accent-color: #f093fb;
+    --code-bg: #f6f8fa;
+    --border-color: #e1e4e8;
+}
+
+/* Header styling */
+.sidebar-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+/* Improve code blocks */
+pre {
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+code {
+    background-color: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+/* Tables */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+table thead {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+}
+
+table th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+}
+
+table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+table tbody tr:hover {
+    background-color: rgba(102, 126, 234, 0.05);
+}
+
+/* Blockquotes */
+blockquote {
+    border-left: 4px solid var(--primary-color);
+    background-color: rgba(102, 126, 234, 0.05);
+    padding: 1em;
+    margin: 1em 0;
+    border-radius: 0 4px 4px 0;
+}
+
+/* Admonitions */
+.warning {
+    background-color: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 1em;
+    margin: 1em 0;
+    border-radius: 0 4px 4px 0;
+}
+
+.info {
+    background-color: #d1ecf1;
+    border-left: 4px solid #17a2b8;
+    padding: 1em;
+    margin: 1em 0;
+    border-radius: 0 4px 4px 0;
+}
+
+.success {
+    background-color: #d4edda;
+    border-left: 4px solid #28a745;
+    padding: 1em;
+    margin: 1em 0;
+    border-radius: 0 4px 4px 0;
+}
+
+/* Headers */
+h1, h2, h3, h4, h5, h6 {
+    color: #2c3e50;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+}
+
+h1 {
+    border-bottom: 3px solid var(--primary-color);
+    padding-bottom: 0.3em;
+}
+
+h2 {
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 0.3em;
+}
+
+/* Links */
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: var(--secondary-color);
+    text-decoration: underline;
+}
+
+/* Search box */
+#searchbar {
+    border-radius: 20px;
+    border: 2px solid var(--primary-color);
+    padding: 8px 16px;
+    transition: all 0.3s ease;
+}
+
+#searchbar:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+/* Navigation */
+.nav-chapters {
+    display: flex;
+    justify-content: space-between;
+    margin: 2em 0;
+    gap: 1em;
+}
+
+.nav-chapters a {
+    flex: 1;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    text-align: center;
+    border-radius: 6px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nav-chapters a:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    text-decoration: none;
+}
+
+/* Code language badge */
+pre::before {
+    content: attr(data-lang);
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: var(--primary-color);
+    color: white;
+    padding: 2px 8px;
+    font-size: 0.8em;
+    border-radius: 0 6px 0 6px;
+}
+
+/* Sidebar active item */
+.sidebar .active {
+    background-color: rgba(102, 126, 234, 0.1);
+    border-left: 3px solid var(--primary-color);
+}
+
+/* Print styles */
+@media print {
+    .sidebar, .nav-chapters, #searchbar {
+        display: none;
+    }
+
+    pre {
+        border: 1px solid #ccc;
+        page-break-inside: avoid;
+    }
+}
+
+/* Dark theme overrides */
+.coal, .navy, .ayu {
+    --primary-color: #a0aff4;
+    --secondary-color: #9d8fd9;
+    --code-bg: #2b2b2b;
+    --border-color: #4a4a4a;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .nav-chapters {
+        flex-direction: column;
+    }
+
+    table {
+        font-size: 0.9em;
+    }
+
+    pre {
+        font-size: 0.85em;
+    }
+}
+
+/* Copy button for code blocks */
+.copy-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8em;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+pre:hover .copy-button {
+    opacity: 1;
+}
+
+.copy-button:hover {
+    background: var(--secondary-color);
+}
+
+/* Checklist styles */
+input[type="checkbox"] {
+    margin-right: 0.5em;
+}
+
+/* Badge */
+.badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+    margin-left: 0.5em;
+}
+
+.badge-new {
+    background-color: #28a745;
+    color: white;
+}
+
+.badge-beta {
+    background-color: #ffc107;
+    color: #333;
+}
+
+.badge-deprecated {
+    background-color: #dc3545;
+    color: white;
+}

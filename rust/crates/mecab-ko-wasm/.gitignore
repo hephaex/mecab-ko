@@ -1,0 +1,12 @@
+# WASM build artifacts
+pkg/
+wasm-pack.log
+
+# npm/yarn
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build
+target/
+Cargo.lock

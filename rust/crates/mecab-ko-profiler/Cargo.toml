@@ -1,0 +1,64 @@
+[package]
+name = "mecab-ko-profiler"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+readme = "README.md"
+description = "Memory profiling tools for MeCab-Ko components"
+keywords = ["profiling", "memory", "benchmark", "mecab", "korean"]
+categories = ["development-tools::profiling", "memory-management"]
+
+[dependencies]
+# Core dependencies
+thiserror.workspace = true
+anyhow.workspace = true
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+
+# Memory profiling
+dhat = "0.3"
+tracking-allocator = "0.4"
+
+# Statistics and reporting
+chrono = "0.4"
+humansize = "2.1"
+tabled = "0.15"
+
+# Flamegraph generation (optional)
+inferno = { version = "0.11", optional = true }
+
+# CLI dependencies
+clap = { workspace = true, optional = true }
+colored = { version = "2.1", optional = true }
+
+# Internal dependencies
+mecab-ko-core = { path = "../mecab-ko-core", optional = true }
+mecab-ko-dict = { path = "../mecab-ko-dict", optional = true }
+
+[dev-dependencies]
+criterion.workspace = true
+tempfile = "3.8"
+
+[features]
+default = ["cli", "profilers"]
+cli = ["dep:clap", "dep:colored"]
+profilers = ["dep:mecab-ko-core", "dep:mecab-ko-dict"]
+flamegraph = ["dep:inferno"]
+full = ["cli", "profilers", "flamegraph"]
+
+[[bin]]
+name = "mecab-profile"
+required-features = ["cli"]
+
+[lib]
+name = "mecab_ko_profiler"
+path = "src/lib.rs"
+
+[[bench]]
+name = "memory_bench"
+harness = false

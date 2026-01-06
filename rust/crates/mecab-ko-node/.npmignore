@@ -1,0 +1,28 @@
+# Source files
+src/
+*.rs
+Cargo.toml
+Cargo.lock
+build.rs
+
+# Test files
+*.test.ts
+*.test.js
+vitest.config.ts
+
+# Build artifacts
+target/
+
+# Git
+.git/
+.gitignore
+
+# CI/CD
+.github/
+
+# Documentation sources
+*.md.in
+
+# Development files
+.vscode/
+.idea/

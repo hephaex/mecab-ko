@@ -1,0 +1,107 @@
+[
+  {
+    "id": "doc001",
+    "title": "한국어 형태소 분석",
+    "content": "한국어 형태소 분석기는 자연어 처리의 기본이 되는 도구입니다. MeCab-Ko는 일본어 형태소 분석기인 MeCab을 한국어에 맞게 개조한 것으로, 뛰어난 성능과 정확도를 자랑합니다.",
+    "category": "NLP",
+    "tags": ["형태소분석", "자연어처리", "MeCab"]
+  },
+  {
+    "id": "doc002",
+    "title": "검색 엔진 기술",
+    "content": "Elasticsearch는 강력한 분산 검색 및 분석 엔진입니다. 실시간 검색과 대용량 데이터 처리가 가능하며, RESTful API를 통해 쉽게 사용할 수 있습니다.",
+    "category": "Search",
+    "tags": ["검색엔진", "Elasticsearch", "분산시스템"]
+  },
+  {
+    "id": "doc003",
+    "title": "자연어 처리 응용",
+    "content": "자연어 처리는 인공지능의 중요한 분야입니다. 기계 번역, 감정 분석, 질의응답 시스템 등 다양한 응용 분야에서 활용됩니다.",
+    "category": "AI",
+    "tags": ["인공지능", "기계학습", "딥러닝"]
+  },
+  {
+    "id": "doc004",
+    "title": "데이터 분석과 시각화",
+    "content": "빅데이터 시대에 데이터 분석은 필수적입니다. Python, R, SQL 등 다양한 도구를 활용하여 데이터를 분석하고, 시각화를 통해 인사이트를 발견할 수 있습니다.",
+    "category": "Data",
+    "tags": ["빅데이터", "데이터분석", "시각화"]
+  },
+  {
+    "id": "doc005",
+    "title": "한글 정보 검색",
+    "content": "한글은 조합형 문자 체계로 복잡한 처리가 필요합니다. 초성 검색, 자모 분리, 유니코드 정규화 등을 고려해야 정확한 검색이 가능합니다.",
+    "category": "Korean",
+    "tags": ["한글", "정보검색", "유니코드"]
+  },
+  {
+    "id": "doc006",
+    "title": "클라우드 컴퓨팅",
+    "content": "AWS, GCP, Azure 같은 클라우드 플랫폼은 확장성과 유연성을 제공합니다. 서버리스 아키텍처, 컨테이너 오케스트레이션 등 다양한 서비스를 이용할 수 있습니다.",
+    "category": "Cloud",
+    "tags": ["클라우드", "AWS", "컨테이너"]
+  },
+  {
+    "id": "doc007",
+    "title": "웹 개발 프레임워크",
+    "content": "React, Vue, Angular 같은 프론트엔드 프레임워크와 Spring, Django, Express 같은 백엔드 프레임워크가 널리 사용됩니다.",
+    "category": "Development",
+    "tags": ["웹개발", "프레임워크", "풀스택"]
+  },
+  {
+    "id": "doc008",
+    "title": "보안과 암호화",
+    "content": "정보 보안은 매우 중요합니다. HTTPS, SSL/TLS, JWT, OAuth2 등의 기술을 사용하여 데이터를 안전하게 보호해야 합니다.",
+    "category": "Security",
+    "tags": ["보안", "암호화", "인증"]
+  },
+  {
+    "id": "doc009",
+    "title": "모바일 애플리케이션",
+    "content": "iOS와 Android 플랫폼에서 동작하는 모바일 앱 개발이 활발합니다. React Native, Flutter 같은 크로스 플랫폼 프레임워크도 인기입니다.",
+    "category": "Mobile",
+    "tags": ["모바일", "앱개발", "크로스플랫폼"]
+  },
+  {
+    "id": "doc010",
+    "title": "데이터베이스 설계",
+    "content": "관계형 데이터베이스(MySQL, PostgreSQL)와 NoSQL 데이터베이스(MongoDB, Redis)를 목적에 맞게 선택해야 합니다. 정규화, 인덱싱, 샤딩 등을 고려한 설계가 중요합니다.",
+    "category": "Database",
+    "tags": ["데이터베이스", "SQL", "NoSQL"]
+  },
+  {
+    "id": "doc011",
+    "title": "소프트웨어 테스팅",
+    "content": "단위 테스트, 통합 테스트, E2E 테스트를 통해 소프트웨어 품질을 보장합니다. JUnit, Jest, Selenium 같은 테스팅 프레임워크가 사용됩니다.",
+    "category": "Testing",
+    "tags": ["테스팅", "품질보증", "자동화"]
+  },
+  {
+    "id": "doc012",
+    "title": "DevOps와 CI/CD",
+    "content": "지속적 통합과 배포(CI/CD)는 현대 소프트웨어 개발의 핵심입니다. Jenkins, GitLab CI, GitHub Actions를 활용하여 자동화된 파이프라인을 구축할 수 있습니다.",
+    "category": "DevOps",
+    "tags": ["DevOps", "CICD", "자동화"]
+  },
+  {
+    "id": "doc013",
+    "title": "컨테이너와 쿠버네티스",
+    "content": "Docker 컨테이너와 Kubernetes 오케스트레이션은 마이크로서비스 아키텍처의 기반입니다. 확장성, 가용성, 관리 효율성을 높일 수 있습니다.",
+    "category": "Infrastructure",
+    "tags": ["Docker", "Kubernetes", "마이크로서비스"]
+  },
+  {
+    "id": "doc014",
+    "title": "API 설계 원칙",
+    "content": "RESTful API 설계 시 명확한 리소스 구조, 적절한 HTTP 메서드 사용, 버전 관리가 중요합니다. GraphQL은 유연한 데이터 쿼리를 제공합니다.",
+    "category": "API",
+    "tags": ["REST", "GraphQL", "API설계"]
+  },
+  {
+    "id": "doc015",
+    "title": "성능 최적화",
+    "content": "웹 애플리케이션 성능 최적화를 위해 캐싱, CDN, 코드 스플리팅, 레이지 로딩 등의 기법을 사용합니다. 성능 모니터링도 필수적입니다.",
+    "category": "Performance",
+    "tags": ["성능최적화", "캐싱", "모니터링"]
+  }
+]

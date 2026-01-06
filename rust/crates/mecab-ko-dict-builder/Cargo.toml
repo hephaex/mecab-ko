@@ -1,0 +1,43 @@
+[package]
+name = "mecab-ko-dict-builder"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation = "https://docs.rs/mecab-ko-dict-builder"
+readme = "README.md"
+description = "한국어 형태소 사전 빌더 - CSV에서 바이너리 사전 생성"
+keywords = ["korean", "dictionary", "builder", "mecab", "nlp"]
+categories = ["text-processing", "command-line-utilities"]
+
+[[bin]]
+name = "mecab-ko-dict-builder"
+path = "src/main.rs"
+
+[dependencies]
+mecab-ko-hangul = { path = "../mecab-ko-hangul" }
+mecab-ko-dict = { path = "../mecab-ko-dict" }
+thiserror.workspace = true
+anyhow.workspace = true
+serde.workspace = true
+csv.workspace = true
+yada.workspace = true
+zstd.workspace = true
+byteorder.workspace = true
+rkyv.workspace = true
+encoding_rs.workspace = true
+unicode-normalization.workspace = true
+clap.workspace = true
+indicatif.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[dev-dependencies]
+criterion.workspace = true
+tempfile = "3.10"
+
+[lints]
+workspace = true

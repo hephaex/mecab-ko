@@ -1,0 +1,42 @@
+[package]
+name = "mecab-ko"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation = "https://docs.rs/mecab-ko"
+readme = "../../README.md"
+description = "한국어 형태소 분석기 - MeCab-Ko의 순수 Rust 구현"
+keywords = ["korean", "morphological-analysis", "nlp", "tokenizer", "mecab"]
+categories = ["text-processing", "science"]
+
+[dependencies]
+mecab-ko-core = { path = "../mecab-ko-core" }
+mecab-ko-dict = { path = "../mecab-ko-dict" }
+mecab-ko-hangul = { path = "../mecab-ko-hangul" }
+
+[dev-dependencies]
+criterion.workspace = true
+serde = { workspace = true }
+serde_json = { workspace = true }
+tempfile = "3.10"
+
+# TODO: 벤치마크 구현 후 활성화
+# [[bench]]
+# name = "mecab_bench"
+# harness = false
+
+[lints]
+workspace = true
+
+[features]
+default = []
+# 사전 빌더 기능 (사전 생성 시에만 필요)
+builder = ["dep:mecab-ko-dict-builder"]
+
+[dependencies.mecab-ko-dict-builder]
+path = "../mecab-ko-dict-builder"
+optional = true

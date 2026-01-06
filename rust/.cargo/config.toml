@@ -1,0 +1,54 @@
+# Cargo configuration for MeCab-Ko
+
+[build]
+# Use all available CPU cores for faster builds
+jobs = -1
+
+[target.x86_64-unknown-linux-gnu]
+# Use lld linker for faster linking (if available)
+# rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+
+[alias]
+# Convenient aliases for common commands
+
+# Run all tests with output
+test-all = "test --workspace --all-features -- --nocapture"
+
+# Run integration tests
+test-integration = "test --tests -- --nocapture"
+
+# Run only fast tests (non-ignored)
+test-fast = "test --workspace --lib --tests"
+
+# Run ignored tests (slow/manual tests)
+test-slow = "test --workspace -- --ignored --nocapture"
+
+# Generate test coverage report
+coverage = "tarpaulin --tests --out Html --output-dir coverage"
+
+# Generate coverage for CI
+coverage-ci = "tarpaulin --tests --out Xml --output-dir coverage"
+
+# Run clippy with strict settings
+lint = "clippy --all-targets --all-features -- -D warnings"
+
+# Format all code
+fmt-all = "fmt --all"
+
+# Check formatting without modifying
+fmt-check = "fmt --all -- --check"
+
+# Run benchmarks
+bench-all = "bench --workspace"
+
+# Full CI check (fmt + clippy + test + doc)
+ci-check = "fmt --all -- --check && clippy --all-targets --all-features -- -D warnings && test --workspace --all-features && doc --no-deps"
+
+# Build documentation
+doc-build = "doc --no-deps --all-features"
+
+# Build and open documentation
+doc-open = "doc --no-deps --all-features --open"
+
+# Clean all build artifacts
+clean-all = "clean && rm -rf target/criterion coverage"

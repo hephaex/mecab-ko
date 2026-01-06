@@ -1,0 +1,64 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "mecab-ko-python"
+version = "0.1.0"
+description = "한국어 형태소 분석기 - MeCab-Ko Python 바인딩 (Korean Morphological Analyzer)"
+readme = "README.md"
+authors = [
+    { name = "hephaex", email = "hephaex@gmail.com" }
+]
+maintainers = [
+    { name = "hephaex", email = "hephaex@gmail.com" }
+]
+license = { text = "MIT OR Apache-2.0" }
+keywords = ["korean", "morphological-analysis", "nlp", "tokenizer", "mecab", "konlpy"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Programming Language :: Rust",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Text Processing :: Linguistic",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+requires-python = ">=3.8"
+
+[project.urls]
+Homepage = "https://github.com/hephaex/mecab-ko"
+Repository = "https://github.com/hephaex/mecab-ko"
+Documentation = "https://github.com/hephaex/mecab-ko/tree/main/rust/crates/mecab-ko-python"
+Issues = "https://github.com/hephaex/mecab-ko/issues"
+Changelog = "https://github.com/hephaex/mecab-ko/releases"
+
+[tool.maturin]
+module-name = "mecab_ko"
+python-source = "python"
+features = ["pyo3/extension-module"]
+# Build wheels for multiple platforms
+compatibility = "linux"
+strip = true
+
+# Support for different architectures
+[tool.maturin.target.x86_64-unknown-linux-gnu]
+[tool.maturin.target.aarch64-unknown-linux-gnu]
+[tool.maturin.target.x86_64-apple-darwin]
+[tool.maturin.target.aarch64-apple-darwin]
+[tool.maturin.target.x86_64-pc-windows-msvc]

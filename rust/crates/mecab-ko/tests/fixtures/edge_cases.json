@@ -1,0 +1,142 @@
+[
+  {
+    "input": "",
+    "expected_morphs": [],
+    "expected_pos": [],
+    "description": "Empty string",
+    "category": "edge"
+  },
+  {
+    "input": " ",
+    "expected_morphs": [],
+    "expected_pos": [],
+    "description": "Single space",
+    "category": "edge"
+  },
+  {
+    "input": "  ",
+    "expected_morphs": [],
+    "expected_pos": [],
+    "description": "Multiple spaces",
+    "category": "edge"
+  },
+  {
+    "input": "ㅋㅋㅋ",
+    "expected_morphs": ["ㅋㅋㅋ"],
+    "expected_pos": [["ㅋㅋㅋ", "IC"]],
+    "description": "Consonants only (laughter)",
+    "category": "edge"
+  },
+  {
+    "input": "ㅎㅎ",
+    "expected_morphs": ["ㅎㅎ"],
+    "expected_pos": [["ㅎㅎ", "IC"]],
+    "description": "Consonants only (alternative laughter)",
+    "category": "edge"
+  },
+  {
+    "input": "123",
+    "expected_morphs": ["123"],
+    "expected_pos": [["123", "SN"]],
+    "description": "Numbers only",
+    "category": "edge"
+  },
+  {
+    "input": "ABC",
+    "expected_morphs": ["ABC"],
+    "expected_pos": [["ABC", "SL"]],
+    "description": "English letters only",
+    "category": "edge"
+  },
+  {
+    "input": "Hello 안녕",
+    "expected_morphs": ["Hello", "안녕"],
+    "expected_pos": [["Hello", "SL"], ["안녕", "NNG"]],
+    "description": "Mixed English and Korean",
+    "category": "edge"
+  },
+  {
+    "input": "가나다@#$",
+    "expected_morphs": ["가나다", "@", "#", "$"],
+    "expected_pos": [["가나다", "NNG"], ["@", "SW"], ["#", "SW"], ["$", "SW"]],
+    "description": "Korean with symbols",
+    "category": "edge"
+  },
+  {
+    "input": "ㄱ",
+    "expected_morphs": ["ㄱ"],
+    "expected_pos": [["ㄱ", "SL"]],
+    "description": "Single consonant jamo",
+    "category": "edge"
+  },
+  {
+    "input": "ㅏ",
+    "expected_morphs": ["ㅏ"],
+    "expected_pos": [["ㅏ", "SL"]],
+    "description": "Single vowel jamo",
+    "category": "edge"
+  },
+  {
+    "input": "가",
+    "expected_morphs": ["가"],
+    "expected_pos": [["가", "VV"]],
+    "description": "Single syllable (verb 'go')",
+    "category": "edge"
+  },
+  {
+    "input": "!!!",
+    "expected_morphs": ["!", "!", "!"],
+    "expected_pos": [["!", "SF"], ["!", "SF"], ["!", "SF"]],
+    "description": "Multiple exclamation marks",
+    "category": "edge"
+  },
+  {
+    "input": "???",
+    "expected_morphs": ["?", "?", "?"],
+    "expected_pos": [["?", "SF"], ["?", "SF"], ["?", "SF"]],
+    "description": "Multiple question marks",
+    "category": "edge"
+  },
+  {
+    "input": "...",
+    "expected_morphs": ["..."],
+    "expected_pos": [["...", "SE"]],
+    "description": "Ellipsis",
+    "category": "edge"
+  },
+  {
+    "input": "2024년 1월 1일",
+    "expected_morphs": ["2024", "년", "1", "월", "1", "일"],
+    "expected_pos": [["2024", "SN"], ["년", "NNB"], ["1", "SN"], ["월", "NNB"], ["1", "SN"], ["일", "NNB"]],
+    "description": "Date with numbers",
+    "category": "edge"
+  },
+  {
+    "input": "010-1234-5678",
+    "expected_morphs": ["010", "-", "1234", "-", "5678"],
+    "expected_pos": [["010", "SN"], ["-", "SO"], ["1234", "SN"], ["-", "SO"], ["5678", "SN"]],
+    "description": "Phone number",
+    "category": "edge"
+  },
+  {
+    "input": "서울특별시강남구역삼동",
+    "expected_morphs": ["서울특별시", "강남구", "역삼동"],
+    "expected_pos": [["서울특별시", "NNP"], ["강남구", "NNP"], ["역삼동", "NNP"]],
+    "description": "Address without spaces",
+    "category": "edge"
+  },
+  {
+    "input": "ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ",
+    "expected_morphs": ["ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ"],
+    "expected_pos": [["ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ", "IC"]],
+    "description": "Long sequence of consonants",
+    "category": "edge"
+  },
+  {
+    "input": "URL: https://example.com",
+    "expected_morphs": ["URL", ":", "https", ":", "//", "example", ".", "com"],
+    "expected_pos": [["URL", "SL"], [":", "SP"], ["https", "SL"], [":", "SP"], ["//", "SW"], ["example", "SL"], [".", "SF"], ["com", "SL"]],
+    "description": "URL in text",
+    "category": "edge"
+  }
+]

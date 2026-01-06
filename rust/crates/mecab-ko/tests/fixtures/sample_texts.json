@@ -1,0 +1,72 @@
+[
+  {
+    "input": "안녕하세요",
+    "expected_morphs": ["안녕", "하", "세요"],
+    "expected_pos": [["안녕", "NNG"], ["하", "XSV"], ["세요", "EP+EF"]],
+    "description": "Basic greeting",
+    "category": "basic"
+  },
+  {
+    "input": "감사합니다",
+    "expected_morphs": ["감사", "하", "ㅂ니다"],
+    "expected_pos": [["감사", "NNG"], ["하", "XSV"], ["ㅂ니다", "EF"]],
+    "description": "Thank you expression",
+    "category": "basic"
+  },
+  {
+    "input": "좋은 아침입니다",
+    "expected_morphs": ["좋", "은", "아침", "이", "ㅂ니다"],
+    "expected_pos": [["좋", "VA"], ["은", "ETM"], ["아침", "NNG"], ["이", "VCP"], ["ㅂ니다", "EF"]],
+    "description": "Good morning",
+    "category": "basic"
+  },
+  {
+    "input": "오늘 날씨가 좋습니다",
+    "expected_morphs": ["오늘", "날씨", "가", "좋", "습니다"],
+    "expected_pos": [["오늘", "NNG"], ["날씨", "NNG"], ["가", "JKS"], ["좋", "VA"], ["습니다", "EF"]],
+    "description": "Weather comment",
+    "category": "basic"
+  },
+  {
+    "input": "저는 학생입니다",
+    "expected_morphs": ["저", "는", "학생", "이", "ㅂ니다"],
+    "expected_pos": [["저", "NP"], ["는", "JX"], ["학생", "NNG"], ["이", "VCP"], ["ㅂ니다", "EF"]],
+    "description": "Self-introduction",
+    "category": "basic"
+  },
+  {
+    "input": "서울은 대한민국의 수도입니다",
+    "expected_morphs": ["서울", "은", "대한민국", "의", "수도", "이", "ㅂ니다"],
+    "expected_pos": [["서울", "NNP"], ["은", "JX"], ["대한민국", "NNP"], ["의", "JKG"], ["수도", "NNG"], ["이", "VCP"], ["ㅂ니다", "EF"]],
+    "description": "Factual statement with proper nouns",
+    "category": "complex"
+  },
+  {
+    "input": "커피를 마시면서 책을 읽었습니다",
+    "expected_morphs": ["커피", "를", "마시", "면서", "책", "을", "읽", "었", "습니다"],
+    "expected_pos": [["커피", "NNG"], ["를", "JKO"], ["마시", "VV"], ["면서", "EC"], ["책", "NNG"], ["을", "JKO"], ["읽", "VV"], ["었", "EP"], ["습니다", "EF"]],
+    "description": "Simultaneous actions",
+    "category": "complex"
+  },
+  {
+    "input": "인공지능은 현대 기술의 핵심입니다",
+    "expected_morphs": ["인공지능", "은", "현대", "기술", "의", "핵심", "이", "ㅂ니다"],
+    "expected_pos": [["인공지능", "NNG"], ["은", "JX"], ["현대", "NNG"], ["기술", "NNG"], ["의", "JKG"], ["핵심", "NNG"], ["이", "VCP"], ["ㅂ니다", "EF"]],
+    "description": "Technical sentence with compound nouns",
+    "category": "technical"
+  },
+  {
+    "input": "데이터베이스 최적화가 필요합니다",
+    "expected_morphs": ["데이터베이스", "최적화", "가", "필요", "하", "ㅂ니다"],
+    "expected_pos": [["데이터베이스", "NNG"], ["최적화", "NNG"], ["가", "JKS"], ["필요", "NNG"], ["하", "XSV"], ["ㅂ니다", "EF"]],
+    "description": "Technical requirement statement",
+    "category": "technical"
+  },
+  {
+    "input": "머신러닝 알고리즘을 학습시켰습니다",
+    "expected_morphs": ["머신러닝", "알고리즘", "을", "학습", "시키", "었", "습니다"],
+    "expected_pos": [["머신러닝", "NNG"], ["알고리즘", "NNG"], ["을", "JKO"], ["학습", "NNG"], ["시키", "VV"], ["었", "EP"], ["습니다", "EF"]],
+    "description": "ML training statement",
+    "category": "technical"
+  }
+]

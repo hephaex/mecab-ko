@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  neologism-collector:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mecab-ko-neologism-collector
+    restart: unless-stopped
+
+    environment:
+      - TZ=Asia/Seoul
+      - LOG_LEVEL=INFO
+
+    env_file:
+      - .env
+
+    volumes:
+      # Persist database
+      - ./data:/app/data
+      # Persist logs
+      - ./logs:/app/logs
+      # Persist exports
+      - ./data/export:/app/data/export
+      # Mount config (optional override)
+      - ./config.yaml:/app/config.yaml:ro
+
+    command: python main.py scheduler
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sqlite3; conn = sqlite3.connect('/app/data/neologisms.db'); conn.close()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Optional: Run one-off jobs
+  collector-cli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mecab-ko-collector-cli
+
+    environment:
+      - TZ=Asia/Seoul
+      - LOG_LEVEL=INFO
+
+    env_file:
+      - .env
+
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./data/export:/app/data/export
+      - ./config.yaml:/app/config.yaml:ro
+
+    # Don't start automatically
+    profiles:
+      - cli
+
+    # Override with: docker-compose run --rm collector-cli python main.py <command>
+    entrypoint: []
+    command: /bin/bash
+
+volumes:
+  data:
+  logs:

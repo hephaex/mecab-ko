@@ -1,0 +1,224 @@
+# Neologism Collector Configuration
+
+# Database Configuration
+database:
+  url: "sqlite:///data/neologisms.db"
+  echo: false
+  pool_size: 5
+  max_overflow: 10
+
+# Crawler Configuration
+crawler:
+  # User agent for web requests
+  user_agent: "MeCab-Ko Neologism Collector (Research/Educational; +https://github.com/yourrepo)"
+
+  # Rate limiting (requests per second)
+  rate_limit:
+    requests_per_second: 1
+    burst: 3
+
+  # Timeout settings (seconds)
+  timeout:
+    connect: 10
+    read: 30
+
+  # Retry configuration
+  retry:
+    max_attempts: 3
+    backoff_factor: 2
+
+  # Respect robots.txt
+  respect_robots_txt: true
+
+# Sources Configuration
+sources:
+  naver_news:
+    enabled: true
+    url: "https://news.naver.com"
+    sections:
+      - "politics"
+      - "economy"
+      - "society"
+      - "culture"
+      - "it"
+    max_articles_per_section: 50
+
+  wikipedia:
+    enabled: true
+    url: "https://ko.wikipedia.org"
+    categories:
+      - "최근_변경"
+      - "신조어"
+    max_pages: 100
+
+  twitter:
+    enabled: false  # Requires API credentials
+    api_key: "${TWITTER_API_KEY}"
+    api_secret: "${TWITTER_API_SECRET}"
+    access_token: "${TWITTER_ACCESS_TOKEN}"
+    access_secret: "${TWITTER_ACCESS_SECRET}"
+    keywords:
+      - "한국어"
+      - "신조어"
+    max_tweets: 1000
+
+  reddit:
+    enabled: false  # Requires API credentials
+    client_id: "${REDDIT_CLIENT_ID}"
+    client_secret: "${REDDIT_CLIENT_SECRET}"
+    user_agent: "MeCab-Ko Neologism Collector"
+    subreddits:
+      - "hanguk"
+      - "korea"
+      - "Korean"
+    max_posts: 500
+
+# Detector Configuration
+detector:
+  # Minimum frequency for a word to be considered
+  min_frequency: 5
+
+  # Minimum length for Korean words
+  min_length: 2
+  max_length: 20
+
+  # Character types to filter
+  allow_mixed_script: true  # Allow Korean + English/Numbers
+  allow_special_chars: false
+
+  # Statistical thresholds
+  thresholds:
+    # New word must appear at least this many times
+    min_occurrences: 10
+    # TF-IDF threshold
+    tfidf_threshold: 0.1
+    # Context diversity (appeared in N different contexts)
+    min_context_diversity: 3
+
+# Classifier Configuration
+classifier:
+  # Features for neologism vs typo classification
+  features:
+    - "length"
+    - "char_type_ratio"
+    - "keyboard_distance"
+    - "phonetic_similarity"
+    - "context_coherence"
+
+  # Weights for scoring
+  weights:
+    frequency: 0.3
+    context_diversity: 0.25
+    morphological_validity: 0.2
+    social_spread: 0.15
+    temporal_trend: 0.1
+
+# Scorer Configuration
+scorer:
+  # Scoring algorithm: "weighted_sum" or "ml_model"
+  algorithm: "weighted_sum"
+
+  # Thresholds for categorization
+  thresholds:
+    high_confidence: 0.8
+    medium_confidence: 0.5
+    low_confidence: 0.3
+
+  # Decay factor for temporal relevance (days)
+  temporal_decay_days: 30
+
+# Storage Configuration
+storage:
+  # Keep data for N days
+  retention_days: 365
+
+  # Batch size for bulk operations
+  batch_size: 1000
+
+  # Enable compression
+  compress: true
+
+# Exporter Configuration
+exporter:
+  # Output directory
+  output_dir: "data/export"
+
+  # MeCab CSV format
+  csv_format:
+    encoding: "utf-8"
+    delimiter: ","
+    fields:
+      - "surface"
+      - "left_id"
+      - "right_id"
+      - "cost"
+      - "pos"
+      - "semantic1"
+      - "semantic2"
+      - "has_jongseong"
+      - "reading"
+      - "type"
+      - "first_pos"
+      - "last_pos"
+      - "expression"
+
+  # Default POS for neologisms
+  default_pos: "NNG"  # 일반명사
+
+  # Cost calculation
+  cost_base: 5000
+  cost_adjustment_factor: 100
+
+# Scheduler Configuration
+scheduler:
+  # Enable scheduled collection
+  enabled: true
+
+  # Collection schedule (cron-like)
+  schedules:
+    - name: "hourly_news"
+      job: "collect_naver_news"
+      trigger: "interval"
+      hours: 1
+
+    - name: "daily_wikipedia"
+      job: "collect_wikipedia"
+      trigger: "cron"
+      hour: 2
+      minute: 0
+
+    - name: "daily_detection"
+      job: "detect_neologisms"
+      trigger: "cron"
+      hour: 3
+      minute: 0
+
+    - name: "weekly_export"
+      job: "export_mecab_csv"
+      trigger: "cron"
+      day_of_week: "mon"
+      hour: 4
+      minute: 0
+
+    - name: "monthly_cleanup"
+      job: "cleanup_old_data"
+      trigger: "cron"
+      day: 1
+      hour: 5
+      minute: 0
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}"
+
+  # Log files
+  files:
+    main: "logs/neologism_collector.log"
+    crawler: "logs/crawler.log"
+    detector: "logs/detector.log"
+
+  # Rotation
+  rotation: "100 MB"
+  retention: "30 days"
+  compression: "zip"

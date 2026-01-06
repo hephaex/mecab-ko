@@ -18,9 +18,10 @@ categories = ["text-processing", "internationalization"]
 [dev-dependencies]
 criterion.workspace = true
 
-[[bench]]
-name = "hangul_bench"
-harness = false
+# TODO: 벤치마크 구현 후 활성화
+# [[bench]]
+# name = "hangul_bench"
+# harness = false
 
 [lints]
 workspace = true

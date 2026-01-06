@@ -1,0 +1,44 @@
+# Gradle
+.gradle/
+build/
+out/
+bin/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# VSCode
+.vscode/
+
+# Maven
+target/
+
+# OS
+.DS_Store
+Thumbs.db
+*~
+
+# Native libraries
+*.so
+*.dylib
+*.dll
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+
+# Plugin package
+*.zip

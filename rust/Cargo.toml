@@ -1,10 +1,19 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/mecab-ko",
     "crates/mecab-ko-core",
     "crates/mecab-ko-dict",
+    "crates/mecab-ko-dict-builder",
+    "crates/mecab-ko-dict-validator",
     "crates/mecab-ko-hangul",
     "crates/mecab-ko-cli",
+    "crates/mecab-ko-python",
+    "crates/mecab-ko-wasm",
+    "crates/mecab-ko-node",
+    "crates/mecab-ko-elasticsearch",
+    "crates/mecab-ko-profiler",
+    "crates/benchmarks",
 ]
 
 [workspace.package]
@@ -34,11 +43,25 @@ zstd = "0.13"
 
 # Data structures
 fst = "0.4"
+yada = "0.5"                    # Double Array Trie (Lindera 스타일)
 byteorder = "1.5"
 memmap2 = "0.9"
 
+# Serialization
+rkyv = "0.8"  # Zero-copy 직렬화
+
+# Text processing
+csv = "1.3"                     # CSV 파싱
+unicode-normalization = "0.1"   # 유니코드 정규화
+encoding_rs = "0.8"             # EUC-KR 등 인코딩
+
 # CLI
 clap = { version = "4.4", features = ["derive"] }
+indicatif = "0.17"              # 프로그레스 바
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = "0.3"
 
 # Testing & Benchmarking
 criterion = { version = "0.5", features = ["html_reports"] }
@@ -51,9 +74,9 @@ unsafe_code = "deny"
 missing_docs = "warn"
 
 [workspace.lints.clippy]
-all = "warn"
-pedantic = "warn"
-nursery = "warn"
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
 # 엄격한 에러 처리
 unwrap_used = "deny"
 expect_used = "deny"

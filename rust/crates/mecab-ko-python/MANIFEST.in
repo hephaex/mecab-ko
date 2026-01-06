@@ -1,0 +1,36 @@
+# Include documentation and metadata files
+include README.md
+include LICENSE-MIT
+include LICENSE-APACHE
+include INSTALL.md
+include IMPLEMENTATION.md
+include QUICKSTART.md
+include SUMMARY.md
+
+# Include Rust source code for building from source
+include Cargo.toml
+recursive-include src *.rs
+
+# Include Python source files
+recursive-include python *.py
+recursive-include python *.pyi
+include python/py.typed
+
+# Include examples
+recursive-include examples *.py
+
+# Include tests
+recursive-include tests *.py
+
+# Exclude compiled files and build artifacts
+global-exclude __pycache__
+global-exclude *.py[co]
+global-exclude .DS_Store
+global-exclude *.so
+global-exclude *.dylib
+global-exclude *.dll
+
+# Exclude development files
+exclude .gitignore
+exclude verify_installation.py
+recursive-exclude target *

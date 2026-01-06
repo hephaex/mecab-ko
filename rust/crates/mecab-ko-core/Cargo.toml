@@ -22,9 +22,10 @@ serde.workspace = true
 [dev-dependencies]
 criterion.workspace = true
 
-[[bench]]
-name = "tokenizer_bench"
-harness = false
+# TODO: 벤치마크 구현 후 활성화
+# [[bench]]
+# name = "tokenizer_bench"
+# harness = false
 
 [lints]
 workspace = true

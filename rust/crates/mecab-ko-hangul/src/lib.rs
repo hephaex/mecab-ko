@@ -1,4 +1,4 @@
-//! # mecab-rs-ko-hangul
+//! # mecab-ko-hangul
 //!
 //! 한글 자소(Jamo) 처리를 위한 유틸리티 라이브러리입니다.
 //!
@@ -12,7 +12,7 @@
 //! ## Example
 //!
 //! ```rust
-//! use mecab_rs_ko_hangul::{decompose, compose, is_hangul, has_jongseong};
+//! use mecab_ko_hangul::{decompose, compose, is_hangul, has_jongseong};
 //!
 //! // 자모 분리
 //! let (cho, jung, jong) = decompose('한').unwrap();
@@ -29,8 +29,8 @@
 //! assert!(!is_hangul('a'));
 //!
 //! // 종성 판별
-//! assert!(has_jongseong('한'));
-//! assert!(!has_jongseong('하'));
+//! assert_eq!(has_jongseong('한'), Some(true));
+//! assert_eq!(has_jongseong('하'), Some(false));
 //! ```
 
 #![warn(missing_docs)]
@@ -43,6 +43,7 @@ const HANGUL_BASE: u32 = 0xAC00;
 const HANGUL_END: u32 = 0xD7A3;
 
 /// 초성 개수 (19개)
+#[allow(dead_code)]
 const CHOSEONG_COUNT: u32 = 19;
 
 /// 중성 개수 (21개)
@@ -53,22 +54,46 @@ const JONGSEONG_COUNT: u32 = 28;
 
 /// 초성 목록 (19개)
 const CHOSEONG_LIST: [char; 19] = [
-    'ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ',
-    'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ',
+    'ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ',
+    'ㅌ', 'ㅍ', 'ㅎ',
 ];
 
 /// 중성 목록 (21개)
 const JUNGSEONG_LIST: [char; 21] = [
-    'ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 'ㅗ', 'ㅘ',
-    'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ', 'ㅡ', 'ㅢ', 'ㅣ',
+    'ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 'ㅗ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ',
+    'ㅟ', 'ㅠ', 'ㅡ', 'ㅢ', 'ㅣ',
 ];
 
 /// 종성 목록 (28개, 첫 번째는 종성 없음)
 const JONGSEONG_LIST: [Option<char>; 28] = [
-    None,       Some('ㄱ'), Some('ㄲ'), Some('ㄳ'), Some('ㄴ'), Some('ㄵ'), Some('ㄶ'),
-    Some('ㄷ'), Some('ㄹ'), Some('ㄺ'), Some('ㄻ'), Some('ㄼ'), Some('ㄽ'), Some('ㄾ'),
-    Some('ㄿ'), Some('ㅀ'), Some('ㅁ'), Some('ㅂ'), Some('ㅄ'), Some('ㅅ'), Some('ㅆ'),
-    Some('ㅇ'), Some('ㅈ'), Some('ㅊ'), Some('ㅋ'), Some('ㅌ'), Some('ㅍ'), Some('ㅎ'),
+    None,
+    Some('ㄱ'),
+    Some('ㄲ'),
+    Some('ㄳ'),
+    Some('ㄴ'),
+    Some('ㄵ'),
+    Some('ㄶ'),
+    Some('ㄷ'),
+    Some('ㄹ'),
+    Some('ㄺ'),
+    Some('ㄻ'),
+    Some('ㄼ'),
+    Some('ㄽ'),
+    Some('ㄾ'),
+    Some('ㄿ'),
+    Some('ㅀ'),
+    Some('ㅁ'),
+    Some('ㅂ'),
+    Some('ㅄ'),
+    Some('ㅅ'),
+    Some('ㅆ'),
+    Some('ㅇ'),
+    Some('ㅈ'),
+    Some('ㅊ'),
+    Some('ㅋ'),
+    Some('ㅌ'),
+    Some('ㅍ'),
+    Some('ㅎ'),
 ];
 
 /// 주어진 문자가 한글 음절인지 확인합니다.
@@ -84,7 +109,7 @@ const JONGSEONG_LIST: [Option<char>; 28] = [
 /// # Example
 ///
 /// ```rust
-/// use mecab_rs_ko_hangul::is_hangul_syllable;
+/// use mecab_ko_hangul::is_hangul_syllable;
 ///
 /// assert!(is_hangul_syllable('가'));
 /// assert!(is_hangul_syllable('힣'));
@@ -92,6 +117,7 @@ const JONGSEONG_LIST: [Option<char>; 28] = [
 /// assert!(!is_hangul_syllable('a'));
 /// ```
 #[inline]
+#[must_use]
 pub fn is_hangul_syllable(c: char) -> bool {
     let code = c as u32;
     (HANGUL_BASE..=HANGUL_END).contains(&code)
@@ -107,6 +133,7 @@ pub fn is_hangul_syllable(c: char) -> bool {
 ///
 /// 한글이면 `true`, 아니면 `false`
 #[inline]
+#[must_use]
 pub fn is_hangul(c: char) -> bool {
     is_hangul_syllable(c) || is_jamo(c)
 }
@@ -115,6 +142,7 @@ pub fn is_hangul(c: char) -> bool {
 ///
 /// 호환용 자모(ㄱ-ㅎ, ㅏ-ㅣ) 범위를 확인합니다.
 #[inline]
+#[must_use]
 pub fn is_jamo(c: char) -> bool {
     let code = c as u32;
     // 호환용 자모: ㄱ(0x3131) ~ ㅣ(0x3163)
@@ -123,12 +151,14 @@ pub fn is_jamo(c: char) -> bool {
 
 /// 주어진 문자가 초성 자모인지 확인합니다.
 #[inline]
+#[must_use]
 pub fn is_choseong(c: char) -> bool {
     CHOSEONG_LIST.contains(&c)
 }
 
 /// 주어진 문자가 중성 자모인지 확인합니다.
 #[inline]
+#[must_use]
 pub fn is_jungseong(c: char) -> bool {
     JUNGSEONG_LIST.contains(&c)
 }
@@ -148,13 +178,14 @@ pub fn is_jungseong(c: char) -> bool {
 /// # Example
 ///
 /// ```rust
-/// use mecab_rs_ko_hangul::has_jongseong;
+/// use mecab_ko_hangul::has_jongseong;
 ///
 /// assert_eq!(has_jongseong('한'), Some(true));
 /// assert_eq!(has_jongseong('하'), Some(false));
 /// assert_eq!(has_jongseong('a'), None);
 /// ```
 #[inline]
+#[must_use]
 pub fn has_jongseong(c: char) -> Option<bool> {
     if !is_hangul_syllable(c) {
         return None;
@@ -177,7 +208,7 @@ pub fn has_jongseong(c: char) -> Option<bool> {
 /// # Example
 ///
 /// ```rust
-/// use mecab_rs_ko_hangul::decompose;
+/// use mecab_ko_hangul::decompose;
 ///
 /// let result = decompose('한');
 /// assert_eq!(result, Some(('ㅎ', 'ㅏ', Some('ㄴ'))));
@@ -185,6 +216,8 @@ pub fn has_jongseong(c: char) -> Option<bool> {
 /// let result = decompose('가');
 /// assert_eq!(result, Some(('ㄱ', 'ㅏ', None)));
 /// ```
+#[must_use]
+#[allow(clippy::similar_names)]
 pub fn decompose(c: char) -> Option<(char, char, Option<char>)> {
     if !is_hangul_syllable(c) {
         return None;
@@ -192,13 +225,13 @@ pub fn decompose(c: char) -> Option<(char, char, Option<char>)> {
 
     let code = c as u32 - HANGUL_BASE;
 
-    let jong_idx = code % JONGSEONG_COUNT;
-    let jung_idx = ((code - jong_idx) / JONGSEONG_COUNT) % JUNGSEONG_COUNT;
-    let cho_idx = ((code - jong_idx) / JONGSEONG_COUNT) / JUNGSEONG_COUNT;
+    let jongseong_idx = code % JONGSEONG_COUNT;
+    let jungseong_idx = ((code - jongseong_idx) / JONGSEONG_COUNT) % JUNGSEONG_COUNT;
+    let choseong_idx = ((code - jongseong_idx) / JONGSEONG_COUNT) / JUNGSEONG_COUNT;
 
-    let cho = CHOSEONG_LIST[cho_idx as usize];
-    let jung = JUNGSEONG_LIST[jung_idx as usize];
-    let jong = JONGSEONG_LIST[jong_idx as usize];
+    let cho = CHOSEONG_LIST[choseong_idx as usize];
+    let jung = JUNGSEONG_LIST[jungseong_idx as usize];
+    let jong = JONGSEONG_LIST[jongseong_idx as usize];
 
     Some((cho, jung, jong))
 }
@@ -219,7 +252,7 @@ pub fn decompose(c: char) -> Option<(char, char, Option<char>)> {
 /// # Example
 ///
 /// ```rust
-/// use mecab_rs_ko_hangul::compose;
+/// use mecab_ko_hangul::compose;
 ///
 /// let c = compose('ㅎ', 'ㅏ', Some('ㄴ'));
 /// assert_eq!(c, Some('한'));
@@ -227,15 +260,19 @@ pub fn decompose(c: char) -> Option<(char, char, Option<char>)> {
 /// let c = compose('ㄱ', 'ㅏ', None);
 /// assert_eq!(c, Some('가'));
 /// ```
-pub fn compose(cho: char, jung: char, jong: Option<char>) -> Option<char> {
-    let cho_idx = CHOSEONG_LIST.iter().position(|&c| c == cho)? as u32;
-    let jung_idx = JUNGSEONG_LIST.iter().position(|&c| c == jung)? as u32;
-    let jong_idx = match jong {
+#[must_use]
+#[allow(clippy::cast_possible_truncation, clippy::similar_names)]
+pub fn compose(choseong: char, jungseong: char, jongseong: Option<char>) -> Option<char> {
+    let choseong_idx = CHOSEONG_LIST.iter().position(|&c| c == choseong)? as u32;
+    let jungseong_idx = JUNGSEONG_LIST.iter().position(|&c| c == jungseong)? as u32;
+    let jongseong_idx = match jongseong {
         None => 0,
         Some(j) => JONGSEONG_LIST.iter().position(|&c| c == Some(j))? as u32,
     };
 
-    let code = HANGUL_BASE + (cho_idx * JUNGSEONG_COUNT + jung_idx) * JONGSEONG_COUNT + jong_idx;
+    let code = HANGUL_BASE
+        + (choseong_idx * JUNGSEONG_COUNT + jungseong_idx) * JONGSEONG_COUNT
+        + jongseong_idx;
 
     char::from_u32(code)
 }
@@ -253,11 +290,12 @@ pub fn compose(cho: char, jung: char, jong: Option<char>) -> Option<char> {
 /// # Example
 ///
 /// ```rust
-/// use mecab_rs_ko_hangul::decompose_str;
+/// use mecab_ko_hangul::decompose_str;
 ///
 /// assert_eq!(decompose_str("한글"), "ㅎㅏㄴㄱㅡㄹ");
 /// assert_eq!(decompose_str("Hello 한글"), "Hello ㅎㅏㄴㄱㅡㄹ");
 /// ```
+#[must_use]
 pub fn decompose_str(s: &str) -> String {
     let mut result = String::with_capacity(s.len() * 3);
 
@@ -289,10 +327,11 @@ pub fn decompose_str(s: &str) -> String {
 /// # Example
 ///
 /// ```rust
-/// use mecab_rs_ko_hangul::compose_str;
+/// use mecab_ko_hangul::compose_str;
 ///
 /// assert_eq!(compose_str("ㅎㅏㄴㄱㅡㄹ"), "한글");
 /// ```
+#[must_use]
 pub fn compose_str(s: &str) -> String {
     let chars: Vec<char> = s.chars().collect();
     let mut result = String::with_capacity(s.len());
@@ -306,16 +345,16 @@ pub fn compose_str(s: &str) -> String {
 
             // 다음 문자가 종성이 될 수 있는지 확인
             // 단, 그 다음에 중성이 오면 종성이 아님
-            let jong = if i + 2 < chars.len() {
-                let potential_jong = chars[i + 2];
-                let is_potential_jong = JONGSEONG_LIST.iter().any(|&c| c == Some(potential_jong));
+            let jongseong = if i + 2 < chars.len() {
+                let potential_jongseong = chars[i + 2];
+                let is_potential_jongseong = JONGSEONG_LIST.contains(&Some(potential_jongseong));
 
-                if is_potential_jong {
+                if is_potential_jongseong {
                     // 다음 다음 문자가 중성이면, 현재 문자는 다음 음절의 초성
                     if i + 3 < chars.len() && is_jungseong(chars[i + 3]) {
                         None
                     } else {
-                        Some(potential_jong)
+                        Some(potential_jongseong)
                     }
                 } else {
                     None
@@ -324,9 +363,9 @@ pub fn compose_str(s: &str) -> String {
                 None
             };
 
-            if let Some(c) = compose(cho, jung, jong) {
+            if let Some(c) = compose(cho, jung, jongseong) {
                 result.push(c);
-                i += if jong.is_some() { 3 } else { 2 };
+                i += if jongseong.is_some() { 3 } else { 2 };
             } else {
                 result.push(chars[i]);
                 i += 1;
@@ -341,7 +380,7 @@ pub fn compose_str(s: &str) -> String {
 }
 
 /// 문자의 종류를 나타내는 열거형
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CharType {
     /// 한글 음절
     HangulSyllable,
@@ -374,6 +413,7 @@ pub enum CharType {
 /// # Returns
 ///
 /// 문자의 종류를 나타내는 `CharType`
+#[must_use]
 pub fn classify_char(c: char) -> CharType {
     let code = c as u32;
 

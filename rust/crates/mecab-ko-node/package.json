@@ -1,0 +1,62 @@
+{
+  "name": "@mecab-ko/node",
+  "version": "0.1.0",
+  "description": "Node.js bindings for MeCab-Ko Korean morphological analyzer",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "keywords": [
+    "korean",
+    "morphological-analysis",
+    "nlp",
+    "tokenizer",
+    "mecab",
+    "napi"
+  ],
+  "author": "hephaex <hephaex@gmail.com>",
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hephaex/mecab-ko.git",
+    "directory": "rust/crates/mecab-ko-node"
+  },
+  "homepage": "https://github.com/hephaex/mecab-ko",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md"
+  ],
+  "napi": {
+    "name": "mecab-ko-node",
+    "triples": {
+      "defaults": true,
+      "additional": [
+        "x86_64-apple-darwin",
+        "aarch64-apple-darwin",
+        "x86_64-pc-windows-msvc",
+        "x86_64-unknown-linux-gnu",
+        "aarch64-unknown-linux-gnu"
+      ]
+    }
+  },
+  "scripts": {
+    "build": "napi build --platform --release --cargo-name mecab-ko-node",
+    "build:debug": "napi build --platform --cargo-name mecab-ko-node",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "napi prepublish -t npm",
+    "artifacts": "napi artifacts",
+    "version": "napi version"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^2.18.0",
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.1.0"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,46 @@
+[package]
+name = "mecab-ko-elasticsearch"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation = "https://docs.rs/mecab-ko-elasticsearch"
+readme = "README.md"
+description = "Elasticsearch/Lucene Nori 호환 레이어 - JNI 바인딩 및 분석기 플러그인"
+keywords = ["korean", "elasticsearch", "lucene", "nori", "analyzer"]
+categories = ["text-processing", "api-bindings"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+mecab-ko-core = { path = "../mecab-ko-core" }
+mecab-ko-hangul = { path = "../mecab-ko-hangul" }
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+# JNI bindings
+jni = { version = "0.21", optional = true }
+once_cell = { version = "1.19", optional = true }
+
+# Async support (optional)
+tokio = { version = "1.35", features = ["sync", "rt"], optional = true }
+
+[dev-dependencies]
+criterion.workspace = true
+
+[features]
+default = []
+jni-bindings = ["jni", "once_cell"]
+async = ["tokio"]
+
+[[bench]]
+name = "analyzer_bench"
+harness = false
+
+[lints]
+workspace = true

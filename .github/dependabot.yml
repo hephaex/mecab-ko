@@ -1,0 +1,61 @@
+version: 2
+updates:
+  # Cargo dependencies
+  - package-ecosystem: cargo
+    directory: "/rust"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - hephaex
+    assignees:
+      - hephaex
+    labels:
+      - "dependencies"
+      - "rust"
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
+      include: "scope"
+    rebase-strategy: "auto"
+    versioning-strategy: "increase"
+    allow:
+      - dependency-type: "all"
+    ignore:
+      - dependency-name: "mecab-ko"
+
+  # GitHub Actions
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - hephaex
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci(actions)"
+    rebase-strategy: "auto"
+
+  # Docker (if applicable)
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: wednesday
+      time: "03:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - hephaex
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "ci(docker)"
+    rebase-strategy: "auto"

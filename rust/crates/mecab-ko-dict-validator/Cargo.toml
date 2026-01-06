@@ -1,0 +1,62 @@
+[package]
+name = "mecab-ko-dict-validator"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+readme = "README.md"
+keywords.workspace = true
+categories.workspace = true
+description = "Dictionary validation tool for MeCab-Ko"
+
+[[bin]]
+name = "dict-validate"
+path = "src/bin/dict-validate.rs"
+
+[dependencies]
+# Error handling
+thiserror.workspace = true
+anyhow.workspace = true
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Text processing
+csv.workspace = true
+unicode-normalization.workspace = true
+encoding_rs.workspace = true
+
+# CLI
+clap.workspace = true
+indicatif.workspace = true
+
+# Logging
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+# Parallel processing
+rayon = "1.8"
+
+# Regex for pattern matching
+regex = "1.10"
+
+# Configuration
+toml = "0.8"
+
+# Time handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# Internal dependencies
+mecab-ko-hangul = { path = "../mecab-ko-hangul" }
+
+[dev-dependencies]
+criterion.workspace = true
+tempfile = "3.10"
+
+[lints]
+workspace = true

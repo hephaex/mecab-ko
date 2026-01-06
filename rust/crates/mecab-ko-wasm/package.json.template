@@ -1,0 +1,36 @@
+{
+  "name": "mecab-ko-wasm",
+  "version": "0.1.0",
+  "description": "WebAssembly bindings for MeCab-Ko Korean morphological analyzer",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "mecab_ko_wasm_bg.wasm",
+    "mecab_ko_wasm.js",
+    "mecab_ko_wasm.d.ts"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hephaex/mecab-ko"
+  },
+  "keywords": [
+    "korean",
+    "nlp",
+    "morphological-analysis",
+    "tokenizer",
+    "mecab",
+    "wasm",
+    "webassembly"
+  ],
+  "author": "hephaex <hephaex@gmail.com>",
+  "license": "MIT OR Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/hephaex/mecab-ko/issues"
+  },
+  "homepage": "https://github.com/hephaex/mecab-ko#readme",
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  }
+}

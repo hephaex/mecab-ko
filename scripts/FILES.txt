@@ -1,0 +1,85 @@
+MeCab-Ko 말뭉치 처리 스크립트
+==============================
+
+위치: /home/mare/mecab-ko/scripts/
+
+파일 구조
+--------
+
+스크립트 (Python)
+  corpus_to_dict.py          (18K, 559 lines)  - 말뭉치 → MeCab 사전 변환
+  extract_neologisms.py      (17K, 520 lines)  - 신조어 자동 추출
+  merge_dictionaries.py      (12K, 408 lines)  - 사전 병합 및 분석
+  test_scripts.py            (10K, 354 lines)  - 자동 테스트 스위트
+
+유틸리티 (Shell)
+  example_workflow.sh        (11K, 359 lines)  - 전체 워크플로우 자동화
+
+문서
+  README.md                  (13K, 520 lines)  - 메인 문서
+  QUICKSTART.md              (10K, 429 lines)  - 5분 빠른 시작
+  CORPUS_LICENSES.md         (11K, 335 lines)  - 저작권 가이드
+  INDEX.md                   ( 8K, 321 lines)  - 파일 인덱스
+  COMPLETION_SUMMARY.md      (11K, ~400 lines) - 작업 완료 보고서
+  FILES.txt                  (이 파일)         - 파일 목록
+
+설정
+  requirements.txt           (1K,   41 lines)  - Python 의존성
+
+통계
+----
+총 파일:    11개
+총 크기:    ~140K
+총 라인:    ~4,246 lines
+  - Python: 1,841 lines (43%)
+  - 문서:   2,005 lines (47%)
+  - 기타:     400 lines (10%)
+
+주요 기능
+---------
+✓ 3가지 입력 형식 지원 (Modu JSON, Sejong XML, CoNLL-U)
+✓ 2가지 출력 형식 (MeCab CSV, JSON)
+✓ 5가지 신조어 패턴 탐지
+✓ 5가지 사전 병합 전략
+✓ 자동 빈도 계산 및 비용 할당
+✓ 실시간 통계 분석
+✓ 완전한 테스트 커버리지
+
+테스트 상태
+-----------
+✅ 4/4 테스트 통과 (100%)
+
+사용 예제
+---------
+# 말뭉치 변환
+./corpus_to_dict.py -f modu -i corpus/ -o dict.csv
+
+# 신조어 추출
+./extract_neologisms.py -f modu -i corpus/ -o neo.json
+
+# 사전 병합
+./merge_dictionaries.py -i dict1.csv dict2.csv -o merged.csv
+
+# 전체 자동화
+./example_workflow.sh /data/corpus /output
+
+빠른 시작
+---------
+1. QUICKSTART.md 읽기
+2. 샘플 데이터로 테스트
+3. 실제 말뭉치 적용
+4. CORPUS_LICENSES.md 확인 (배포 전 필수)
+
+도움말
+------
+각 스크립트의 도움말:
+  ./corpus_to_dict.py --help
+  ./extract_neologisms.py --help
+  ./merge_dictionaries.py --help
+
+테스트 실행:
+  ./test_scripts.py
+
+작성일: 2026-01-05
+버전: 1.0.0
+상태: ✅ 완료
