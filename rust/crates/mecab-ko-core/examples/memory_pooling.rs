@@ -36,7 +36,7 @@ fn main() {
 
 fn demo_token_pool() {
     println!("1. Token Pool Demo");
-    println!("-" .repeat(50));
+    println!("{}", "-".repeat(50));
 
     let pool = TokenPool::new();
 
@@ -72,7 +72,7 @@ fn demo_token_pool() {
 
 fn demo_string_interning() {
     println!("2. String Interning Demo");
-    println!("-" .repeat(50));
+    println!("{}", "-".repeat(50));
 
     let interner = SharedStringInterner::new();
 
@@ -108,7 +108,7 @@ fn demo_string_interning() {
 
 fn demo_pool_manager() {
     println!("3. Pool Manager Demo");
-    println!("-" .repeat(50));
+    println!("{}", "-".repeat(50));
 
     let manager = PoolManager::new();
 
@@ -147,7 +147,7 @@ fn demo_pool_manager() {
 
 fn demo_tokenizer_pooling() -> Result<(), Box<dyn std::error::Error>> {
     println!("4. Tokenizer Integration Demo");
-    println!("-" .repeat(50));
+    println!("{}", "-".repeat(50));
 
     // Note: 이 부분은 사전이 설치되어 있어야 동작합니다
     let mut tokenizer = match Tokenizer::new() {

@@ -65,5 +65,13 @@ harness = false
 # name = "simd_bench"
 # harness = false
 
+[[example]]
+name = "async_example"
+required-features = ["async"]
+
+[[example]]
+name = "simd_demo"
+required-features = ["simd"]
+
 [lints]
 workspace = true
