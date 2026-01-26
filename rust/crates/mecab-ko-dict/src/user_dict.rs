@@ -48,6 +48,8 @@ pub struct UserEntry {
     pub reading: Option<String>,
     /// 원형 (기본형)
     pub lemma: Option<String>,
+    /// 전체 품사 정보 (feature string, 캐시)
+    pub feature: String,
 }
 
 impl UserEntry {
@@ -59,14 +61,21 @@ impl UserEntry {
         reading: Option<String>,
     ) -> Self {
         let surface = surface.into();
+        let pos = pos.into();
+        let feature = format!(
+            "{},*,*,{},*,*,*,*",
+            pos,
+            reading.as_deref().unwrap_or("*")
+        );
         Self {
             surface: surface.clone(),
             left_id: 0, // 기본 컨텍스트 ID
             right_id: 0,
             cost,
-            pos: pos.into(),
+            pos,
             reading,
             lemma: None,
+            feature,
         }
     }
 
@@ -291,6 +300,30 @@ impl UserDictionary {
                     .collect()
             })
             .unwrap_or_default()
+    }
+
+    /// 공통 접두사 검색
+    ///
+    /// 주어진 텍스트의 접두사와 일치하는 모든 엔트리를 찾습니다.
+    ///
+    /// # Arguments
+    ///
+    /// * `text` - 검색할 텍스트
+    ///
+    /// # Returns
+    ///
+    /// 일치하는 엔트리의 벡터
+    pub fn common_prefix_search(&self, text: &str) -> Vec<&UserEntry> {
+        let mut results = Vec::new();
+
+        // 각 엔트리의 표면형을 텍스트의 접두사로 확인
+        for entry in &self.entries {
+            if text.starts_with(&entry.surface) {
+                results.push(entry);
+            }
+        }
+
+        results
     }
 
     /// 모든 엔트리 반환

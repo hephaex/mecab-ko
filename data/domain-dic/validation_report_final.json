@@ -1,0 +1,77 @@
+{
+  "summary": {
+    "total_files": 5,
+    "valid_files": 5,
+    "files_with_warnings": 0,
+    "total_entries": 283670,
+    "total_duplicates": 0,
+    "total_format_errors": 0
+  },
+  "files": {
+    "ai_ml": {
+      "path": "data/domain-dic/it-terms/ai_ml.csv",
+      "entries": 19642,
+      "valid": true,
+      "has_warnings": false,
+      "issues": {
+        "duplicates": 0,
+        "invalid_pos": 0,
+        "empty_readings": 0,
+        "format_errors": 0,
+        "warnings": 0
+      }
+    },
+    "cloud_infrastructure": {
+      "path": "data/domain-dic/it-terms/cloud_infrastructure.csv",
+      "entries": 18493,
+      "valid": true,
+      "has_warnings": false,
+      "issues": {
+        "duplicates": 0,
+        "invalid_pos": 0,
+        "empty_readings": 0,
+        "format_errors": 0,
+        "warnings": 0
+      }
+    },
+    "frameworks_libraries": {
+      "path": "data/domain-dic/it-terms/frameworks_libraries.csv",
+      "entries": 170899,
+      "valid": true,
+      "has_warnings": false,
+      "issues": {
+        "duplicates": 0,
+        "invalid_pos": 0,
+        "empty_readings": 0,
+        "format_errors": 0,
+        "warnings": 0
+      }
+    },
+    "general_it": {
+      "path": "data/domain-dic/it-terms/general_it.csv",
+      "entries": 25540,
+      "valid": true,
+      "has_warnings": false,
+      "issues": {
+        "duplicates": 0,
+        "invalid_pos": 0,
+        "empty_readings": 0,
+        "format_errors": 0,
+        "warnings": 0
+      }
+    },
+    "programming_languages": {
+      "path": "data/domain-dic/it-terms/programming_languages.csv",
+      "entries": 49096,
+      "valid": true,
+      "has_warnings": false,
+      "issues": {
+        "duplicates": 0,
+        "invalid_pos": 0,
+        "empty_readings": 0,
+        "format_errors": 0,
+        "warnings": 0
+      }
+    }
+  }
+}

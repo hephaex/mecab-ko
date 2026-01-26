@@ -320,9 +320,9 @@ impl SystemDictionary {
         self.entries.push(entry);
     }
 
-    /// 테스트용 생성자 (crate-internal only)
-    #[cfg(test)]
-    pub(crate) fn new_test(
+    /// 테스트용 생성자 (외부 crate의 test에서도 사용 가능)
+    #[doc(hidden)]
+    pub fn new_test(
         dicdir: PathBuf,
         trie: Trie<'static>,
         matrix: ConnectionMatrix,

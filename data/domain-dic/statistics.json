@@ -1,0 +1,30 @@
+{
+  "total_terms": 283670,
+  "categories": {
+    "programming_languages": {
+      "count": 49096,
+      "has_reading": 49096,
+      "has_variants": 17
+    },
+    "frameworks_libraries": {
+      "count": 170899,
+      "has_reading": 170899,
+      "has_variants": 24
+    },
+    "cloud_infrastructure": {
+      "count": 18493,
+      "has_reading": 18493,
+      "has_variants": 22
+    },
+    "ai_ml": {
+      "count": 19642,
+      "has_reading": 19642,
+      "has_variants": 45
+    },
+    "general_it": {
+      "count": 25540,
+      "has_reading": 25540,
+      "has_variants": 39
+    }
+  }
+}

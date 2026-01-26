@@ -24,7 +24,8 @@ serde.workspace = true
 serde_json.workspace = true
 
 # Performance optimizations
-lru = "0.12"
+# Updated to 0.16.3+ to fix IterMut soundness issue (RUSTSEC-2026-0002)
+lru = "0.16.3"
 parking_lot = "0.12"
 rayon = "1.10"
 

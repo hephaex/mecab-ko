@@ -20,6 +20,7 @@ crate-type = ["cdylib"]
 [dependencies]
 mecab-ko-core = { path = "../mecab-ko-core" }
 pyo3 = { workspace = true }
+parking_lot = "0.12"
 
 # Python 바인딩에서는 일부 lint 완화
 [lints.rust]

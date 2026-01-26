@@ -1,0 +1,140 @@
+{
+  "version": "1.0.0",
+  "description": "외래어 표기 정규화 규칙 - 국립국어원 외래어 표기법 기반",
+  "rules": [
+    {
+      "rule_type": "VowelLength",
+      "from": "오",
+      "to": "어",
+      "confidence": 0.9,
+      "examples": ["코피 → 커피", "초콜릿 → 초콜릿"]
+    },
+    {
+      "rule_type": "VowelLength",
+      "from": "어",
+      "to": "오",
+      "confidence": 0.9,
+      "examples": ["커피 → 코피", "서버 → 서버"]
+    },
+    {
+      "rule_type": "ConsonantVariation",
+      "from": "ㅂ",
+      "to": "ㅍ",
+      "confidence": 0.9,
+      "examples": ["베이스 → 페이스", "부트 → 푸트"]
+    },
+    {
+      "rule_type": "ConsonantVariation",
+      "from": "ㅍ",
+      "to": "ㅂ",
+      "confidence": 0.9,
+      "examples": ["페이스 → 베이스", "푸트 → 부트"]
+    },
+    {
+      "rule_type": "ConsonantVariation",
+      "from": "ㄷ",
+      "to": "ㅌ",
+      "confidence": 0.9,
+      "examples": ["데이터 → 테이터", "도어 → 토어"]
+    },
+    {
+      "rule_type": "ConsonantVariation",
+      "from": "ㅌ",
+      "to": "ㄷ",
+      "confidence": 0.9,
+      "examples": ["테이터 → 데이터", "토어 → 도어"]
+    },
+    {
+      "rule_type": "ConsonantVariation",
+      "from": "ㄱ",
+      "to": "ㅋ",
+      "confidence": 0.9,
+      "examples": ["가드 → 카드", "게임 → 케임"]
+    },
+    {
+      "rule_type": "ConsonantVariation",
+      "from": "ㅋ",
+      "to": "ㄱ",
+      "confidence": 0.9,
+      "examples": ["카드 → 가드", "케임 → 게임"]
+    },
+    {
+      "rule_type": "ConsonantVariation",
+      "from": "ㅈ",
+      "to": "ㅊ",
+      "confidence": 0.85,
+      "examples": ["자켓 → 차켓", "저지 → 처지"]
+    },
+    {
+      "rule_type": "ConsonantVariation",
+      "from": "ㅊ",
+      "to": "ㅈ",
+      "confidence": 0.85,
+      "examples": ["차켓 → 자켓", "처지 → 저지"]
+    },
+    {
+      "rule_type": "JongseongVariation",
+      "from": "ㄹ",
+      "to": "",
+      "confidence": 0.85,
+      "examples": ["소프트웨어 → 소프트웨아", "서버 → 서버"]
+    },
+    {
+      "rule_type": "JongseongVariation",
+      "from": "",
+      "to": "ㄹ",
+      "confidence": 0.85,
+      "examples": ["소프트웨아 → 소프트웨어", "서버 → 서버"]
+    },
+    {
+      "rule_type": "VowelVariation",
+      "from": "에이",
+      "to": "에",
+      "confidence": 0.9,
+      "examples": ["케이크 → 케크", "스테이크 → 스테크"]
+    },
+    {
+      "rule_type": "VowelVariation",
+      "from": "에",
+      "to": "에이",
+      "confidence": 0.9,
+      "examples": ["케크 → 케이크", "스테크 → 스테이크"]
+    },
+    {
+      "rule_type": "VowelVariation",
+      "from": "이",
+      "to": "익",
+      "confidence": 0.85,
+      "examples": ["케이크 → 케익", "페이크 → 페익"]
+    },
+    {
+      "rule_type": "VowelVariation",
+      "from": "익",
+      "to": "이",
+      "confidence": 0.85,
+      "examples": ["케익 → 케이크", "페익 → 페이크"]
+    }
+  ],
+  "phonetic_groups": [
+    {
+      "name": "voiceless_stops",
+      "description": "무성 파열음 (ㄱ, ㄷ, ㅂ)",
+      "members": ["ㄱ", "ㄷ", "ㅂ"]
+    },
+    {
+      "name": "aspirated_stops",
+      "description": "유기 파열음 (ㅋ, ㅌ, ㅍ)",
+      "members": ["ㅋ", "ㅌ", "ㅍ"]
+    },
+    {
+      "name": "front_vowels",
+      "description": "전설 모음 (ㅣ, ㅔ, ㅐ)",
+      "members": ["ㅣ", "ㅔ", "ㅐ"]
+    },
+    {
+      "name": "back_vowels",
+      "description": "후설 모음 (ㅡ, ㅓ, ㅏ)",
+      "members": ["ㅡ", "ㅓ", "ㅏ"]
+    }
+  ]
+}

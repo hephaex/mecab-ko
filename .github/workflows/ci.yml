@@ -188,7 +188,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run security audit
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit
+
+      - name: Run cargo audit
+        run: cargo audit --manifest-path rust/Cargo.toml --deny warnings
+        continue-on-error: false
+
+      - name: Run RustSec audit check
         uses: rustsec/audit-check-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

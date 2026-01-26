@@ -7,6 +7,7 @@ use clap::{Parser, Subcommand, ValueEnum};
 use mecab_ko_core::Tokenizer;
 use mecab_ko_dict::UserDictionary;
 use serde::Serialize;
+use std::cell::RefCell;
 use std::io::{self, BufRead, Write};
 use std::path::PathBuf;
 
@@ -118,7 +119,7 @@ struct TokenOutput {
 
 /// 분석 결과 컨텍스트
 struct AnalysisContext {
-    tokenizer: Tokenizer,
+    tokenizer: RefCell<Tokenizer>,
     #[allow(dead_code)]
     user_dict: Option<UserDictionary>,
     args: Args,
@@ -153,14 +154,14 @@ impl AnalysisContext {
         };
 
         Ok(Self {
-            tokenizer,
+            tokenizer: RefCell::new(tokenizer),
             user_dict,
             args,
         })
     }
 
     fn process_text(&self, text: &str) -> Result<()> {
-        let tokens = self.tokenizer.tokenize(text);
+        let tokens = self.tokenizer.borrow_mut().tokenize(text);
 
         match self.args.output_format {
             OutputFormat::Default => {
@@ -189,7 +190,7 @@ impl AnalysisContext {
                 for (i, token) in tokens.iter().enumerate() {
                     println!(
                         "[{:03}] surface=\"{}\" pos={} span=[{},{})",
-                        i, token.surface, token.pos, token.start, token.end
+                        i, token.surface, token.pos, token.start_byte, token.end_byte
                     );
                 }
             }
@@ -199,8 +200,8 @@ impl AnalysisContext {
                     .map(|t| TokenOutput {
                         surface: t.surface.clone(),
                         pos: t.pos.clone(),
-                        start: t.start,
-                        end: t.end,
+                        start: t.start_byte,
+                        end: t.end_byte,
                         reading: t.reading.clone(),
                         lemma: t.lemma.clone(),
                     })
@@ -216,8 +217,8 @@ impl AnalysisContext {
                         "{},{},{},{},{},{}",
                         escape_csv(&token.surface),
                         token.pos,
-                        token.start,
-                        token.end,
+                        token.start_byte,
+                        token.end_byte,
                         token.reading.as_deref().unwrap_or(""),
                         token.lemma.as_deref().unwrap_or("")
                     );

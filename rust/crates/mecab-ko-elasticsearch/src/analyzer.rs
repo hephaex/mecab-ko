@@ -7,7 +7,6 @@ use crate::tokenizer::{Token, TokenStream, Tokenizer, WordType};
 use lru::LruCache;
 use mecab_ko_core::nori_compat::{NoriToken, NoriTokenizer as CoreNoriTokenizer};
 use parking_lot::Mutex;
-use std::borrow::Cow;
 use std::num::NonZeroUsize;
 
 /// 기본 캐시 크기 (항목 수)
@@ -224,8 +223,8 @@ impl NoriAnalyzer {
 ///
 /// `mecab-ko-core`의 `NoriTokenizer`를 래핑하여 Elasticsearch 인터페이스 제공
 pub struct NoriTokenizerImpl {
-    /// 코어 토크나이저
-    inner: CoreNoriTokenizer,
+    /// 코어 토크나이저 (Mutex로 래핑하여 내부 가변성 제공)
+    inner: Mutex<CoreNoriTokenizer>,
     /// 설정
     config: TokenizerConfig,
 }
@@ -237,7 +236,7 @@ impl NoriTokenizerImpl {
     ///
     /// MeCab 코어 초기화 실패 시 에러 반환
     pub fn new(config: TokenizerConfig) -> Result<Self> {
-        let inner = if let Some(dict_path) = &config.user_dictionary_path {
+        let tokenizer = if let Some(dict_path) = &config.user_dictionary_path {
             CoreNoriTokenizer::with_dict(
                 dict_path
                     .to_str()
@@ -252,7 +251,10 @@ impl NoriTokenizerImpl {
             )?
         };
 
-        Ok(Self { inner, config })
+        Ok(Self {
+            inner: Mutex::new(tokenizer),
+            config,
+        })
     }
 
     /// 설정 반환
@@ -264,7 +266,7 @@ impl NoriTokenizerImpl {
 
 impl Tokenizer for NoriTokenizerImpl {
     fn tokenize(&self, text: &str) -> Result<Vec<Token>> {
-        let nori_tokens = self.inner.tokenize(text)?;
+        let nori_tokens = self.inner.lock().tokenize(text)?;
 
         // Pre-allocate with exact capacity to avoid reallocation
         let mut tokens = Vec::with_capacity(nori_tokens.len());

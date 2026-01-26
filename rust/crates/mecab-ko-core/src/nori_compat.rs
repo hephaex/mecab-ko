@@ -174,7 +174,7 @@ impl NoriTokenizer {
     ///     println!("{}: {}", token.surface, token.pos_tag);
     /// }
     /// ```
-    pub fn tokenize(&self, text: &str) -> Result<Vec<NoriToken>> {
+    pub fn tokenize(&mut self, text: &str) -> Result<Vec<NoriToken>> {
         let mecab_tokens = self.tokenizer.tokenize(text);
         let mut nori_tokens = Vec::new();
 
@@ -195,8 +195,8 @@ impl NoriTokenizer {
         let mut tokens = vec![NoriToken {
             surface: token.surface.clone(),
             pos_tag: nori_tag.as_str().to_string(),
-            start_offset: char_offset(text, token.start),
-            end_offset: char_offset(text, token.end),
+            start_offset: char_offset(text, token.start_byte),
+            end_offset: char_offset(text, token.end_byte),
             lemma: token.lemma.clone(),
             reading: token.reading.clone(),
             word_type: if pos_tag == PosTag::Unknown {
@@ -260,7 +260,7 @@ impl NoriTokenizer {
     fn split_unknown_to_unigrams(&self, token: &Token, text: &str) -> Vec<NoriToken> {
         let chars: Vec<char> = token.surface.chars().collect();
         let mut tokens = Vec::new();
-        let mut char_pos = token.start;
+        let mut char_pos = token.start_byte;
 
         for ch in chars {
             let surface = ch.to_string();
@@ -356,7 +356,7 @@ impl NoriAnalyzer {
     /// let tokens = analyzer.analyze("형태소 분석기")?;
     /// // 조사/어미가 제거된 결과만 반환
     /// ```
-    pub fn analyze(&self, text: &str) -> Result<Vec<NoriToken>> {
+    pub fn analyze(&mut self, text: &str) -> Result<Vec<NoriToken>> {
         let tokens = self.tokenizer.tokenize(text)?;
         Ok(self.filter_stoptags(tokens))
     }
@@ -575,7 +575,7 @@ mod tests {
 
     #[test]
     fn test_tokenizer_basic_functionality() {
-        let tokenizer = NoriTokenizer::new(DecompoundMode::None, false).unwrap();
+        let mut tokenizer = NoriTokenizer::new(DecompoundMode::None, false).unwrap();
         let result = tokenizer.tokenize("테스트");
         assert!(result.is_ok());
 
@@ -585,7 +585,7 @@ mod tests {
 
     #[test]
     fn test_analyzer_basic_functionality() {
-        let analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None).unwrap();
+        let mut analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None).unwrap();
         let result = analyzer.analyze("테스트");
         assert!(result.is_ok());
     }

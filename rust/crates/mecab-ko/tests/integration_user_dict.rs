@@ -22,6 +22,7 @@ fn test_user_entry_creation() {
         pos: "NNP".to_string(),
         reading: Some("메캅".to_string()),
         lemma: None,
+        feature: "NNP,*,*,*,*,*,MeCab,메캅".to_string(),
     };
 
     assert_eq!(entry.surface, "MeCab");

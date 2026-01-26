@@ -26,6 +26,7 @@
 #![deny(unsafe_code)]
 
 use mecab_ko_core::{Token, Tokenizer};
+use std::cell::RefCell;
 use wasm_bindgen::prelude::*;
 
 // When the `console_error_panic_hook` feature is enabled, we can call the
@@ -138,8 +139,8 @@ impl From<Token> for WasmToken {
         Self {
             surface: token.surface,
             pos: token.pos,
-            start: token.start,
-            end: token.end,
+            start: token.start_byte,
+            end: token.end_byte,
             reading: token.reading,
             lemma: token.lemma,
         }
@@ -152,7 +153,7 @@ impl From<Token> for WasmToken {
 /// in JavaScript/TypeScript environments.
 #[wasm_bindgen]
 pub struct Mecab {
-    tokenizer: Tokenizer,
+    tokenizer: RefCell<Tokenizer>,
 }
 
 #[wasm_bindgen]
@@ -171,7 +172,9 @@ impl Mecab {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Result<Self, JsValue> {
         Tokenizer::new()
-            .map(|tokenizer| Self { tokenizer })
+            .map(|tokenizer| Self {
+                tokenizer: RefCell::new(tokenizer),
+            })
             .map_err(|e| JsValue::from_str(&format!("Failed to initialize tokenizer: {e}")))
     }
 
@@ -190,6 +193,7 @@ impl Mecab {
     #[wasm_bindgen]
     pub fn tokenize(&self, text: &str) -> Vec<WasmToken> {
         self.tokenizer
+            .borrow_mut()
             .tokenize(text)
             .into_iter()
             .map(WasmToken::from)
@@ -209,7 +213,7 @@ impl Mecab {
     #[must_use]
     #[wasm_bindgen]
     pub fn morphs(&self, text: &str) -> Vec<String> {
-        self.tokenizer.morphs(text)
+        self.tokenizer.borrow_mut().morphs(text)
     }
 
     /// Extract part-of-speech tagged pairs
@@ -229,7 +233,7 @@ impl Mecab {
     /// Returns an error if JSON serialization fails
     #[wasm_bindgen]
     pub fn pos(&self, text: &str) -> Result<String, JsValue> {
-        let pos_pairs = self.tokenizer.pos(text);
+        let pos_pairs = self.tokenizer.borrow_mut().pos(text);
         serde_json::to_string(&pos_pairs)
             .map_err(|e| JsValue::from_str(&format!("JSON serialization error: {e}")))
     }
@@ -247,7 +251,7 @@ impl Mecab {
     #[must_use]
     #[wasm_bindgen]
     pub fn nouns(&self, text: &str) -> Vec<String> {
-        self.tokenizer.nouns(text)
+        self.tokenizer.borrow_mut().nouns(text)
     }
 
     /// Perform wakati (분리) tokenization
@@ -263,7 +267,7 @@ impl Mecab {
     #[must_use]
     #[wasm_bindgen]
     pub fn wakati(&self, text: &str) -> Vec<String> {
-        self.tokenizer.wakati(text)
+        self.tokenizer.borrow_mut().wakati(text)
     }
 }
 

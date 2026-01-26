@@ -34,7 +34,7 @@ fn demo_basic_tokenizer() -> Result<(), Box<dyn std::error::Error>> {
     println!("1. Basic Nori Tokenizer");
     println!("{}", "─".repeat(50));
 
-    let tokenizer = NoriTokenizer::new(DecompoundMode::None, false)?;
+    let mut tokenizer = NoriTokenizer::new(DecompoundMode::None, false)?;
     let text = "한국어 형태소 분석기";
 
     println!("Input: {text}");
@@ -63,7 +63,7 @@ fn demo_decompound_modes() -> Result<(), Box<dyn std::error::Error>> {
         DecompoundMode::Discard,
         DecompoundMode::Mixed,
     ] {
-        let tokenizer = NoriTokenizer::new(mode, false)?;
+        let mut tokenizer = NoriTokenizer::new(mode, false)?;
         let tokens = tokenizer.tokenize(text)?;
 
         println!("Mode: {} - {} tokens", mode.as_str(), tokens.len());
@@ -90,7 +90,7 @@ fn demo_analyzer() -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", "─".repeat(50));
 
     // Default analyzer removes particles (J) and endings (E)
-    let analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::Mixed)?;
+    let mut analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::Mixed)?;
 
     let text = "안녕하세요";
     println!("Input: {text}");
@@ -104,7 +104,7 @@ fn demo_analyzer() -> Result<(), Box<dyn std::error::Error>> {
 
     // Custom stoptags
     println!("\nCustom analyzer (removing J, E, SF):");
-    let custom_analyzer = NoriAnalyzer::new(
+    let mut custom_analyzer = NoriAnalyzer::new(
         None,
         DecompoundMode::None,
         vec!["J".to_string(), "E".to_string(), "SF".to_string()],

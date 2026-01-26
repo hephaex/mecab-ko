@@ -21,6 +21,8 @@ mecab-ko-core = { path = "../mecab-ko-core" }
 # napi-rs for Node.js bindings
 napi = "2.16"
 napi-derive = "2.16"
+# Thread-safe locking
+parking_lot = "0.12"
 
 [build-dependencies]
 napi-build = "2.1"

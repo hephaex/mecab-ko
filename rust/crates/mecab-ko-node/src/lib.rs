@@ -27,6 +27,7 @@
 use mecab_ko_core::{Token as CoreToken, Tokenizer as CoreTokenizer};
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
+use parking_lot::Mutex;
 
 /// Token represents a morpheme in the analyzed text.
 ///
@@ -54,8 +55,8 @@ impl From<CoreToken> for Token {
         Self {
             surface: token.surface,
             pos: token.pos,
-            start: token.start as u32,
-            end: token.end as u32,
+            start: token.start_byte as u32,
+            end: token.end_byte as u32,
             reading: token.reading,
             lemma: token.lemma,
         }
@@ -75,7 +76,7 @@ impl From<CoreToken> for Token {
 /// ```
 #[napi]
 pub struct Mecab {
-    tokenizer: CoreTokenizer,
+    tokenizer: Mutex<CoreTokenizer>,
 }
 
 #[napi]
@@ -96,7 +97,9 @@ impl Mecab {
         let tokenizer = CoreTokenizer::new()
             .map_err(|e| Error::from_reason(format!("Failed to initialize tokenizer: {e}")))?;
 
-        Ok(Self { tokenizer })
+        Ok(Self {
+            tokenizer: Mutex::new(tokenizer),
+        })
     }
 
     /// Creates a new Mecab instance with a custom dictionary path.
@@ -119,7 +122,9 @@ impl Mecab {
         let tokenizer = CoreTokenizer::with_dict(&dict_path)
             .map_err(|e| Error::from_reason(format!("Failed to load dictionary: {e}")))?;
 
-        Ok(Self { tokenizer })
+        Ok(Self {
+            tokenizer: Mutex::new(tokenizer),
+        })
     }
 
     /// Tokenizes the input text and returns an array of tokens.
@@ -146,6 +151,7 @@ impl Mecab {
     #[napi]
     pub fn tokenize(&self, text: String) -> Vec<Token> {
         self.tokenizer
+            .lock()
             .tokenize(&text)
             .into_iter()
             .map(Token::from)
@@ -172,7 +178,7 @@ impl Mecab {
     /// ```
     #[napi]
     pub fn morphs(&self, text: String) -> Vec<String> {
-        self.tokenizer.morphs(&text)
+        self.tokenizer.lock().morphs(&text)
     }
 
     /// Extracts nouns from the input text.
@@ -195,7 +201,7 @@ impl Mecab {
     /// ```
     #[napi]
     pub fn nouns(&self, text: String) -> Vec<String> {
-        self.tokenizer.nouns(&text)
+        self.tokenizer.lock().nouns(&text)
     }
 
     /// Returns part-of-speech tagged pairs.
@@ -219,6 +225,7 @@ impl Mecab {
     #[napi]
     pub fn pos(&self, text: String) -> Vec<Vec<String>> {
         self.tokenizer
+            .lock()
             .pos(&text)
             .into_iter()
             .map(|(surface, pos)| vec![surface, pos])
@@ -248,10 +255,15 @@ mod tests {
         let core_token = CoreToken {
             surface: "테스트".to_string(),
             pos: "NNG".to_string(),
-            start: 0,
-            end: 9,
+            start_pos: 0,
+            end_pos: 3,
+            start_byte: 0,
+            end_byte: 9,
             reading: None,
             lemma: None,
+            cost: 0,
+            features: String::new(),
+            normalized: None,
         };
 
         let token = Token::from(core_token);

@@ -23,7 +23,9 @@
 //! ```
 
 use mecab_ko_core::Tokenizer;
+use parking_lot::Mutex;
 use pyo3::prelude::*;
+use pyo3::types::PyModule;
 
 /// MeCab-Ko tokenizer class for Python.
 ///
@@ -41,7 +43,7 @@ use pyo3::prelude::*;
 /// ```
 #[pyclass(name = "Mecab")]
 struct PyMecab {
-    tokenizer: Tokenizer,
+    tokenizer: Mutex<Tokenizer>,
 }
 
 #[pymethods]
@@ -81,7 +83,9 @@ impl PyMecab {
             })?
         };
 
-        Ok(Self { tokenizer })
+        Ok(Self {
+            tokenizer: Mutex::new(tokenizer),
+        })
     }
 
     /// Extract morphemes from text.
@@ -103,7 +107,7 @@ impl PyMecab {
     /// ```
     #[pyo3(text_signature = "($self, text)")]
     fn morphs(&self, text: &str) -> PyResult<Vec<String>> {
-        Ok(self.tokenizer.morphs(text))
+        Ok(self.tokenizer.lock().morphs(text))
     }
 
     /// Extract nouns from text.
@@ -125,7 +129,7 @@ impl PyMecab {
     /// ```
     #[pyo3(text_signature = "($self, text)")]
     fn nouns(&self, text: &str) -> PyResult<Vec<String>> {
-        Ok(self.tokenizer.nouns(text))
+        Ok(self.tokenizer.lock().nouns(text))
     }
 
     /// Perform part-of-speech tagging.
@@ -147,7 +151,7 @@ impl PyMecab {
     /// ```
     #[pyo3(text_signature = "($self, text)")]
     fn pos(&self, text: &str) -> PyResult<Vec<(String, String)>> {
-        Ok(self.tokenizer.pos(text))
+        Ok(self.tokenizer.lock().pos(text))
     }
 
     /// Parse text and return MeCab format output.
@@ -169,7 +173,7 @@ impl PyMecab {
     /// ```
     #[pyo3(text_signature = "($self, text)")]
     fn parse(&self, text: &str) -> PyResult<String> {
-        let tokens = self.tokenizer.tokenize(text);
+        let tokens = self.tokenizer.lock().tokenize(text);
         let mut result = String::new();
 
         for token in tokens {
@@ -211,7 +215,7 @@ impl PyMecab {
 /// This function is called when the module is imported in Python.
 /// It registers the Mecab class and module metadata.
 #[pymodule]
-fn mecab_ko(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
+fn mecab_ko(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyMecab>()?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     m.add("__doc__", "MeCab-Ko: Korean morphological analyzer")?;

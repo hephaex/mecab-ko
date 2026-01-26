@@ -6,10 +6,10 @@ use mecab_ko_core::nori_compat::{
 
 #[test]
 fn test_nori_tokenizer_none_mode() {
-    let tokenizer = NoriTokenizer::new(DecompoundMode::None, false);
+    let mut tokenizer = NoriTokenizer::new(DecompoundMode::None, false);
     assert!(tokenizer.is_ok());
 
-    let tokenizer = tokenizer.unwrap();
+    let mut tokenizer = tokenizer.unwrap();
     let result = tokenizer.tokenize("안녕하세요");
     assert!(result.is_ok());
 
@@ -19,40 +19,40 @@ fn test_nori_tokenizer_none_mode() {
 
 #[test]
 fn test_nori_tokenizer_mixed_mode() {
-    let tokenizer = NoriTokenizer::new(DecompoundMode::Mixed, false);
+    let mut tokenizer = NoriTokenizer::new(DecompoundMode::Mixed, false);
     assert!(tokenizer.is_ok());
 
-    let tokenizer = tokenizer.unwrap();
+    let mut tokenizer = tokenizer.unwrap();
     let result = tokenizer.tokenize("형태소분석");
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_nori_tokenizer_discard_mode() {
-    let tokenizer = NoriTokenizer::new(DecompoundMode::Discard, false);
+    let mut tokenizer = NoriTokenizer::new(DecompoundMode::Discard, false);
     assert!(tokenizer.is_ok());
 
-    let tokenizer = tokenizer.unwrap();
+    let mut tokenizer = tokenizer.unwrap();
     let result = tokenizer.tokenize("한국어");
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_nori_tokenizer_with_unknown_unigrams() {
-    let tokenizer = NoriTokenizer::new(DecompoundMode::None, true);
+    let mut tokenizer = NoriTokenizer::new(DecompoundMode::None, true);
     assert!(tokenizer.is_ok());
 
-    let tokenizer = tokenizer.unwrap();
+    let mut tokenizer = tokenizer.unwrap();
     let result = tokenizer.tokenize("테스트");
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_nori_analyzer_default() {
-    let analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None);
+    let mut analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None);
     assert!(analyzer.is_ok());
 
-    let analyzer = analyzer.unwrap();
+    let mut analyzer = analyzer.unwrap();
     let result = analyzer.analyze("안녕하세요");
     assert!(result.is_ok());
 
@@ -65,10 +65,10 @@ fn test_nori_analyzer_default() {
 #[test]
 fn test_nori_analyzer_with_custom_stoptags() {
     let stoptags = vec!["J".to_string(), "E".to_string(), "SF".to_string()];
-    let analyzer = NoriAnalyzer::new(None, DecompoundMode::None, stoptags, false);
+    let mut analyzer = NoriAnalyzer::new(None, DecompoundMode::None, stoptags, false);
     assert!(analyzer.is_ok());
 
-    let analyzer = analyzer.unwrap();
+    let mut analyzer = analyzer.unwrap();
     let stoptags = analyzer.stoptags();
     assert_eq!(stoptags.len(), 3);
     assert!(stoptags.contains(&"SF"));
@@ -174,14 +174,14 @@ fn test_all_decompound_modes() {
     ];
 
     for mode in modes {
-        let tokenizer = NoriTokenizer::new(mode, false);
+        let mut tokenizer = NoriTokenizer::new(mode, false);
         assert!(
             tokenizer.is_ok(),
             "Failed to create tokenizer with mode: {}",
             mode.as_str()
         );
 
-        let analyzer = NoriAnalyzer::default_with_decompound(mode);
+        let mut analyzer = NoriAnalyzer::default_with_decompound(mode);
         assert!(
             analyzer.is_ok(),
             "Failed to create analyzer with mode: {}",
@@ -192,14 +192,14 @@ fn test_all_decompound_modes() {
 
 #[test]
 fn test_empty_string() {
-    let tokenizer = NoriTokenizer::new(DecompoundMode::None, false).unwrap();
+    let mut tokenizer = NoriTokenizer::new(DecompoundMode::None, false).unwrap();
     let result = tokenizer.tokenize("");
     assert!(result.is_ok());
 }
 
 #[test]
 fn test_analyzer_preserves_content_words() {
-    let analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None).unwrap();
+    let mut analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None).unwrap();
     let result = analyzer.analyze("테스트");
     assert!(result.is_ok());
 
