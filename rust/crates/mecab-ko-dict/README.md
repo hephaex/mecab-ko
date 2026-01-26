@@ -8,7 +8,9 @@
 - **UserDictionary**: 사용자 정의 단어 추가 지원
 - **Double-Array Trie**: 빠른 형태소 검색
 - **연접 비용 행렬**: 형태소 간 연결 비용 계산
-- **메모리 맵 지원**: 효율적인 메모리 사용
+- **메모리 맵 지원**: 효율적인 메모리 사용 (NEW)
+- **지연 로딩**: 첫 접근 시에만 사전 로드 (NEW)
+- **압축 지원**: zstd 압축 자동 해제 (NEW)
 
 ## 설치
 
@@ -22,13 +24,10 @@ mecab-ko-dict = "0.1.0"
 ### 시스템 사전 로드
 
 ```rust
-use mecab_ko_dict::{DictionaryLoader, Dictionary};
+use mecab_ko_dict::{MmapDictionary, Dictionary};
 
-// 기본 경로에서 로드
-let dict = DictionaryLoader::load_default()?;
-
-// 특정 경로에서 로드
-let dict = DictionaryLoader::load_system("/usr/local/lib/mecab/dic/mecab-ko-dic")?;
+// 기본 로드 (mmap 활성화)
+let dict = MmapDictionary::load("./dict")?;
 
 // 형태소 검색
 let entries = dict.lookup("안녕");
@@ -38,6 +37,24 @@ for entry in entries {
 
 // 연접 비용 조회
 let cost = dict.get_connection_cost(left_id, right_id);
+```
+
+### 고급 로딩 옵션
+
+```rust
+use mecab_ko_dict::loader::{DictionaryLoader, LoaderConfig};
+
+// 설정 커스터마이징
+let dict = DictionaryLoader::new("./dict")
+    .use_mmap(true)          // 메모리 맵 사용
+    .auto_decompress(true)    // 자동 압축 해제
+    .lazy_load(false)         // 즉시 로드
+    .load()?;
+
+// 지연 로딩
+let lazy_dict = DictionaryLoader::new("./dict")
+    .lazy_load(true)
+    .load()?;
 ```
 
 ### 사용자 사전

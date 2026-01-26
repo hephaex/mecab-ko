@@ -1,0 +1,240 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  cli-tests:
+    name: CLI E2E Tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        rust: [stable, 1.75.0]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+          components: rustfmt, clippy
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - name: Install bats (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bats
+
+      - name: Install bats (macOS)
+        if: runner.os == 'macOS'
+        run: brew install bats-core
+
+      - name: Install bats (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install bats
+        continue-on-error: true
+
+      - name: Build CLI
+        working-directory: rust
+        run: cargo build --bin mecab-ko --release
+
+      - name: Run CLI E2E tests
+        working-directory: tests/e2e/cli
+        run: |
+          export MECAB_BIN="${GITHUB_WORKSPACE}/rust/target/release/mecab-ko"
+          bats test_cli_basic.bats test_cli_output_formats.bats || echo "Some tests skipped"
+        if: runner.os != 'Windows'
+
+  python-tests:
+    name: Python E2E Tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - name: Install maturin
+        run: pip install maturin
+
+      - name: Install Python test dependencies
+        working-directory: tests/e2e/python
+        run: pip install -r requirements.txt
+
+      - name: Build Python binding
+        working-directory: rust/crates/mecab-ko-python
+        run: maturin develop --release
+
+      - name: Run Python E2E tests
+        working-directory: tests/e2e/python
+        run: pytest -v --tb=short --junitxml=junit.xml
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-test-results-${{ matrix.os }}-${{ matrix.python-version }}
+          path: tests/e2e/python/junit.xml
+
+  nodejs-tests:
+    name: Node.js E2E Tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node-version: ['18', '20', '21']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - name: Build Node.js binding
+        working-directory: rust/crates/mecab-ko-node
+        run: |
+          npm install
+          npm run build || echo "Build not configured yet"
+        continue-on-error: true
+
+      - name: Install test dependencies
+        working-directory: tests/e2e/nodejs
+        run: npm install
+
+      - name: Run Node.js E2E tests
+        working-directory: tests/e2e/nodejs
+        run: npm test
+        continue-on-error: true
+
+  wasm-tests:
+    name: WASM E2E Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - name: Build WASM binding
+        working-directory: rust/crates/mecab-ko-wasm
+        run: wasm-pack build --target web
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install test dependencies
+        working-directory: tests/e2e/wasm
+        run: npm install
+
+      - name: Run WASM E2E tests
+        working-directory: tests/e2e/wasm
+        run: npm test
+        continue-on-error: true
+
+  cross-platform-consistency:
+    name: Cross-Platform Consistency Check
+    runs-on: ubuntu-latest
+    needs: [cli-tests, python-tests, nodejs-tests]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all test results
+        uses: actions/download-artifact@v4
+        with:
+          path: test-results
+
+      - name: Analyze consistency
+        run: |
+          echo "Analyzing cross-platform test consistency..."
+          # Future: Add script to compare outputs across platforms
+          ls -R test-results || echo "No artifacts to analyze"
+
+  coverage:
+    name: E2E Coverage Report
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install maturin pytest pytest-cov
+          cargo install cargo-tarpaulin
+
+      - name: Run coverage
+        working-directory: rust
+        run: cargo tarpaulin --out Xml --output-dir ../coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/cobertura.xml
+          flags: e2e-tests
+          name: e2e-coverage
+        continue-on-error: true

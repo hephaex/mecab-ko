@@ -7,6 +7,8 @@
 - **CSV 파싱**: mecab-ko-dic 12컬럼 형식 지원
 - **Double-Array Trie 구축**: yada 라이브러리 기반 고속 검색 구조
 - **연접 비용 행렬**: matrix.def 파일 파싱 및 바이너리 변환
+- **문자 타입 정의**: char.def 파싱 및 바이너리 변환 (NEW)
+- **미등록어 정의**: unk.def 파싱 및 바이너리 변환 (NEW)
 - **압축 지원**: zstd 압축 (레벨 0-22)
 - **인코딩 지원**: UTF-8, EUC-KR 자동 감지
 - **한글 종성 처리**: 자동 종성 유무 판별
@@ -66,6 +68,32 @@ println!("Built dictionary with {} entries", result.entry_count);
 ...
 ```
 
+### char.def (선택적)
+
+문자 타입 정의:
+
+```
+# 타입 정의: TYPE_NAME invoke group length
+DEFAULT 1 0 0
+SPACE   0 1 0
+HANGUL  1 1 0
+
+# 문자 매핑: 0xCODE TYPE_NAME
+0x0020 SPACE
+0x0009 SPACE
+```
+
+### unk.def (선택적)
+
+미등록어 처리 정의:
+
+```
+# 문자타입,좌ID,우ID,비용,Feature
+DEFAULT,0,0,0,UNK,*,*,*,*,*,*,*
+SPACE,0,0,0,SP,*,*,*,*,*,*,*
+HANGUL,1,1,1000,UNK,*,*,*,*,*,*,*
+```
+
 ## 출력 형식
 
 ### sys.dic (또는 sys.dic.zst)
@@ -82,6 +110,18 @@ Double-Array Trie 바이너리 파일
 - Little-endian i16 배열
 - 헤더: lsize (u16) + rsize (u16)
 - 데이터: lsize × rsize 개의 i16 값
+
+### char.bin (선택적)
+
+문자 타입 정의 바이너리
+
+- 타입 정의 및 문자 매핑 정보
+
+### unk.bin (선택적)
+
+미등록어 정의 바이너리
+
+- 문자 타입별 미등록어 처리 규칙
 
 ## 성능
 

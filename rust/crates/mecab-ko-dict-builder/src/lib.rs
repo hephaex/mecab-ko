@@ -24,6 +24,9 @@
 pub use builder::DictionaryBuilder;
 pub use error::{BuildError, Result};
 
+pub mod char_def_parser;
+pub mod unk_def_parser;
+
 /// 빌더 에러 모듈
 pub mod error {
     use thiserror::Error;
@@ -345,7 +348,9 @@ pub mod builder {
     //!
     //! CSV → 바이너리 사전 변환
 
+    use super::char_def_parser::CharDef;
     use super::csv_parser::{CsvEntry, CsvParser, Encoding};
+    use super::unk_def_parser::UnkDef;
     use super::{BuildError, Result};
     use mecab_ko_dict::dictionary::DictEntry;
     use mecab_ko_dict::matrix::{DenseMatrix, Matrix};
@@ -405,11 +410,23 @@ pub mod builder {
             // 2. matrix.def 파싱
             let matrix = self.build_matrix()?;
 
-            // 3. Trie 및 엔트리 빌드
+            // 3. char.def 파싱 (선택적)
+            let char_def = self.build_char_def().ok();
+
+            // 4. unk.def 파싱 (선택적)
+            let unk_def = self.build_unk_def().ok();
+
+            // 5. Trie 및 엔트리 빌드
             let (trie_bytes, dict_entries) = self.build_trie_and_entries(&csv_entries)?;
 
-            // 4. 바이너리 출력
-            self.save_dictionary(&trie_bytes, &matrix, &dict_entries)?;
+            // 6. 바이너리 출력
+            self.save_dictionary(
+                &trie_bytes,
+                &matrix,
+                &dict_entries,
+                char_def.as_ref(),
+                unk_def.as_ref(),
+            )?;
 
             Ok(BuildResult {
                 entry_count: dict_entries.len(),
@@ -447,6 +464,42 @@ pub mod builder {
             }
 
             DenseMatrix::from_def_file(&matrix_path).map_err(BuildError::Dict)
+        }
+
+        /// char.def 파싱
+        fn build_char_def(&self) -> Result<CharDef> {
+            let char_def_path = Path::new(&self.config.input_dir).join("char.def");
+
+            if self.config.verbose {
+                tracing::info!("Loading char.def from {}", char_def_path.display());
+            }
+
+            if !char_def_path.exists() {
+                if self.config.verbose {
+                    tracing::warn!("char.def not found, skipping");
+                }
+                return Err(BuildError::Format("char.def not found".to_string()));
+            }
+
+            CharDef::from_file(&char_def_path)
+        }
+
+        /// unk.def 파싱
+        fn build_unk_def(&self) -> Result<UnkDef> {
+            let unk_def_path = Path::new(&self.config.input_dir).join("unk.def");
+
+            if self.config.verbose {
+                tracing::info!("Loading unk.def from {}", unk_def_path.display());
+            }
+
+            if !unk_def_path.exists() {
+                if self.config.verbose {
+                    tracing::warn!("unk.def not found, skipping");
+                }
+                return Err(BuildError::Format("unk.def not found".to_string()));
+            }
+
+            UnkDef::from_file(&unk_def_path)
         }
 
         /// Trie 및 사전 엔트리 빌드
@@ -516,6 +569,8 @@ pub mod builder {
             trie_bytes: &[u8],
             matrix: &DenseMatrix,
             _dict_entries: &[DictEntry],
+            char_def: Option<&CharDef>,
+            unk_def: Option<&UnkDef>,
         ) -> Result<()> {
             let output_dir = Path::new(&self.config.output_dir);
             std::fs::create_dir_all(output_dir).map_err(BuildError::Io)?;
@@ -567,6 +622,26 @@ pub mod builder {
                     .map_err(BuildError::Dict)?;
             } else {
                 matrix.to_bin_file(&matrix_path).map_err(BuildError::Dict)?;
+            }
+
+            // char.def 저장
+            if let Some(char_def) = char_def {
+                if self.config.verbose {
+                    tracing::info!("  Saving char.def...");
+                }
+                let char_def_bytes = char_def.to_bytes();
+                let char_def_path = output_dir.join("char.bin");
+                std::fs::write(&char_def_path, char_def_bytes).map_err(BuildError::Io)?;
+            }
+
+            // unk.def 저장
+            if let Some(unk_def) = unk_def {
+                if self.config.verbose {
+                    tracing::info!("  Saving unk.def...");
+                }
+                let unk_def_bytes = unk_def.to_bytes();
+                let unk_def_path = output_dir.join("unk.bin");
+                std::fs::write(&unk_def_path, unk_def_bytes).map_err(BuildError::Io)?;
             }
 
             if self.config.verbose {

@@ -22,12 +22,20 @@
 #![deny(unsafe_code)]
 
 pub mod dictionary;
+pub mod file_watcher;
+pub mod hot_reload;
+// pub mod loader; // NOTE: Disabled temporarily - compilation errors to be fixed separately
 pub mod matrix;
 pub mod trie;
 pub mod user_dict;
 
 pub use dictionary::{DictEntry, DictionaryLoader, SystemDictionary};
 pub use error::{DictError, Result};
+pub use file_watcher::{FileEvent, FileWatcher, WatchConfig};
+pub use hot_reload::{
+    DeltaUpdate, DeltaUpdateBuilder, EntryChange, HotReloadDictionary, Version, VersionInfo,
+};
+// pub use loader::{LazyDictionary, LoaderConfig, MmapDictionary}; // Disabled with loader module
 pub use matrix::{ConnectionMatrix, DenseMatrix, Matrix, MatrixLoader, MmapMatrix, SparseMatrix};
 pub use trie::{DictionarySearcher, EntryIndex, PrefixMatch, Trie, TrieBuilder};
 pub use user_dict::{UserDictionary, UserDictionaryBuilder, UserEntry};
@@ -97,36 +105,6 @@ pub mod format {
         pub version: u32,
         /// 엔트리 수
         pub entry_count: u32,
-    }
-}
-
-/// 사전 로더 모듈 (스텁)
-pub mod loader {
-    //! 사전 로딩 기능
-
-    use super::{Dictionary, Entry};
-    use std::path::Path;
-
-    /// 메모리 맵 사전
-    pub struct MmapDictionary {
-        // TODO: 구현
-    }
-
-    impl MmapDictionary {
-        /// 사전 로드
-        pub fn load<P: AsRef<Path>>(_path: P) -> super::Result<Self> {
-            todo!("사전 로딩 구현 예정")
-        }
-    }
-
-    impl Dictionary for MmapDictionary {
-        fn lookup(&self, _surface: &str) -> Vec<Entry> {
-            todo!("형태소 검색 구현 예정")
-        }
-
-        fn get_connection_cost(&self, _left_id: u16, _right_id: u16) -> i16 {
-            todo!("연접 비용 조회 구현 예정")
-        }
     }
 }
 

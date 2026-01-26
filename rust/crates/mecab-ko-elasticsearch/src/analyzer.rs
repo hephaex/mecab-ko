@@ -4,7 +4,14 @@ use crate::config::{AnalyzerConfig, DecompoundMode, TokenizerConfig};
 use crate::error::{Error, Result};
 use crate::filter::{NoriPartOfSpeechStopFilter, TokenFilter};
 use crate::tokenizer::{Token, TokenStream, Tokenizer, WordType};
+use lru::LruCache;
 use mecab_ko_core::nori_compat::{NoriToken, NoriTokenizer as CoreNoriTokenizer};
+use parking_lot::Mutex;
+use std::borrow::Cow;
+use std::num::NonZeroUsize;
+
+/// 기본 캐시 크기 (항목 수)
+const DEFAULT_CACHE_SIZE: usize = 1024;
 
 /// Nori 분석기
 ///
@@ -16,6 +23,8 @@ use mecab_ko_core::nori_compat::{NoriToken, NoriTokenizer as CoreNoriTokenizer};
 /// - 사용자 사전 지원
 /// - 품사 기반 필터링 (stoptags)
 /// - 미등록어 유니그램 출력
+/// - LRU 캐싱으로 성능 최적화
+/// - 배치 처리 지원
 ///
 /// # Example
 ///
@@ -39,6 +48,8 @@ pub struct NoriAnalyzer {
     tokenizer: NoriTokenizerImpl,
     /// 품사 필터
     pos_filter: Option<NoriPartOfSpeechStopFilter>,
+    /// LRU 캐시 (토큰화 결과 캐싱)
+    cache: Option<Mutex<LruCache<String, Vec<Token>>>>,
 }
 
 impl NoriAnalyzer {
@@ -49,6 +60,16 @@ impl NoriAnalyzer {
     /// - 토크나이저 초기화 실패
     /// - 설정 유효성 검증 실패
     pub fn new(config: AnalyzerConfig) -> Result<Self> {
+        Self::with_cache_size(config, DEFAULT_CACHE_SIZE)
+    }
+
+    /// 캐시 크기를 지정하여 분석기 생성
+    ///
+    /// # Errors
+    ///
+    /// - 토크나이저 초기화 실패
+    /// - 설정 유효성 검증 실패
+    pub fn with_cache_size(config: AnalyzerConfig, cache_size: usize) -> Result<Self> {
         config.validate()?;
 
         let tokenizer = NoriTokenizerImpl::new(TokenizerConfig::from(&config))?;
@@ -59,10 +80,27 @@ impl NoriAnalyzer {
             Some(NoriPartOfSpeechStopFilter::new(config.stoptags))
         };
 
+        let cache = if cache_size > 0 {
+            NonZeroUsize::new(cache_size).map(|size| Mutex::new(LruCache::new(size)))
+        } else {
+            None
+        };
+
         Ok(Self {
             tokenizer,
             pos_filter,
+            cache,
         })
+    }
+
+    /// 캐시 없이 분석기 생성
+    ///
+    /// # Errors
+    ///
+    /// - 토크나이저 초기화 실패
+    /// - 설정 유효성 검증 실패
+    pub fn without_cache(config: AnalyzerConfig) -> Result<Self> {
+        Self::with_cache_size(config, 0)
     }
 
     /// 기본 설정으로 생성 (조사/어미 제거)
@@ -80,12 +118,36 @@ impl NoriAnalyzer {
 
     /// 텍스트 분석
     ///
-    /// 토큰화 후 필터 적용
+    /// 토큰화 후 필터 적용. 캐시가 활성화되어 있으면 결과를 캐싱합니다.
     ///
     /// # Errors
     ///
     /// 토큰화 실패 시 에러 반환
     pub fn analyze(&self, text: &str) -> Result<Vec<Token>> {
+        // 캐시 확인
+        if let Some(cache) = &self.cache {
+            if let Some(cached) = cache.lock().get(text) {
+                return Ok(cached.clone());
+            }
+        }
+
+        // 토큰화 및 필터링
+        let tokens = self.analyze_uncached(text)?;
+
+        // 캐시에 저장
+        if let Some(cache) = &self.cache {
+            cache.lock().put(text.to_string(), tokens.clone());
+        }
+
+        Ok(tokens)
+    }
+
+    /// 캐시를 사용하지 않고 분석
+    ///
+    /// # Errors
+    ///
+    /// 토큰화 실패 시 에러 반환
+    pub fn analyze_uncached(&self, text: &str) -> Result<Vec<Token>> {
         let mut tokens = self.tokenizer.tokenize(text)?;
 
         if let Some(filter) = &self.pos_filter {
@@ -93,6 +155,23 @@ impl NoriAnalyzer {
         }
 
         Ok(tokens)
+    }
+
+    /// 배치 분석 (병렬 처리)
+    ///
+    /// 여러 텍스트를 병렬로 처리하여 성능 향상
+    ///
+    /// # Errors
+    ///
+    /// 토큰화 실패 시 에러 반환
+    #[cfg(feature = "batch")]
+    pub fn analyze_batch(&self, texts: &[&str]) -> Result<Vec<Vec<Token>>> {
+        use rayon::prelude::*;
+
+        texts
+            .par_iter()
+            .map(|text| self.analyze(text))
+            .collect()
     }
 
     /// 토큰 스트림 생성
@@ -122,6 +201,22 @@ impl NoriAnalyzer {
         self.pos_filter
             .as_ref()
             .map_or_else(Vec::new, NoriPartOfSpeechStopFilter::tags)
+    }
+
+    /// 캐시 초기화
+    pub fn clear_cache(&self) {
+        if let Some(cache) = &self.cache {
+            cache.lock().clear();
+        }
+    }
+
+    /// 캐시 통계 반환 (캐시 크기, 현재 항목 수)
+    #[must_use]
+    pub fn cache_stats(&self) -> Option<(usize, usize)> {
+        self.cache.as_ref().map(|cache| {
+            let lock = cache.lock();
+            (lock.cap().get(), lock.len())
+        })
     }
 }
 
@@ -170,10 +265,15 @@ impl NoriTokenizerImpl {
 impl Tokenizer for NoriTokenizerImpl {
     fn tokenize(&self, text: &str) -> Result<Vec<Token>> {
         let nori_tokens = self.inner.tokenize(text)?;
-        Ok(nori_tokens
-            .into_iter()
-            .map(convert_nori_token)
-            .collect())
+
+        // Pre-allocate with exact capacity to avoid reallocation
+        let mut tokens = Vec::with_capacity(nori_tokens.len());
+
+        for nori in nori_tokens {
+            tokens.push(convert_nori_token(nori));
+        }
+
+        Ok(tokens)
     }
 }
 

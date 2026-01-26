@@ -23,6 +23,8 @@ yada.workspace = true
 byteorder.workspace = true
 memmap2.workspace = true
 zstd.workspace = true
+notify = "6.1"
+crossbeam-channel = "0.5"
 
 [dev-dependencies]
 criterion.workspace = true

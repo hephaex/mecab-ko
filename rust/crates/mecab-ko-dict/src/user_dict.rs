@@ -104,6 +104,7 @@ impl UserEntry {
 /// 사용자 정의 사전
 ///
 /// 사용자가 커스텀 단어를 추가하여 형태소 분석을 개선할 수 있습니다.
+#[derive(Clone)]
 pub struct UserDictionary {
     /// 엔트리 목록
     entries: Vec<UserEntry>,

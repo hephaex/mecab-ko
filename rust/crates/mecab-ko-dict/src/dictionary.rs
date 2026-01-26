@@ -319,6 +319,23 @@ impl SystemDictionary {
     pub fn add_entry(&mut self, entry: DictEntry) {
         self.entries.push(entry);
     }
+
+    /// 테스트용 생성자 (crate-internal only)
+    #[cfg(test)]
+    pub(crate) fn new_test(
+        dicdir: PathBuf,
+        trie: Trie<'static>,
+        matrix: ConnectionMatrix,
+        entries: Vec<DictEntry>,
+    ) -> Self {
+        Self {
+            dicdir,
+            trie,
+            matrix,
+            entries,
+            user_dict: None,
+        }
+    }
 }
 
 impl Dictionary for SystemDictionary {

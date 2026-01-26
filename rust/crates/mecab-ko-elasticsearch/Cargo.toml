@@ -23,6 +23,11 @@ thiserror.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 
+# Performance optimizations
+lru = "0.12"
+parking_lot = "0.12"
+rayon = "1.10"
+
 # JNI bindings
 jni = { version = "0.21", optional = true }
 once_cell = { version = "1.19", optional = true }
@@ -32,14 +37,21 @@ tokio = { version = "1.35", features = ["sync", "rt"], optional = true }
 
 [dev-dependencies]
 criterion.workspace = true
+tempfile = "3.10"
 
 [features]
-default = []
+default = ["batch", "cache"]
 jni-bindings = ["jni", "once_cell"]
 async = ["tokio"]
+batch = []
+cache = []
 
 [[bench]]
 name = "analyzer_bench"
+harness = false
+
+[[bench]]
+name = "performance_bench"
 harness = false
 
 [lints]

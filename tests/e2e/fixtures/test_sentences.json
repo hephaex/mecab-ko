@@ -1,0 +1,171 @@
+{
+  "version": "1.0.0",
+  "description": "Common test sentences for MeCab-Ko E2E testing",
+  "test_cases": [
+    {
+      "id": "basic_001",
+      "description": "Simple sentence with common words",
+      "input": "나는 학교에 갑니다.",
+      "expected_tokens": [
+        {"surface": "나", "pos": "NP"},
+        {"surface": "는", "pos": "JX"},
+        {"surface": "학교", "pos": "NNG"},
+        {"surface": "에", "pos": "JKB"},
+        {"surface": "가", "pos": "VV"},
+        {"surface": "ㅂ니다", "pos": "EF"},
+        {"surface": ".", "pos": "SF"}
+      ]
+    },
+    {
+      "id": "basic_002",
+      "description": "Sentence with verb conjugation",
+      "input": "오늘은 날씨가 좋습니다.",
+      "expected_tokens": [
+        {"surface": "오늘", "pos": "NNG"},
+        {"surface": "은", "pos": "JX"},
+        {"surface": "날씨", "pos": "NNG"},
+        {"surface": "가", "pos": "JKS"},
+        {"surface": "좋", "pos": "VA"},
+        {"surface": "습니다", "pos": "EF"},
+        {"surface": ".", "pos": "SF"}
+      ]
+    },
+    {
+      "id": "basic_003",
+      "description": "Question sentence",
+      "input": "이것은 무엇입니까?",
+      "expected_tokens": [
+        {"surface": "이것", "pos": "NP"},
+        {"surface": "은", "pos": "JX"},
+        {"surface": "무엇", "pos": "NP"},
+        {"surface": "이", "pos": "VCP"},
+        {"surface": "ㅂ니까", "pos": "EF"},
+        {"surface": "?", "pos": "SF"}
+      ]
+    },
+    {
+      "id": "compound_001",
+      "description": "Compound noun",
+      "input": "대한민국의 수도는 서울입니다.",
+      "expected_tokens": [
+        {"surface": "대한민국", "pos": "NNP"},
+        {"surface": "의", "pos": "JKG"},
+        {"surface": "수도", "pos": "NNG"},
+        {"surface": "는", "pos": "JX"},
+        {"surface": "서울", "pos": "NNP"},
+        {"surface": "이", "pos": "VCP"},
+        {"surface": "ㅂ니다", "pos": "EF"},
+        {"surface": ".", "pos": "SF"}
+      ]
+    },
+    {
+      "id": "mixed_001",
+      "description": "Mixed Korean and English",
+      "input": "Python은 프로그래밍 언어입니다.",
+      "expected_tokens": [
+        {"surface": "Python", "pos": "SL"},
+        {"surface": "은", "pos": "JX"},
+        {"surface": "프로그래밍", "pos": "NNG"},
+        {"surface": "언어", "pos": "NNG"},
+        {"surface": "이", "pos": "VCP"},
+        {"surface": "ㅂ니다", "pos": "EF"},
+        {"surface": ".", "pos": "SF"}
+      ]
+    },
+    {
+      "id": "numbers_001",
+      "description": "Sentence with numbers",
+      "input": "2024년 1월 5일입니다.",
+      "expected_tokens": [
+        {"surface": "2024", "pos": "SN"},
+        {"surface": "년", "pos": "NNBC"},
+        {"surface": "1", "pos": "SN"},
+        {"surface": "월", "pos": "NNBC"},
+        {"surface": "5", "pos": "SN"},
+        {"surface": "일", "pos": "NNBC"},
+        {"surface": "이", "pos": "VCP"},
+        {"surface": "ㅂ니다", "pos": "EF"},
+        {"surface": ".", "pos": "SF"}
+      ]
+    },
+    {
+      "id": "honorific_001",
+      "description": "Honorific speech",
+      "input": "선생님께서 말씀하셨습니다.",
+      "expected_tokens": [
+        {"surface": "선생님", "pos": "NNG"},
+        {"surface": "께서", "pos": "JKS"},
+        {"surface": "말씀", "pos": "NNG"},
+        {"surface": "하", "pos": "XSV"},
+        {"surface": "시", "pos": "EP"},
+        {"surface": "었", "pos": "EP"},
+        {"surface": "습니다", "pos": "EF"},
+        {"surface": ".", "pos": "SF"}
+      ]
+    },
+    {
+      "id": "edge_empty",
+      "description": "Empty string",
+      "input": "",
+      "expected_tokens": []
+    },
+    {
+      "id": "edge_whitespace",
+      "description": "Only whitespace",
+      "input": "   \t\n  ",
+      "expected_tokens": []
+    },
+    {
+      "id": "edge_punctuation",
+      "description": "Only punctuation",
+      "input": "...!!!???",
+      "expected_tokens": [
+        {"surface": ".", "pos": "SF"},
+        {"surface": ".", "pos": "SF"},
+        {"surface": ".", "pos": "SF"},
+        {"surface": "!", "pos": "SF"},
+        {"surface": "!", "pos": "SF"},
+        {"surface": "!", "pos": "SF"},
+        {"surface": "?", "pos": "SF"},
+        {"surface": "?", "pos": "SF"},
+        {"surface": "?", "pos": "SF"}
+      ]
+    },
+    {
+      "id": "long_sentence",
+      "description": "Long sentence test",
+      "input": "형태소 분석은 자연어 처리의 가장 기본적인 작업 중 하나로, 문장을 의미 있는 최소 단위인 형태소로 분리하고 각 형태소의 품사를 판별하는 과정입니다.",
+      "min_tokens": 20
+    },
+    {
+      "id": "user_dict_001",
+      "description": "User dictionary test (if supported)",
+      "input": "카카오톡으로 메시지를 보냈습니다.",
+      "note": "Tests user dictionary integration"
+    }
+  ],
+  "performance_tests": [
+    {
+      "id": "perf_001",
+      "description": "Performance test with repeated text",
+      "input": "나는 학교에 갑니다. ",
+      "repeat": 1000,
+      "max_time_ms": 1000
+    }
+  ],
+  "error_cases": [
+    {
+      "id": "error_001",
+      "description": "Invalid UTF-8 handling",
+      "note": "Implementation specific - test graceful degradation"
+    },
+    {
+      "id": "error_002",
+      "description": "Extremely long input",
+      "input_generator": "repeat_char",
+      "char": "가",
+      "count": 100000,
+      "note": "Tests memory handling"
+    }
+  ]
+}

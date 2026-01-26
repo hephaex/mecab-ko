@@ -1,0 +1,18 @@
+{
+  "name": "mecab-ko-wasm-e2e-tests",
+  "version": "1.0.0",
+  "description": "End-to-end tests for MeCab-Ko WASM bindings",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:browser": "vitest --browser"
+  },
+  "devDependencies": {
+    "@vitest/ui": "^1.0.0",
+    "vitest": "^1.0.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "@vitest/browser": "^1.0.0"
+  }
+}

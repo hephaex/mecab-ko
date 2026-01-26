@@ -89,10 +89,21 @@ impl TokenFilter for NoriPartOfSpeechStopFilter {
             return Ok(tokens);
         }
 
-        Ok(tokens
-            .into_iter()
-            .filter(|token| !self.stoptags.contains(&token.pos_tag))
-            .collect())
+        // In-place filtering with capacity hint
+        let mut filtered = Vec::with_capacity(tokens.len());
+
+        for token in tokens {
+            if !self.stoptags.contains(&token.pos_tag) {
+                filtered.push(token);
+            }
+        }
+
+        // Shrink to fit if we filtered out a lot
+        if filtered.capacity() > filtered.len() * 2 {
+            filtered.shrink_to_fit();
+        }
+
+        Ok(filtered)
     }
 }
 
@@ -140,19 +151,24 @@ impl Default for NoriReadingFormFilter {
 
 impl TokenFilter for NoriReadingFormFilter {
     fn filter(&self, tokens: Vec<Token>) -> Result<Vec<Token>> {
-        Ok(tokens
-            .into_iter()
-            .map(|mut token| {
-                if let Some(reading) = &token.reading {
-                    token.surface = reading.clone();
-                } else if !self.keep_original {
-                    // 읽기가 없고 원본 유지 설정이 꺼져있으면 토큰 제거
-                    return None;
-                }
-                Some(token)
-            })
-            .flatten()
-            .collect())
+        let mut result = Vec::with_capacity(tokens.len());
+
+        for mut token in tokens {
+            if let Some(reading) = token.reading.take() {
+                // Move reading instead of cloning
+                token.surface = reading;
+                result.push(token);
+            } else if self.keep_original {
+                result.push(token);
+            }
+            // If !keep_original and no reading, skip token
+        }
+
+        if result.capacity() > result.len() * 2 {
+            result.shrink_to_fit();
+        }
+
+        Ok(result)
     }
 }
 
@@ -238,16 +254,17 @@ impl Default for LowercaseFilter {
 
 impl TokenFilter for LowercaseFilter {
     fn filter(&self, tokens: Vec<Token>) -> Result<Vec<Token>> {
-        Ok(tokens
-            .into_iter()
-            .map(|mut token| {
-                token.surface = token.surface.to_lowercase();
-                if let Some(lemma) = token.lemma {
-                    token.lemma = Some(lemma.to_lowercase());
-                }
-                token
-            })
-            .collect())
+        let mut result = Vec::with_capacity(tokens.len());
+
+        for mut token in tokens {
+            token.surface.make_ascii_lowercase();
+            if let Some(ref mut lemma) = token.lemma {
+                lemma.make_ascii_lowercase();
+            }
+            result.push(token);
+        }
+
+        Ok(result)
     }
 }
 

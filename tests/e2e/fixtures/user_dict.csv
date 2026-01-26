@@ -1,0 +1,12 @@
+# User Dictionary for E2E Testing
+# Format: surface,left_id,right_id,cost,pos,semantic_class,reading,pronunciation
+카카오톡,0,0,0,NNP,*,*,*
+스마트폰,0,0,0,NNG,*,*,*
+인공지능,0,0,0,NNG,*,*,*
+머신러닝,0,0,0,NNG,*,*,*
+딥러닝,0,0,0,NNG,*,*,*
+빅데이터,0,0,0,NNG,*,*,*
+클라우드,0,0,0,NNG,*,*,*
+DevOps,0,0,0,SL,*,*,*
+쿠버네티스,0,0,0,NNG,*,*,*
+도커,0,0,0,NNG,*,*,*

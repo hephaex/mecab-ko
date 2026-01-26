@@ -138,12 +138,32 @@ fn concurrent_analysis_benchmark(c: &mut Criterion) {
     });
 }
 
+fn throughput_benchmark(c: &mut Criterion) {
+    let mut group = c.benchmark_group("throughput");
+
+    let analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::Mixed).unwrap();
+
+    // 다양한 텍스트 크기로 처리량 측정
+    for size in [100, 500, 1000, 5000] {
+        let text = "한국어 형태소 분석기를 사용하여 자연어 처리를 수행합니다. "
+            .repeat(size / 50);
+
+        group.throughput(Throughput::Bytes(text.len() as u64));
+        group.bench_with_input(BenchmarkId::new("chars", size), &text, |b, text| {
+            b.iter(|| analyzer.analyze(black_box(text)));
+        });
+    }
+
+    group.finish();
+}
+
 criterion_group!(
     benches,
     analyzer_benchmark,
     decompound_mode_benchmark,
     filter_benchmark,
     analyzer_creation_benchmark,
-    concurrent_analysis_benchmark
+    concurrent_analysis_benchmark,
+    throughput_benchmark
 );
 criterion_main!(benches);
