@@ -9,6 +9,7 @@ use mecab_ko_elasticsearch::filter::{
 use mecab_ko_elasticsearch::tokenizer::{Token, Tokenizer};
 
 #[test]
+#[ignore = "Requires system dictionary"]
 fn test_nori_tokenizer_basic() {
     let config = TokenizerConfig {
         decompound_mode: DecompoundMode::None,
@@ -35,6 +36,7 @@ fn test_nori_tokenizer_basic() {
 }
 
 #[test]
+#[ignore = "Requires system dictionary"]
 fn test_nori_analyzer_with_stoptags() {
     let config = AnalyzerConfig::new()
         .with_decompound_mode(DecompoundMode::None)
@@ -57,6 +59,7 @@ fn test_nori_analyzer_with_stoptags() {
 }
 
 #[test]
+#[ignore = "Requires system dictionary"]
 fn test_nori_analyzer_default() {
     let analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None);
     assert!(analyzer.is_ok());
@@ -69,6 +72,7 @@ fn test_nori_analyzer_default() {
 }
 
 #[test]
+#[ignore = "Requires system dictionary"]
 fn test_decompound_mode_none() {
     let config = AnalyzerConfig::new().with_decompound_mode(DecompoundMode::None);
 
@@ -165,6 +169,7 @@ fn test_analyzer_config_validation() {
 }
 
 #[test]
+#[ignore = "Requires system dictionary"]
 fn test_analyzer_stoptag_management() {
     let mut analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None).unwrap();
 
@@ -243,6 +248,7 @@ fn test_token_serialization() {
 }
 
 #[test]
+#[ignore = "Requires system dictionary"]
 fn test_empty_text_handling() {
     let analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None).unwrap();
 
@@ -254,6 +260,7 @@ fn test_empty_text_handling() {
 }
 
 #[test]
+#[ignore = "Requires system dictionary"]
 fn test_whitespace_only_text() {
     let analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None).unwrap();
 
@@ -266,6 +273,7 @@ fn test_whitespace_only_text() {
 }
 
 #[test]
+#[ignore = "Requires system dictionary"]
 fn test_multiple_analysis_calls() {
     let analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None).unwrap();
 
@@ -279,6 +287,7 @@ fn test_multiple_analysis_calls() {
 }
 
 #[test]
+#[ignore = "Requires system dictionary"]
 fn test_long_text_analysis() {
     let analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None).unwrap();
 
@@ -299,6 +308,7 @@ fn test_long_text_analysis() {
 }
 
 #[test]
+#[ignore = "Requires system dictionary"]
 fn test_special_characters() {
     let analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None).unwrap();
 
@@ -311,6 +321,7 @@ fn test_special_characters() {
 }
 
 #[test]
+#[ignore = "Requires system dictionary"]
 fn test_mixed_language_text() {
     let analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None).unwrap();
 

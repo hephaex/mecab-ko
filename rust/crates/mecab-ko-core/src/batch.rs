@@ -352,6 +352,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_batch_tokenizer_creation() {
         let batch = BatchTokenizer::new();
         assert!(batch.is_ok());
@@ -364,6 +365,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_tokenize_batch() {
         let batch = BatchTokenizer::new().expect("should create");
         let texts = vec!["안녕하세요", "감사합니다"];
@@ -376,6 +378,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_tokenize_batch_owned() {
         let batch = BatchTokenizer::new().expect("should create");
         let texts = vec!["안녕하세요".to_string(), "감사합니다".to_string()];
@@ -386,6 +389,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_tokenize_chunked() {
         let batch = BatchTokenizer::new().expect("should create");
         let text = "안녕하세요 감사합니다 좋은 하루 되세요";
@@ -396,6 +400,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_split_into_chunks() {
         let batch = BatchTokenizer::new().expect("should create");
         let text = "안녕하세요 감사합니다";
@@ -406,12 +411,14 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_pool_size() {
         let batch = BatchTokenizer::new().expect("should create");
         assert_eq!(batch.pool_size(), BatchTokenizer::default_pool_size());
     }
 
     #[test]
+    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_available_tokenizers() {
         let batch = BatchTokenizer::new().expect("should create");
         let available = batch.available_tokenizers();
@@ -419,18 +426,21 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_with_pool_size() {
         let batch = BatchTokenizer::with_pool_size(4).expect("should create");
         assert_eq!(batch.pool_size(), 4);
     }
 
     #[test]
+    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_parallel_stream_processor_creation() {
         let processor = ParallelStreamProcessor::new();
         assert!(processor.is_ok());
     }
 
     #[test]
+    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_with_chunk_size() {
         let processor = ParallelStreamProcessor::new()
             .expect("should create")
@@ -440,6 +450,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_empty_batch() {
         let batch = BatchTokenizer::new().expect("should create");
         let texts: Vec<&str> = vec![];
@@ -450,6 +461,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_single_item_batch() {
         let batch = BatchTokenizer::new().expect("should create");
         let texts = vec!["안녕하세요"];
@@ -461,6 +473,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_large_batch() {
         let batch = BatchTokenizer::new().expect("should create");
         let texts: Vec<&str> = (0..100).map(|_| "안녕하세요").collect();

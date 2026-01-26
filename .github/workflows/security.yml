@@ -1,0 +1,196 @@
+name: Security
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'rust/**'
+      - '.github/workflows/security.yml'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'rust/**'
+      - '.github/workflows/security.yml'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+
+jobs:
+  # RustSec security advisory database check
+  audit-check:
+    name: Security Audit (RustSec)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run RustSec audit check
+        uses: rustsec/audit-check-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Cargo audit for dependency vulnerabilities
+  cargo-audit:
+    name: Cargo Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit
+
+      - name: Run cargo audit
+        run: cargo audit --manifest-path rust/Cargo.toml --deny warnings
+
+  # Dependency checking with cargo-deny
+  cargo-deny:
+    name: Dependency Check (cargo-deny)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-deny
+        run: cargo install cargo-deny
+
+      - name: Run cargo-deny checks
+        run: cargo deny --manifest-path rust/Cargo.toml check all
+
+  # Check for unsafe code usage
+  unsafe-code-check:
+    name: Unsafe Code Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-geiger
+        run: cargo install cargo-geiger
+
+      - name: Check unsafe code
+        run: |
+          cargo geiger --manifest-path rust/Cargo.toml --output TableReport
+        continue-on-error: true
+
+  # SAST with clippy (strict mode)
+  sast-clippy:
+    name: SAST - Clippy (Strict)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: rust/target
+          key: ${{ runner.os }}-cargo-clippy-sast-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-clippy-sast-
+
+      - name: Run clippy (strict mode)
+        run: |
+          cargo clippy --manifest-path rust/Cargo.toml \
+            --all-targets --all-features \
+            -- -D warnings -W clippy::all -W clippy::pedantic
+
+  # Check for unmaintained/deprecated dependencies
+  unmaintained-deps:
+    name: Check Unmaintained Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Check for outdated dependencies
+        run: |
+          cargo install cargo-outdated
+          cargo outdated --manifest-path rust/Cargo.toml --format list || true
+
+      - name: Check for yanked dependencies
+        run: |
+          cargo install cargo-deny
+          cargo deny --manifest-path rust/Cargo.toml check advisories || true
+
+  # Supply chain security with SLSA provenance
+  sbom-generation:
+    name: Generate SBOM
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-sbom
+        run: cargo install cargo-sbom
+        continue-on-error: true
+
+      - name: Generate SBOM
+        run: |
+          cargo sbom --manifest-path rust/Cargo.toml > sbom.json || true
+        continue-on-error: true
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.json
+          retention-days: 30
+        continue-on-error: true
+
+  # Security summary
+  security-summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    needs: [audit-check, cargo-audit, cargo-deny, unsafe-code-check, sast-clippy]
+    if: always()
+    steps:
+      - name: Generate security summary
+        run: |
+          echo "## Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Checks Performed" >> $GITHUB_STEP_SUMMARY
+          echo "- RustSec Audit: ${{ needs.audit-check.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Cargo Audit: ${{ needs.cargo-audit.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Cargo Deny: ${{ needs.cargo-deny.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Unsafe Code: ${{ needs.unsafe-code-check.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Clippy (Strict): ${{ needs.sast-clippy.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ needs.audit-check.result }}" != "success" ||
+                "${{ needs.cargo-audit.result }}" != "success" ||
+                "${{ needs.cargo-deny.result }}" != "success" ]]; then
+            echo "### Status: ⚠️ SECURITY ISSUES FOUND" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "### Status: ✅ ALL SECURITY CHECKS PASSED" >> $GITHUB_STEP_SUMMARY
+          fi

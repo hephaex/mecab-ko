@@ -7,11 +7,17 @@ on:
       - 'rust/**'
       - '.github/workflows/code-quality.yml'
       - 'Cargo.toml'
+      - 'Cargo.lock'
   pull_request:
     branches: [main, master, develop]
     paths:
       - 'rust/**'
       - '.github/workflows/code-quality.yml'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+  schedule:
+    # Run daily at 3 AM UTC
+    - cron: '0 3 * * *'
   workflow_dispatch:
 
 env:

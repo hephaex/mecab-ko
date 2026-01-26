@@ -27,7 +27,7 @@ tracking-allocator = "0.4"
 # Statistics and reporting
 chrono = "0.4"
 humansize = "2.1"
-tabled = "0.15"
+tabled = "0.20"
 
 # Flamegraph generation (optional)
 inferno = { version = "0.11", optional = true }

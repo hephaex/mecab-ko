@@ -6,11 +6,12 @@ MeCab-Ko 프로젝트의 GitHub Actions 워크플로우 완전 가이드입니�
 
 | 파일 | 이름 | 목적 | 트리거 | 소요시간 |
 |------|------|------|--------|---------|
-| `ci.yml` | CI | 자동 테스트 및 린트 | Push/PR | 15-20분 |
+| `ci.yml` | CI | 빌드, 테스트, 린트 | Push/PR | 20-30분 |
+| `security.yml` | Security | 보안 검사 (audit, deny, geiger) | Push/PR/Daily | 10-15분 |
+| `code-quality.yml` | Code Quality | 정적 분석 및 메트릭 | Push/PR/Daily | 15-20분 |
+| `benchmark.yml` | Benchmarks | 성능 비교 및 측정 | Push/PR/Manual | 10-20분 |
 | `release.yml` | Release | 릴리스 빌드 및 배포 | Tag push | 30-40분 |
 | `docs.yml` | Documentation | 문서 생성 및 배포 | Push/PR | 10-15분 |
-| `code-quality.yml` | Code Quality | 정적 분석 및 메트릭 | Push/PR | 10-15분 |
-| `benchmark.yml` | Benchmarks | 성능 비교 | Push/PR | 15-20분 |
 | `scheduled.yml` | Scheduled | 정기 점검 | Cron | 20-30분 |
 | `dependabot.yml` | Workflow (설정) | 의존성 자동 업데이트 | Weekly | 자동 |
 
@@ -19,13 +20,16 @@ MeCab-Ko 프로젝트의 GitHub Actions 워크플로우 완전 가이드입니�
 ```
 .github/
 ├── workflows/
-│   ├── ci.yml                 # 기본 CI 파이프라인
+│   ├── ci.yml                 # 기본 CI 파이프라인 (빌드, 테스트, 린트)
+│   ├── security.yml           # 보안 검사 (audit, deny, unsafe code 검사)
+│   ├── code-quality.yml       # 코드 품질 분석 (복잡도, 문서화, 의존성)
+│   ├── benchmark.yml          # 성능 벤치마크 및 비교
 │   ├── release.yml            # 릴리스 자동화
 │   ├── docs.yml               # 문서 빌드 및 배포
-│   ├── code-quality.yml       # 코드 품질 분석
-│   ├── benchmark.yml          # 성능 벤치마크
 │   ├── scheduled.yml          # 정기 작업
-│   └── dependabot.yml         # 워크플로우 자동 PR 처리
+│   ├── e2e-tests.yml          # E2E 테스트
+│   ├── elasticsearch-plugin-tests.yml # 플러그인 테스트
+│   └── dependabot.yml         # Dependabot 설정 및 자동화
 ├── dependabot.yml             # Dependabot 설정
 ├── pull_request_template.md   # PR 템플릿
 └── WORKFLOWS.md               # 이 파일
@@ -35,36 +39,125 @@ MeCab-Ko 프로젝트의 GitHub Actions 워크플로우 완전 가이드입니�
 
 ### 1. CI Workflow (`ci.yml`)
 
-**역할**: 모든 push와 pull request에서 자동 테스트 실행
+**역할**: 모든 push와 pull request에서 자동 빌드, 테스트, 린트 실행
 
 **포함 내용**:
 ```
-┌─ Test Suite
+┌─ Rustfmt Check (빠른 포맷 검사)
+├─ Clippy Lint (린트 검사)
+├─ Test Suite (다중 플랫폼 테스트)
 │  ├─ Linux (stable, beta, nightly)
 │  ├─ macOS (stable, beta, nightly)
 │  └─ Windows (stable, beta, nightly)
-├─ Clippy Lint
-├─ Rustfmt Check
+├─ Build (모든 플랫폼)
+├─ Security Audit (cargo audit + RustSec)
 ├─ Code Coverage (tarpaulin)
-├─ Build (all platforms)
-└─ Security Audit
+└─ CI Status (모든 체크 요약)
 ```
 
 **주요 Features**:
+- 빠른 검사 먼저 실행 (fmt, clippy)
 - 3개 OS × 3개 Rust 버전 = 9개 병렬 테스트
 - 자동 캐싱으로 빌드 시간 단축
-- 릴리스 빌드도 검증
-- SBOM 및 보안 감시
+- Debug와 Release 빌드 모두 검증
+- Rustdoc 생성 및 경고 검사
 
 **Key Settings**:
 ```yaml
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  RUSTFLAGS: -D warnings  # 모든 경고를 에러로 처리
 paths:
   - 'rust/**'
   - 'Cargo.toml'
   - 'Cargo.lock'
 ```
 
-### 2. Release Workflow (`release.yml`)
+### 2. Security Workflow (`security.yml`)
+
+**역할**: 의존성 및 코드 보안 검사 (자동 또는 일일 스케줄)
+
+**포함 내용**:
+```
+┌─ RustSec Audit (보안 데이터베이스 검사)
+├─ Cargo Audit (cargo audit 도구)
+├─ Cargo Deny (의존성 정책 검사)
+├─ Unsafe Code Check (unsafe 사용 추적 via cargo-geiger)
+├─ SAST - Clippy (엄격한 린트 검사)
+├─ Unmaintained Dependencies (구식 의존성 확인)
+├─ SBOM Generation (소프트웨어 BOM 생성)
+└─ Security Summary (보안 체크 요약)
+```
+
+**주요 Features**:
+- 자동 보안 감시 (매일 2 AM UTC)
+- 3가지 보안 도구로 다층 검사
+- SBOM 생성으로 공급망 보안 추적
+- PR/Push 시 추가 검사
+- 보안 문제 발견 시 즉시 감지
+
+**트리거**:
+```yaml
+on:
+  push:        # 모든 push
+  pull_request # 모든 PR
+  schedule:    # 매일 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch  # 수동 실행
+```
+
+### 3. Code Quality Workflow (`code-quality.yml`)
+
+**역할**: 정적 분석, 복잡도, 문서화 점검
+
+**포함 내용**:
+```
+┌─ Code Quality Checks
+│  ├─ clippy (JSON 형식)
+│  ├─ rustfmt (포맷 검사)
+│  └─ cargo check (컴파일 검사)
+├─ Dependency Audit
+│  ├─ cargo-deny
+│  └─ RustSec
+├─ Unused Dependencies (cargo-udeps with nightly)
+├─ Documentation Check (문서화 커버리지)
+├─ Complexity Analysis (tokei, cargo-metrics)
+└─ Summary (품질 체크 요약)
+```
+
+**주요 Features**:
+- 자동 품질 분석 (매일 3 AM UTC)
+- PR에 자동 코멘트로 결과 공유
+- 미사용 의존성 검사 (nightly 필요)
+- 코드 통계 및 복잡도 보고서
+- 문서화 커버리지 추적
+
+### 4. Benchmark Workflow (`benchmark.yml`)
+
+**역할**: 성능 측정 및 비교 분석
+
+**포함 내용**:
+```
+┌─ Benchmark Compilation Check
+├─ Run Benchmarks (현재 브랜치)
+├─ Benchmark Comparison (PR 시 base와 비교)
+└─ Extended Benchmarks (스케줄 또는 수동)
+```
+
+**주요 Features**:
+- PR 시 자동으로 base 브랜치와 비교
+- Criterion 기반 성능 측정
+- GitHub benchmark 액션으로 시각화
+- 결과를 PR 코멘트로 자동 공유
+- 수동 트리거로 상세 벤치마크 실행 가능
+
+**수동 실행**:
+```bash
+gh workflow run benchmark.yml -f full_bench=true
+```
+
+### 5. Release Workflow (`release.yml`)
 
 **역할**: 버전 태그 푸시 시 자동 릴리스 생성
 
@@ -105,7 +198,7 @@ git push origin main --tags
 - 각 플랫폼별 바이너리 압축 파일 업로드
 - crates.io에 자동 배포
 
-### 3. Documentation Workflow (`docs.yml`)
+### 6. Documentation Workflow (`docs.yml`)
 
 **역할**: Rustdoc 및 mdBook 문서 자동 생성 및 배포
 
@@ -128,37 +221,7 @@ https://hephaex.github.io/mecab-ko/api/mecab_ko/
 https://hephaex.github.io/mecab-ko/book/
 ```
 
-### 4. Code Quality Workflow (`code-quality.yml`)
-
-**역할**: 정적 분석 및 메트릭 수집
-
-**포함 내용**:
-```
-├─ Code Quality Checks
-│  ├─ clippy
-│  ├─ rustfmt
-│  └─ cargo check
-├─ Dependency Audit
-│  ├─ cargo-deny
-│  └─ security audit
-├─ Unused Dependencies (cargo-udeps)
-├─ Documentation Check
-└─ Complexity Analysis (tokei, cargo-metrics)
-```
-
-**PR 코멘트**: 자동으로 품질 요약을 PR에 추가
-
-### 5. Performance Benchmark (`benchmark.yml`)
-
-**역할**: 성능 변화 추적 및 비교
-
-**기능**:
-- Pull Request 시 base 브랜치와 자동 비교
-- criterion으로 측정
-- GitHub benchmark 액션으로 시각화
-- PR에 결과 코멘트
-
-### 6. Scheduled Tasks (`scheduled.yml`)
+### 7. Scheduled Tasks (`scheduled.yml`)
 
 **스케줄**:
 ```
@@ -232,16 +295,33 @@ PR 생성 시 자동으로 제공되는 템플릿:
 
 ## 환경 변수
 
-### 전역 설정
+### CI 워크플로우
 ```yaml
 env:
   CARGO_TERM_COLOR: always      # 컬러 출력
-  RUST_BACKTRACE: 1             # 디버깅 정보
+  RUST_BACKTRACE: 1             # 기본 디버깅 정보
+  RUSTFLAGS: -D warnings        # 모든 경고를 에러로 처리
+
+steps:
+  # 테스트 실패 시 상세 정보
+  - name: Run tests
+    env:
+      RUST_BACKTRACE: full      # 전체 스택 추적
 ```
 
-### Per-workflow
-- CI: `RUST_BACKTRACE: full` (테스트 실패 시)
-- 기타: job 레벨에서 설정
+### Security 워크플로우
+```yaml
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings        # 보안 중심
+```
+
+### Benchmark 워크플로우
+```yaml
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+```
 
 ## 성능 최적화
 
