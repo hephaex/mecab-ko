@@ -39,6 +39,13 @@ use crate::lattice::{Lattice, Node, NodeId, NodeType, INVALID_NODE_ID};
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
+// SIMD 최적화 모듈
+#[cfg(feature = "simd")]
+pub mod simd;
+
+#[cfg(feature = "simd")]
+pub use simd::{simd_forward_pass_position, simd_update_node_cost};
+
 /// 연접 비용 조회 인터페이스
 ///
 /// 두 형태소 간의 연결 비용을 반환합니다.

@@ -34,6 +34,13 @@ use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
 use crate::error::{DictError, Result};
 
+// SIMD 최적화 모듈
+#[cfg(feature = "simd")]
+pub mod simd;
+
+#[cfg(feature = "simd")]
+pub use simd::SimdMatrix;
+
 /// 연접 비용 행렬 헤더 크기 (바이트)
 const MATRIX_HEADER_SIZE: usize = 4;
 

@@ -377,6 +377,11 @@ impl SpacePositions {
 /// Lattice 구조
 ///
 /// 입력 텍스트의 모든 형태소 분석 후보를 담는 격자 구조입니다.
+///
+/// # 메모리 최적화
+///
+/// - `nodes` 벡터는 재사용을 위해 `clear()` 시 용량 유지
+/// - `ends_at`, `starts_at`도 용량 유지하여 재할당 최소화
 #[derive(Debug)]
 pub struct Lattice {
     /// 원본 텍스트 (공백 제거 전)
@@ -392,6 +397,7 @@ pub struct Lattice {
     space_positions: SpacePositions,
 
     /// 모든 노드 (ID로 인덱싱)
+    /// 메모리 최적화: 재사용을 위해 용량 유지
     nodes: Vec<Node>,
 
     /// 각 문자 위치에서 끝나는 노드 ID 목록

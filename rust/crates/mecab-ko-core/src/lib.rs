@@ -24,16 +24,24 @@
 
 #![warn(missing_docs)]
 #![deny(unsafe_code)]
+#![cfg_attr(feature = "simd", feature(portable_simd))]
 
+pub mod batch;
 pub mod kiwi_compat;
 pub mod lattice;
 pub mod normalizer;
 pub mod nori_compat;
+pub mod pool;
 pub mod pos_tag;
+pub mod streaming;
 pub mod tokenizer;
 pub mod unknown;
 pub mod viterbi;
 
+#[cfg(feature = "async")]
+pub mod async_tokenizer;
+
+pub use batch::{BatchTokenizer, ParallelStreamProcessor};
 pub use error::{Error, Result};
 pub use kiwi_compat::{from_kiwi_tag, to_kiwi_tag, KiwiPosTag, KiwiToken};
 pub use lattice::{Lattice, Node, NodeBuilder, NodeType};
@@ -42,10 +50,17 @@ pub use nori_compat::{
     mecab_to_nori_tag, nori_to_mecab_tag, DecompoundMode, NoriAnalyzer, NoriToken, NoriTokenizer,
     WordType,
 };
+pub use pool::{
+    IdVecPool, NodeVecPool, PoolManager, PoolStats, SharedStringInterner, Symbol, TokenPool,
+};
 pub use pos_tag::PosTag;
+pub use streaming::{StreamingTokenizer, TokenStream};
 pub use tokenizer::{Token, Tokenizer};
 pub use unknown::{CharCategoryMap, UnknownDictionary, UnknownHandler};
 pub use viterbi::{ConnectionCost, NbestSearcher, SpacePenalty, ViterbiSearcher};
+
+#[cfg(feature = "async")]
+pub use async_tokenizer::{AsyncStreamingTokenizer, AsyncTokenizer};
 
 /// 에러 모듈
 pub mod error {

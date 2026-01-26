@@ -70,6 +70,10 @@ tracing-subscriber = "0.3"
 # Testing & Benchmarking
 criterion = { version = "0.5", features = ["html_reports"] }
 
+# Async & Parallel
+tokio = { version = "1.0", features = ["full"] }
+rayon = "1.10"
+
 # Python bindings (optional)
 # Updated to 0.24.1+ to fix buffer overflow in PyString::from_object (RUSTSEC-2025-0020)
 pyo3 = { version = "0.24.1", features = ["extension-module"] }

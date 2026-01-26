@@ -20,6 +20,7 @@
 
 #![warn(missing_docs)]
 #![deny(unsafe_code)]
+#![cfg_attr(feature = "simd", feature(portable_simd))]
 
 pub mod dictionary;
 pub mod file_watcher;

@@ -26,6 +26,10 @@ zstd.workspace = true
 notify = "6.1"
 crossbeam-channel = "0.5"
 
+[features]
+default = []
+simd = []
+
 [dev-dependencies]
 criterion.workspace = true
 

@@ -1,0 +1,318 @@
+//! SIMD 최적화 벤치마크
+//!
+//! Viterbi 알고리즘과 연접 비용 행렬 조회의 SIMD 최적화 성능을 측정합니다.
+
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use mecab_ko_core::lattice::{Lattice, NodeBuilder};
+use mecab_ko_core::viterbi::{ConnectionCost, ViterbiSearcher, ZeroConnectionCost};
+use mecab_ko_dict::{DenseMatrix, Matrix};
+
+/// 테스트용 연접 비용 행렬 생성
+fn create_test_matrix(size: usize) -> DenseMatrix {
+    let mut matrix = DenseMatrix::new(size, size, 0);
+
+    // 현실적인 연접 비용 패턴 설정
+    for left in 0..size {
+        for right in 0..size {
+            let cost = ((left * 17 + right * 13) % 10000) as i16 - 5000;
+            matrix.set(right as u16, left as u16, cost);
+        }
+    }
+
+    matrix
+}
+
+/// 테스트용 래티스 생성 (한국어 문장)
+fn create_test_lattice(text: &str, nodes_per_position: usize) -> Lattice {
+    let mut lattice = Lattice::new(text);
+    let char_len = lattice.char_len();
+
+    // 각 위치에서 여러 노드 추가
+    for start_pos in 0..char_len {
+        for len in 1..=3.min(char_len - start_pos) {
+            for variant in 0..nodes_per_position {
+                let end_pos = start_pos + len;
+                let surface = &text[..end_pos.min(text.len())];
+
+                lattice.add_node(
+                    NodeBuilder::new(surface, start_pos, end_pos)
+                        .left_id((variant * 10 + start_pos) as u16 % 100)
+                        .right_id((variant * 20 + end_pos) as u16 % 100)
+                        .word_cost((variant * 100 + len * 50) as i32),
+                );
+            }
+        }
+    }
+
+    lattice
+}
+
+/// 연접 비용 행렬 단일 조회 벤치마크
+fn bench_matrix_single_lookup(c: &mut Criterion) {
+    let mut group = c.benchmark_group("matrix_single_lookup");
+
+    for size in [50, 100, 200].iter() {
+        let matrix = create_test_matrix(*size);
+
+        group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, _| {
+            b.iter(|| {
+                let mut sum = 0i32;
+                for i in 0..100 {
+                    let right = (i * 7) % *size;
+                    let left = (i * 13) % *size;
+                    sum = sum.wrapping_add(matrix.get(right as u16, left as u16));
+                }
+                black_box(sum)
+            });
+        });
+    }
+
+    group.finish();
+}
+
+/// SIMD 배치 조회 벤치마크
+#[cfg(feature = "simd")]
+fn bench_matrix_batch_lookup(c: &mut Criterion) {
+    use mecab_ko_dict::matrix::simd::SimdMatrix;
+
+    let mut group = c.benchmark_group("matrix_batch_lookup");
+
+    for size in [50, 100, 200].iter() {
+        let matrix = create_test_matrix(*size);
+
+        group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, _| {
+            b.iter(|| {
+                let mut sum = 0i32;
+                // 8개씩 배치 조회
+                for chunk in 0..12 {
+                    let base = chunk * 8;
+                    let right_ids = [
+                        ((base + 0) * 7 % *size) as u16,
+                        ((base + 1) * 7 % *size) as u16,
+                        ((base + 2) * 7 % *size) as u16,
+                        ((base + 3) * 7 % *size) as u16,
+                        ((base + 4) * 7 % *size) as u16,
+                        ((base + 5) * 7 % *size) as u16,
+                        ((base + 6) * 7 % *size) as u16,
+                        ((base + 7) * 7 % *size) as u16,
+                    ];
+                    let left_ids = [
+                        ((base + 0) * 13 % *size) as u16,
+                        ((base + 1) * 13 % *size) as u16,
+                        ((base + 2) * 13 % *size) as u16,
+                        ((base + 3) * 13 % *size) as u16,
+                        ((base + 4) * 13 % *size) as u16,
+                        ((base + 5) * 13 % *size) as u16,
+                        ((base + 6) * 13 % *size) as u16,
+                        ((base + 7) * 13 % *size) as u16,
+                    ];
+
+                    let costs = matrix.batch_get_8(&right_ids, &left_ids);
+                    for cost in costs.iter() {
+                        sum = sum.wrapping_add(*cost);
+                    }
+                }
+                black_box(sum)
+            });
+        });
+    }
+
+    group.finish();
+}
+
+/// Viterbi Forward Pass 벤치마크
+fn bench_viterbi_forward(c: &mut Criterion) {
+    let mut group = c.benchmark_group("viterbi_forward");
+    group.throughput(Throughput::Elements(1));
+
+    let texts = vec![
+        ("short", "안녕하세요"),
+        ("medium", "아버지가방에들어가신다"),
+        ("long", "대한민국의수도는서울특별시이며인구는약천만명입니다"),
+    ];
+
+    for (name, text) in texts {
+        let matrix = create_test_matrix(100);
+        let mut lattice = create_test_lattice(text, 3);
+
+        group.bench_with_input(BenchmarkId::new("scalar", name), &text, |b, _| {
+            b.iter(|| {
+                let mut lat = lattice.clone();
+                let searcher = ViterbiSearcher::new();
+                let path = searcher.search(&mut lat, &matrix);
+                black_box(path)
+            });
+        });
+    }
+
+    group.finish();
+}
+
+/// SIMD Viterbi Forward Pass 벤치마크
+#[cfg(feature = "simd")]
+fn bench_viterbi_forward_simd(c: &mut Criterion) {
+    use mecab_ko_core::viterbi::simd::simd_forward_pass_position;
+    use mecab_ko_core::viterbi::SpacePenalty;
+
+    let mut group = c.benchmark_group("viterbi_forward_simd");
+    group.throughput(Throughput::Elements(1));
+
+    let texts = vec![
+        ("short", "안녕하세요"),
+        ("medium", "아버지가방에들어가신다"),
+        ("long", "대한민국의수도는서울특별시이며인구는약천만명입니다"),
+    ];
+
+    for (name, text) in texts {
+        let matrix = create_test_matrix(100);
+        let lattice = create_test_lattice(text, 3);
+
+        group.bench_with_input(BenchmarkId::new("simd", name), &text, |b, _| {
+            b.iter(|| {
+                let mut lat = lattice.clone();
+                let space_penalty = SpacePenalty::new();
+                let char_len = lat.char_len();
+
+                // SIMD forward pass
+                for pos in 0..=char_len {
+                    simd_forward_pass_position(&mut lat, &matrix, &space_penalty, pos);
+                }
+
+                black_box(lat.eos().total_cost)
+            });
+        });
+    }
+
+    group.finish();
+}
+
+/// 노드 비용 계산 벤치마크 (SIMD vs Scalar)
+#[cfg(feature = "simd")]
+fn bench_node_cost_calculation(c: &mut Criterion) {
+    use mecab_ko_core::viterbi::simd::simd_update_node_cost;
+    use mecab_ko_core::viterbi::SpacePenalty;
+
+    let mut group = c.benchmark_group("node_cost_calculation");
+
+    let matrix = create_test_matrix(100);
+    let space_penalty = SpacePenalty::new();
+
+    // 다양한 이전 노드 개수로 테스트
+    for num_prev in [4, 8, 16, 32].iter() {
+        let prev_nodes: Vec<(u32, i32, u16)> = (0..*num_prev)
+            .map(|i| (i, (i as i32) * 100, (i % 100) as u16))
+            .collect();
+
+        let lattice = create_test_lattice("테스트", 3);
+        let node_id = 1; // 임의 노드
+
+        group.bench_with_input(
+            BenchmarkId::new("simd", num_prev),
+            num_prev,
+            |b, _| {
+                b.iter(|| {
+                    let (cost, prev) = simd_update_node_cost(
+                        &lattice,
+                        &matrix,
+                        node_id,
+                        &prev_nodes,
+                        &space_penalty,
+                    );
+                    black_box((cost, prev))
+                });
+            },
+        );
+    }
+
+    group.finish();
+}
+
+/// 전체 Viterbi 비교 벤치마크
+fn bench_viterbi_complete(c: &mut Criterion) {
+    let mut group = c.benchmark_group("viterbi_complete");
+
+    let test_sentences = vec![
+        "안녕하세요",
+        "형태소분석기테스트입니다",
+        "자연어처리는매우흥미로운분야입니다",
+        "대한민국의수도는서울특별시이며많은사람들이살고있습니다",
+    ];
+
+    for (idx, sentence) in test_sentences.iter().enumerate() {
+        let matrix = create_test_matrix(100);
+        let lattice = create_test_lattice(sentence, 5);
+
+        group.bench_with_input(
+            BenchmarkId::new("complete", idx),
+            sentence,
+            |b, _| {
+                b.iter(|| {
+                    let mut lat = lattice.clone();
+                    let searcher = ViterbiSearcher::new();
+                    let path = searcher.search(&mut lat, &matrix);
+                    black_box((path.len(), searcher.get_best_cost(&lat)))
+                });
+            },
+        );
+    }
+
+    group.finish();
+}
+
+/// 메모리 접근 패턴 벤치마크
+fn bench_memory_access_pattern(c: &mut Criterion) {
+    let mut group = c.benchmark_group("memory_access_pattern");
+
+    let matrix = create_test_matrix(200);
+
+    // 순차 접근
+    group.bench_function("sequential", |b| {
+        b.iter(|| {
+            let mut sum = 0i32;
+            for i in 0..1000 {
+                let right = (i % 200) as u16;
+                let left = (i / 200) as u16;
+                sum = sum.wrapping_add(matrix.get(right, left));
+            }
+            black_box(sum)
+        });
+    });
+
+    // 랜덤 접근
+    group.bench_function("random", |b| {
+        b.iter(|| {
+            let mut sum = 0i32;
+            for i in 0..1000 {
+                let right = ((i * 137) % 200) as u16;
+                let left = ((i * 179) % 200) as u16;
+                sum = sum.wrapping_add(matrix.get(right, left));
+            }
+            black_box(sum)
+        });
+    });
+
+    group.finish();
+}
+
+// 벤치마크 그룹 등록
+criterion_group!(
+    benches,
+    bench_matrix_single_lookup,
+    bench_viterbi_forward,
+    bench_viterbi_complete,
+    bench_memory_access_pattern,
+);
+
+#[cfg(feature = "simd")]
+criterion_group!(
+    simd_benches,
+    bench_matrix_batch_lookup,
+    bench_viterbi_forward_simd,
+    bench_node_cost_calculation,
+);
+
+#[cfg(feature = "simd")]
+criterion_main!(benches, simd_benches);
+
+#[cfg(not(feature = "simd"))]
+criterion_main!(benches);

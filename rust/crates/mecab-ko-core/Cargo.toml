@@ -18,13 +18,51 @@ mecab-ko-hangul = { path = "../mecab-ko-hangul" }
 mecab-ko-dict = { path = "../mecab-ko-dict" }
 thiserror.workspace = true
 serde.workspace = true
+# Memory pooling and optimization
+string-interner = "0.17"
+parking_lot = "0.12"
+# Async runtime (optional)
+tokio = { version = "1.0", features = ["full"], optional = true }
+# Parallel processing
+rayon = "1.10"
 
 [dev-dependencies]
 criterion.workspace = true
+tokio = { version = "1.0", features = ["full", "test-util"] }
 
-# TODO: 벤치마크 구현 후 활성화
+[features]
+default = []
+async = ["tokio"]
+simd = ["mecab-ko-dict/simd"]
+simd-dict = ["simd"]
+
+[[bench]]
+name = "tokenizer_bench"
+harness = false
+
+[[bench]]
+name = "lattice_bench"
+harness = false
+
+[[bench]]
+name = "viterbi_bench"
+harness = false
+
+[[bench]]
+name = "memory_bench"
+harness = false
+
+[[bench]]
+name = "comparison_bench"
+harness = false
+
+# Temporarily disabled - needs fixes
 # [[bench]]
-# name = "tokenizer_bench"
+# name = "memory_pool_bench"
+# harness = false
+
+# [[bench]]
+# name = "simd_bench"
 # harness = false
 
 [lints]

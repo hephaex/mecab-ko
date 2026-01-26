@@ -45,6 +45,7 @@ use mecab_ko_dict::{SystemDictionary, UserDictionary};
 use crate::error::Result;
 use crate::lattice::{Lattice, Node, NodeBuilder, NodeType};
 use crate::normalizer::{NormalizationConfig, Normalizer};
+use crate::pool::{PoolManager, PoolStats};
 use crate::pos_tag::PosTag;
 use crate::unknown::UnknownHandler;
 use crate::viterbi::{SpacePenalty, ViterbiSearcher};
@@ -187,6 +188,12 @@ fn parse_features(features: &str) -> (Cow<'_, str>, Option<String>, Option<Strin
 ///
 /// 형태소 분석의 메인 인터페이스입니다.
 /// 시스템 사전, 사용자 사전, 미등록어 처리기를 통합하여 형태소 분석을 수행합니다.
+///
+/// # 메모리 최적화
+///
+/// - `lattice` 재사용으로 매 분석마다 재할당 방지
+/// - `pool_manager`로 Token, Node 객체 재사용
+/// - String interning으로 중복 문자열 제거
 pub struct Tokenizer {
     /// 시스템 사전
     dictionary: SystemDictionary,
@@ -205,6 +212,9 @@ pub struct Tokenizer {
 
     /// 정규화 활성화 여부
     enable_normalization: bool,
+
+    /// 메모리 풀 관리자
+    pool_manager: PoolManager,
 }
 
 impl Tokenizer {
@@ -241,6 +251,7 @@ impl Tokenizer {
             lattice,
             normalizer: None,
             enable_normalization: false,
+            pool_manager: PoolManager::new(),
         })
     }
 
@@ -269,6 +280,7 @@ impl Tokenizer {
             lattice,
             normalizer: None,
             enable_normalization: false,
+            pool_manager: PoolManager::new(),
         })
     }
 
@@ -527,6 +539,22 @@ impl Tokenizer {
         self.lattice.stats()
     }
 
+    /// 메모리 풀 통계 정보
+    ///
+    /// 메모리 풀의 사용 현황을 반환합니다.
+    #[must_use]
+    pub fn pool_stats(&self) -> PoolStats {
+        self.pool_manager.stats()
+    }
+
+    /// 메모리 풀 초기화
+    ///
+    /// 모든 풀을 비워 메모리를 해제합니다.
+    /// 장기 실행 프로세스에서 주기적으로 호출하여 메모리 누수 방지.
+    pub fn clear_pools(&self) {
+        self.pool_manager.clear_all();
+    }
+
     /// 외래어 정규화 활성화
     ///
     /// # Arguments
@@ -666,6 +694,7 @@ mod tests {
             lattice,
             normalizer: None,
             enable_normalization: false,
+            pool_manager: PoolManager::new(),
         }
     }
 

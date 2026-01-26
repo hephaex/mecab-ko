@@ -1,0 +1,511 @@
+//! # 메모리 풀링 벤치마크
+//!
+//! 메모리 풀링 최적화의 효과를 측정합니다.
+//!
+//! ## 측정 항목
+//!
+//! 1. **할당 오버헤드**: 풀 사용 vs 직접 할당
+//! 2. **처리량**: 초당 처리 가능한 토큰 수
+//! 3. **메모리 사용량**: 풀 크기와 메모리 사용량
+//! 4. **재사용률**: 풀에서 재사용되는 객체 비율
+//!
+//! ## 실행 방법
+//!
+//! ```bash
+//! cd /home/mare/mecab-ko/rust/crates/mecab-ko-core
+//! cargo bench --bench memory_pool_bench
+//! ```
+
+use criterion::{
+    black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput,
+};
+use mecab_ko_core::pool::{NodeVecPool, PoolManager, SharedStringInterner, TokenPool};
+use mecab_ko_core::tokenizer::{Token, Tokenizer};
+
+// ============================================================================
+// Token Pool Benchmarks
+// ============================================================================
+
+/// Token 직접 생성 vs 풀 사용 비교
+fn bench_token_allocation(c: &mut Criterion) {
+    let mut group = c.benchmark_group("token_allocation");
+
+    // 직접 생성
+    group.bench_function("direct_new", |b| {
+        b.iter(|| {
+            let token = Token::new(
+                black_box("안녕하세요".to_string()),
+                black_box("NNG".to_string()),
+                0,
+                5,
+                0,
+                15,
+            );
+            black_box(token);
+        });
+    });
+
+    // 풀 사용
+    group.bench_function("pool_acquire", |b| {
+        let pool = TokenPool::new();
+
+        b.iter(|| {
+            let mut token = pool.acquire();
+            token.surface = black_box("안녕하세요".to_string());
+            token.pos = black_box("NNG".to_string());
+            token.start_pos = 0;
+            token.end_pos = 5;
+            token.start_byte = 0;
+            token.end_byte = 15;
+
+            pool.release(token);
+        });
+    });
+
+    group.finish();
+}
+
+/// 대량 Token 처리 시 풀 효과
+fn bench_token_batch_processing(c: &mut Criterion) {
+    let mut group = c.benchmark_group("token_batch");
+
+    for size in [10, 100, 1000].iter() {
+        // 직접 생성
+        group.bench_with_input(BenchmarkId::new("direct", size), size, |b, &size| {
+            b.iter(|| {
+                let mut tokens = Vec::new();
+                for i in 0..size {
+                    let token = Token::new(
+                        format!("word_{i}"),
+                        "NNG".to_string(),
+                        i,
+                        i + 1,
+                        i * 3,
+                        (i + 1) * 3,
+                    );
+                    tokens.push(token);
+                }
+                black_box(tokens);
+            });
+        });
+
+        // 풀 사용
+        group.bench_with_input(BenchmarkId::new("pooled", size), size, |b, &size| {
+            let pool = TokenPool::with_capacity(size);
+
+            b.iter(|| {
+                let mut tokens = Vec::new();
+                for i in 0..size {
+                    let mut token = pool.acquire();
+                    token.surface = format!("word_{i}");
+                    token.pos = "NNG".to_string();
+                    token.start_pos = i;
+                    token.end_pos = i + 1;
+                    token.start_byte = i * 3;
+                    token.end_byte = (i + 1) * 3;
+                    tokens.push(token);
+                }
+
+                // 반환
+                for token in tokens {
+                    pool.release(token);
+                }
+            });
+        });
+    }
+
+    group.finish();
+}
+
+/// Token 풀 재사용률 측정
+fn bench_token_pool_reuse(c: &mut Criterion) {
+    let mut group = c.benchmark_group("token_pool_reuse");
+
+    // 순차 재사용 (높은 재사용률)
+    group.bench_function("sequential_reuse", |b| {
+        let pool = TokenPool::new();
+
+        b.iter(|| {
+            for _ in 0..100 {
+                let mut token = pool.acquire();
+                token.surface = "test".to_string();
+                pool.release(token);
+            }
+        });
+    });
+
+    // 배치 재사용 (중간 재사용률)
+    group.bench_function("batch_reuse", |b| {
+        let pool = TokenPool::new();
+
+        b.iter(|| {
+            let mut tokens = Vec::new();
+
+            // 획득
+            for _ in 0..50 {
+                tokens.push(pool.acquire());
+            }
+
+            // 반환
+            for token in tokens {
+                pool.release(token);
+            }
+        });
+    });
+
+    group.finish();
+}
+
+// ============================================================================
+// String Interning Benchmarks
+// ============================================================================
+
+/// String interning 효과 측정
+fn bench_string_interning(c: &mut Criterion) {
+    let mut group = c.benchmark_group("string_interning");
+
+    // POS 태그 (높은 중복도)
+    let pos_tags = vec!["NNG", "NNP", "VV", "VA", "JKS", "JKO", "JKB", "EP", "EF"];
+
+    // 직접 할당
+    group.bench_function("direct_allocation", |b| {
+        b.iter(|| {
+            let mut tags = Vec::new();
+            for _ in 0..1000 {
+                for tag in &pos_tags {
+                    tags.push(black_box(tag.to_string()));
+                }
+            }
+            black_box(tags);
+        });
+    });
+
+    // Interning 사용
+    group.bench_function("with_interning", |b| {
+        let interner = SharedStringInterner::new();
+
+        b.iter(|| {
+            let mut symbols = Vec::new();
+            for _ in 0..1000 {
+                for tag in &pos_tags {
+                    symbols.push(black_box(interner.intern(tag)));
+                }
+            }
+            black_box(symbols);
+        });
+    });
+
+    group.finish();
+}
+
+/// String interning 검색 성능
+fn bench_string_interning_lookup(c: &mut Criterion) {
+    let mut group = c.benchmark_group("string_interning_lookup");
+
+    let interner = SharedStringInterner::new();
+
+    // 사전 등록
+    let pos_tags = vec!["NNG", "NNP", "VV", "VA", "JKS", "JKO", "JKB", "EP", "EF"];
+    let symbols: Vec<_> = pos_tags.iter().map(|tag| interner.intern(tag)).collect();
+
+    // Intern 성능 (기존 문자열)
+    group.bench_function("intern_existing", |b| {
+        b.iter(|| {
+            for tag in &pos_tags {
+                black_box(interner.intern(black_box(tag)));
+            }
+        });
+    });
+
+    // Resolve 성능
+    group.bench_function("resolve", |b| {
+        b.iter(|| {
+            for &symbol in &symbols {
+                black_box(interner.resolve(black_box(symbol)));
+            }
+        });
+    });
+
+    group.finish();
+}
+
+// ============================================================================
+// Node Vector Pool Benchmarks
+// ============================================================================
+
+/// Node 벡터 풀 효과
+fn bench_node_vec_pool(c: &mut Criterion) {
+    use mecab_ko_core::lattice::Node;
+
+    let mut group = c.benchmark_group("node_vec_pool");
+
+    // 직접 할당
+    group.bench_function("direct_allocation", |b| {
+        b.iter(|| {
+            let mut vec = Vec::new();
+            for i in 0..100 {
+                vec.push(Node::bos());
+                vec.push(Node::eos(i as u32, 10, 30));
+            }
+            black_box(vec);
+        });
+    });
+
+    // 풀 사용
+    group.bench_function("pooled_allocation", |b| {
+        let pool = NodeVecPool::new();
+
+        b.iter(|| {
+            let mut vec = pool.acquire();
+            for i in 0..100 {
+                vec.push(Node::bos());
+                vec.push(Node::eos(i as u32, 10, 30));
+            }
+            pool.release(vec);
+        });
+    });
+
+    group.finish();
+}
+
+// ============================================================================
+// Pool Manager Benchmarks
+// ============================================================================
+
+/// 통합 풀 관리자 성능
+fn bench_pool_manager(c: &mut Criterion) {
+    let mut group = c.benchmark_group("pool_manager");
+
+    // 통계 조회 오버헤드
+    group.bench_function("stats", |b| {
+        let manager = PoolManager::new();
+
+        b.iter(|| {
+            let stats = manager.stats();
+            black_box(stats);
+        });
+    });
+
+    // 풀 초기화 성능
+    group.bench_function("clear_all", |b| {
+        let manager = PoolManager::new();
+
+        // 풀에 객체 추가
+        for _ in 0..100 {
+            let token = manager.token_pool.acquire();
+            manager.token_pool.release(token);
+        }
+
+        b.iter(|| {
+            manager.clear_all();
+        });
+    });
+
+    group.finish();
+}
+
+// ============================================================================
+// Real-world Scenario Benchmarks
+// ============================================================================
+
+/// 실제 토크나이저 사용 패턴에서의 풀 효과
+fn bench_tokenizer_with_pooling(c: &mut Criterion) {
+    let mut group = c.benchmark_group("tokenizer_pooling");
+
+    let sentences = vec![
+        "한국어 형태소 분석기는 자연어 처리의 핵심 기술입니다",
+        "아버지가 방에 들어가신다는 문장을 분석해보겠습니다",
+        "오늘은 날씨가 맑고 화창하여 산책하기 좋은 날입니다",
+    ];
+
+    // 연속 분석 (높은 재사용률 기대)
+    group.bench_function("sequential_analysis", |b| {
+        let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+
+        b.iter(|| {
+            for sentence in &sentences {
+                let tokens = tokenizer.tokenize(black_box(sentence));
+                black_box(tokens);
+            }
+        });
+    });
+
+    // 풀 통계 오버헤드
+    group.bench_function("with_stats_tracking", |b| {
+        let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+
+        b.iter(|| {
+            for sentence in &sentences {
+                let tokens = tokenizer.tokenize(black_box(sentence));
+                black_box(tokens);
+            }
+            let stats = tokenizer.pool_stats();
+            black_box(stats);
+        });
+    });
+
+    group.finish();
+}
+
+/// 메모리 사용량 추정 벤치마크
+fn bench_memory_usage_estimation(c: &mut Criterion) {
+    let mut group = c.benchmark_group("memory_estimation");
+
+    // 다양한 크기의 풀
+    for size in [10, 100, 1000].iter() {
+        group.bench_with_input(
+            BenchmarkId::new("token_pool", size),
+            size,
+            |b, &size| {
+                let pool = TokenPool::with_capacity(size);
+
+                // 풀 채우기
+                for _ in 0..size {
+                    let token = pool.acquire();
+                    pool.release(token);
+                }
+
+                b.iter(|| {
+                    let usage = pool.memory_usage();
+                    black_box(usage);
+                });
+            },
+        );
+    }
+
+    group.finish();
+}
+
+/// 동시성 환경에서의 풀 성능
+fn bench_concurrent_pool_access(c: &mut Criterion) {
+    let mut group = c.benchmark_group("concurrent_access");
+
+    // String interner (Arc<Mutex<>> 사용)
+    group.bench_function("string_interner_concurrent", |b| {
+        let interner = SharedStringInterner::new();
+        let pos_tags = vec!["NNG", "NNP", "VV", "VA"];
+
+        b.iter(|| {
+            for tag in &pos_tags {
+                black_box(interner.intern(black_box(tag)));
+            }
+        });
+    });
+
+    group.finish();
+}
+
+// ============================================================================
+// Memory Pressure Benchmarks
+// ============================================================================
+
+/// 메모리 압박 상황에서의 풀 동작
+fn bench_memory_pressure(c: &mut Criterion) {
+    let mut group = c.benchmark_group("memory_pressure");
+
+    // 풀 크기 제한 효과
+    group.bench_function("limited_pool_size", |b| {
+        let pool = TokenPool::with_capacity(10); // 작은 풀
+
+        b.iter(|| {
+            // 풀 크기를 초과하는 할당
+            for _ in 0..100 {
+                let token = pool.acquire();
+                pool.release(token);
+            }
+        });
+    });
+
+    // 무제한 풀 (비교용)
+    group.bench_function("unlimited_pool_size", |b| {
+        let pool = TokenPool::with_capacity(1000); // 큰 풀
+
+        b.iter(|| {
+            for _ in 0..100 {
+                let token = pool.acquire();
+                pool.release(token);
+            }
+        });
+    });
+
+    group.finish();
+}
+
+/// 풀 워밍업 효과
+fn bench_pool_warmup(c: &mut Criterion) {
+    let mut group = c.benchmark_group("pool_warmup");
+
+    // Cold pool (첫 사용)
+    group.bench_function("cold_pool", |b| {
+        b.iter(|| {
+            let pool = TokenPool::new();
+            for _ in 0..50 {
+                let token = pool.acquire();
+                pool.release(token);
+            }
+        });
+    });
+
+    // Warm pool (사전 워밍업)
+    group.bench_function("warm_pool", |b| {
+        let pool = TokenPool::new();
+
+        // 워밍업
+        for _ in 0..50 {
+            let token = pool.acquire();
+            pool.release(token);
+        }
+
+        b.iter(|| {
+            for _ in 0..50 {
+                let token = pool.acquire();
+                pool.release(token);
+            }
+        });
+    });
+
+    group.finish();
+}
+
+// ============================================================================
+// Criterion Groups
+// ============================================================================
+
+criterion_group!(
+    token_benches,
+    bench_token_allocation,
+    bench_token_batch_processing,
+    bench_token_pool_reuse,
+);
+
+criterion_group!(
+    string_benches,
+    bench_string_interning,
+    bench_string_interning_lookup,
+);
+
+criterion_group!(node_benches, bench_node_vec_pool,);
+
+criterion_group!(manager_benches, bench_pool_manager,);
+
+criterion_group!(
+    real_world_benches,
+    bench_tokenizer_with_pooling,
+    bench_memory_usage_estimation,
+    bench_concurrent_pool_access,
+);
+
+criterion_group!(
+    pressure_benches,
+    bench_memory_pressure,
+    bench_pool_warmup,
+);
+
+criterion_main!(
+    token_benches,
+    string_benches,
+    node_benches,
+    manager_benches,
+    real_world_benches,
+    pressure_benches,
+);
