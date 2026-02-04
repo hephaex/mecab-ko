@@ -14,8 +14,8 @@ keywords = ["korean", "morphological-analysis", "viterbi", "nlp", "tokenizer"]
 categories = ["text-processing", "science"]
 
 [dependencies]
-mecab-ko-hangul = { path = "../mecab-ko-hangul" }
-mecab-ko-dict = { path = "../mecab-ko-dict" }
+mecab-ko-hangul = { version = "0.1.0", path = "../mecab-ko-hangul" }
+mecab-ko-dict = { version = "0.1.0", path = "../mecab-ko-dict" }
 thiserror.workspace = true
 serde.workspace = true
 # Memory pooling and optimization

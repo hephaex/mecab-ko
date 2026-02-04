@@ -46,6 +46,11 @@ try {
             console.log(`  - ${surface}/${tag}`);
         });
 
+        // Parse (MeCab format)
+        console.log('MeCab format:');
+        const parsed = mecab.parse(text);
+        console.log(parsed);
+
         console.log('');
     });
 

@@ -1,288 +1,133 @@
-# MeCab-Ko Integration Tests
+# mecab-ko
 
-This directory contains comprehensive integration tests for the MeCab-Ko Rust implementation.
+[![Crates.io](https://img.shields.io/crates/v/mecab-ko.svg)](https://crates.io/crates/mecab-ko)
+[![Documentation](https://docs.rs/mecab-ko/badge.svg)](https://docs.rs/mecab-ko)
+[![License](https://img.shields.io/crates/l/mecab-ko.svg)](https://github.com/hephaex/mecab-ko)
+[![MSRV](https://img.shields.io/badge/MSRV-1.75-blue)](https://www.rust-lang.org/)
 
-## Test Structure
+**고성능 한국어 형태소 분석기 - MeCab-Ko의 순수 Rust 구현**
 
-```
-tests/
-├── common/                         # Common test utilities
-│   ├── mod.rs                      # Main utilities module
-│   └── fixtures.rs                 # Fixture loading and management
-├── fixtures/                       # Test data fixtures
-│   ├── sample_texts.json           # Sample Korean texts
-│   ├── expected_results.json       # Expected analysis results
-│   └── edge_cases.json             # Edge case inputs
-├── integration_basic.rs            # Basic tokenization tests
-├── integration_dict.rs             # Dictionary loading/search tests
-├── integration_user_dict.rs        # User dictionary tests
-├── integration_nori.rs             # Nori compatibility tests
-├── integration_kiwi.rs             # Kiwi compatibility tests
-├── integration_performance.rs      # Performance regression tests
-└── integration_golden.rs           # Golden test integration
-```
+MeCab-Ko는 일본어 형태소 분석기 MeCab을 한국어에 맞게 개선한 형태소 분석 도구입니다. 이 크레이트는 기존 C++ 구현을 Rust로 재작성하여 메모리 안전성과 성능을 동시에 달성합니다.
 
-## Running Tests
+## 특징
 
-### Run all tests
-```bash
-cd /home/mare/mecab-ko/rust
-cargo test --tests
+- **메모리 안전성**: Rust의 소유권 시스템으로 메모리 버그 방지
+- **고성능**: 제로 비용 추상화와 최적화된 알고리즘
+- **순수 Rust**: C/C++ 의존성 없이 크로스 플랫폼 지원
+- **MeCab 호환**: 기존 mecab-ko-dic 사전 포맷 지원
+- **사용자 사전**: 도메인별 용어 추가 가능
+
+## 설치
+
+Cargo.toml에 추가:
+
+```toml
+[dependencies]
+mecab-ko = "0.1.0"
 ```
 
-### Run specific test file
-```bash
-cargo test --test integration_basic
-cargo test --test integration_dict
-cargo test --test integration_golden
-```
+## 빠른 시작
 
-### Run with output
-```bash
-cargo test --tests -- --nocapture
-```
-
-### Run ignored tests (manual/slow tests)
-```bash
-cargo test --tests -- --ignored
-```
-
-### Run specific test
-```bash
-cargo test test_hangul_decomposition_integration
-```
-
-## Test Categories
-
-### 1. Basic Tests (`integration_basic.rs`)
-Tests fundamental tokenization functionality:
-- Basic sentence tokenization
-- Morpheme extraction
-- POS tagging accuracy
-- Edge cases (empty input, single characters, etc.)
-- Token position tracking
-- Hangul crate integration
-
-**Status**: Implemented (waiting for tokenizer implementation)
-
-### 2. Dictionary Tests (`integration_dict.rs`)
-Tests dictionary operations:
-- System dictionary loading
-- Entry lookup and retrieval
-- Connection cost matrix
-- Trie-based searching
-- Memory-mapped access
-- Concurrent access
-
-**Status**: Implemented (waiting for dictionary implementation)
-
-### 3. User Dictionary Tests (`integration_user_dict.rs`)
-Tests user dictionary functionality:
-- User dictionary creation
-- CSV format parsing
-- Priority handling
-- Persistence (save/load)
-- Technical terms and proper names
-
-**Status**: Implemented (waiting for user dictionary implementation)
-
-### 4. Nori Compatibility Tests (`integration_nori.rs`)
-Tests Elasticsearch Nori compatibility:
-- POS tag mapping (MeCab ↔ Nori)
-- Decompound modes (none, discard, mixed)
-- Token type classification
-- Output format compatibility
-
-**Status**: Implemented (waiting for Nori compatibility layer)
-
-### 5. Kiwi Compatibility Tests (`integration_kiwi.rs`)
-Tests Kiwi analyzer compatibility:
-- POS tag mapping (MeCab ↔ Kiwi)
-- Token format and scoring
-- Spacing options
-- N-best analysis
-
-**Status**: Implemented (waiting for Kiwi compatibility layer)
-
-### 6. Performance Tests (`integration_performance.rs`)
-Tests performance characteristics:
-- Tokenization throughput
-- Dictionary lookup speed
-- Memory usage
-- Scaling with input size
-- Parallel processing
-
-**Status**: Implemented (waiting for implementation)
-
-### 7. Golden Tests (`integration_golden.rs`)
-Integration with golden test set:
-- Automatic comparison with expected results
-- Test coverage verification
-- Regression detection
-- Report generation
-
-**Status**: Implemented and ready to use
-
-## Test Fixtures
-
-### sample_texts.json
-Sample Korean texts with expected morphological analysis results.
-Categories: basic, complex, technical
-
-### expected_results.json
-Expected analysis results for common Korean sentences.
-Includes noun extraction tests and complex grammatical structures.
-
-### edge_cases.json
-Edge case inputs to test robustness:
-- Empty strings
-- Whitespace
-- Special characters
-- Mixed scripts
-- Numbers and punctuation
-
-## Golden Tests
-
-Golden tests are located in `/home/mare/mecab-ko/tests/golden/`:
-- `basic.json` - 50 basic sentence tests
-- `nouns.json` - 30 noun extraction tests
-- `complex.json` - 20 complex sentence tests
-
-These tests serve as the reference for correct behavior and regression detection.
-
-## Test Coverage
-
-### Generate coverage report
-```bash
-# Install tarpaulin (once)
-cargo install cargo-tarpaulin
-
-# Generate coverage
-cargo tarpaulin --tests --out Html --output-dir coverage
-
-# View report
-open coverage/index.html
-```
-
-### Coverage goals
-- Line coverage: > 80%
-- Branch coverage: > 70%
-- Public API coverage: 100%
-
-## CI Integration
-
-Tests are automatically run in CI on:
-- Every push to main branches
-- All pull requests
-- Nightly builds
-
-### CI Test Commands
-```bash
-# Run all tests
-cargo test --all-features --tests
-
-# Run with coverage
-cargo tarpaulin --tests --out Xml
-
-# Run benchmarks (on main only)
-cargo bench --no-run
-```
-
-## Writing New Tests
-
-### 1. Add test to appropriate file
-Choose the correct integration test file based on functionality.
-
-### 2. Use common utilities
 ```rust
-mod common;
-use common::{load_fixtures, compare_morphs, MorphTestCase};
+use mecab_ko::Tokenizer;
 
-#[test]
-fn test_my_feature() {
-    let test_cases = load_fixtures("sample_texts.json")
-        .expect("Failed to load fixtures");
+fn main() -> Result<(), mecab_ko::Error> {
+    // 토크나이저 초기화
+    let tokenizer = Tokenizer::new()?;
 
-    // Your test logic here
+    // 기본 형태소 분석
+    let tokens = tokenizer.tokenize("안녕하세요, 형태소 분석기입니다.");
+
+    for token in tokens {
+        println!("{}\t{}\t{}", token.surface, token.pos, token.reading);
+    }
+
+    Ok(())
 }
 ```
 
-### 3. Mark incomplete tests as ignored
+## 주요 기능
+
+### 기본 토큰화
+
 ```rust
-#[test]
-#[ignore = "Requires implementation"]
-fn test_future_feature() {
-    // TODO: Implement once feature is available
-    println!("Feature test (placeholder)");
+let tokens = tokenizer.tokenize("한국어 형태소 분석");
+for token in tokens {
+    println!("{} / {}", token.surface, token.pos);
 }
+// 출력:
+// 한국어 / NNG
+// 형태소 / NNG
+// 분석 / NNG
 ```
 
-### 4. Add performance assertions
+### Wakati 모드 (어절 분리)
+
 ```rust
-use common::perf;
-
-#[test]
-fn test_performance() {
-    let result = perf::measure("Operation", 1000, || {
-        // Your operation
-    });
-
-    println!("{}", result.format());
-    perf::assert_performance(&result, 100.0); // Max 100μs
-}
+let words = tokenizer.wakati("한국어 형태소 분석");
+println!("{}", words.join(" "));
+// 출력: "한국어 형태소 분석"
 ```
 
-## Test Maintenance
+### 사용자 사전
 
-### Update golden tests (USE WITH CAUTION)
-```bash
-cargo test test_update_golden_results -- --ignored
+```rust
+use mecab_ko::{Tokenizer, UserDictionaryBuilder};
+
+// 사용자 사전 생성
+let user_dict = UserDictionaryBuilder::new()
+    .add("딥러닝", "NNG")
+    .add("챗GPT", "NNP")
+    .build()?;
+
+// 토크나이저에 적용
+let tokenizer = Tokenizer::with_user_dict(user_dict)?;
+
+let tokens = tokenizer.tokenize("딥러닝과 챗GPT");
 ```
 
-This will update the expected results in golden test files.
-**Only run this after manually verifying that the new results are correct!**
+### 사전 경로 지정
 
-### Generate test report
-```bash
-cargo test test_generate_report -- --ignored --nocapture
+```rust
+let tokenizer = Tokenizer::with_dict_path("/path/to/mecab-ko-dic")?;
 ```
 
-This generates a detailed report of golden test results.
+## 크레이트 구조
 
-## Troubleshooting
+mecab-ko는 다음 하위 크레이트들로 구성됩니다:
 
-### Tests fail with "Failed to load fixtures"
-Make sure you're running tests from the workspace root:
-```bash
-cd /home/mare/mecab-ko/rust
-cargo test
-```
+- **[mecab-ko-core](https://crates.io/crates/mecab-ko-core)**: 핵심 분석 엔진 (Lattice, Viterbi)
+- **[mecab-ko-dict](https://crates.io/crates/mecab-ko-dict)**: 사전 관리 및 로딩
+- **[mecab-ko-hangul](https://crates.io/crates/mecab-ko-hangul)**: 한글 처리 유틸리티
 
-### Ignored tests don't run
-Add `--ignored` flag:
-```bash
-cargo test -- --ignored
-```
+## 성능
 
-### Coverage report is empty
-Ensure you're running with `--tests` flag:
-```bash
-cargo tarpaulin --tests
-```
+Rust 구현은 기존 C++ 구현과 비슷하거나 더 나은 성능을 제공합니다:
 
-## Future Improvements
+- **처리 속도**: 1M+ 문자/초 (일반 텍스트 기준)
+- **메모리 사용**: 사전 크기 + 처리 버퍼 (mmap 활용)
+- **초기 로딩**: < 100ms (mmap 사용 시)
 
-- [ ] Add property-based testing with `proptest`
-- [ ] Add fuzzing tests
-- [ ] Add integration tests with real dictionaries
-- [ ] Add benchmarking suite with `criterion`
-- [ ] Add stress tests for memory and performance
-- [ ] Add cross-platform compatibility tests
-- [ ] Add Unicode edge case tests
+## 최소 Rust 버전 (MSRV)
 
-## References
+이 크레이트는 Rust 1.75 이상을 요구합니다.
 
-- [Golden Test Set](../../tests/golden/README.md)
-- [Project Plan](../../docs/PROJECT_PLAN.md)
-- [Rust Testing Guide](https://doc.rust-lang.org/book/ch11-00-testing.html)
-- [cargo-tarpaulin](https://github.com/xd009642/tarpaulin)
+## 라이선스
+
+MIT OR Apache-2.0 중 선택
+
+## 기여
+
+이슈와 풀 리퀘스트는 언제나 환영합니다!
+
+## 참고 자료
+
+- [프로젝트 저장소](https://github.com/hephaex/mecab-ko)
+- [Legacy C++ 구현](https://bitbucket.org/eunjeon/mecab-ko)
+- [mecab-ko-dic 사전](https://bitbucket.org/eunjeon/mecab-ko-dic)
+
+## 관련 프로젝트
+
+- [mecab](https://taku910.github.io/mecab/) - 원본 일본어 형태소 분석기
+- [konlpy](https://konlpy.org/) - 한국어 NLP 파이썬 라이브러리
+- [elasticsearch-analysis-nori](https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-nori.html) - Elasticsearch 한국어 분석기

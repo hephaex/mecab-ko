@@ -10,6 +10,7 @@ interface AnalysisResult {
     morphs: string[];
     nouns: string[];
     posTagged: string[][];
+    mecabFormat: string;
 }
 
 async function analyzeText(mecab: Mecab, text: string): Promise<AnalysisResult> {
@@ -18,7 +19,8 @@ async function analyzeText(mecab: Mecab, text: string): Promise<AnalysisResult> 
         tokens: mecab.tokenize(text),
         morphs: mecab.morphs(text),
         nouns: mecab.nouns(text),
-        posTagged: mecab.pos(text)
+        posTagged: mecab.pos(text),
+        mecabFormat: mecab.parse(text)
     };
 }
 
@@ -46,6 +48,8 @@ async function main(): Promise<void> {
 
     console.log(`\nMorphs: ${result.morphs.join(' / ')}`);
     console.log(`Nouns: ${result.nouns.join(', ')}`);
+    console.log('\nMeCab Format Output:');
+    console.log(result.mecabFormat);
 
     // Batch processing
     const texts: string[] = [

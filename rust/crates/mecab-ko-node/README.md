@@ -54,6 +54,14 @@ console.log(nouns); // ['대한민국', '수도', '서울']
 // POS tagging
 const pairs = mecab.pos('좋은 아침입니다');
 console.log(pairs); // [['좋은', 'VA+ETM'], ['아침', 'NNG'], ['입니다', 'VCP+EF']]
+
+// MeCab format output
+const parsed = mecab.parse('형태소 분석');
+console.log(parsed);
+// Output:
+// 형태소\tNNG,*,*,*,*,*,*,*
+// 분석\tNNG,*,*,*,*,*,*,*
+// EOS
 ```
 
 ## API Reference
@@ -160,6 +168,29 @@ const pairs = mecab.pos('안녕하세요');
 
 **Returns:** An array of `[surface, pos]` tuples.
 
+##### `parse(text: string): string`
+
+Parses text and returns MeCab-compatible format string.
+
+The output format follows the original MeCab format:
+```
+surface\tfeature1,feature2,...
+EOS
+```
+
+```typescript
+const result = mecab.parse('형태소');
+console.log(result);
+// Output:
+// 형태소\tNNG,*,*,*,*,*,*,*
+// EOS
+```
+
+**Parameters:**
+- `text`: The text to analyze
+
+**Returns:** A formatted string in MeCab format.
+
 ### Function: `getVersion()`
 
 Returns the version of the mecab-ko-node library.
@@ -219,6 +250,7 @@ console.log('Tokens:', mecab.tokenize(text));
 console.log('Morphs:', mecab.morphs(text));
 console.log('Nouns:', mecab.nouns(text));
 console.log('POS:', mecab.pos(text));
+console.log('MeCab format:\n', mecab.parse(text));
 ```
 
 ### Processing Multiple Texts

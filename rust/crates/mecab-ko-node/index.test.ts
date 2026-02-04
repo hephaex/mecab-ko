@@ -162,6 +162,75 @@ describe('@mecab-ko/node', () => {
     });
   });
 
+  describe('parse', () => {
+    it('should return MeCab format string', () => {
+      const result = mecab.parse('안녕하세요');
+
+      expect(typeof result).toBe('string');
+      expect(result.length).toBeGreaterThan(0);
+      expect(result.endsWith('EOS\n')).toBe(true);
+    });
+
+    it('should contain tab-separated values', () => {
+      const result = mecab.parse('형태소');
+      const lines = result.trim().split('\n');
+
+      // Last line should be EOS
+      expect(lines[lines.length - 1]).toBe('EOS');
+
+      // Each token line should contain tab
+      lines.slice(0, -1).forEach(line => {
+        expect(line).toContain('\t');
+        const [surface, features] = line.split('\t');
+        expect(surface.length).toBeGreaterThan(0);
+        expect(features.length).toBeGreaterThan(0);
+      });
+    });
+
+    it('should handle empty string', () => {
+      const result = mecab.parse('');
+      expect(result).toBe('EOS\n');
+    });
+
+    it('should match tokenize results', () => {
+      const text = '테스트 문장';
+      const tokens = mecab.tokenize(text);
+      const parsed = mecab.parse(text);
+      const lines = parsed.trim().split('\n');
+
+      // Number of token lines should match
+      expect(lines.length - 1).toBe(tokens.length);
+
+      // Each line should correspond to a token
+      tokens.forEach((token: Token, idx: number) => {
+        const [surface] = lines[idx].split('\t');
+        expect(surface).toBe(token.surface);
+      });
+    });
+
+    it('should handle complex sentences', () => {
+      const text = '대한민국의 수도는 서울입니다.';
+      const result = mecab.parse(text);
+
+      expect(result.length).toBeGreaterThan(0);
+      expect(result.endsWith('EOS\n')).toBe(true);
+
+      const lines = result.trim().split('\n');
+      expect(lines.length).toBeGreaterThan(1); // At least one token + EOS
+    });
+
+    it('should preserve feature strings', () => {
+      const result = mecab.parse('안녕');
+      const lines = result.trim().split('\n');
+
+      lines.slice(0, -1).forEach(line => {
+        const [, features] = line.split('\t');
+        // Features should contain comma-separated values
+        expect(features).toBeTruthy();
+      });
+    });
+  });
+
   describe('getVersion', () => {
     it('should return version string', () => {
       const version = getVersion();

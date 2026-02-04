@@ -21,6 +21,7 @@ path = "src/main.rs"
 mecab-ko-core = { path = "../mecab-ko-core" }
 mecab-ko-dict = { path = "../mecab-ko-dict" }
 clap.workspace = true
+clap_complete = "4.4"
 anyhow.workspace = true
 serde_json.workspace = true
 serde.workspace = true

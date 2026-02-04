@@ -231,6 +231,60 @@ impl Mecab {
             .map(|(surface, pos)| vec![surface, pos])
             .collect()
     }
+
+    /// Parses text and returns MeCab-compatible format string.
+    ///
+    /// The output format follows the original MeCab format:
+    /// ```text
+    /// surface\tfeature1,feature2,...
+    /// EOS
+    /// ```
+    ///
+    /// # Arguments
+    ///
+    /// * `text` - The text to analyze
+    ///
+    /// # Returns
+    ///
+    /// A formatted string in MeCab format.
+    ///
+    /// # Examples
+    ///
+    /// ```javascript
+    /// const result = mecab.parse('형태소');
+    /// console.log(result);
+    /// // Output:
+    /// // 형태소\tNNG,*,*,*,*,*,*,*
+    /// // EOS
+    /// ```
+    #[napi]
+    pub fn parse(&self, text: String) -> String {
+        let tokens = self.tokenizer.lock().tokenize(&text);
+        format_mecab_output(&tokens)
+    }
+}
+
+/// Formats tokens into MeCab-compatible output string.
+///
+/// # Arguments
+///
+/// * `tokens` - The tokens to format
+///
+/// # Returns
+///
+/// A formatted string with each token on a line, followed by "EOS"
+fn format_mecab_output(tokens: &[CoreToken]) -> String {
+    let mut output = String::with_capacity(tokens.len() * 32);
+
+    for token in tokens {
+        output.push_str(&token.surface);
+        output.push('\t');
+        output.push_str(&token.features);
+        output.push('\n');
+    }
+
+    output.push_str("EOS\n");
+    output
 }
 
 /// Returns the version of the mecab-ko-node library.

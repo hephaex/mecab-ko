@@ -41,11 +41,16 @@
   "scripts": {
     "build": "napi build --platform --release --cargo-name mecab-ko-node",
     "build:debug": "napi build --platform --cargo-name mecab-ko-node",
+    "build:all": "./scripts/build-all.sh",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:all": "./scripts/test-all.sh",
     "prepublishOnly": "napi prepublish -t npm",
     "artifacts": "napi artifacts",
-    "version": "napi version"
+    "version": "napi version",
+    "example:cjs": "node examples/basic.js",
+    "example:esm": "node examples/esm-example.mjs",
+    "example:ts": "npx tsx examples/typescript-example.ts"
   },
   "devDependencies": {
     "@napi-rs/cli": "^2.18.0",
