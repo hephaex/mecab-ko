@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeCab-Ko WASM Demo</title>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 { color: #333; }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        button:hover { background: #45a049; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .output {
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .output h2 { margin-top: 0; color: #555; }
+        pre {
+            background: #f8f8f8;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .token {
+            display: inline-block;
+            background: #e3f2fd;
+            padding: 2px 8px;
+            margin: 2px;
+            border-radius: 3px;
+        }
+        .pos { color: #666; font-size: 0.9em; }
+        #status { color: #666; font-style: italic; }
+    </style>
+</head>
+<body>
+    <h1>MeCab-Ko WebAssembly Demo</h1>
+    <p id="status">Loading WebAssembly module...</p>
+
+    <textarea id="input" rows="4" placeholder="한국어 텍스트를 입력하세요...">안녕하세요. 형태소 분석기입니다.</textarea>
+    <br>
+    <button id="analyzeBtn" onclick="analyze()" disabled>Analyze / 분석</button>
+
+    <div id="output"></div>
+
+    <script type="module">
+        import init, { Mecab } from '../pkg/mecab_ko_wasm.js';
+
+        let mecab;
+
+        async function initialize() {
+            try {
+                await init();
+                mecab = new Mecab();
+                document.getElementById('status').textContent = 'MeCab initialized successfully!';
+                document.getElementById('analyzeBtn').disabled = false;
+            } catch (error) {
+                document.getElementById('status').textContent = 'Failed to initialize: ' + error.message;
+                console.error('Initialization error:', error);
+            }
+        }
+
+        window.analyze = function() {
+            const text = document.getElementById('input').value;
+            if (!text.trim()) {
+                alert('텍스트를 입력해주세요.');
+                return;
+            }
+
+            try {
+                const tokens = mecab.tokenize(text);
+                const morphs = mecab.morphs(text);
+                const nouns = mecab.nouns(text);
+                const pos = mecab.pos(text);
+
+                let html = '<div class="output">';
+
+                // Tokens section
+                html += '<h2>Tokens (토큰)</h2><div>';
+                tokens.forEach(token => {
+                    html += `<span class="token">${token.surface} <span class="pos">(${token.pos})</span></span>`;
+                });
+                html += '</div>';
+
+                // Morphemes section
+                html += '<h2>Morphemes (형태소)</h2>';
+                html += '<pre>' + morphs.join(' ') + '</pre>';
+
+                // Nouns section
+                html += '<h2>Nouns (명사)</h2>';
+                html += '<pre>' + (nouns.length > 0 ? nouns.join(', ') : '(no nouns found)') + '</pre>';
+
+                // POS Tags section
+                html += '<h2>POS Tags (품사 태그)</h2><pre>';
+                pos.forEach(([surface, tag]) => {
+                    html += `${surface}\t${tag}\n`;
+                });
+                html += '</pre>';
+
+                // Raw JSON
+                html += '<h2>Raw JSON</h2>';
+                html += '<pre>' + JSON.stringify(tokens.map(t => ({
+                    surface: t.surface,
+                    pos: t.pos,
+                    start: t.start,
+                    end: t.end
+                })), null, 2) + '</pre>';
+
+                html += '</div>';
+
+                document.getElementById('output').innerHTML = html;
+            } catch (error) {
+                document.getElementById('output').innerHTML =
+                    '<div class="output" style="color: red;">Error: ' + error.message + '</div>';
+                console.error('Analysis error:', error);
+            }
+        };
+
+        initialize().catch(console.error);
+    </script>
+</body>
+</html>

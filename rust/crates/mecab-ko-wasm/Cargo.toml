@@ -19,7 +19,8 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 mecab-ko-core = { path = "../mecab-ko-core" }
 wasm-bindgen = "0.2"
-serde = { workspace = true }
+js-sys = "0.3"
+serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 
 # Optional: For better error handling in WASM
@@ -45,3 +46,9 @@ nursery = "warn"
 unwrap_used = "allow"
 expect_used = "allow"
 panic = "allow"
+
+# WASM build optimization
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
