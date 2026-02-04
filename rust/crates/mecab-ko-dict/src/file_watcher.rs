@@ -309,7 +309,7 @@ impl FileWatcher {
             // 이벤트 수신 (타임아웃 설정)
             match event_rx.recv_timeout(Duration::from_millis(100)) {
                 Ok(Ok(event)) => {
-                    Self::handle_event(&dict, &config, event);
+                    Self::handle_event(dict, config, event);
                 }
                 Ok(Err(e)) => {
                     eprintln!("File watcher error: {e}");
@@ -335,9 +335,8 @@ impl FileWatcher {
                     }
                 }
             }
-            EventKind::Remove(_) | _ => {
-                // 파일 삭제는 무시 (기존 사전 유지)
-                // 기타 이벤트는 무시
+            EventKind::Remove(_) | EventKind::Access(_) | EventKind::Any | EventKind::Other => {
+                // 파일 삭제 및 기타 이벤트는 무시 (기존 사전 유지)
             }
         }
     }

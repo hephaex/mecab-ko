@@ -1,177 +1,254 @@
 # Contributing to MeCab-Ko
 
-> **Project**: MeCab-Ko - Korean Morphological Analyzer  
-> **Maintainer**: hephaex (hephaex@gmail.com)  
+> **Project**: MeCab-Ko - Korean Morphological Analyzer
+> **Maintainer**: hephaex (hephaex@gmail.com)
 > **Repository**: https://github.com/hephaex/mecab-ko
 
 ---
 
-MeCab-Ko 프로젝트에 기여해 주셔서 감사합니다! 이 문서는 프로젝트에 기여하는 방법을 안내합니다.
+Thank you for your interest in contributing to MeCab-Ko! This document provides guidelines for contributing to the project.
 
-## 행동 강령
+## Code of Conduct
 
-이 프로젝트는 [Contributor Covenant](https://www.contributor-covenant.org/) 행동 강령을 따릅니다. 참여함으로써 이 코드를 준수할 것에 동의하는 것입니다.
+This project follows the [Contributor Covenant](https://www.contributor-covenant.org/) code of conduct. By participating, you agree to uphold this code.
 
 ---
 
-## 기여 방법
+## How to Report Bugs
 
-### 버그 리포트
+If you found a bug:
 
-버그를 발견했다면:
+1. Check [existing issues](https://github.com/hephaex/mecab-ko/issues) to avoid duplicates
+2. Create a new issue with the following information:
+   - MeCab-Ko version
+   - Rust version (`rustc --version`)
+   - Operating system
+   - Steps to reproduce
+   - Expected behavior vs actual behavior
+   - Error messages (if any)
 
-1. [기존 이슈](https://github.com/hephaex/mecab-ko/issues)에서 중복 여부 확인
-2. 새 이슈 생성 시 다음 정보 포함:
-   - MeCab-RS-KO 버전
-   - Rust 버전 (`rustc --version`)
-   - 운영체제
-   - 재현 단계
-   - 예상 동작 vs 실제 동작
-   - 에러 메시지 (있는 경우)
+## How to Suggest Features
 
-### 기능 제안
+To suggest new features:
 
-새로운 기능을 제안하려면:
+1. Open a Discussion or Issue to share your idea
+2. Explain the use case and expected benefits
+3. If possible, suggest an implementation approach
 
-1. Discussion 또는 Issue에서 아이디어 공유
-2. 유스케이스와 기대 효과 설명
-3. 가능하다면 구현 방향 제안
+---
 
-### 코드 기여
+## Development Setup
 
-#### 시작하기
+### Prerequisites
+
+- Rust toolchain (1.75.0 or later recommended)
+- Git
+
+### Getting Started
 
 ```bash
-# 1. 저장소 포크
-# GitHub에서 Fork 버튼 클릭
+# 1. Fork the repository on GitHub
 
-# 2. 로컬 클론
+# 2. Clone locally
 git clone https://github.com/YOUR_USERNAME/mecab-ko.git
 cd mecab-ko
 
-# 3. Rust 개발 디렉토리로 이동
+# 3. Navigate to Rust development directory
 cd rust
 
-# 4. 업스트림 설정
+# 4. Set up upstream
 git remote add upstream https://github.com/hephaex/mecab-ko.git
 
-# 4. 개발 환경 확인
-rustc --version  # 1.75.0 이상 권장
+# 5. Verify development environment
+rustc --version
 cargo --version
 ```
 
-#### 개발 워크플로우
+### Development Workflow
 
 ```bash
-# 1. 최신 main 동기화
+# 1. Sync with latest main
 git checkout main
 git pull upstream main
 
-# 2. 브랜치 생성
+# 2. Create a branch
 git checkout -b feature/RST-XXX-description
 
-# 3. 개발 및 테스트
+# 3. Develop and test
 cargo build --all-features
 cargo test
 cargo clippy -- -D warnings
 cargo fmt
 
-# 4. 커밋
+# 4. Commit
 git add .
 git commit -m "feat(module): description"
 
-# 5. 푸시 및 PR 생성
+# 5. Push and create PR
 git push origin feature/RST-XXX-description
 ```
 
 ---
 
-## 코딩 표준
+## Code Style Guidelines
 
-### Rust 스타일 가이드
+### Rust Style Guide
 
 ```rust
-// ✅ 좋은 예
-/// 한글 음절을 자모로 분해합니다.
+// Good example
+/// Decomposes a Korean syllable into jamo components.
 ///
 /// # Arguments
-/// * `syllable` - 분해할 한글 음절
+/// * `syllable` - The Korean syllable to decompose
 ///
 /// # Returns
-/// 초성, 중성, 종성(옵션) 튜플
+/// Tuple of (choseong, jungseong, jongseong option)
 ///
 /// # Examples
 /// ```
-/// use mecab_rs_ko_hangul::decompose;
-/// let (cho, jung, jong) = decompose('한').unwrap();
-/// assert_eq!(cho, 'ㅎ');
+/// use mecab_ko_hangul::decompose;
+/// let (cho, jung, jong) = decompose('han').unwrap();
+/// assert_eq!(cho, 'h');
 /// ```
 pub fn decompose(syllable: char) -> Option<(char, char, Option<char>)> {
-    // 구현
+    // implementation
 }
 
-// ❌ 피해야 할 예
+// Bad example - avoid this
 pub fn d(c: char) -> Option<(char, char, Option<char>)> {
-    // 문서 없음, 불명확한 이름
+    // No documentation, unclear naming
 }
 ```
 
-### 필수 검사
+### Key Rules (from CLAUDE.md)
 
-PR 제출 전 모든 검사 통과 필수:
+1. **Minimize `unsafe`**: Use `unsafe` only when absolutely necessary
+   - Always include `// SAFETY:` comments explaining why it's safe
+   - Prefer safe Rust alternatives when available
+
+   ```rust
+   // When necessary
+   // SAFETY: ptr always points to valid memory and
+   // length is guaranteed not to exceed allocated buffer size
+   unsafe {
+       std::slice::from_raw_parts(ptr, length)
+   }
+   ```
+
+2. **No `unwrap()` or `expect()` in library code**
+   - Use `Result<T, E>` or `Option<T>` for error handling
+   - Use `thiserror` for custom error types
+
+   ```rust
+   // Good
+   pub fn parse(input: &str) -> Result<Token, ParseError> {
+       // ...
+   }
+
+   // Bad - can panic!
+   pub fn parse(input: &str) -> Token {
+       input.parse().unwrap()
+   }
+   ```
+
+3. **Rustdoc required for all public APIs**
+   - Every public function, struct, enum, and trait must have documentation comments
+   - Include `# Arguments`, `# Returns`, and `# Examples` sections
+
+### Required Checks
+
+All checks must pass before submitting a PR:
 
 ```bash
-# 빌드
+# Build
 cargo build --all-features
 
-# 테스트 (문서 테스트 포함)
+# Test (including doc tests)
 cargo test --all-features
 
-# Clippy (경고 없이)
+# Clippy (no warnings)
 cargo clippy --all-features -- -D warnings
 
-# 포맷팅
+# Formatting
 cargo fmt --all -- --check
-```
-
-### unsafe 코드
-
-- `unsafe` 사용은 최소화
-- 사용 시 반드시 `// SAFETY:` 주석으로 안전성 근거 설명
-- 대안이 있다면 safe Rust 선호
-
-```rust
-// ✅ 필요한 경우
-// SAFETY: ptr은 항상 유효한 메모리를 가리키며,
-// length는 할당된 버퍼 크기를 초과하지 않음이 보장됨
-unsafe {
-    std::slice::from_raw_parts(ptr, length)
-}
-```
-
-### 에러 처리
-
-- 라이브러리 코드에서 `unwrap()`, `expect()` 금지
-- `Result<T, E>` 또는 `Option<T>` 사용
-- 커스텀 에러 타입은 `thiserror` 사용 권장
-
-```rust
-// ✅ 좋은 예
-pub fn parse(input: &str) -> Result<Token, ParseError> {
-    // ...
-}
-
-// ❌ 피해야 할 예
-pub fn parse(input: &str) -> Token {
-    input.parse().unwrap() // 패닉 가능!
-}
 ```
 
 ---
 
-## 커밋 컨벤션
+## Pull Request Process
 
-[Conventional Commits](https://www.conventionalcommits.org/) 형식 사용:
+### PR Checklist
+
+Before submitting:
+
+- [ ] Link related issue number (`Closes #XXX`)
+- [ ] All tests pass
+- [ ] No Clippy warnings
+- [ ] Formatting applied
+- [ ] New features include tests
+- [ ] Public APIs are documented
+- [ ] CHANGELOG updated (if applicable)
+- [ ] Breaking changes are noted
+
+### PR Template
+
+```markdown
+## Summary
+[Brief description of changes]
+
+## Related Issue
+Closes #[issue number]
+
+## Changes
+- Change 1
+- Change 2
+
+## Testing
+Describe how to test the changes
+
+## Checklist
+- [ ] Tests pass
+- [ ] Clippy clean
+- [ ] Documentation updated
+```
+
+### Review Process
+
+1. **Automated checks**: CI runs build, tests, and linting
+2. **Code review**: Maintainers review code quality
+3. **Change requests**: Modifications may be requested
+4. **Approval and merge**: Merged via Squash and Merge
+
+---
+
+## Testing Requirements
+
+- All new features must include unit tests
+- Bug fixes should include regression tests
+- All tests must pass before merging
+- Integration tests go in the `tests/` directory
+- Benchmarks go in the `benches/` directory
+
+Run tests with:
+```bash
+cargo test --all-features
+```
+
+---
+
+## Documentation Requirements
+
+- **All public APIs must have rustdoc comments**
+- Include `# Arguments`, `# Returns`, and `# Examples` sections
+- Update README files when adding new features
+- Keep CHANGELOG.md updated for significant changes
+- Breaking changes must be clearly documented
+
+---
+
+## Commit Convention
+
+Use [Conventional Commits](https://www.conventionalcommits.org/) format:
 
 ```
 <type>(<scope>): <description>
@@ -181,31 +258,31 @@ pub fn parse(input: &str) -> Token {
 [optional footer]
 ```
 
-### 타입
+### Types
 
-| Type | 설명 |
-|------|------|
-| `feat` | 새로운 기능 |
-| `fix` | 버그 수정 |
-| `docs` | 문서 변경 |
-| `style` | 포맷팅 (코드 동작 변경 없음) |
-| `refactor` | 리팩토링 |
-| `perf` | 성능 개선 |
-| `test` | 테스트 추가/수정 |
-| `build` | 빌드 시스템 변경 |
-| `ci` | CI 설정 변경 |
-| `chore` | 기타 변경 |
+| Type | Description |
+|------|-------------|
+| `feat` | New feature |
+| `fix` | Bug fix |
+| `docs` | Documentation changes |
+| `style` | Formatting (no code behavior change) |
+| `refactor` | Refactoring |
+| `perf` | Performance improvement |
+| `test` | Add/modify tests |
+| `build` | Build system changes |
+| `ci` | CI configuration changes |
+| `chore` | Other changes |
 
-### 스코프
+### Scopes
 
-- `hangul`: 한글 유틸리티
-- `dict`: 사전 관련
-- `core`: 핵심 알고리즘
-- `cli`: CLI 도구
-- `python`: Python 바인딩
-- `wasm`: WASM 바인딩
+- `hangul`: Hangul utilities
+- `dict`: Dictionary related
+- `core`: Core algorithms
+- `cli`: CLI tool
+- `python`: Python bindings
+- `wasm`: WASM bindings
 
-### 예시
+### Example
 
 ```
 feat(hangul): add jamo decomposition function
@@ -218,130 +295,60 @@ Closes #RST-008
 
 ---
 
-## Pull Request 가이드
-
-### PR 체크리스트
-
-PR 제출 전 확인:
-
-- [ ] 관련 이슈 번호 연결 (`Closes #XXX`)
-- [ ] 모든 테스트 통과
-- [ ] Clippy 경고 없음
-- [ ] 포맷팅 적용됨
-- [ ] 새 기능은 테스트 포함
-- [ ] 공개 API는 문서화됨
-- [ ] CHANGELOG 업데이트 (해당 시)
-- [ ] Breaking change는 명시됨
-
-### PR 템플릿
-
-```markdown
-## Summary
-[변경 사항 요약]
-
-## Related Issue
-Closes #[이슈번호]
-
-## Changes
-- 변경 1
-- 변경 2
-
-## Testing
-테스트 방법 설명
-
-## Checklist
-- [ ] Tests pass
-- [ ] Clippy clean
-- [ ] Documentation updated
-```
-
-### 리뷰 프로세스
-
-1. **자동 검사**: CI가 빌드, 테스트, 린트 실행
-2. **코드 리뷰**: 메인테이너가 코드 품질 검토
-3. **수정 요청**: 필요시 변경 요청
-4. **승인 및 병합**: Squash and Merge로 병합
-
----
-
-## 프로젝트 구조
+## Project Structure
 
 ```
 mecab-ko/
-├── crates/
-│   ├── mecab-ko-core/      # 핵심 알고리즘
-│   │   ├── src/
-│   │   │   ├── lib.rs
-│   │   │   ├── lattice.rs     # 래티스 구조
-│   │   │   └── viterbi.rs     # Viterbi 알고리즘
-│   │   └── Cargo.toml
-│   │
-│   ├── mecab-ko-dict/      # 사전 관리
-│   │   ├── src/
-│   │   │   ├── lib.rs
-│   │   │   ├── trie.rs        # Double-Array Trie
-│   │   │   └── connection.rs  # 연결 비용
-│   │   └── Cargo.toml
-│   │
-│   ├── mecab-ko-hangul/    # 한글 유틸리티
-│   │   ├── src/lib.rs
-│   │   └── Cargo.toml
-│   │
-│   ├── mecab-ko-cli/       # CLI 도구
-│   │   └── ...
-│   │
-│   └── mecab-ko-python/    # Python 바인딩
-│       └── ...
-│
-├── docs/                       # 문서
-│   ├── architecture/          # 아키텍처 문서
-│   ├── analysis/              # 분석 문서
-│   └── api/                   # API 문서
-│
-├── tests/                      # 통합 테스트
-├── benches/                    # 벤치마크
-├── examples/                   # 예제 코드
-│
-├── Cargo.toml                  # 워크스페이스 설정
-├── README.md
-├── CHANGELOG.md
-├── CONTRIBUTING.md
+├── rust/                          # Rust implementation
+│   ├── crates/
+│   │   ├── mecab-ko-core/         # Core algorithms
+│   │   ├── mecab-ko-dict/         # Dictionary management
+│   │   ├── mecab-ko-hangul/       # Hangul utilities
+│   │   ├── mecab-ko-cli/          # CLI tool
+│   │   └── mecab-ko-python/       # Python bindings
+│   ├── tests/                     # Integration tests
+│   ├── benches/                   # Benchmarks
+│   └── examples/                  # Example code
+├── legacy/                        # Original C/C++ code
+├── docs/                          # Documentation
+├── CLAUDE.md                      # Project coding rules
+├── CONTRIBUTING.md                # This file
 ├── LICENSE-MIT
 └── LICENSE-APACHE
 ```
 
 ---
 
-## 릴리스 프로세스
+## Release Process
 
-버전 관리는 [Semantic Versioning](https://semver.org/)을 따릅니다:
+Version management follows [Semantic Versioning](https://semver.org/):
 
-- **MAJOR**: 하위 호환되지 않는 API 변경
-- **MINOR**: 하위 호환되는 기능 추가
-- **PATCH**: 하위 호환되는 버그 수정
+- **MAJOR**: Breaking API changes
+- **MINOR**: Backward-compatible feature additions
+- **PATCH**: Backward-compatible bug fixes
 
 ### Pre-release
 
-- `0.x.y`: 초기 개발 단계
-- `x.y.z-alpha.N`: 알파 릴리스
-- `x.y.z-beta.N`: 베타 릴리스
-- `x.y.z-rc.N`: 릴리스 후보
+- `0.x.y`: Initial development stage
+- `x.y.z-alpha.N`: Alpha release
+- `x.y.z-beta.N`: Beta release
+- `x.y.z-rc.N`: Release candidate
 
 ---
 
-## 도움 받기
+## Getting Help
 
-- **이슈**: https://github.com/hephaex/mecab-ko/issues
-- **디스커션**: https://github.com/hephaex/mecab-ko/discussions
-- **이메일**: hephaex@gmail.com
-
----
-
-## 라이선스
-
-이 프로젝트에 기여함으로써, 귀하의 기여가 프로젝트와 동일한 라이선스(MIT OR Apache-2.0)로 배포됨에 동의합니다.
+- **Issues**: https://github.com/hephaex/mecab-ko/issues
+- **Discussions**: https://github.com/hephaex/mecab-ko/discussions
+- **Email**: hephaex@gmail.com
 
 ---
 
-*Last Updated: 2026-01-04*  
+## License
+
+By contributing to this project, you agree that your contributions will be distributed under the same license as the project (MIT OR Apache-2.0).
+
+---
+
+*Last Updated: 2026-02-05*
 *Maintainer: hephaex (hephaex@gmail.com)*

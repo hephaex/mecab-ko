@@ -52,6 +52,7 @@ pub enum DecompoundMode {
 
 impl DecompoundMode {
     /// 문자열에서 파싱
+    #[must_use]
     pub fn from_str(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
             "none" => Some(Self::None),
@@ -62,6 +63,7 @@ impl DecompoundMode {
     }
 
     /// 문자열 표현
+    #[must_use]
     pub const fn as_str(&self) -> &'static str {
         match self {
             Self::None => "none",
@@ -107,6 +109,7 @@ pub enum WordType {
 
 impl WordType {
     /// 문자열 표현
+    #[must_use]
     pub const fn as_str(&self) -> &'static str {
         match self {
             Self::Known => "KNOWN",
@@ -143,6 +146,10 @@ impl NoriTokenizer {
     ///
     /// let tokenizer = NoriTokenizer::new(DecompoundMode::Mixed, true)?;
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the internal tokenizer fails to initialize.
     pub fn new(decompound_mode: DecompoundMode, output_unknown_unigrams: bool) -> Result<Self> {
         Ok(Self {
             tokenizer: Tokenizer::new()?,
@@ -152,6 +159,10 @@ impl NoriTokenizer {
     }
 
     /// 사전 경로를 지정하여 생성
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the tokenizer fails to load the dictionary.
     pub fn with_dict(
         dict_path: &str,
         decompound_mode: DecompoundMode,
@@ -174,6 +185,10 @@ impl NoriTokenizer {
     ///     println!("{}: {}", token.surface, token.pos_tag);
     /// }
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if tokenization fails.
     pub fn tokenize(&mut self, text: &str) -> Result<Vec<NoriToken>> {
         let mecab_tokens = self.tokenizer.tokenize(text);
         let mut nori_tokens = Vec::new();
@@ -187,6 +202,10 @@ impl NoriTokenizer {
     }
 
     /// MeCab 토큰을 Nori 토큰으로 변환
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if token conversion fails.
     fn convert_token(&self, token: Token, text: &str) -> Result<Vec<NoriToken>> {
         let pos_tag = PosTag::from_str(&token.pos).unwrap_or(PosTag::Unknown);
         let nori_tag = pos_tag.to_nori_compat();
@@ -319,6 +338,10 @@ impl NoriAnalyzer {
     ///     false
     /// )?;
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the tokenizer initialization fails.
     pub fn new(
         user_dictionary: Option<String>,
         decompound_mode: DecompoundMode,
@@ -339,6 +362,10 @@ impl NoriAnalyzer {
     /// ```rust,ignore
     /// let analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::Mixed)?;
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if initialization fails.
     pub fn default_with_decompound(decompound_mode: DecompoundMode) -> Result<Self> {
         Self::new(
             None,
@@ -356,6 +383,10 @@ impl NoriAnalyzer {
     /// let tokens = analyzer.analyze("형태소 분석기")?;
     /// // 조사/어미가 제거된 결과만 반환
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if analysis fails.
     pub fn analyze(&mut self, text: &str) -> Result<Vec<NoriToken>> {
         let tokens = self.tokenizer.tokenize(text)?;
         Ok(self.filter_stoptags(tokens))
@@ -384,6 +415,7 @@ impl NoriAnalyzer {
     }
 
     /// stoptags 목록 반환
+    #[must_use]
     pub fn stoptags(&self) -> Vec<&str> {
         self.stoptags.iter().map(|s| s.as_str()).collect()
     }

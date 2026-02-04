@@ -530,25 +530,24 @@ impl HotReloadDictionary {
     ///
     /// Returns an error if the version is not found in history or locks cannot be acquired.
     pub fn rollback(&self, target_version: Version) -> Result<()> {
-        let history = self
-            .history
-            .read()
-            .map_err(|_| DictError::Format("Failed to acquire read lock on history".to_string()))?;
+        let target = {
+            let history = self
+                .history
+                .read()
+                .map_err(|_| DictError::Format("Failed to acquire read lock on history".to_string()))?;
 
-        let target = history
-            .iter()
-            .find(|v| v.version == target_version)
-            .ok_or_else(|| {
-                DictError::Format(format!("Version {target_version} not found in history"))
-            })?
-            .clone();
-        drop(history);
+            history
+                .iter()
+                .find(|v| v.version == target_version)
+                .ok_or_else(|| {
+                    DictError::Format(format!("Version {target_version} not found in history"))
+                })?
+                .clone()
+        };
 
-        let mut dict = self.current.write().map_err(|_| {
+        *self.current.write().map_err(|_| {
             DictError::Format("Failed to acquire write lock on dictionary".to_string())
-        })?;
-
-        *dict = target;
+        })? = target;
 
         Ok(())
     }
@@ -697,7 +696,7 @@ impl DeltaUpdate {
 
     /// 빌더 패턴 시작
     #[must_use]
-    pub fn builder() -> DeltaUpdateBuilder {
+    pub const fn builder() -> DeltaUpdateBuilder {
         DeltaUpdateBuilder::new()
     }
 
@@ -770,7 +769,7 @@ impl Default for DeltaUpdateBuilder {
 impl DeltaUpdateBuilder {
     /// 새 빌더 생성
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             delta: DeltaUpdate::new(),
         }

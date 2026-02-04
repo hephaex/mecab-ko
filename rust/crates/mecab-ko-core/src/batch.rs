@@ -124,6 +124,7 @@ impl BatchTokenizer {
     /// let texts = vec!["안녕하세요", "감사합니다"];
     /// let results = batch.tokenize_batch(&texts);
     /// ```
+    #[must_use]
     pub fn tokenize_batch(&self, texts: &[&str]) -> Vec<Vec<Token>> {
         texts
             .par_iter()
@@ -140,6 +141,7 @@ impl BatchTokenizer {
     /// # Returns
     ///
     /// 각 텍스트의 토큰 목록
+    #[must_use]
     pub fn tokenize_batch_owned(&self, texts: &[String]) -> Vec<Vec<Token>> {
         texts
             .par_iter()
@@ -152,9 +154,8 @@ impl BatchTokenizer {
     /// 풀에서 토크나이저를 가져와 사용합니다.
     fn tokenize_single(&self, text: &str) -> Vec<Token> {
         // 풀에서 토크나이저 가져오기
-        let mut pool = match self.tokenizer_pool.lock() {
-            Ok(guard) => guard,
-            Err(_) => return Vec::new(), // Lock poisoned, return empty result
+        let Ok(mut pool) = self.tokenizer_pool.lock() else {
+            return Vec::new(); // Lock poisoned, return empty result
         };
 
         if let Some(mut tokenizer) = pool.pop() {
@@ -216,8 +217,9 @@ impl BatchTokenizer {
     /// # Returns
     ///
     /// 모든 토큰 목록
+    #[must_use]
     pub fn tokenize_chunked(&self, text: &str, chunk_size: usize) -> Vec<Token> {
-        let chunks = self.split_into_chunks(text, chunk_size);
+        let chunks = Self::split_into_chunks(text, chunk_size);
 
         let results: Vec<Vec<Token>> = chunks
             .par_iter()
@@ -229,7 +231,7 @@ impl BatchTokenizer {
     }
 
     /// 텍스트를 청크로 분할
-    fn split_into_chunks(&self, text: &str, chunk_size: usize) -> Vec<String> {
+    fn split_into_chunks(text: &str, chunk_size: usize) -> Vec<String> {
         let mut chunks = Vec::new();
         let mut current = String::new();
 
@@ -250,7 +252,7 @@ impl BatchTokenizer {
 
     /// 풀 크기 조회
     #[must_use]
-    pub fn pool_size(&self) -> usize {
+    pub const fn pool_size(&self) -> usize {
         self.pool_size
     }
 
@@ -295,7 +297,8 @@ impl ParallelStreamProcessor {
     }
 
     /// 청크 크기 설정
-    pub fn with_chunk_size(mut self, size: usize) -> Self {
+    #[must_use]
+    pub const fn with_chunk_size(mut self, size: usize) -> Self {
         self.chunk_size = size;
         self
     }
@@ -399,7 +402,7 @@ mod tests {
         let batch = BatchTokenizer::new().expect("should create");
         let text = "안녕하세요 감사합니다";
 
-        let chunks = batch.split_into_chunks(text, 5);
+        let chunks = BatchTokenizer::split_into_chunks(text, 5);
 
         assert!(chunks.len() > 1);
     }

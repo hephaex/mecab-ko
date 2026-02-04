@@ -132,7 +132,8 @@ pub struct Node {
 
 impl Node {
     /// BOS 노드 생성
-    pub fn bos() -> Self {
+    #[must_use]
+    pub const fn bos() -> Self {
         Self {
             id: BOS_NODE_ID,
             surface: Cow::Borrowed("BOS"),
@@ -152,7 +153,8 @@ impl Node {
     }
 
     /// EOS 노드 생성
-    pub fn eos(id: NodeId, char_len: usize, byte_len: usize) -> Self {
+    #[must_use]
+    pub const fn eos(id: NodeId, char_len: usize, byte_len: usize) -> Self {
         Self {
             id,
             surface: Cow::Borrowed("EOS"),
@@ -173,25 +175,29 @@ impl Node {
 
     /// 노드가 BOS인지 확인
     #[inline]
+    #[must_use]
     pub fn is_bos(&self) -> bool {
         self.node_type == NodeType::Bos
     }
 
     /// 노드가 EOS인지 확인
     #[inline]
+    #[must_use]
     pub fn is_eos(&self) -> bool {
         self.node_type == NodeType::Eos
     }
 
     /// 노드 길이 (문자 단위)
     #[inline]
-    pub fn char_len(&self) -> usize {
+    #[must_use]
+    pub const fn char_len(&self) -> usize {
         self.end_pos - self.start_pos
     }
 
     /// 노드 길이 (바이트 단위)
     #[inline]
-    pub fn byte_len(&self) -> usize {
+    #[must_use]
+    pub const fn byte_len(&self) -> usize {
         self.end_byte - self.start_byte
     }
 }
@@ -220,6 +226,7 @@ impl NodeBuilder {
     /// * `surface` - 표면형
     /// * `start_pos` - 시작 위치 (문자 단위)
     /// * `end_pos` - 끝 위치 (문자 단위)
+    #[must_use]
     pub fn new(surface: &str, start_pos: usize, end_pos: usize) -> Self {
         Self {
             surface: surface.to_string(),
@@ -237,50 +244,58 @@ impl NodeBuilder {
     }
 
     /// 바이트 위치 설정
-    pub fn byte_positions(mut self, start: usize, end: usize) -> Self {
+    #[must_use]
+    pub const fn byte_positions(mut self, start: usize, end: usize) -> Self {
         self.start_byte = start;
         self.end_byte = end;
         self
     }
 
     /// 좌문맥 ID 설정
-    pub fn left_id(mut self, id: u16) -> Self {
+    #[must_use]
+    pub const fn left_id(mut self, id: u16) -> Self {
         self.left_id = id;
         self
     }
 
     /// 우문맥 ID 설정
-    pub fn right_id(mut self, id: u16) -> Self {
+    #[must_use]
+    pub const fn right_id(mut self, id: u16) -> Self {
         self.right_id = id;
         self
     }
 
     /// 단어 비용 설정
-    pub fn word_cost(mut self, cost: i32) -> Self {
+    #[must_use]
+    pub const fn word_cost(mut self, cost: i32) -> Self {
         self.word_cost = cost;
         self
     }
 
     /// 노드 타입 설정
-    pub fn node_type(mut self, node_type: NodeType) -> Self {
+    #[must_use]
+    pub const fn node_type(mut self, node_type: NodeType) -> Self {
         self.node_type = node_type;
         self
     }
 
     /// 품사 정보 설정
+    #[must_use]
     pub fn feature(mut self, feature: &str) -> Self {
         self.feature = feature.to_string();
         self
     }
 
     /// 띄어쓰기 앞 여부 설정
-    pub fn has_space_before(mut self, value: bool) -> Self {
+    #[must_use]
+    pub const fn has_space_before(mut self, value: bool) -> Self {
         self.has_space_before = value;
         self
     }
 
     /// Node 빌드 (ID는 Lattice에서 할당)
-    pub fn build(self) -> NodeBuilder {
+    #[must_use]
+    pub const fn build(self) -> NodeBuilder {
         self
     }
 }
@@ -298,6 +313,7 @@ pub struct CharPositions {
 
 impl CharPositions {
     /// 문자열에서 위치 정보 생성
+    #[must_use]
     pub fn new(text: &str) -> Self {
         let mut char_to_byte = Vec::with_capacity(text.chars().count() + 1);
         let mut byte_pos = 0;
@@ -316,6 +332,7 @@ impl CharPositions {
 
     /// 문자 위치 → 바이트 위치 변환
     #[inline]
+    #[must_use]
     pub fn char_to_byte(&self, char_pos: usize) -> usize {
         self.char_to_byte
             .get(char_pos)
@@ -325,6 +342,7 @@ impl CharPositions {
 
     /// 문자 개수
     #[inline]
+    #[must_use]
     pub fn char_count(&self) -> usize {
         if self.char_to_byte.is_empty() {
             0
@@ -335,6 +353,7 @@ impl CharPositions {
 
     /// 총 바이트 수
     #[inline]
+    #[must_use]
     pub fn byte_count(&self) -> usize {
         self.total_bytes
     }
@@ -349,6 +368,7 @@ pub struct SpacePositions {
 
 impl SpacePositions {
     /// 문자열에서 띄어쓰기 위치 추출
+    #[must_use]
     pub fn new(text: &str) -> Self {
         let mut positions = std::collections::HashSet::new();
         let mut char_pos = 0;
@@ -369,6 +389,7 @@ impl SpacePositions {
 
     /// 해당 위치가 띄어쓰기 직후인지 확인
     #[inline]
+    #[must_use]
     pub fn has_space_before(&self, char_pos: usize) -> bool {
         self.positions.contains(&char_pos)
     }
@@ -430,6 +451,7 @@ impl Lattice {
     /// let lattice = Lattice::new("안녕하세요");
     /// assert_eq!(lattice.text(), "안녕하세요");
     /// ```
+    #[must_use]
     pub fn new(text: &str) -> Self {
         // 공백 제거 (분석용)
         let original_text = text.to_string();
@@ -476,42 +498,49 @@ impl Lattice {
 
     /// 분석용 텍스트 반환 (공백 제거됨)
     #[inline]
+    #[must_use]
     pub fn text(&self) -> &str {
         &self.text
     }
 
     /// 원본 텍스트 반환
     #[inline]
+    #[must_use]
     pub fn original_text(&self) -> &str {
         &self.original_text
     }
 
     /// 문자 개수
     #[inline]
+    #[must_use]
     pub fn char_len(&self) -> usize {
         self.char_positions.char_count()
     }
 
     /// 바이트 길이
     #[inline]
+    #[must_use]
     pub fn byte_len(&self) -> usize {
         self.char_positions.byte_count()
     }
 
     /// 노드 개수 (BOS, EOS 포함)
     #[inline]
+    #[must_use]
     pub fn node_count(&self) -> usize {
         self.nodes.len()
     }
 
     /// BOS 노드 참조
     #[inline]
+    #[must_use]
     pub fn bos(&self) -> &Node {
         &self.nodes[self.bos_id as usize]
     }
 
     /// EOS 노드 참조
     #[inline]
+    #[must_use]
     pub fn eos(&self) -> &Node {
         &self.nodes[self.eos_id as usize]
     }
@@ -525,6 +554,7 @@ impl Lattice {
 
     /// ID로 노드 참조
     #[inline]
+    #[must_use]
     pub fn node(&self, id: NodeId) -> Option<&Node> {
         self.nodes.get(id as usize)
     }
@@ -613,6 +643,7 @@ impl Lattice {
     }
 
     /// 문자 위치에서 부분 문자열 추출
+    #[must_use]
     pub fn substring(&self, start: usize, end: usize) -> &str {
         let start_byte = self.char_positions.char_to_byte(start);
         let end_byte = self.char_positions.char_to_byte(end);
@@ -621,6 +652,7 @@ impl Lattice {
 
     /// 특정 위치에 띄어쓰기가 있는지 확인
     #[inline]
+    #[must_use]
     pub fn has_space_at(&self, char_pos: usize) -> bool {
         self.space_positions.has_space_before(char_pos)
     }
@@ -691,6 +723,7 @@ impl Lattice {
     /// 최적 경로 추출 (Viterbi 실행 후 호출)
     ///
     /// EOS에서 BOS까지 역추적하여 최적 경로의 노드들을 반환합니다.
+    #[must_use]
     pub fn best_path(&self) -> Vec<&Node> {
         let mut path = Vec::new();
         let mut current_id = self.eos_id;
@@ -751,6 +784,7 @@ pub struct LatticeStats {
 
 impl Lattice {
     /// 통계 정보 계산
+    #[must_use]
     pub fn stats(&self) -> LatticeStats {
         let mut stats = LatticeStats {
             total_nodes: self.nodes.len(),

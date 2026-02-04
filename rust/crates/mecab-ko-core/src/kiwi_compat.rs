@@ -203,6 +203,7 @@ impl KiwiPosTag {
     /// assert_eq!(KiwiPosTag::from_str("W_URL"), Some(KiwiPosTag::W_URL));
     /// assert_eq!(KiwiPosTag::from_str("INVALID"), None);
     /// ```
+    #[must_use]
     pub fn from_str(s: &str) -> Option<Self> {
         match s {
             // 체언
@@ -269,6 +270,7 @@ impl KiwiPosTag {
     }
 
     /// Kiwi 품사 태그 문자열 반환
+    #[must_use]
     pub const fn as_str(&self) -> &'static str {
         match self {
             // 체언
@@ -352,13 +354,13 @@ impl fmt::Display for KiwiPosTag {
 /// assert_eq!(to_kiwi_tag(PosTag::SSO), KiwiPosTag::SS); // 여는괄호 -> 따옴표/괄호
 /// assert_eq!(to_kiwi_tag(PosTag::SC), KiwiPosTag::SP); // 구분자 -> 쉼표
 /// ```
+#[must_use]
 pub const fn to_kiwi_tag(mecab_tag: PosTag) -> KiwiPosTag {
     match mecab_tag {
         // 체언 - 대부분 1:1 매핑
         PosTag::NNG => KiwiPosTag::NNG,
         PosTag::NNP => KiwiPosTag::NNP,
-        PosTag::NNB => KiwiPosTag::NNB,
-        PosTag::NNBC => KiwiPosTag::NNB, // 단위명사 -> 의존명사 통합
+        PosTag::NNB | PosTag::NNBC => KiwiPosTag::NNB, // 단위명사 -> 의존명사 통합
         PosTag::NP => KiwiPosTag::NP,
         PosTag::NR => KiwiPosTag::NR,
 
@@ -404,10 +406,8 @@ pub const fn to_kiwi_tag(mecab_tag: PosTag) -> KiwiPosTag {
 
         // 기호 - 일부 통합
         PosTag::SF => KiwiPosTag::SF,
-        PosTag::SP => KiwiPosTag::SP,
-        PosTag::SSO => KiwiPosTag::SS, // 여는괄호 -> 따옴표/괄호 통합
-        PosTag::SSC => KiwiPosTag::SS, // 닫는괄호 -> 따옴표/괄호 통합
-        PosTag::SC => KiwiPosTag::SP,  // 구분자 -> 쉼표 통합
+        PosTag::SP | PosTag::SC => KiwiPosTag::SP, // 구분자 -> 쉼표 통합
+        PosTag::SSO | PosTag::SSC => KiwiPosTag::SS, // 여는/닫는괄호 -> 따옴표/괄호 통합
         PosTag::SE => KiwiPosTag::SE,
         PosTag::SY => KiwiPosTag::SO, // 기타기호 -> 그외기호
         PosTag::SL => KiwiPosTag::SL,
@@ -432,6 +432,7 @@ pub const fn to_kiwi_tag(mecab_tag: PosTag) -> KiwiPosTag {
 /// assert_eq!(from_kiwi_tag(KiwiPosTag::SS), PosTag::SSO); // 괄호 -> 여는괄호 (기본값)
 /// assert_eq!(from_kiwi_tag(KiwiPosTag::W_URL), PosTag::SL); // 웹 태그 -> 외국어
 /// ```
+#[must_use]
 pub const fn from_kiwi_tag(kiwi_tag: KiwiPosTag) -> PosTag {
     match kiwi_tag {
         // 체언 - 1:1 매핑
@@ -486,19 +487,15 @@ pub const fn from_kiwi_tag(kiwi_tag: KiwiPosTag) -> PosTag {
         KiwiPosTag::SP => PosTag::SP, // SP는 SC도 포함할 수 있음 (손실)
         KiwiPosTag::SS => PosTag::SSO, // SS -> SSO (기본값, SSC는 손실)
         KiwiPosTag::SE => PosTag::SE,
-        KiwiPosTag::SO => PosTag::SY, // SO -> SY
-        KiwiPosTag::SW => PosTag::SY, // SW -> SY (붙임표를 기타기호로)
-        KiwiPosTag::SL => PosTag::SL,
-        KiwiPosTag::SH => PosTag::SH,
-        KiwiPosTag::SN => PosTag::SN,
-
-        // 웹 관련 - SL (외국어)로 통합
-        KiwiPosTag::W_URL
+        KiwiPosTag::SO | KiwiPosTag::SW => PosTag::SY, // SO, SW -> SY (붙임표를 기타기호로)
+        KiwiPosTag::SL | KiwiPosTag::W_URL
         | KiwiPosTag::W_EMAIL
         | KiwiPosTag::W_HASHTAG
         | KiwiPosTag::W_MENTION
         | KiwiPosTag::W_EMOJI
-        | KiwiPosTag::W_OTHER => PosTag::SL,
+        | KiwiPosTag::W_OTHER => PosTag::SL, // 웹 관련 - SL (외국어)로 통합
+        KiwiPosTag::SH => PosTag::SH,
+        KiwiPosTag::SN => PosTag::SN,
 
         // 특수
         KiwiPosTag::Unknown => PosTag::Unknown,
@@ -565,11 +562,13 @@ impl KiwiToken {
     }
 
     /// 끝 위치 계산 (start + length)
+    #[must_use]
     pub const fn end(&self) -> usize {
         self.start + self.length
     }
 
     /// MeCab-Ko 품사 태그로 변환
+    #[must_use]
     pub const fn to_mecab_tag(&self) -> PosTag {
         from_kiwi_tag(self.tag)
     }

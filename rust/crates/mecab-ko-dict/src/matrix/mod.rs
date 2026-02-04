@@ -4,7 +4,7 @@
 //!
 //! ## 포맷 지원
 //!
-//! - **텍스트 포맷** (`matrix.def`): MeCab 표준 형식
+//! - **텍스트 포맷** (`matrix.def`): `MeCab` 표준 형식
 //! - **바이너리 포맷** (`matrix.bin`): 고정 크기 i16 배열
 //! - **압축 포맷** (`matrix.bin.zst`): Zstd 압축 바이너리
 //!
@@ -86,7 +86,7 @@ pub struct DenseMatrix {
     lsize: usize,
     /// 우문맥 크기
     rsize: usize,
-    /// 비용 배열 (row-major: costs[right_id + lsize * left_id])
+    /// 비용 배열 (row-major: costs[`right_id` + lsize * `left_id`])
     costs: Vec<i16>,
 }
 
@@ -98,7 +98,7 @@ impl DenseMatrix {
     /// * `lsize` - 좌문맥 크기
     /// * `rsize` - 우문맥 크기
     /// * `default_cost` - 기본 비용 값
-    pub fn new(lsize: usize, rsize: usize, default_cost: i16) -> Self {
+    #[must_use] pub fn new(lsize: usize, rsize: usize, default_cost: i16) -> Self {
         let costs = vec![default_cost; lsize * rsize];
         Self {
             lsize,
@@ -118,6 +118,10 @@ impl DenseMatrix {
     /// # Returns
     ///
     /// 성공 시 `DenseMatrix`, 크기 불일치 시 에러
+    ///
+    /// # Errors
+    ///
+    /// 비용 배열의 길이가 `lsize * rsize`와 일치하지 않으면 에러를 반환합니다.
     pub fn from_vec(lsize: usize, rsize: usize, costs: Vec<i16>) -> Result<Self> {
         let expected_size = lsize * rsize;
         if costs.len() != expected_size {
@@ -161,6 +165,10 @@ impl DenseMatrix {
     /// # Arguments
     ///
     /// * `path` - matrix.def 파일 경로
+    ///
+    /// # Errors
+    ///
+    /// 파일을 읽을 수 없거나 형식이 잘못된 경우 에러를 반환합니다.
     pub fn from_def_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = std::fs::File::open(path.as_ref()).map_err(DictError::Io)?;
         let reader = BufReader::new(file);
@@ -168,6 +176,10 @@ impl DenseMatrix {
     }
 
     /// 텍스트 리더에서 로드
+    ///
+    /// # Errors
+    ///
+    /// 리더에서 데이터를 읽을 수 없거나 형식이 잘못된 경우 에러를 반환합니다.
     pub fn from_def_reader<R: BufRead>(mut reader: R) -> Result<Self> {
         // 첫 줄: 크기 정보
         let mut first_line = String::new();
@@ -229,12 +241,20 @@ impl DenseMatrix {
     /// [2 bytes] rsize (little-endian u16)
     /// [lsize * rsize * 2 bytes] costs (little-endian i16 array)
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// 파일을 읽을 수 없거나 형식이 잘못된 경우 에러를 반환합니다.
     pub fn from_bin_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let data = std::fs::read(path.as_ref()).map_err(DictError::Io)?;
         Self::from_bin_bytes(&data)
     }
 
     /// 바이너리 바이트에서 로드
+    ///
+    /// # Errors
+    ///
+    /// 데이터가 유효한 바이너리 형식이 아닌 경우 에러를 반환합니다.
     pub fn from_bin_bytes(data: &[u8]) -> Result<Self> {
         if data.len() < MATRIX_HEADER_SIZE {
             return Err(DictError::Format(
@@ -252,8 +272,7 @@ impl DenseMatrix {
 
         if data_size != expected_size {
             return Err(DictError::Format(format!(
-                "Matrix data size mismatch: expected {} bytes, got {}",
-                expected_size, data_size
+                "Matrix data size mismatch: expected {expected_size} bytes, got {data_size}"
             )));
         }
 
@@ -270,6 +289,10 @@ impl DenseMatrix {
     }
 
     /// 압축된 바이너리 파일(matrix.bin.zst)에서 로드
+    ///
+    /// # Errors
+    ///
+    /// 파일을 읽거나 압축 해제할 수 없는 경우 에러를 반환합니다.
     pub fn from_compressed_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = std::fs::File::open(path.as_ref()).map_err(DictError::Io)?;
         let decoder = zstd::Decoder::new(file).map_err(DictError::Io)?;
@@ -281,11 +304,13 @@ impl DenseMatrix {
     }
 
     /// 바이너리 형식으로 저장
-    pub fn to_bin_bytes(&self) -> Vec<u8> {
+    #[must_use] pub fn to_bin_bytes(&self) -> Vec<u8> {
         let mut buf = Vec::with_capacity(MATRIX_HEADER_SIZE + self.costs.len() * 2);
 
         // 헤더
+        #[allow(clippy::cast_possible_truncation)]
         buf.write_u16::<LittleEndian>(self.lsize as u16).ok();
+        #[allow(clippy::cast_possible_truncation)]
         buf.write_u16::<LittleEndian>(self.rsize as u16).ok();
 
         // 데이터
@@ -297,12 +322,20 @@ impl DenseMatrix {
     }
 
     /// 바이너리 파일로 저장
+    ///
+    /// # Errors
+    ///
+    /// 파일을 쓸 수 없는 경우 에러를 반환합니다.
     pub fn to_bin_file<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         let data = self.to_bin_bytes();
         std::fs::write(path.as_ref(), data).map_err(DictError::Io)
     }
 
     /// 압축된 바이너리 파일로 저장
+    ///
+    /// # Errors
+    ///
+    /// 파일을 쓰거나 압축할 수 없는 경우 에러를 반환합니다.
     pub fn to_compressed_file<P: AsRef<Path>>(&self, path: P, level: i32) -> Result<()> {
         let data = self.to_bin_bytes();
         let file = std::fs::File::create(path.as_ref()).map_err(DictError::Io)?;
@@ -313,12 +346,12 @@ impl DenseMatrix {
     }
 
     /// 원본 비용 배열 참조
-    pub fn costs(&self) -> &[i16] {
+    #[must_use] pub fn costs(&self) -> &[i16] {
         &self.costs
     }
 
     /// 메모리 사용량 (바이트)
-    pub fn memory_size(&self) -> usize {
+    #[must_use] pub fn memory_size(&self) -> usize {
         std::mem::size_of::<Self>() + self.costs.len() * std::mem::size_of::<i16>()
     }
 }
@@ -327,7 +360,7 @@ impl Matrix for DenseMatrix {
     fn get(&self, right_id: u16, left_id: u16) -> i32 {
         let index = right_id as usize + self.lsize * left_id as usize;
         if index < self.costs.len() {
-            self.costs[index] as i32
+            i32::from(self.costs[index])
         } else {
             INVALID_CONNECTION_COST
         }
@@ -367,6 +400,10 @@ impl MmapMatrix {
     ///
     /// 파일이 외부에서 수정되지 않아야 합니다.
     /// memmap2는 파일을 메모리에 매핑하며, 이는 본질적으로 unsafe입니다.
+    ///
+    /// # Errors
+    ///
+    /// 파일을 읽거나 메모리 맵을 생성할 수 없는 경우 에러를 반환합니다.
     #[allow(unsafe_code)]
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = std::fs::File::open(path.as_ref()).map_err(DictError::Io)?;
@@ -401,6 +438,10 @@ impl MmapMatrix {
     /// 압축된 파일에서 로드 (메모리에 전체 압축 해제)
     ///
     /// 압축 파일은 메모리 맵이 아닌 전체 압축 해제 후 로드됩니다.
+    ///
+    /// # Errors
+    ///
+    /// 파일을 읽거나 압축 해제할 수 없는 경우 에러를 반환합니다.
     pub fn from_compressed_file<P: AsRef<Path>>(path: P) -> Result<DenseMatrix> {
         // 압축 파일은 DenseMatrix로 로드
         DenseMatrix::from_compressed_file(path)
@@ -408,7 +449,7 @@ impl MmapMatrix {
 
     /// 비용 배열의 오프셋 계산
     #[inline]
-    fn offset(&self, right_id: u16, left_id: u16) -> usize {
+    const fn offset(&self, right_id: u16, left_id: u16) -> usize {
         MATRIX_HEADER_SIZE + (right_id as usize + self.lsize * left_id as usize) * 2
     }
 }
@@ -418,7 +459,7 @@ impl Matrix for MmapMatrix {
         let offset = self.offset(right_id, left_id);
         if offset + 2 <= self.mmap.len() {
             let bytes = [self.mmap[offset], self.mmap[offset + 1]];
-            i16::from_le_bytes(bytes) as i32
+            i32::from(i16::from_le_bytes(bytes))
         } else {
             INVALID_CONNECTION_COST
         }
@@ -445,13 +486,13 @@ pub struct SparseMatrix {
     rsize: usize,
     /// 기본 비용 (희소 엔트리에 없는 경우)
     default_cost: i16,
-    /// 희소 엔트리 (key: right_id + lsize * left_id, value: cost)
+    /// 희소 엔트리 (key: `right_id` + lsize * `left_id`, value: cost)
     entries: std::collections::HashMap<usize, i16>,
 }
 
 impl SparseMatrix {
     /// 새로운 희소 행렬 생성
-    pub fn new(lsize: usize, rsize: usize, default_cost: i16) -> Self {
+    #[must_use] pub fn new(lsize: usize, rsize: usize, default_cost: i16) -> Self {
         Self {
             lsize,
             rsize,
@@ -470,8 +511,8 @@ impl SparseMatrix {
         }
     }
 
-    /// DenseMatrix에서 변환 (기본값과 다른 엔트리만 저장)
-    pub fn from_dense(dense: &DenseMatrix, default_cost: i16) -> Self {
+    /// `DenseMatrix에서` 변환 (기본값과 다른 엔트리만 저장)
+    #[must_use] pub fn from_dense(dense: &DenseMatrix, default_cost: i16) -> Self {
         let mut sparse = Self::new(dense.lsize, dense.rsize, default_cost);
         for (index, &cost) in dense.costs.iter().enumerate() {
             if cost != default_cost {
@@ -481,8 +522,8 @@ impl SparseMatrix {
         sparse
     }
 
-    /// DenseMatrix로 변환
-    pub fn to_dense(&self) -> DenseMatrix {
+    /// `DenseMatrix로` 변환
+    #[must_use] pub fn to_dense(&self) -> DenseMatrix {
         let mut costs = vec![self.default_cost; self.lsize * self.rsize];
         for (&index, &cost) in &self.entries {
             if index < costs.len() {
@@ -497,21 +538,25 @@ impl SparseMatrix {
     }
 
     /// 엔트리 수
-    pub fn entry_count_stored(&self) -> usize {
+    #[must_use] pub fn entry_count_stored(&self) -> usize {
         self.entries.len()
     }
 
     /// 희소도 (0.0 ~ 1.0, 1.0 = 완전 희소)
-    pub fn sparsity(&self) -> f64 {
+    #[must_use] pub fn sparsity(&self) -> f64 {
         let total = self.lsize * self.rsize;
         if total == 0 {
             return 0.0;
         }
-        1.0 - (self.entries.len() as f64 / total as f64)
+        #[allow(clippy::cast_precision_loss)]
+        let entries_len = self.entries.len() as f64;
+        #[allow(clippy::cast_precision_loss)]
+        let total_f64 = total as f64;
+        1.0 - (entries_len / total_f64)
     }
 
     /// 메모리 사용량 (바이트, 대략적)
-    pub fn memory_size(&self) -> usize {
+    #[must_use] pub fn memory_size(&self) -> usize {
         std::mem::size_of::<Self>()
             + self.entries.capacity() * (std::mem::size_of::<usize>() + std::mem::size_of::<i16>())
     }
@@ -522,8 +567,7 @@ impl Matrix for SparseMatrix {
         let index = right_id as usize + self.lsize * left_id as usize;
         self.entries
             .get(&index)
-            .map(|&c| c as i32)
-            .unwrap_or(self.default_cost as i32)
+            .map_or_else(|| i32::from(self.default_cost), |&c| i32::from(c))
     }
 
     fn left_size(&self) -> usize {
@@ -547,6 +591,10 @@ impl MatrixLoader {
     /// - `.def`: 텍스트 포맷
     /// - `.bin`: 바이너리 포맷
     /// - `.bin.zst`, `.zst`: 압축 바이너리 포맷
+    ///
+    /// # Errors
+    ///
+    /// 파일을 읽거나 파싱할 수 없는 경우 에러를 반환합니다.
     pub fn load<P: AsRef<Path>>(path: P) -> Result<DenseMatrix> {
         let path = path.as_ref();
         let path_str = path.to_string_lossy();
@@ -564,6 +612,10 @@ impl MatrixLoader {
     }
 
     /// 메모리 맵으로 로드 (바이너리 파일만 지원)
+    ///
+    /// # Errors
+    ///
+    /// 파일을 읽거나 메모리 맵을 생성할 수 없는 경우 에러를 반환합니다.
     pub fn load_mmap<P: AsRef<Path>>(path: P) -> Result<MmapMatrix> {
         MmapMatrix::from_file(path)
     }
@@ -583,21 +635,37 @@ pub enum ConnectionMatrix {
 
 impl ConnectionMatrix {
     /// 텍스트 파일에서 로드
+    ///
+    /// # Errors
+    ///
+    /// 파일을 읽거나 파싱할 수 없는 경우 에러를 반환합니다.
     pub fn from_def_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         Ok(Self::Dense(DenseMatrix::from_def_file(path)?))
     }
 
     /// 바이너리 파일에서 로드
+    ///
+    /// # Errors
+    ///
+    /// 파일을 읽거나 파싱할 수 없는 경우 에러를 반환합니다.
     pub fn from_bin_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         Ok(Self::Dense(DenseMatrix::from_bin_file(path)?))
     }
 
     /// 메모리 맵으로 로드
+    ///
+    /// # Errors
+    ///
+    /// 파일을 읽거나 메모리 맵을 생성할 수 없는 경우 에러를 반환합니다.
     pub fn from_mmap_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         Ok(Self::Mmap(MmapMatrix::from_file(path)?))
     }
 
     /// 자동 포맷 감지 로드
+    ///
+    /// # Errors
+    ///
+    /// 파일을 읽거나 파싱할 수 없는 경우 에러를 반환합니다.
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self> {
         Ok(Self::Dense(MatrixLoader::load(path)?))
     }

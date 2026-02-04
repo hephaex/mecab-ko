@@ -50,26 +50,34 @@ impl<'a> Trie<'a> {
     /// # Arguments
     ///
     /// * `bytes` - 직렬화된 Trie 데이터
-    pub fn new(bytes: &'a [u8]) -> Self {
+    #[must_use] pub fn new(bytes: &'a [u8]) -> Self {
         Self {
             da: DoubleArray::new(Cow::Borrowed(bytes)),
         }
     }
 
     /// 소유 바이트 벡터에서 Trie 생성
-    pub fn from_vec(bytes: Vec<u8>) -> Trie<'static> {
+    #[must_use] pub fn from_vec(bytes: Vec<u8>) -> Trie<'static> {
         Trie {
             da: DoubleArray::new(Cow::Owned(bytes)),
         }
     }
 
     /// 파일에서 Trie 로드
+    ///
+    /// # Errors
+    ///
+    /// 파일을 읽을 수 없는 경우 에러를 반환합니다.
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Trie<'static>> {
         let bytes = std::fs::read(path.as_ref()).map_err(DictError::Io)?;
         Ok(Self::from_vec(bytes))
     }
 
     /// 압축된 파일에서 Trie 로드 (zstd)
+    ///
+    /// # Errors
+    ///
+    /// 파일을 읽거나 압축 해제할 수 없는 경우 에러를 반환합니다.
     pub fn from_compressed_file<P: AsRef<Path>>(path: P) -> Result<Trie<'static>> {
         let file = std::fs::File::open(path.as_ref()).map_err(DictError::Io)?;
         let mut decoder = zstd::Decoder::new(file).map_err(DictError::Io)?;
@@ -94,12 +102,12 @@ impl<'a> Trie<'a> {
     /// let value = trie.exact_match("가다");
     /// assert_eq!(value, Some(1));
     /// ```
-    pub fn exact_match(&self, key: &str) -> Option<u32> {
+    #[must_use] pub fn exact_match(&self, key: &str) -> Option<u32> {
         self.da.exact_match_search(key.as_bytes())
     }
 
     /// 바이트 키로 정확히 일치하는 키 검색
-    pub fn exact_match_bytes(&self, key: &[u8]) -> Option<u32> {
+    #[must_use] pub fn exact_match_bytes(&self, key: &[u8]) -> Option<u32> {
         self.da.exact_match_search(key)
     }
 
@@ -114,9 +122,9 @@ impl<'a> Trie<'a> {
     ///
     /// # Returns
     ///
-    /// (value, byte_length) 쌍의 반복자
+    /// (value, `byte_length`) 쌍의 반복자
     /// - value: 일치하는 키의 값
-    /// - byte_length: 일치하는 키의 바이트 길이
+    /// - `byte_length`: 일치하는 키의 바이트 길이
     ///
     /// # Example
     ///
@@ -149,10 +157,10 @@ impl<'a> Trie<'a> {
     ///
     /// # Returns
     ///
-    /// (value, end_byte) 쌍의 벡터
+    /// (value, `end_byte`) 쌍의 벡터
     /// - value: 일치하는 키의 값
-    /// - end_byte: 일치하는 키의 끝 바이트 위치
-    pub fn common_prefix_search_at(&self, text: &str, start_byte: usize) -> Vec<(u32, usize)> {
+    /// - `end_byte`: 일치하는 키의 끝 바이트 위치
+    #[must_use] pub fn common_prefix_search_at(&self, text: &str, start_byte: usize) -> Vec<(u32, usize)> {
         if start_byte >= text.len() {
             return Vec::new();
         }
@@ -180,6 +188,10 @@ impl TrieBuilder {
     /// # Returns
     ///
     /// 성공 시 직렬화된 Trie 바이트, 실패 시 에러
+    ///
+    /// # Errors
+    ///
+    /// 엔트리가 비어있거나 Trie 빌드에 실패한 경우 에러를 반환합니다.
     ///
     /// # Note
     ///
@@ -212,6 +224,10 @@ impl TrieBuilder {
     }
 
     /// 바이트 키-값 쌍에서 Trie 빌드
+    ///
+    /// # Errors
+    ///
+    /// 엔트리가 비어있거나 Trie 빌드에 실패한 경우 에러를 반환합니다.
     pub fn build_bytes(entries: &[(&[u8], u32)]) -> Result<Vec<u8>> {
         if entries.is_empty() {
             return Err(DictError::Format(
@@ -226,17 +242,29 @@ impl TrieBuilder {
     /// 정렬되지 않은 엔트리에서 Trie 빌드
     ///
     /// 내부적으로 정렬을 수행합니다.
+    ///
+    /// # Errors
+    ///
+    /// 엔트리가 비어있거나 Trie 빌드에 실패한 경우 에러를 반환합니다.
     pub fn build_unsorted(entries: &mut [(&str, u32)]) -> Result<Vec<u8>> {
         entries.sort_by(|a, b| a.0.as_bytes().cmp(b.0.as_bytes()));
         Self::build(entries)
     }
 
     /// Trie를 파일로 저장
+    ///
+    /// # Errors
+    ///
+    /// 파일을 쓸 수 없는 경우 에러를 반환합니다.
     pub fn save_to_file<P: AsRef<Path>>(bytes: &[u8], path: P) -> Result<()> {
         std::fs::write(path.as_ref(), bytes).map_err(DictError::Io)
     }
 
     /// Trie를 압축하여 파일로 저장 (zstd)
+    ///
+    /// # Errors
+    ///
+    /// 파일을 쓰거나 압축할 수 없는 경우 에러를 반환합니다.
     pub fn save_to_compressed_file<P: AsRef<Path>>(
         bytes: &[u8],
         path: P,
@@ -258,12 +286,12 @@ pub struct EntryIndex(pub u32);
 
 impl EntryIndex {
     /// 새 인덱스 생성
-    pub fn new(index: u32) -> Self {
+    #[must_use] pub const fn new(index: u32) -> Self {
         Self(index)
     }
 
     /// 인덱스 값 반환
-    pub fn value(&self) -> u32 {
+    #[must_use] pub const fn value(&self) -> u32 {
         self.0
     }
 }
@@ -294,8 +322,8 @@ pub struct PrefixMatch {
 }
 
 impl PrefixMatch {
-    /// 새 PrefixMatch 생성
-    pub fn new(index: u32, byte_length: usize, start_byte: usize) -> Self {
+    /// 새 `PrefixMatch` 생성
+    #[must_use] pub const fn new(index: u32, byte_length: usize, start_byte: usize) -> Self {
         Self {
             index: EntryIndex(index),
             start_byte,
@@ -317,18 +345,18 @@ pub struct DictionarySearcher<'a, E> {
 
 impl<'a, E> DictionarySearcher<'a, E> {
     /// 새 검색기 생성
-    pub fn new(trie: &'a Trie<'a>, entries: &'a [E]) -> Self {
+    pub const fn new(trie: &'a Trie<'a>, entries: &'a [E]) -> Self {
         Self { trie, entries }
     }
 
     /// 정확히 일치하는 엔트리 검색
-    pub fn exact_match(&self, key: &str) -> Option<&E> {
+    #[must_use] pub fn exact_match(&self, key: &str) -> Option<&E> {
         let index = self.trie.exact_match(key)?;
         self.entries.get(index as usize)
     }
 
     /// 공통 접두사 검색으로 모든 일치 엔트리 반환
-    pub fn common_prefix_search(&self, text: &str) -> Vec<(&E, PrefixMatch)> {
+    #[must_use] pub fn common_prefix_search(&self, text: &str) -> Vec<(&E, PrefixMatch)> {
         self.trie
             .common_prefix_search(text)
             .filter_map(|(index, byte_len)| {
@@ -340,7 +368,7 @@ impl<'a, E> DictionarySearcher<'a, E> {
     }
 
     /// 특정 위치에서 공통 접두사 검색
-    pub fn common_prefix_search_at(&self, text: &str, start_byte: usize) -> Vec<(&E, PrefixMatch)> {
+    #[must_use] pub fn common_prefix_search_at(&self, text: &str, start_byte: usize) -> Vec<(&E, PrefixMatch)> {
         self.trie
             .common_prefix_search_at(text, start_byte)
             .into_iter()

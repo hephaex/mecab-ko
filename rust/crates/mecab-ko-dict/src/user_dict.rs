@@ -32,7 +32,7 @@ use crate::trie::{Trie, TrieBuilder};
 use crate::Entry;
 
 /// 사용자 사전 엔트리
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UserEntry {
     /// 표면형
     pub surface: String,
@@ -68,7 +68,7 @@ impl UserEntry {
             reading.as_deref().unwrap_or("*")
         );
         Self {
-            surface: surface.clone(),
+            surface,
             left_id: 0, // 기본 컨텍스트 ID
             right_id: 0,
             cost,
@@ -80,20 +80,21 @@ impl UserEntry {
     }
 
     /// 컨텍스트 ID 설정
-    pub fn with_context_ids(mut self, left_id: u16, right_id: u16) -> Self {
+    #[must_use] pub const fn with_context_ids(mut self, left_id: u16, right_id: u16) -> Self {
         self.left_id = left_id;
         self.right_id = right_id;
         self
     }
 
     /// 원형 설정
+    #[must_use]
     pub fn with_lemma(mut self, lemma: impl Into<String>) -> Self {
         self.lemma = Some(lemma.into());
         self
     }
 
     /// Entry로 변환
-    pub fn to_entry(&self) -> Entry {
+    #[must_use] pub fn to_entry(&self) -> Entry {
         let feature = format!(
             "{},*,*,*,*,*,{},*",
             self.pos,
@@ -133,7 +134,7 @@ impl Default for UserDictionary {
 
 impl UserDictionary {
     /// 새 사용자 사전 생성
-    pub fn new() -> Self {
+    #[must_use] pub fn new() -> Self {
         Self {
             entries: Vec::new(),
             surface_map: HashMap::new(),
@@ -143,7 +144,7 @@ impl UserDictionary {
     }
 
     /// 기본 비용 설정
-    pub fn with_default_cost(mut self, cost: i16) -> Self {
+    #[must_use] pub const fn with_default_cost(mut self, cost: i16) -> Self {
         self.default_cost = cost;
         self
     }
@@ -215,6 +216,10 @@ impl UserDictionary {
     /// - 품사: 필수 (예: NNG, NNP, VV)
     /// - 비용: 선택 (기본값: -1000)
     /// - 읽기: 선택
+    ///
+    /// # Errors
+    ///
+    /// 파일을 읽거나 파싱할 수 없는 경우 에러를 반환합니다.
     pub fn load_from_csv<P: AsRef<Path>>(&mut self, path: P) -> Result<&mut Self> {
         let file = std::fs::File::open(path.as_ref()).map_err(DictError::Io)?;
         let reader = BufReader::new(file);
@@ -235,6 +240,10 @@ impl UserDictionary {
     }
 
     /// CSV 문자열에서 사전 로드
+    ///
+    /// # Errors
+    ///
+    /// 파싱 오류가 발생한 경우 에러를 반환합니다.
     pub fn load_from_str(&mut self, content: &str) -> Result<&mut Self> {
         for (line_num, line) in content.lines().enumerate() {
             let line = line.trim();
@@ -255,8 +264,7 @@ impl UserDictionary {
 
         if parts.len() < 2 {
             return Err(DictError::Format(format!(
-                "Invalid user dictionary format at line {}: expected at least 2 fields",
-                line_num
+                "Invalid user dictionary format at line {line_num}: expected at least 2 fields"
             )));
         }
 
@@ -265,8 +273,7 @@ impl UserDictionary {
 
         if surface.is_empty() || pos.is_empty() {
             return Err(DictError::Format(format!(
-                "Empty surface or POS at line {}",
-                line_num
+                "Empty surface or POS at line {line_num}"
             )));
         }
 
@@ -290,7 +297,7 @@ impl UserDictionary {
     }
 
     /// 표면형으로 엔트리 검색
-    pub fn lookup(&self, surface: &str) -> Vec<&UserEntry> {
+    #[must_use] pub fn lookup(&self, surface: &str) -> Vec<&UserEntry> {
         self.surface_map
             .get(surface)
             .map(|indices| {
@@ -313,7 +320,7 @@ impl UserDictionary {
     /// # Returns
     ///
     /// 일치하는 엔트리의 벡터
-    pub fn common_prefix_search(&self, text: &str) -> Vec<&UserEntry> {
+    #[must_use] pub fn common_prefix_search(&self, text: &str) -> Vec<&UserEntry> {
         let mut results = Vec::new();
 
         // 각 엔트리의 표면형을 텍스트의 접두사로 확인
@@ -327,23 +334,27 @@ impl UserDictionary {
     }
 
     /// 모든 엔트리 반환
-    pub fn entries(&self) -> &[UserEntry] {
+    #[must_use] pub fn entries(&self) -> &[UserEntry] {
         &self.entries
     }
 
     /// 엔트리 수 반환
-    pub fn len(&self) -> usize {
+    #[must_use] pub fn len(&self) -> usize {
         self.entries.len()
     }
 
     /// 사전이 비어있는지 확인
-    pub fn is_empty(&self) -> bool {
+    #[must_use] pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }
 
     /// Trie 빌드
     ///
     /// 사전 검색을 위한 Double-Array Trie를 빌드합니다.
+    ///
+    /// # Errors
+    ///
+    /// 사전이 비어있거나 Trie 빌드에 실패한 경우 에러를 반환합니다.
     pub fn build_trie(&mut self) -> Result<&[u8]> {
         if let Some(ref cache) = self.trie_cache {
             return Ok(cache);
@@ -356,6 +367,7 @@ impl UserDictionary {
         }
 
         // 표면형과 첫 번째 인덱스로 엔트리 생성
+        #[allow(clippy::cast_possible_truncation)]
         let mut trie_entries: Vec<(&str, u32)> = self
             .surface_map
             .iter()
@@ -375,13 +387,13 @@ impl UserDictionary {
     }
 
     /// 빌드된 Trie 가져오기
-    pub fn get_trie(&self) -> Option<Trie<'_>> {
+    #[must_use] pub fn get_trie(&self) -> Option<Trie<'_>> {
         self.trie_cache.as_ref().map(|bytes| Trie::new(bytes))
     }
 
     /// Entry 목록으로 변환
-    pub fn to_entries(&self) -> Vec<Entry> {
-        self.entries.iter().map(|e| e.to_entry()).collect()
+    #[must_use] pub fn to_entries(&self) -> Vec<Entry> {
+        self.entries.iter().map(UserEntry::to_entry).collect()
     }
 
     /// 사전 초기화 (모든 엔트리 제거)
@@ -392,6 +404,10 @@ impl UserDictionary {
     }
 
     /// 파일로 저장 (CSV 형식)
+    ///
+    /// # Errors
+    ///
+    /// 파일을 쓸 수 없는 경우 에러를 반환합니다.
     pub fn save_to_csv<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         use std::io::Write;
 
@@ -427,31 +443,32 @@ impl Default for UserDictionaryBuilder {
 
 impl UserDictionaryBuilder {
     /// 새 빌더 생성
-    pub fn new() -> Self {
+    #[must_use] pub fn new() -> Self {
         Self {
             dict: UserDictionary::new(),
         }
     }
 
     /// 기본 비용 설정
-    pub fn default_cost(mut self, cost: i16) -> Self {
+    #[must_use] pub fn default_cost(mut self, cost: i16) -> Self {
         self.dict = self.dict.with_default_cost(cost);
         self
     }
 
     /// 엔트리 추가
-    pub fn add(mut self, surface: &str, pos: &str) -> Self {
+    #[must_use] pub fn add(mut self, surface: &str, pos: &str) -> Self {
         self.dict.add_entry(surface, pos, None, None);
         self
     }
 
     /// 비용과 함께 엔트리 추가
-    pub fn add_with_cost(mut self, surface: &str, pos: &str, cost: i16) -> Self {
+    #[must_use] pub fn add_with_cost(mut self, surface: &str, pos: &str, cost: i16) -> Self {
         self.dict.add_entry(surface, pos, Some(cost), None);
         self
     }
 
     /// 모든 정보와 함께 엔트리 추가
+    #[must_use]
     pub fn add_full(mut self, surface: &str, pos: &str, cost: i16, reading: Option<&str>) -> Self {
         self.dict
             .add_entry(surface, pos, Some(cost), reading.map(String::from));
@@ -459,23 +476,35 @@ impl UserDictionaryBuilder {
     }
 
     /// CSV 파일에서 로드
+    ///
+    /// # Errors
+    ///
+    /// 파일을 읽거나 파싱할 수 없는 경우 에러를 반환합니다.
     pub fn load_csv<P: AsRef<Path>>(mut self, path: P) -> Result<Self> {
         self.dict.load_from_csv(path)?;
         Ok(self)
     }
 
     /// CSV 문자열에서 로드
+    ///
+    /// # Errors
+    ///
+    /// 파싱 오류가 발생한 경우 에러를 반환합니다.
     pub fn load_str(mut self, content: &str) -> Result<Self> {
         self.dict.load_from_str(content)?;
         Ok(self)
     }
 
     /// 사전 빌드
-    pub fn build(self) -> UserDictionary {
+    #[must_use] pub fn build(self) -> UserDictionary {
         self.dict
     }
 
     /// Trie와 함께 빌드
+    ///
+    /// # Errors
+    ///
+    /// Trie 빌드에 실패한 경우 에러를 반환합니다.
     pub fn build_with_trie(mut self) -> Result<UserDictionary> {
         if !self.dict.is_empty() {
             self.dict.build_trie()?;
