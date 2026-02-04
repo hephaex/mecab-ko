@@ -46,9 +46,3 @@ nursery = "warn"
 unwrap_used = "allow"
 expect_used = "allow"
 panic = "allow"
-
-# WASM build optimization
-[profile.release]
-opt-level = "z"
-lto = true
-codegen-units = 1

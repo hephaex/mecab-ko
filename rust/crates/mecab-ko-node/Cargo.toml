@@ -27,11 +27,6 @@ parking_lot = "0.12"
 [build-dependencies]
 napi-build = "2.1"
 
-[profile.release]
-lto = true
-codegen-units = 1
-strip = true
-
 # Override workspace lints for FFI code
 [lints.rust]
 unsafe_code = "allow"
