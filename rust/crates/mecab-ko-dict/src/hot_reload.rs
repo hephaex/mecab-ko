@@ -4,8 +4,8 @@
 //!
 //! ## 주요 기능
 //!
-//! - **파일 변경 감지**: `notify` 크레이트를 통한 자동 감지
-//! - **무중단 교체**: RwLock과 Copy-on-Write 전략
+//! - **파일 변경 감지**: notify 크레이트를 통한 자동 감지
+//! - **무중단 교체**: `RwLock`과 Copy-on-Write 전략
 //! - **델타 업데이트**: 변경분만 적용하여 성능 최적화
 //! - **버전 관리**: 사전 버전 추적 및 롤백 지원
 //! - **스레드 안전성**: 동시 읽기/쓰기 처리
@@ -54,8 +54,8 @@
 //!
 //! ## 성능 특성
 //!
-//! - **읽기**: Lock contention 최소화 (RwLock)
-//! - **쓰기**: Copy-on-Write로 기존 읽기 영향 없음
+//! - **읽기**: Lock contention 최소화 (`RwLock`)
+//! - **쓰기**: `Copy-on-Write`로 기존 읽기 영향 없음
 //! - **델타 업데이트**: O(변경분) 복잡도
 //! - **메모리**: 버전당 증분 메모리 사용
 
@@ -120,7 +120,7 @@ impl VersionedDictionary {
 
 /// 핫 리로드 가능한 사전
 ///
-/// RwLock으로 동시 접근을 제어하며, Copy-on-Write 전략으로 무중단 업데이트를 지원합니다.
+/// `RwLock`으로 동시 접근을 제어하며, Copy-on-Write 전략으로 무중단 업데이트를 지원합니다.
 pub struct HotReloadDictionary {
     /// 현재 사전 (버전 포함)
     current: Arc<RwLock<VersionedDictionary>>,
@@ -169,6 +169,10 @@ impl HotReloadDictionary {
     }
 
     /// 기본 경로에서 핫 리로드 사전 생성
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the dictionary files cannot be loaded.
     pub fn new_default() -> Result<Self> {
         let system_dict = SystemDictionary::load_default()?;
         let dicdir = system_dict.dicdir().to_path_buf();
@@ -191,23 +195,27 @@ impl HotReloadDictionary {
     }
 
     /// 최대 버전 히스토리 크기 설정
-    pub fn with_max_history(mut self, max_history: usize) -> Self {
+    #[must_use]
+    pub const fn with_max_history(mut self, max_history: usize) -> Self {
         self.max_history = max_history;
         self
     }
 
     /// 최대 델타 큐 크기 설정
-    pub fn with_max_delta_queue(mut self, max_delta_queue: usize) -> Self {
+    #[must_use]
+    pub const fn with_max_delta_queue(mut self, max_delta_queue: usize) -> Self {
         self.max_delta_queue = max_delta_queue;
         self
     }
 
     /// 현재 버전 반환
+    #[must_use]
     pub fn current_version(&self) -> Version {
         self.current.read().map(|dict| dict.version).unwrap_or(0)
     }
 
     /// 사전 디렉토리 경로 반환
+    #[must_use]
     pub fn dicdir(&self) -> &Path {
         &self.dicdir
     }
@@ -217,6 +225,10 @@ impl HotReloadDictionary {
     /// # Arguments
     ///
     /// * `surface` - 검색할 표면형
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the dictionary lock cannot be acquired.
     pub fn lookup(&self, surface: &str) -> Result<Vec<Entry>> {
         let dict = self.current.read().map_err(|_| {
             DictError::Format("Failed to acquire read lock on dictionary".to_string())
@@ -234,6 +246,7 @@ impl HotReloadDictionary {
         // 사용자 사전 검색
         let user_entries = dict.user_dict.lookup(surface);
         results.extend(user_entries.iter().map(|e| e.to_entry()));
+        drop(dict);
 
         Ok(results)
     }
@@ -249,7 +262,7 @@ impl HotReloadDictionary {
     ///
     /// # Errors
     ///
-    /// - Lock 획득 실패
+    /// Returns an error if the dictionary lock cannot be acquired.
     pub fn add_entry(
         &self,
         surface: impl Into<String>,
@@ -283,6 +296,10 @@ impl HotReloadDictionary {
     /// # Returns
     ///
     /// 제거된 엔트리 수
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the dictionary lock cannot be acquired.
     pub fn remove_entry(&self, surface: &str) -> Result<(Version, usize)> {
         let mut dict = self.current.write().map_err(|_| {
             DictError::Format("Failed to acquire write lock on dictionary".to_string())
@@ -337,6 +354,10 @@ impl HotReloadDictionary {
     ///
     /// * `surface` - 수정할 표면형
     /// * `update_fn` - 업데이트 함수
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the dictionary lock cannot be acquired.
     pub fn update_entry<F>(&self, surface: &str, update_fn: F) -> Result<Version>
     where
         F: Fn(&mut UserEntry),
@@ -390,6 +411,10 @@ impl HotReloadDictionary {
     /// # Arguments
     ///
     /// * `delta` - 델타 업데이트
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the dictionary lock cannot be acquired.
     pub fn apply_delta(&self, delta: DeltaUpdate) -> Result<Version> {
         let mut dict = self.current.write().map_err(|_| {
             DictError::Format("Failed to acquire write lock on dictionary".to_string())
@@ -474,6 +499,10 @@ impl HotReloadDictionary {
     /// 시스템 사전 리로드
     ///
     /// 사전 파일이 변경되었을 때 호출됩니다.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the dictionary files cannot be reloaded or the lock cannot be acquired.
     pub fn reload_system_dict(&self) -> Result<Version> {
         let mut dict = self.current.write().map_err(|_| {
             DictError::Format("Failed to acquire write lock on dictionary".to_string())
@@ -496,6 +525,10 @@ impl HotReloadDictionary {
     /// # Arguments
     ///
     /// * `target_version` - 롤백할 버전
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the version is not found in history or locks cannot be acquired.
     pub fn rollback(&self, target_version: Version) -> Result<()> {
         let history = self
             .history
@@ -507,18 +540,24 @@ impl HotReloadDictionary {
             .find(|v| v.version == target_version)
             .ok_or_else(|| {
                 DictError::Format(format!("Version {target_version} not found in history"))
-            })?;
+            })?
+            .clone();
+        drop(history);
 
         let mut dict = self.current.write().map_err(|_| {
             DictError::Format("Failed to acquire write lock on dictionary".to_string())
         })?;
 
-        *dict = target.clone();
+        *dict = target;
 
         Ok(())
     }
 
     /// 버전 히스토리 조회
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if locks cannot be acquired.
     pub fn version_history(&self) -> Result<Vec<VersionInfo>> {
         let history = self
             .history
@@ -540,6 +579,8 @@ impl HotReloadDictionary {
             timestamp: v.timestamp,
             user_entry_count: v.user_dict.len(),
         }));
+        drop(history);
+        drop(current);
 
         versions.sort_by(|a, b| b.version.cmp(&a.version));
 
@@ -558,6 +599,7 @@ impl HotReloadDictionary {
         while history.len() > self.max_history {
             history.pop_front();
         }
+        drop(history);
 
         Ok(())
     }
@@ -573,11 +615,16 @@ impl HotReloadDictionary {
         while queue.len() > self.max_delta_queue {
             queue.pop_front();
         }
+        drop(queue);
 
         Ok(())
     }
 
     /// 델타 히스토리 조회
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the lock cannot be acquired.
     pub fn delta_history(&self) -> Result<Vec<DeltaUpdate>> {
         let queue = self.delta_queue.read().map_err(|_| {
             DictError::Format("Failed to acquire read lock on delta queue".to_string())
@@ -587,15 +634,25 @@ impl HotReloadDictionary {
     }
 
     /// 사용자 사전 내보내기
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the lock cannot be acquired.
     pub fn export_user_dict(&self) -> Result<UserDictionary> {
         let dict = self.current.read().map_err(|_| {
             DictError::Format("Failed to acquire read lock on dictionary".to_string())
         })?;
 
-        Ok((*dict.user_dict).clone())
+        let user_dict = (*dict.user_dict).clone();
+        drop(dict);
+        Ok(user_dict)
     }
 
     /// 사용자 사전 가져오기
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the lock cannot be acquired.
     pub fn import_user_dict(&self, user_dict: UserDictionary) -> Result<Version> {
         let mut dict = self.current.write().map_err(|_| {
             DictError::Format("Failed to acquire write lock on dictionary".to_string())
@@ -629,7 +686,8 @@ impl Default for DeltaUpdate {
 
 impl DeltaUpdate {
     /// 새 델타 업데이트 생성
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self {
             additions: Vec::new(),
             removals: Vec::new(),
@@ -638,26 +696,31 @@ impl DeltaUpdate {
     }
 
     /// 빌더 패턴 시작
+    #[must_use]
     pub fn builder() -> DeltaUpdateBuilder {
         DeltaUpdateBuilder::new()
     }
 
     /// 추가 작업 수
+    #[must_use]
     pub fn addition_count(&self) -> usize {
         self.additions.len()
     }
 
     /// 제거 작업 수
+    #[must_use]
     pub fn removal_count(&self) -> usize {
         self.removals.len()
     }
 
     /// 수정 작업 수
+    #[must_use]
     pub fn modification_count(&self) -> usize {
         self.modifications.len()
     }
 
     /// 총 변경 작업 수
+    #[must_use]
     pub fn total_changes(&self) -> usize {
         self.additions.len() + self.removals.len() + self.modifications.len()
     }
@@ -681,7 +744,7 @@ pub struct EntryChange {
 }
 
 impl EntryChange {
-    /// UserEntry로 변환
+    /// `UserEntry`로 변환
     fn to_user_entry(&self) -> UserEntry {
         UserEntry::new(
             self.surface.clone(),
@@ -706,6 +769,7 @@ impl Default for DeltaUpdateBuilder {
 
 impl DeltaUpdateBuilder {
     /// 새 빌더 생성
+    #[must_use]
     pub fn new() -> Self {
         Self {
             delta: DeltaUpdate::new(),
@@ -713,6 +777,7 @@ impl DeltaUpdateBuilder {
     }
 
     /// 엔트리 추가
+    #[must_use]
     pub fn add(mut self, surface: impl Into<String>, pos: impl Into<String>, cost: i16) -> Self {
         self.delta.additions.push(EntryChange {
             surface: surface.into(),
@@ -726,6 +791,7 @@ impl DeltaUpdateBuilder {
     }
 
     /// 엔트리 추가 (읽기 포함)
+    #[must_use]
     pub fn add_with_reading(
         mut self,
         surface: impl Into<String>,
@@ -745,12 +811,14 @@ impl DeltaUpdateBuilder {
     }
 
     /// 엔트리 제거
+    #[must_use]
     pub fn remove(mut self, surface: impl Into<String>) -> Self {
         self.delta.removals.push(surface.into());
         self
     }
 
     /// 엔트리 수정
+    #[must_use]
     pub fn modify(mut self, surface: impl Into<String>, pos: impl Into<String>, cost: i16) -> Self {
         self.delta.modifications.push(EntryChange {
             surface: surface.into(),
@@ -764,6 +832,7 @@ impl DeltaUpdateBuilder {
     }
 
     /// 델타 업데이트 빌드
+    #[must_use]
     pub fn build(self) -> DeltaUpdate {
         self.delta
     }
@@ -782,6 +851,7 @@ pub struct VersionInfo {
 
 impl VersionInfo {
     /// 버전 생성 시간 (Duration)
+    #[must_use]
     pub fn age(&self) -> Option<Duration> {
         SystemTime::now().duration_since(self.timestamp).ok()
     }

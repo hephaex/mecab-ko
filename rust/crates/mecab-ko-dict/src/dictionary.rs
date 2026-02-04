@@ -4,8 +4,8 @@
 //!
 //! ## 구조
 //!
-//! - **SystemDictionary**: Trie + Matrix + Features를 통합한 시스템 사전
-//! - **DictionaryLoader**: 사전 경로 탐색 및 로딩
+//! - **`SystemDictionary`**: Trie + Matrix + Features를 통합한 시스템 사전
+//! - **`DictionaryLoader`**: 사전 경로 탐색 및 로딩
 //! - 환경변수 기반 사전 경로 지원 (`MECAB_DICDIR`)
 //! - 메모리 맵 기반 효율적 로딩
 //!
@@ -72,7 +72,7 @@ pub struct SystemDictionary {
 /// 사전 엔트리 (내부 표현)
 ///
 /// 메모리 효율을 위해 feature는 인덱스로 저장합니다.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DictEntry {
     /// 표면형
     pub surface: String,
@@ -105,6 +105,7 @@ impl DictEntry {
     }
 
     /// Entry로 변환
+    #[must_use]
     pub fn to_entry(&self) -> Entry {
         Entry {
             surface: self.surface.clone(),
@@ -163,7 +164,7 @@ impl SystemDictionary {
             Trie::from_file(&trie_path)?
         } else {
             // 압축 파일 시도
-            let compressed_path = dicdir.join(format!("{}.zst", TRIE_FILE));
+            let compressed_path = dicdir.join(format!("{TRIE_FILE}.zst"));
             if compressed_path.exists() {
                 Trie::from_compressed_file(&compressed_path)?
             } else {
@@ -208,6 +209,7 @@ impl SystemDictionary {
     /// # Arguments
     ///
     /// * `user_dict` - 사용자 사전
+    #[must_use]
     pub fn with_user_dictionary(mut self, user_dict: UserDictionary) -> Self {
         self.user_dict = Some(Arc::new(user_dict));
         self
@@ -219,28 +221,33 @@ impl SystemDictionary {
     }
 
     /// 사전 디렉토리 경로 반환
+    #[must_use]
     pub fn dicdir(&self) -> &Path {
         &self.dicdir
     }
 
     /// Trie 참조 반환
-    pub fn trie(&self) -> &Trie<'static> {
+    #[must_use]
+    pub const fn trie(&self) -> &Trie<'static> {
         &self.trie
     }
 
     /// Matrix 참조 반환
-    pub fn matrix(&self) -> &ConnectionMatrix {
+    #[must_use]
+    pub const fn matrix(&self) -> &ConnectionMatrix {
         &self.matrix
     }
 
     /// 엔트리 배열 참조 반환
+    #[must_use]
     pub fn entries(&self) -> &[DictEntry] {
         &self.entries
     }
 
     /// 사용자 사전 참조 반환
+    #[must_use]
     pub fn user_dictionary(&self) -> Option<&UserDictionary> {
-        self.user_dict.as_ref().map(|arc| arc.as_ref())
+        self.user_dict.as_deref()
     }
 
     /// 인덱스로 엔트리 조회
@@ -248,6 +255,7 @@ impl SystemDictionary {
     /// # Arguments
     ///
     /// * `index` - Trie에서 반환된 인덱스
+    #[must_use]
     pub fn get_entry(&self, index: u32) -> Option<&DictEntry> {
         self.entries.get(index as usize)
     }
@@ -263,6 +271,7 @@ impl SystemDictionary {
     /// # Returns
     ///
     /// 일치하는 엔트리와 바이트 길이의 벡터
+    #[must_use]
     pub fn common_prefix_search(&self, text: &str) -> Vec<(&DictEntry, usize)> {
         self.trie
             .common_prefix_search(text)
@@ -279,6 +288,7 @@ impl SystemDictionary {
     ///
     /// * `text` - 전체 텍스트
     /// * `start_byte` - 검색 시작 바이트 위치
+    #[must_use]
     pub fn common_prefix_search_at(
         &self,
         text: &str,
@@ -300,6 +310,7 @@ impl SystemDictionary {
     /// # Arguments
     ///
     /// * `surface` - 검색할 표면형
+    #[must_use]
     pub fn lookup_combined(&self, surface: &str) -> Vec<Entry> {
         let mut results = self.lookup(surface);
 
@@ -322,7 +333,8 @@ impl SystemDictionary {
 
     /// 테스트용 생성자 (외부 crate의 test에서도 사용 가능)
     #[doc(hidden)]
-    pub fn new_test(
+    #[must_use]
+    pub const fn new_test(
         dicdir: PathBuf,
         trie: Trie<'static>,
         matrix: ConnectionMatrix,
@@ -351,7 +363,7 @@ impl Dictionary for SystemDictionary {
     }
 
     fn get_connection_cost(&self, left_id: u16, right_id: u16) -> i16 {
-        self.matrix.get(right_id, left_id) as i16
+        i16::try_from(self.matrix.get(right_id, left_id)).unwrap_or(i16::MAX)
     }
 }
 
@@ -369,7 +381,7 @@ impl DictionaryLoader {
     ///
     /// # Errors
     ///
-    /// - 사전 디렉토리를 찾을 수 없는 경우
+    /// Returns an error if the dictionary directory cannot be found.
     pub fn find_dicdir() -> Result<PathBuf> {
         // 환경변수 확인
         if let Ok(dicdir) = std::env::var("MECAB_DICDIR") {
@@ -393,11 +405,19 @@ impl DictionaryLoader {
     }
 
     /// 특정 경로에서 시스템 사전 로드
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the dictionary files cannot be loaded.
     pub fn load_system<P: AsRef<Path>>(dicdir: P) -> Result<SystemDictionary> {
         SystemDictionary::load(dicdir)
     }
 
     /// 기본 경로에서 시스템 사전 로드
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the dictionary files cannot be loaded.
     pub fn load_default() -> Result<SystemDictionary> {
         SystemDictionary::load_default()
     }
@@ -407,6 +427,10 @@ impl DictionaryLoader {
     /// # Arguments
     ///
     /// * `dicdir` - 확인할 디렉토리 경로
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the dictionary directory is invalid or required files are missing.
     pub fn validate_dicdir<P: AsRef<Path>>(dicdir: P) -> Result<()> {
         let dicdir = dicdir.as_ref();
 
@@ -419,7 +443,7 @@ impl DictionaryLoader {
 
         // 필수 파일 확인 (Trie와 Matrix 중 하나는 있어야 함)
         let has_trie =
-            dicdir.join(TRIE_FILE).exists() || dicdir.join(format!("{}.zst", TRIE_FILE)).exists();
+            dicdir.join(TRIE_FILE).exists() || dicdir.join(format!("{TRIE_FILE}.zst")).exists();
 
         let has_matrix = dicdir.join(MATRIX_FILE).exists() || dicdir.join("matrix.def").exists();
 

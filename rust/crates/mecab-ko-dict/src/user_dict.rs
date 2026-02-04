@@ -370,7 +370,8 @@ impl UserDictionary {
         let bytes = TrieBuilder::build(&trie_entries)?;
         self.trie_cache = Some(bytes);
 
-        Ok(self.trie_cache.as_ref().expect("just inserted"))
+        // SAFETY: We just inserted the value above
+        Ok(self.trie_cache.as_ref().unwrap_or_else(|| unreachable!()))
     }
 
     /// 빌드된 Trie 가져오기

@@ -42,7 +42,7 @@ pub use trie::{DictionarySearcher, EntryIndex, PrefixMatch, Trie, TrieBuilder};
 pub use user_dict::{UserDictionary, UserDictionaryBuilder, UserEntry};
 
 /// 사전 엔트리
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Entry {
     /// 표면형
     pub surface: String,
@@ -95,8 +95,9 @@ pub mod error {
 }
 
 /// 사전 포맷 모듈 (스텁)
+///
+/// 바이너리 사전 포맷 정의
 pub mod format {
-    //! 바이너리 사전 포맷 정의
 
     /// 사전 헤더
     pub struct Header {

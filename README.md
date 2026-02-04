@@ -1,71 +1,34 @@
-# 🇰🇷 MeCab-Ko
+# MeCab-Ko
 
+[![CI](https://github.com/hephaex/mecab-ko/actions/workflows/ci.yml/badge.svg)](https://github.com/hephaex/mecab-ko/actions/workflows/ci.yml)
+[![Security](https://github.com/hephaex/mecab-ko/actions/workflows/security.yml/badge.svg)](https://github.com/hephaex/mecab-ko/actions/workflows/security.yml)
 [![Rust](https://img.shields.io/badge/rust-1.75+-orange.svg)](https://www.rust-lang.org/)
-[![C++](https://img.shields.io/badge/c++-11-blue.svg)](https://isocpp.org/)
-[![License](https://img.shields.io/badge/license-GPL%2FLGPL%2FBSD-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
+[![crates.io](https://img.shields.io/crates/v/mecab-ko.svg)](https://crates.io/crates/mecab-ko)
+[![PyPI](https://img.shields.io/pypi/v/mecab-ko-python.svg)](https://pypi.org/project/mecab-ko-python/)
+[![npm](https://img.shields.io/npm/v/mecab-ko-wasm.svg)](https://www.npmjs.com/package/mecab-ko-wasm)
 
-**한국어 형태소 분석기 - MeCab의 한국어 Fork**
+**High-performance Korean morphological analyzer written in pure Rust**
 
-> 은전한닢 프로젝트에서 시작된 MeCab-Ko를 현대화하고, Rust로 재구현하는 프로젝트입니다.
+MeCab-Ko is a modern reimplementation of the [MeCab-Ko](https://bitbucket.org/eunjeon/mecab-ko) Korean morphological analyzer, originally developed by the Eunjeon project. This Rust implementation provides memory safety, cross-platform support (including WebAssembly), and bindings for Python, Node.js, and browsers.
 
-## 📖 프로젝트 개요
+## Features
 
-이 저장소는 두 가지 구현을 포함합니다:
+- **Pure Rust Implementation** - Memory-safe with `#![deny(unsafe_code)]`
+- **High Performance** - Zero-copy parsing, efficient Viterbi algorithm (~150K words/sec)
+- **Cross-Platform** - Linux, macOS, Windows, and WebAssembly
+- **Multiple Bindings** - Python (PyO3), Node.js (N-API), WebAssembly
+- **Korean Optimized** - Space penalty handling, Jamo processing, Jongseong-based rules
+- **User Dictionary** - Custom word support with hot-reload capability
+- **KoNLPy Compatible** - Drop-in replacement for KoNLPy's Mecab API
 
-| 구현 | 경로 | 상태 | 설명 |
-|------|------|------|------|
-| **Legacy (C/C++)** | `/legacy/` | ✅ 안정 | 기존 mecab-ko 구현 |
-| **Rust (v2)** | `/rust/` | 🚧 개발중 | 현대적 Rust 재구현 |
+## Quick Start
 
-### 왜 Rust로 재구현하는가?
+### Rust
 
-| 기존 문제점 | Rust v2 해결책 |
-|-------------|----------------|
-| 오래된 사전 (2018년 이후 업데이트 없음) | 2024년 최신 말뭉치 기반 사전 v3.0 |
-| C/C++ 메모리 안전성 이슈 | Rust의 메모리 안전성 보장 |
-| 복잡한 빌드 (autotools) | Cargo 기반 간편한 빌드 |
-| 플랫폼 제약 (WASM 미지원) | WASM, 다양한 플랫폼 지원 |
-| 분리된 바인딩 프로젝트들 | 통합된 Python/Node.js 바인딩 |
-
-## 🚀 빠른 시작
-
-### Legacy (C/C++) 버전
-
-```bash
-cd legacy
-./configure
-make
-make install
-
-# 사전 설치
-cd mecab-ko-dic
-./configure
-make
-make install
-
-# 실행
-echo "안녕하세요" | mecab
-```
-
-### Rust v2 버전 (개발중)
-
-```bash
-cd rust
-
-# 빌드
-cargo build --release
-
-# 테스트
-cargo test
-
-# 실행
-cargo run --bin mecab-ko -- "안녕하세요"
-```
-
-#### Rust 라이브러리 사용
+Add to your `Cargo.toml`:
 
 ```toml
-# Cargo.toml
 [dependencies]
 mecab-ko = "0.1"
 ```
@@ -73,144 +36,272 @@ mecab-ko = "0.1"
 ```rust
 use mecab_ko::Tokenizer;
 
-fn main() {
-    let tokenizer = Tokenizer::new().unwrap();
+fn main() -> Result<(), mecab_ko::Error> {
+    let tokenizer = Tokenizer::new()?;
+
+    // Tokenize Korean text
     let tokens = tokenizer.tokenize("안녕하세요, 형태소 분석기입니다.");
-    
     for token in tokens {
         println!("{}\t{}", token.surface, token.pos);
     }
+    // Output:
+    // 안녕    NNG
+    // 하      XSV
+    // 세요    EF
+    // ...
+
+    // Wakati mode (space-separated morphemes)
+    let words = tokenizer.wakati("한국어 형태소 분석");
+    println!("{}", words.join(" "));
+
+    // Extract nouns only
+    let nouns = tokenizer.nouns("오늘 날씨가 좋습니다");
+    println!("{:?}", nouns);  // ["오늘", "날씨"]
+
+    Ok(())
 }
 ```
 
-#### Python 바인딩
+### Python
 
 ```bash
-pip install mecab-ko-rs
+pip install mecab-ko-python
 ```
 
 ```python
 from mecab_ko import Mecab
 
 mecab = Mecab()
-print(mecab.morphs("안녕하세요"))  # ['안녕', '하', '세요']
-print(mecab.nouns("형태소 분석기"))  # ['형태소', '분석기']
+
+# Extract morphemes
+print(mecab.morphs("안녕하세요"))
+# ['안녕', '하', '세요']
+
+# Extract nouns
+print(mecab.nouns("아버지가방에들어가신다"))
+# ['아버지', '가방']
+
+# Part-of-speech tagging
+print(mecab.pos("나는 학생입니다"))
+# [('나', 'NP'), ('는', 'JX'), ('학생', 'NNG'), ('이', 'VCP'), ('ㅂ니다', 'EF')]
+
+# MeCab format output
+print(mecab.parse("형태소"))
+# 형태소  NNG,*,*,*,*,*,*,*
+# EOS
 ```
 
-## 📂 저장소 구조
-
-```
-mecab-ko/
-├── legacy/                     # 기존 C/C++ 구현
-│   ├── src/                    # MeCab 소스 코드
-│   ├── mecab-ko-dic/           # 한국어 사전
-│   │   └── seed/               # 사전 원본 데이터
-│   ├── configure               # autotools 빌드
-│   └── Makefile
-│
-├── rust/                       # Rust v2 구현
-│   ├── crates/
-│   │   ├── mecab-ko-core/      # 핵심 분석 엔진
-│   │   ├── mecab-ko-dict/      # 사전 관리
-│   │   ├── mecab-ko-hangul/    # 한글 유틸리티
-│   │   └── mecab-ko-cli/       # CLI 도구
-│   ├── Cargo.toml              # Workspace 설정
-│   └── README.md               # Rust 구현 상세
-│
-├── docs/                       # 프로젝트 문서
-│   ├── PROJECT_PLAN.md         # 24주 로드맵
-│   ├── ISSUE_BACKLOG.md        # 이슈 백로그
-│   ├── AGENTS.md               # 멀티 에이전트 시스템
-│   ├── DEVELOPMENT_WORKFLOW.md # 개발 워크플로우
-│   └── AUTOMATION_GUIDE.md     # 자동화 가이드
-│
-├── .github/                    # GitHub 설정
-│   ├── workflows/              # CI/CD
-│   └── ISSUE_TEMPLATE/         # 이슈 템플릿
-│
-├── CONTRIBUTING.md             # 기여 가이드
-├── SECURITY.md                 # 보안 정책
-├── CODE_QUALITY.md             # 코드 품질 기준
-└── README.md                   # 이 파일
-```
-
-## 📊 Rust v2 목표 성능
-
-| 메트릭 | Legacy | Kiwi | **Rust v2** (목표) |
-|--------|--------|------|-------------------|
-| 속도 (어절/초) | ~100K | ~120K | **~150K** |
-| 정확도 | ~93% | ~87% | **~95%** |
-| 메모리 | ~200MB | ~100MB | **~150MB** |
-| WASM 지원 | ❌ | ❌ | ✅ |
-
-## 🗺️ 로드맵
-
-### Phase 1: 기반 구축 (Q1 2025)
-- [x] 프로젝트 설계 및 계획
-- [ ] 한글 유틸리티 구현
-- [ ] 사전 포맷 설계
-- [ ] 기본 토크나이저
-
-### Phase 2: 핵심 기능 (Q2 2025)
-- [ ] Viterbi 알고리즘
-- [ ] 사전 v3.0 빌드
-- [ ] CLI 도구
-
-### Phase 3: 생태계 통합 (Q3 2025)
-- [ ] Python 바인딩 (PyO3)
-- [ ] WASM 지원
-- [ ] Elasticsearch 플러그인
-
-### Phase 4: 안정화 (Q4 2025)
-- [ ] 성능 최적화
-- [ ] 문서화
-- [ ] v1.0 릴리스
-
-자세한 계획은 [PROJECT_PLAN.md](docs/PROJECT_PLAN.md)를 참조하세요.
-
-## 🤝 기여하기
-
-기여를 환영합니다! [CONTRIBUTING.md](CONTRIBUTING.md)를 참조해주세요.
-
-### 개발 환경 설정
+### Node.js
 
 ```bash
-# 저장소 클론
-git clone https://github.com/hephaex/mecab-ko.git
-cd mecab-ko
-
-# Rust 개발
-cd rust
-cargo build
-cargo test
-
-# Legacy 빌드 (선택)
-cd ../legacy
-./configure && make
+npm install @mecab-ko/node
 ```
 
-## 📜 라이센스
+```javascript
+const { Mecab } = require('@mecab-ko/node');
 
-- **Legacy (C/C++)**: GPL / LGPL / BSD (MeCab 원본 라이센스)
-- **Rust v2**: MIT OR Apache-2.0
+const mecab = new Mecab();
 
-사전 데이터는 [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)을 따릅니다.
+// Tokenize text
+const tokens = mecab.tokenize('형태소 분석기');
+console.log(tokens);
+// [{ surface: '형태소', pos: 'NNG', ... }, { surface: '분석기', pos: 'NNG', ... }]
 
-## 🙏 감사의 말
+// Extract morphemes
+const morphs = mecab.morphs('안녕하세요');
+console.log(morphs);  // ['안녕', '하', '세요']
+
+// Extract nouns
+const nouns = mecab.nouns('대한민국의 수도는 서울입니다');
+console.log(nouns);  // ['대한민국', '수도', '서울']
+
+// POS tagging
+const pos = mecab.pos('좋은 아침입니다');
+console.log(pos);  // [['좋은', 'VA+ETM'], ['아침', 'NNG'], ['입니다', 'VCP+EF']]
+```
+
+### WebAssembly (Browser)
+
+```bash
+npm install mecab-ko-wasm
+```
+
+```javascript
+import init, { Mecab } from 'mecab-ko-wasm';
+
+async function analyze() {
+    // Initialize WASM module
+    await init();
+    const mecab = new Mecab();
+
+    // Extract morphemes
+    const morphs = mecab.morphs("안녕하세요");
+    console.log(morphs);  // ["안녕", "하", "세요"]
+
+    // Extract nouns
+    const nouns = mecab.nouns("형태소 분석기입니다");
+    console.log(nouns);  // ["형태소", "분석기"]
+
+    // Get detailed token information
+    const tokens = mecab.tokenize("한국어 분석기");
+    tokens.forEach(token => {
+        console.log(`${token.surface}: ${token.pos}`);
+    });
+}
+
+analyze();
+```
+
+## Crate Structure
+
+MeCab-Ko is organized as a Cargo workspace with the following crates:
+
+| Crate | Description |
+|-------|-------------|
+| `mecab-ko` | Integration crate re-exporting all public APIs |
+| `mecab-ko-core` | Core tokenization engine (Lattice, Viterbi, Tokenizer) |
+| `mecab-ko-dict` | Dictionary management (Trie, Matrix, User Dictionary) |
+| `mecab-ko-hangul` | Korean Hangul utilities (Jamo decomposition/composition) |
+| `mecab-ko-cli` | Command-line interface |
+| `mecab-ko-dict-builder` | Dictionary compilation tools |
+| `mecab-ko-python` | Python bindings (PyO3) |
+| `mecab-ko-node` | Node.js bindings (N-API) |
+| `mecab-ko-wasm` | WebAssembly bindings |
+| `mecab-ko-elasticsearch` | Elasticsearch/Lucene integration |
+| `mecab-ko-profiler` | Performance profiling tools |
+
+## Build Instructions
+
+### Prerequisites
+
+- Rust 1.75 or later
+- For Python bindings: Python 3.8+ and maturin
+- For Node.js bindings: Node.js 14+ and npm
+- For WASM: wasm-pack
+
+### Building from Source
+
+```bash
+# Clone the repository
+git clone https://github.com/hephaex/mecab-ko.git
+cd mecab-ko/rust
+
+# Build all crates
+cargo build --release
+
+# Run tests
+cargo test
+
+# Run linter
+cargo clippy
+
+# Format code
+cargo fmt
+
+# Build documentation
+cargo doc --no-deps --open
+```
+
+### Building Python Bindings
+
+```bash
+cd rust/crates/mecab-ko-python
+pip install maturin
+maturin develop --release
+```
+
+### Building Node.js Bindings
+
+```bash
+cd rust/crates/mecab-ko-node
+npm install
+npm run build
+```
+
+### Building WASM
+
+```bash
+cd rust/crates/mecab-ko-wasm
+cargo install wasm-pack
+rustup target add wasm32-unknown-unknown
+wasm-pack build --target web --release
+```
+
+## Documentation
+
+- **[Architecture Guide](docs/ARCHITECTURE.md)** - System design, component interactions, and data flow
+- **[Getting Started](docs/RUST_GETTING_STARTED.md)** - Comprehensive installation and usage guide
+- **[Project Plan](docs/PROJECT_PLAN.md)** - Development roadmap
+
+## Common POS Tags
+
+MeCab-Ko uses the Sejong corpus POS tag set:
+
+| Tag | Korean | English |
+|-----|--------|---------|
+| NNG | 일반 명사 | General noun |
+| NNP | 고유 명사 | Proper noun |
+| NNB | 의존 명사 | Dependent noun |
+| NP | 대명사 | Pronoun |
+| VV | 동사 | Verb |
+| VA | 형용사 | Adjective |
+| VX | 보조 용언 | Auxiliary verb |
+| MAG | 일반 부사 | General adverb |
+| JKS | 주격 조사 | Subject particle |
+| JKO | 목적격 조사 | Object particle |
+| JX | 보조사 | Auxiliary particle |
+| EF | 종결 어미 | Final ending |
+| SF | 마침표 | Period |
+
+## Performance Targets
+
+| Metric | Target |
+|--------|--------|
+| Tokenization Speed | ~150K words/sec |
+| Accuracy | ~95% |
+| Memory Usage | ~150MB |
+| WASM Module Size | ~2-5MB |
+
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+```bash
+# Development workflow
+cd rust
+cargo build          # Build
+cargo test           # Test
+cargo clippy         # Lint
+cargo fmt            # Format
+```
+
+### Coding Rules
+
+- `unsafe` code is prohibited (`#![deny(unsafe_code)]`)
+- `unwrap()` and `expect()` are prohibited in library code
+- All public APIs must have rustdoc documentation
+
+## License
+
+This project is dual-licensed under:
+
+- [MIT License](LICENSE-MIT)
+- [Apache License 2.0](LICENSE-APACHE)
+
+Choose the license that best fits your needs.
+
+Dictionary data is licensed under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+
+## Acknowledgments
 
 - [MeCab](https://taku910.github.io/mecab/) - Taku Kudo
-- [은전한닢 프로젝트](https://bitbucket.org/eunjeon/mecab-ko) - mecab-ko 원본
-- [Lindera](https://github.com/lindera/lindera) - Rust 형태소 분석기 참조
-- [Kiwi](https://github.com/bab2min/Kiwi) - 한국어 형태소 분석기 참조
+- [Eunjeon Project](https://bitbucket.org/eunjeon/mecab-ko) - Original mecab-ko
+- [Lindera](https://github.com/lindera/lindera) - Rust morphological analyzer reference
+- [Kiwi](https://github.com/bab2min/Kiwi) - Korean morphological analyzer reference
+- [KoNLPy](https://konlpy.org/) - Python Korean NLP library
 
-## 📞 연락처
+## Contact
 
 - **Author**: hephaex (hephaex@gmail.com)
 - **Issues**: [GitHub Issues](https://github.com/hephaex/mecab-ko/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/hephaex/mecab-ko/discussions)
-
----
-
-<p align="center">
-  Made with ❤️ for Korean NLP
-</p>

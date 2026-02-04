@@ -89,24 +89,28 @@ impl Default for WatchConfig {
 
 impl WatchConfig {
     /// 디바운스 시간 설정
-    pub fn debounce_ms(mut self, ms: u64) -> Self {
+    #[must_use]
+    pub const fn debounce_ms(mut self, ms: u64) -> Self {
         self.debounce_ms = ms;
         self
     }
 
     /// 재귀 감시 설정
-    pub fn recursive(mut self, recursive: bool) -> Self {
+    #[must_use]
+    pub const fn recursive(mut self, recursive: bool) -> Self {
         self.recursive = recursive;
         self
     }
 
     /// 감시할 파일 확장자 추가
+    #[must_use]
     pub fn watch_extension(mut self, ext: impl Into<String>) -> Self {
         self.watch_extensions.push(ext.into());
         self
     }
 
     /// 무시할 파일 패턴 추가
+    #[must_use]
     pub fn ignore_pattern(mut self, pattern: impl Into<String>) -> Self {
         self.ignore_patterns.push(pattern.into());
         self
@@ -174,7 +178,11 @@ impl FileWatcher {
     ///
     /// * `dict` - 핫 리로드 사전 인스턴스
     /// * `config` - 감시 설정
-    pub fn new(dict: Arc<HotReloadDictionary>, config: WatchConfig) -> Result<Self> {
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds, but returns Result for future extensibility.
+    pub const fn new(dict: Arc<HotReloadDictionary>, config: WatchConfig) -> Result<Self> {
         Ok(Self {
             dict,
             config,
@@ -186,6 +194,10 @@ impl FileWatcher {
     }
 
     /// 기본 설정으로 파일 감시자 생성
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds, but returns Result for future extensibility.
     pub fn new_default(dict: Arc<HotReloadDictionary>) -> Result<Self> {
         Self::new(dict, WatchConfig::default())
     }
@@ -194,8 +206,7 @@ impl FileWatcher {
     ///
     /// # Errors
     ///
-    /// - 감시자 생성 실패
-    /// - 디렉토리 접근 실패
+    /// Returns an error if the watcher cannot be created or the directory cannot be accessed.
     pub fn start(&mut self) -> Result<()> {
         if self.watcher.is_some() {
             return Err(DictError::Format(
@@ -237,6 +248,10 @@ impl FileWatcher {
     }
 
     /// 파일 감시 중지
+    ///
+    /// # Errors
+    ///
+    /// Currently always succeeds, but returns Result for API consistency.
     pub fn stop(&mut self) -> Result<()> {
         if let Some(stop_tx) = self.stop_tx.take() {
             let _ = stop_tx.send(());
@@ -253,7 +268,8 @@ impl FileWatcher {
     }
 
     /// 감시 중인지 확인
-    pub fn is_watching(&self) -> bool {
+    #[must_use]
+    pub const fn is_watching(&self) -> bool {
         self.watcher.is_some()
     }
 
@@ -269,7 +285,7 @@ impl FileWatcher {
         let rx = event_rx.clone();
 
         let handle = thread::spawn(move || {
-            Self::worker_loop(dict, config, rx, stop_rx);
+            Self::worker_loop(&dict, &config, &rx, &stop_rx);
         });
 
         self.worker_handle = Some(handle);
@@ -279,10 +295,10 @@ impl FileWatcher {
 
     /// 워커 루프
     fn worker_loop(
-        dict: Arc<HotReloadDictionary>,
-        config: WatchConfig,
-        event_rx: Receiver<notify::Result<Event>>,
-        stop_rx: Receiver<()>,
+        dict: &Arc<HotReloadDictionary>,
+        config: &WatchConfig,
+        event_rx: &Receiver<notify::Result<Event>>,
+        stop_rx: &Receiver<()>,
     ) {
         loop {
             // 종료 신호 확인
@@ -300,7 +316,6 @@ impl FileWatcher {
                 }
                 Err(crossbeam_channel::RecvTimeoutError::Timeout) => {
                     // 타임아웃은 정상
-                    continue;
                 }
                 Err(crossbeam_channel::RecvTimeoutError::Disconnected) => {
                     // 채널 닫힘
@@ -320,10 +335,8 @@ impl FileWatcher {
                     }
                 }
             }
-            EventKind::Remove(_) => {
+            EventKind::Remove(_) | _ => {
                 // 파일 삭제는 무시 (기존 사전 유지)
-            }
-            _ => {
                 // 기타 이벤트는 무시
             }
         }
