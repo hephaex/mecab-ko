@@ -16,7 +16,7 @@
 
 use crate::lattice::{Lattice, NodeId};
 use crate::viterbi::{ConnectionCost, SpacePenalty};
-use std::simd::{cmp::SimdPartialOrd, num::SimdInt, i32x8};
+use std::simd::{cmp::SimdPartialOrd, i32x8, num::SimdInt};
 
 /// SIMD 레인 크기
 const SIMD_LANES: usize = 8;
@@ -74,7 +74,13 @@ pub fn simd_update_node_cost<C: ConnectionCost>(
         )
     } else {
         // 스칼라 처리
-        scalar_cost_calculation(prev_nodes, conn_cost, left_id, word_cost, space_penalty_cost)
+        scalar_cost_calculation(
+            prev_nodes,
+            conn_cost,
+            left_id,
+            word_cost,
+            space_penalty_cost,
+        )
     }
 }
 
@@ -97,7 +103,8 @@ fn simd_batch_cost_calculation<C: ConnectionCost>(
         let end = start + SIMD_LANES;
         let chunk = &prev_nodes[start..end];
 
-        let (min_cost, min_idx) = process_chunk_simd(chunk, conn_cost, left_id, word_cost, space_penalty);
+        let (min_cost, min_idx) =
+            process_chunk_simd(chunk, conn_cost, left_id, word_cost, space_penalty);
 
         if min_cost < best_cost {
             best_cost = min_cost;
@@ -344,24 +351,15 @@ mod tests {
 
     #[test]
     fn test_scalar_cost_calculation() {
-        let prev_nodes = vec![
-            (1, 100, 10),
-            (2, 200, 20),
-            (3, 300, 30),
-        ];
+        let prev_nodes = vec![(1, 100, 10), (2, 200, 20), (3, 300, 30)];
 
         let conn_cost = ZeroConnectionCost;
         let left_id = 5;
         let word_cost = 1000;
         let space_penalty = 0;
 
-        let (best_cost, best_prev) = scalar_cost_calculation(
-            &prev_nodes,
-            &conn_cost,
-            left_id,
-            word_cost,
-            space_penalty,
-        );
+        let (best_cost, best_prev) =
+            scalar_cost_calculation(&prev_nodes, &conn_cost, left_id, word_cost, space_penalty);
 
         assert_eq!(best_cost, 1100); // 100 + 0 + 1000 + 0
         assert_eq!(best_prev, 1);
@@ -379,13 +377,8 @@ mod tests {
         let word_cost = 1000;
         let space_penalty = 0;
 
-        let (best_cost, best_prev) = simd_batch_cost_calculation(
-            &prev_nodes,
-            &conn_cost,
-            left_id,
-            word_cost,
-            space_penalty,
-        );
+        let (best_cost, best_prev) =
+            simd_batch_cost_calculation(&prev_nodes, &conn_cost, left_id, word_cost, space_penalty);
 
         assert_eq!(best_cost, 1000); // 0 + 0 + 1000 + 0
         assert_eq!(best_prev, 0);

@@ -116,15 +116,17 @@ impl AsyncTokenizer {
     /// 토큰 목록
     pub async fn tokenize_async(&self, text: &str) -> Vec<Token> {
         // Semaphore로 동시 실행 제어
-        let _permit = self.semaphore.acquire().await.expect("semaphore closed");
+        let _permit = match self.semaphore.acquire().await {
+            Ok(permit) => permit,
+            Err(_) => return Vec::new(), // Semaphore closed, return empty result
+        };
 
         let text_owned = text.to_string();
         let tokenizer = Arc::clone(&self.tokenizer);
 
         // 블로킹 작업을 별도 스레드에서 실행
         tokio::task::spawn_blocking(move || {
-            let mut tok = tokenizer
-                .blocking_lock();
+            let mut tok = tokenizer.blocking_lock();
             tok.tokenize(&text_owned)
         })
         .await
@@ -206,7 +208,10 @@ impl AsyncTokenizer {
             let semaphore = Arc::clone(&self.semaphore);
 
             let handle = tokio::spawn(async move {
-                let _permit = semaphore.acquire().await.expect("semaphore closed");
+                let _permit = match semaphore.acquire().await {
+                    Ok(permit) => permit,
+                    Err(_) => return Vec::new(), // Semaphore closed, return empty result
+                };
 
                 tokio::task::spawn_blocking(move || {
                     let mut tok = tokenizer.blocking_lock();

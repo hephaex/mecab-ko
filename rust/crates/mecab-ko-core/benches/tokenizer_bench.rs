@@ -11,7 +11,8 @@ mod sample_texts {
     pub const SHORT: &str = "안녕하세요";
 
     /// 중간 텍스트 (50자 내외)
-    pub const MEDIUM: &str = "오늘 날씨가 정말 좋습니다. 산책하기 딱 좋은 날씨네요. 기분이 좋아집니다.";
+    pub const MEDIUM: &str =
+        "오늘 날씨가 정말 좋습니다. 산책하기 딱 좋은 날씨네요. 기분이 좋아집니다.";
 
     /// 긴 텍스트 (200자 내외)
     pub const LONG: &str = "\

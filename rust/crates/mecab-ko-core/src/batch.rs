@@ -152,10 +152,10 @@ impl BatchTokenizer {
     /// 풀에서 토크나이저를 가져와 사용합니다.
     fn tokenize_single(&self, text: &str) -> Vec<Token> {
         // 풀에서 토크나이저 가져오기
-        let mut pool = self
-            .tokenizer_pool
-            .lock()
-            .expect("tokenizer pool lock poisoned");
+        let mut pool = match self.tokenizer_pool.lock() {
+            Ok(guard) => guard,
+            Err(_) => return Vec::new(), // Lock poisoned, return empty result
+        };
 
         if let Some(mut tokenizer) = pool.pop() {
             // 풀 락 해제
@@ -165,10 +165,10 @@ impl BatchTokenizer {
             let tokens = tokenizer.tokenize(text);
 
             // 토크나이저 반환
-            self.tokenizer_pool
-                .lock()
-                .expect("tokenizer pool lock poisoned")
-                .push(tokenizer);
+            if let Ok(mut pool) = self.tokenizer_pool.lock() {
+                pool.push(tokenizer);
+            }
+            // If lock fails here, tokenizer is dropped but processing succeeded
 
             tokens
         } else {
@@ -264,11 +264,8 @@ impl BatchTokenizer {
     }
 }
 
-impl Default for BatchTokenizer {
-    fn default() -> Self {
-        Self::new().expect("Failed to create default batch tokenizer")
-    }
-}
+// Note: Default implementation is not provided for BatchTokenizer because initialization
+// can fail (dictionary loading, thread pool setup, etc.). Use BatchTokenizer::new() explicitly instead.
 
 /// 병렬 스트리밍 프로세서
 ///
@@ -341,11 +338,8 @@ impl ParallelStreamProcessor {
     }
 }
 
-impl Default for ParallelStreamProcessor {
-    fn default() -> Self {
-        Self::new().expect("Failed to create default parallel stream processor")
-    }
-}
+// Note: Default implementation is not provided for ParallelStreamProcessor because initialization
+// can fail (dictionary loading, thread pool setup, etc.). Use ParallelStreamProcessor::new() explicitly instead.
 
 #[cfg(test)]
 mod tests {

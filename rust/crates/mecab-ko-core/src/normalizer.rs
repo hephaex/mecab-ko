@@ -114,8 +114,6 @@ pub struct Normalizer {
     standard_to_variants: Arc<HashMap<String, HashSet<String>>>,
     /// 변이형 → 표준형 맵
     variant_to_standard: Arc<HashMap<String, String>>,
-    /// 정규화 규칙
-    rules: Arc<Vec<NormalizationRule>>,
 }
 
 impl Normalizer {
@@ -140,7 +138,6 @@ impl Normalizer {
             config,
             standard_to_variants: Arc::new(standard_to_variants),
             variant_to_standard: Arc::new(variant_to_standard),
-            rules: Arc::new(rules),
         })
     }
 
@@ -167,13 +164,13 @@ impl Normalizer {
             variant_pairs.extend(external_pairs);
         }
 
-        let (standard_to_variants, variant_to_standard) = Self::build_variant_maps_with_pairs(&rules, &variant_pairs);
+        let (standard_to_variants, variant_to_standard) =
+            Self::build_variant_maps_with_pairs(&rules, &variant_pairs);
 
         Ok(Self {
             config,
             standard_to_variants: Arc::new(standard_to_variants),
             variant_to_standard: Arc::new(variant_to_standard),
-            rules: Arc::new(rules),
         })
     }
 
@@ -182,9 +179,8 @@ impl Normalizer {
         use std::fs::File;
         use std::io::{BufRead, BufReader};
 
-        let file = File::open(path).map_err(|e| {
-            crate::error::Error::Init(format!("Failed to open variant CSV: {e}"))
-        })?;
+        let file = File::open(path)
+            .map_err(|e| crate::error::Error::Init(format!("Failed to open variant CSV: {e}")))?;
 
         let reader = BufReader::new(file);
         let mut pairs = Vec::new();
@@ -395,30 +391,10 @@ impl Normalizer {
     /// 받침 변이 규칙
     fn jongseong_variation_rules() -> Vec<NormalizationRule> {
         vec![
-            NormalizationRule::new(
-                RuleType::JongseongVariation,
-                "ㄹ".into(),
-                "".into(),
-                0.85,
-            ),
-            NormalizationRule::new(
-                RuleType::JongseongVariation,
-                "".into(),
-                "ㄹ".into(),
-                0.85,
-            ),
-            NormalizationRule::new(
-                RuleType::JongseongVariation,
-                "ㅁ".into(),
-                "ㅂ".into(),
-                0.8,
-            ),
-            NormalizationRule::new(
-                RuleType::JongseongVariation,
-                "ㅂ".into(),
-                "ㅁ".into(),
-                0.8,
-            ),
+            NormalizationRule::new(RuleType::JongseongVariation, "ㄹ".into(), "".into(), 0.85),
+            NormalizationRule::new(RuleType::JongseongVariation, "".into(), "ㄹ".into(), 0.85),
+            NormalizationRule::new(RuleType::JongseongVariation, "ㅁ".into(), "ㅂ".into(), 0.8),
+            NormalizationRule::new(RuleType::JongseongVariation, "ㅂ".into(), "ㅁ".into(), 0.8),
         ]
     }
 

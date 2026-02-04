@@ -77,19 +77,14 @@ async fn concurrent_control() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("  Max concurrent: {}", tokenizer.max_concurrent());
 
-    let texts: Vec<String> = (0..10)
-        .map(|i| format!("테스트 문장 번호 {i}"))
-        .collect();
+    let texts: Vec<String> = (0..10).map(|i| format!("테스트 문장 번호 {i}")).collect();
 
     let start = std::time::Instant::now();
     let results = tokenizer.tokenize_batch(texts).await;
     let elapsed = start.elapsed();
 
     println!("  Processed {} texts in {elapsed:?}", results.len());
-    println!(
-        "  Average per text: {:?}",
-        elapsed / results.len() as u32
-    );
+    println!("  Average per text: {:?}", elapsed / results.len() as u32);
 
     Ok(())
 }
@@ -118,10 +113,18 @@ async fn large_batch() -> Result<(), Box<dyn std::error::Error>> {
 
     // 대용량 배치 생성
     let texts: Vec<String> = (0..100)
-        .map(|i| format!("이것은 테스트 문장 번호 {}입니다. 형태소 분석을 수행합니다.", i))
+        .map(|i| {
+            format!(
+                "이것은 테스트 문장 번호 {}입니다. 형태소 분석을 수행합니다.",
+                i
+            )
+        })
         .collect();
 
-    println!("  Processing {} texts with max_concurrent=4...", texts.len());
+    println!(
+        "  Processing {} texts with max_concurrent=4...",
+        texts.len()
+    );
 
     let start = std::time::Instant::now();
     let results = tokenizer.tokenize_batch(texts).await;

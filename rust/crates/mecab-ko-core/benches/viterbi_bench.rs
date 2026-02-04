@@ -46,7 +46,10 @@ fn bench_viterbi_search(c: &mut Criterion) {
     let texts = vec![
         ("short", "안녕하세요"),
         ("medium", "오늘 날씨가 정말 좋습니다"),
-        ("long", "인공지능 기술의 발전으로 자연어 처리 분야가 급격히 성장하고 있습니다"),
+        (
+            "long",
+            "인공지능 기술의 발전으로 자연어 처리 분야가 급격히 성장하고 있습니다",
+        ),
     ];
 
     for (name, text) in texts {

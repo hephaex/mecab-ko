@@ -10,14 +10,7 @@ use mecab_ko_core::Tokenizer;
 fn bench_token_clone(c: &mut Criterion) {
     let mut group = c.benchmark_group("token_clone");
 
-    let token = Token::new(
-        "안녕하세요".to_string(),
-        "NNG".to_string(),
-        0,
-        5,
-        0,
-        15,
-    );
+    let token = Token::new("안녕하세요".to_string(), "NNG".to_string(), 0, 5, 0, 15);
 
     group.bench_function("single_clone", |b| {
         b.iter(|| {
@@ -28,7 +21,16 @@ fn bench_token_clone(c: &mut Criterion) {
 
     // 여러 토큰 복사
     let tokens: Vec<Token> = (0..100)
-        .map(|i| Token::new(format!("토큰{i}"), "NNG".to_string(), i, i + 1, i * 10, (i + 1) * 10))
+        .map(|i| {
+            Token::new(
+                format!("토큰{i}"),
+                "NNG".to_string(),
+                i,
+                i + 1,
+                i * 10,
+                (i + 1) * 10,
+            )
+        })
         .collect();
 
     group.bench_function("vec_clone_100", |b| {
@@ -61,8 +63,8 @@ fn bench_string_allocation(c: &mut Criterion) {
 
     group.bench_function("long_string", |b| {
         b.iter(|| {
-            let s = "인공지능 기술의 발전으로 자연어 처리 분야가 급격히 성장하고 있습니다"
-                .to_string();
+            let s =
+                "인공지능 기술의 발전으로 자연어 처리 분야가 급격히 성장하고 있습니다".to_string();
             black_box(s)
         })
     });

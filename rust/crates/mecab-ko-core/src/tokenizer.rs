@@ -400,7 +400,10 @@ impl Tokenizer {
     /// 사전 엔트리가 하나라도 있으면 true
     fn add_dict_nodes(&mut self, start_pos: usize) -> bool {
         // substring 메서드를 사용하여 부분 문자열 추출 (소유권 확보를 위해 클론)
-        let search_text = self.lattice.substring(start_pos, self.lattice.char_len()).to_string();
+        let search_text = self
+            .lattice
+            .substring(start_pos, self.lattice.char_len())
+            .to_string();
 
         if search_text.is_empty() {
             return false;
@@ -485,10 +488,7 @@ impl Tokenizer {
     ///
     /// 표면형 목록
     pub fn wakati(&mut self, text: &str) -> Vec<String> {
-        self.tokenize(text)
-            .into_iter()
-            .map(|t| t.surface)
-            .collect()
+        self.tokenize(text).into_iter().map(|t| t.surface).collect()
     }
 
     /// 명사만 추출
@@ -565,7 +565,11 @@ impl Tokenizer {
     /// # Errors
     ///
     /// 정규화기 초기화 실패 시 에러 반환
-    pub fn set_normalization(&mut self, enable: bool, config: Option<NormalizationConfig>) -> Result<()> {
+    pub fn set_normalization(
+        &mut self,
+        enable: bool,
+        config: Option<NormalizationConfig>,
+    ) -> Result<()> {
         self.enable_normalization = enable;
 
         if enable {
@@ -637,16 +641,13 @@ impl Tokenizer {
     }
 }
 
-impl Default for Tokenizer {
-    fn default() -> Self {
-        Self::new().expect("Failed to create default tokenizer")
-    }
-}
+// Note: Default implementation is not provided for Tokenizer because initialization
+// can fail (dictionary loading, etc.). Use Tokenizer::new() explicitly instead.
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mecab_ko_dict::{DictEntry, matrix::DenseMatrix, trie::TrieBuilder};
+    use mecab_ko_dict::{matrix::DenseMatrix, trie::TrieBuilder, DictEntry};
 
     /// 테스트용 토크나이저 생성
     fn create_test_tokenizer() -> Tokenizer {
@@ -668,11 +669,23 @@ mod tests {
 
         // 테스트용 엔트리 생성
         let mut entries = Vec::new();
-        entries.push(DictEntry::new("아버지", 1, 1, 1000, "NNG,*,T,아버지,*,*,*,*"));
+        entries.push(DictEntry::new(
+            "아버지",
+            1,
+            1,
+            1000,
+            "NNG,*,T,아버지,*,*,*,*",
+        ));
         entries.push(DictEntry::new("가", 100, 100, 500, "JKS,*,F,가,*,*,*,*"));
         entries.push(DictEntry::new("방", 2, 2, 2000, "NNG,*,T,방,*,*,*,*"));
         entries.push(DictEntry::new("에", 101, 101, 400, "JKB,*,F,에,*,*,*,*"));
-        entries.push(DictEntry::new("들어가", 3, 3, 1500, "VV,*,F,들어가다,*,*,*,*"));
+        entries.push(DictEntry::new(
+            "들어가",
+            3,
+            3,
+            1500,
+            "VV,*,F,들어가다,*,*,*,*",
+        ));
         entries.push(DictEntry::new("신다", 4, 4, 1800, "VV+EP,*,F,신다,*,*,*,*"));
 
         let dictionary = SystemDictionary::new_test(

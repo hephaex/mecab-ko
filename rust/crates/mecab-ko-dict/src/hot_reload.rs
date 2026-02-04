@@ -66,7 +66,9 @@ use std::time::{Duration, SystemTime};
 
 use crate::error::{DictError, Result};
 use crate::user_dict::{UserDictionary, UserEntry};
-use crate::{DictEntry, Entry, SystemDictionary};
+use crate::{Entry, SystemDictionary};
+#[cfg(test)]
+use crate::DictEntry;
 
 /// 사전 버전
 ///
@@ -287,7 +289,7 @@ impl HotReloadDictionary {
         })?;
 
         // 현재 사용자 사전 복사
-        let mut new_user_dict = (*dict.user_dict).clone();
+        let new_user_dict = (*dict.user_dict).clone();
 
         // 엔트리 제거 (표면형이 일치하는 모든 엔트리)
         let removed_count = new_user_dict
@@ -344,7 +346,7 @@ impl HotReloadDictionary {
         })?;
 
         // 현재 사용자 사전 복사
-        let mut new_user_dict = (*dict.user_dict).clone();
+        let new_user_dict = (*dict.user_dict).clone();
 
         // 엔트리 수정
         let updated_entries: Vec<_> = new_user_dict
@@ -617,8 +619,6 @@ pub struct DeltaUpdate {
     removals: Vec<String>,
     /// 수정할 엔트리
     modifications: Vec<EntryChange>,
-    /// 타임스탬프
-    timestamp: SystemTime,
 }
 
 impl Default for DeltaUpdate {
@@ -634,7 +634,6 @@ impl DeltaUpdate {
             additions: Vec::new(),
             removals: Vec::new(),
             modifications: Vec::new(),
-            timestamp: SystemTime::now(),
         }
     }
 

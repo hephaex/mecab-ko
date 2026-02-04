@@ -32,11 +32,7 @@ fn basic_streaming() -> Result<(), Box<dyn std::error::Error>> {
     let mut stream = StreamingTokenizer::new(tokenizer);
 
     // 여러 청크로 나누어 처리
-    let chunks = vec![
-        "안녕하세요.\n",
-        "오늘 날씨가 좋습니다.\n",
-        "감사합니다",
-    ];
+    let chunks = vec!["안녕하세요.\n", "오늘 날씨가 좋습니다.\n", "감사합니다"];
 
     for chunk in chunks {
         let tokens = stream.process_chunk(chunk);
@@ -58,7 +54,10 @@ fn basic_streaming() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    println!("  Total chars processed: {}", stream.total_chars_processed());
+    println!(
+        "  Total chars processed: {}",
+        stream.total_chars_processed()
+    );
 
     Ok(())
 }
@@ -114,7 +113,10 @@ fn file_streaming_simulation() -> Result<(), Box<dyn std::error::Error>> {
     total_tokens += remaining.len();
 
     println!("  Total tokens from file: {total_tokens}");
-    println!("  Total chars processed: {}", stream.total_chars_processed());
+    println!(
+        "  Total chars processed: {}",
+        stream.total_chars_processed()
+    );
 
     Ok(())
 }

@@ -140,11 +140,7 @@ fn test_tokenizer_pool_integration() {
     assert_eq!(stats1.token_pool_size, 0);
 
     // 여러 문장 분석
-    let sentences = vec![
-        "안녕하세요",
-        "테스트입니다",
-        "형태소 분석",
-    ];
+    let sentences = vec!["안녕하세요", "테스트입니다", "형태소 분석"];
 
     for sentence in &sentences {
         let _tokens = tokenizer.tokenize(sentence);
@@ -172,7 +168,9 @@ fn test_tokenizer_pool_reuse() {
 
     // 풀이 계속 증가하지 않아야 함 (재사용되므로)
     // 또는 최소한의 증가만 있어야 함
-    let growth = stats2.token_pool_size.saturating_sub(stats1.token_pool_size);
+    let growth = stats2
+        .token_pool_size
+        .saturating_sub(stats1.token_pool_size);
     assert!(growth <= 5, "Pool grew too much: {growth}");
 }
 
@@ -310,8 +308,8 @@ fn test_pool_stats_format() {
 
 #[test]
 fn test_node_vec_pool_capacity_retention() {
-    use mecab_ko_core::pool::NodeVecPool;
     use mecab_ko_core::lattice::Node;
+    use mecab_ko_core::pool::NodeVecPool;
 
     let pool = NodeVecPool::new();
 

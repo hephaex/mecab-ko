@@ -29,8 +29,8 @@
 pub mod batch;
 pub mod kiwi_compat;
 pub mod lattice;
-pub mod normalizer;
 pub mod nori_compat;
+pub mod normalizer;
 pub mod pool;
 pub mod pos_tag;
 pub mod streaming;
@@ -45,11 +45,11 @@ pub use batch::{BatchTokenizer, ParallelStreamProcessor};
 pub use error::{Error, Result};
 pub use kiwi_compat::{from_kiwi_tag, to_kiwi_tag, KiwiPosTag, KiwiToken};
 pub use lattice::{Lattice, Node, NodeBuilder, NodeType};
-pub use normalizer::{NormalizationConfig, NormalizationRule, Normalizer, RuleType};
 pub use nori_compat::{
     mecab_to_nori_tag, nori_to_mecab_tag, DecompoundMode, NoriAnalyzer, NoriToken, NoriTokenizer,
     WordType,
 };
+pub use normalizer::{NormalizationConfig, NormalizationRule, Normalizer, RuleType};
 pub use pool::{
     IdVecPool, NodeVecPool, PoolManager, PoolStats, SharedStringInterner, Symbol, TokenPool,
 };
@@ -93,7 +93,6 @@ pub mod error {
     /// Result 타입 별칭
     pub type Result<T> = std::result::Result<T, Error>;
 }
-
 
 #[cfg(test)]
 mod tests {

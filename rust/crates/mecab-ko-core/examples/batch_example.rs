@@ -112,7 +112,10 @@ fn parallel_streaming() -> Result<(), Box<dyn std::error::Error>> {
 
     let simulated_large_file = "한국어 형태소 분석 테스트입니다.\n".repeat(100);
 
-    println!("  Simulated file size: {} bytes", simulated_large_file.len());
+    println!(
+        "  Simulated file size: {} bytes",
+        simulated_large_file.len()
+    );
 
     let start = std::time::Instant::now();
 

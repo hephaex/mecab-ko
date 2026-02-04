@@ -1,17 +1,128 @@
-//! # 사전 관리 CLI 커맨드
+//! # Dictionary Management CLI Commands
 //!
-//! 실시간 사전 업데이트를 위한 CLI 인터페이스를 제공합니다.
+//! 사전 관리 CLI 커맨드
 //!
-//! ## 커맨드
+//! This module provides command-line interfaces for managing MeCab-Ko dictionaries,
+//! including real-time dictionary updates, user dictionary management, and versioning.
 //!
-//! - `mecab-ko dict reload` - 사전 리로드
-//! - `mecab-ko dict add <surface> <pos> [cost]` - 엔트리 추가
-//! - `mecab-ko dict remove <surface>` - 엔트리 제거
-//! - `mecab-ko dict list` - 사용자 사전 목록
-//! - `mecab-ko dict export <file>` - 사용자 사전 내보내기
-//! - `mecab-ko dict import <file>` - 사용자 사전 가져오기
-//! - `mecab-ko dict version` - 버전 정보
-//! - `mecab-ko dict rollback <version>` - 버전 롤백
+//! # Features
+//!
+//! - **Hot Reload**: Update dictionaries without restarting the tokenizer
+//! - **User Dictionary Management**: Add, remove, and list custom entries
+//! - **Import/Export**: Backup and restore user dictionaries
+//! - **Versioning**: Track dictionary changes with automatic versioning
+//! - **Rollback**: Restore previous dictionary states
+//!
+//! # Available Commands
+//!
+//! ## Dictionary Management
+//!
+//! - `mecab-ko dict reload` - Reload system dictionary
+//! - `mecab-ko dict add <surface> <pos> [cost]` - Add entry to user dictionary
+//! - `mecab-ko dict remove <surface>` - Remove entry from user dictionary
+//! - `mecab-ko dict clear` - Clear all user dictionary entries
+//!
+//! ## Inspection
+//!
+//! - `mecab-ko dict list` - List user dictionary entries
+//! - `mecab-ko dict info` - Show dictionary information
+//! - `mecab-ko dict version` - Display version information
+//!
+//! ## Import/Export
+//!
+//! - `mecab-ko dict export <file>` - Export user dictionary to CSV
+//! - `mecab-ko dict import <file>` - Import user dictionary from CSV
+//!
+//! ## Version Control
+//!
+//! - `mecab-ko dict version --history` - Show version history
+//! - `mecab-ko dict rollback <version>` - Rollback to specific version
+//!
+//! # Examples
+//!
+//! ## Adding Custom Words
+//!
+//! ```bash
+//! # Add a proper noun
+//! mecab-ko dict add "카카오톡" NNP -1000
+//!
+//! # Add with reading
+//! mecab-ko dict add "iPhone" NNP -1000 --reading "아이폰"
+//! ```
+//!
+//! ## Managing Entries
+//!
+//! ```bash
+//! # List all entries
+//! mecab-ko dict list
+//!
+//! # Search for specific entries
+//! mecab-ko dict list --pattern "카카오"
+//!
+//! # Remove an entry
+//! mecab-ko dict remove "카카오톡"
+//! ```
+//!
+//! ## Backup and Restore
+//!
+//! ```bash
+//! # Export to file
+//! mecab-ko dict export my-dictionary.csv
+//!
+//! # Import from file
+//! mecab-ko dict import my-dictionary.csv
+//! ```
+//!
+//! ## Version Management
+//!
+//! ```bash
+//! # Check current version
+//! mecab-ko dict version
+//!
+//! # View history
+//! mecab-ko dict version --history
+//!
+//! # Rollback to previous version
+//! mecab-ko dict rollback 5
+//! ```
+//!
+//! # CSV Format
+//!
+//! User dictionary CSV files should follow this format:
+//!
+//! ```csv
+//! surface,pos,cost,reading
+//! 카카오톡,NNP,-1000,
+//! iPhone,NNP,-1000,아이폰
+//! ```
+//!
+//! Fields:
+//! - `surface`: The surface form (required)
+//! - `pos`: Part-of-speech tag (required)
+//! - `cost`: Word cost, lower = higher priority (optional, default: -1000)
+//! - `reading`: Pronunciation or reading (optional)
+//!
+//! # Part-of-Speech Tags
+//!
+//! Common Korean POS tags:
+//! - `NNG`: General noun
+//! - `NNP`: Proper noun
+//! - `VV`: Verb
+//! - `VA`: Adjective
+//! - `MAG`: General adverb
+//! - `SL`: Foreign language
+//!
+//! # Performance Considerations
+//!
+//! - Dictionary updates are atomic and thread-safe
+//! - Version history is maintained automatically
+//! - Rollback operations are fast and efficient
+//! - User dictionaries are separate from system dictionaries
+//!
+//! # See Also
+//!
+//! - [`HotReloadDictionary`]: Core hot-reload functionality
+//! - [`UserDictionary`]: User dictionary management
 
 use anyhow::{Context, Result};
 use clap::{Args as ClapArgs, Subcommand};
@@ -20,7 +131,10 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-/// 사전 관리 커맨드
+/// Dictionary management commands
+///
+/// Subcommands for managing system and user dictionaries, including
+/// adding/removing entries, import/export, and version control.
 #[derive(Subcommand, Debug)]
 pub enum DictCommand {
     /// 시스템 사전 리로드
@@ -121,7 +235,35 @@ pub enum DictCommand {
     },
 }
 
-/// 사전 커맨드 실행
+/// Executes a dictionary management command
+///
+/// Dispatches the specified dictionary command to the appropriate handler function.
+///
+/// # Arguments
+///
+/// * `cmd` - The dictionary command to execute
+///
+/// # Returns
+///
+/// Returns `Ok(())` on success, or an error if the operation fails.
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - Dictionary loading fails
+/// - File I/O operations fail
+/// - Invalid arguments are provided
+/// - Version rollback fails
+///
+/// # Examples
+///
+/// ```no_run
+/// use mecab_ko_cli::dict_commands::{DictCommand, execute_dict_command};
+///
+/// let cmd = DictCommand::Info { dicdir: None };
+/// execute_dict_command(&cmd)?;
+/// # Ok::<(), anyhow::Error>(())
+/// ```
 pub fn execute_dict_command(cmd: &DictCommand) -> Result<()> {
     match cmd {
         DictCommand::Reload { dicdir } => reload_dict(dicdir.as_ref()),
@@ -143,7 +285,35 @@ pub fn execute_dict_command(cmd: &DictCommand) -> Result<()> {
     }
 }
 
-/// 사전 리로드
+/// Reloads the system dictionary
+///
+/// Forces a reload of the system dictionary files, picking up any changes
+/// made to the dictionary files on disk.
+///
+/// # Arguments
+///
+/// * `dicdir` - Optional path to dictionary directory (uses default if None)
+///
+/// # Returns
+///
+/// Returns the new version number on success.
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - Dictionary directory is not found
+/// - Dictionary files are corrupted
+/// - Insufficient permissions to read dictionary files
+///
+/// # Examples
+///
+/// ```bash
+/// # Reload default dictionary
+/// mecab-ko dict reload
+///
+/// # Reload specific dictionary
+/// mecab-ko dict reload --dicdir /path/to/dict
+/// ```
 fn reload_dict(dicdir: Option<&PathBuf>) -> Result<()> {
     println!("사전 리로드 중...");
 
@@ -156,7 +326,39 @@ fn reload_dict(dicdir: Option<&PathBuf>) -> Result<()> {
     Ok(())
 }
 
-/// 엔트리 추가
+/// Adds an entry to the user dictionary
+///
+/// Adds a new word with its part-of-speech tag and optional attributes
+/// to the user dictionary. The dictionary is updated atomically.
+///
+/// # Arguments
+///
+/// * `dicdir` - Optional path to dictionary directory
+/// * `surface` - The surface form of the word
+/// * `pos` - Part-of-speech tag (e.g., "NNG", "NNP", "VV")
+/// * `cost` - Word cost (lower values = higher priority, typical range: -10000 to 10000)
+/// * `reading` - Optional reading/pronunciation
+///
+/// # Returns
+///
+/// Returns the new dictionary version number on success.
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - Dictionary cannot be loaded
+/// - Invalid POS tag is provided
+/// - Entry already exists (duplicate entries are allowed but warned)
+///
+/// # Examples
+///
+/// ```bash
+/// # Add proper noun
+/// mecab-ko dict add "ChatGPT" NNP -1000
+///
+/// # Add with reading
+/// mecab-ko dict add "API" SL -1000 --reading "에이피아이"
+/// ```
 fn add_entry(
     dicdir: Option<&PathBuf>,
     surface: &str,
@@ -187,7 +389,30 @@ fn add_entry(
     Ok(())
 }
 
-/// 엔트리 제거
+/// Removes entries from the user dictionary
+///
+/// Removes all user dictionary entries matching the specified surface form.
+/// System dictionary entries are never removed.
+///
+/// # Arguments
+///
+/// * `dicdir` - Optional path to dictionary directory
+/// * `surface` - The surface form to remove
+///
+/// # Returns
+///
+/// Returns the new version number and count of removed entries.
+///
+/// # Errors
+///
+/// Returns an error if dictionary operations fail.
+///
+/// # Examples
+///
+/// ```bash
+/// # Remove an entry
+/// mecab-ko dict remove "ChatGPT"
+/// ```
 fn remove_entry(dicdir: Option<&PathBuf>, surface: &str) -> Result<()> {
     let dict = create_hot_reload_dict(dicdir)?;
 
@@ -207,7 +432,29 @@ fn remove_entry(dicdir: Option<&PathBuf>, surface: &str) -> Result<()> {
     Ok(())
 }
 
-/// 사용자 사전 목록 표시
+/// Lists all user dictionary entries
+///
+/// Displays all entries in the user dictionary in a formatted table.
+/// Optionally filters entries by pattern matching.
+///
+/// # Arguments
+///
+/// * `dicdir` - Optional path to dictionary directory
+/// * `pattern` - Optional search pattern to filter entries
+///
+/// # Errors
+///
+/// Returns an error if dictionary cannot be loaded or exported.
+///
+/// # Examples
+///
+/// ```bash
+/// # List all entries
+/// mecab-ko dict list
+///
+/// # Search for entries containing "카카오"
+/// mecab-ko dict list --pattern "카카오"
+/// ```
 fn list_entries(dicdir: Option<&PathBuf>, pattern: Option<&str>) -> Result<()> {
     let dict = create_hot_reload_dict(dicdir)?;
     let user_dict = dict.export_user_dict().context("Failed to export user dictionary")?;
@@ -241,7 +488,36 @@ fn list_entries(dicdir: Option<&PathBuf>, pattern: Option<&str>) -> Result<()> {
     Ok(())
 }
 
-/// 사용자 사전 내보내기
+/// Exports the user dictionary to a CSV file
+///
+/// Creates a CSV file containing all user dictionary entries.
+/// The file can be imported later to restore the dictionary state.
+///
+/// # Arguments
+///
+/// * `dicdir` - Optional path to dictionary directory
+/// * `output` - Path to the output CSV file
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - Dictionary cannot be exported
+/// - Output file cannot be created
+/// - Write operation fails
+///
+/// # CSV Format
+///
+/// ```csv
+/// surface,pos,cost,reading
+/// 카카오톡,NNP,-1000,
+/// ```
+///
+/// # Examples
+///
+/// ```bash
+/// # Export to file
+/// mecab-ko dict export backup.csv
+/// ```
 fn export_dict(dicdir: Option<&PathBuf>, output: &PathBuf) -> Result<()> {
     let dict = create_hot_reload_dict(dicdir)?;
     let user_dict = dict.export_user_dict().context("Failed to export user dictionary")?;
@@ -259,7 +535,38 @@ fn export_dict(dicdir: Option<&PathBuf>, output: &PathBuf) -> Result<()> {
     Ok(())
 }
 
-/// 사용자 사전 가져오기
+/// Imports a user dictionary from a CSV file
+///
+/// Replaces the current user dictionary with entries from the specified CSV file.
+/// Existing entries are preserved unless they conflict with imported entries.
+///
+/// # Arguments
+///
+/// * `dicdir` - Optional path to dictionary directory
+/// * `input` - Path to the input CSV file
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - Input file cannot be read
+/// - CSV format is invalid
+/// - Dictionary import fails
+///
+/// # CSV Format
+///
+/// The input file should follow this format:
+/// ```csv
+/// surface,pos,cost,reading
+/// 카카오톡,NNP,-1000,
+/// iPhone,NNP,-1000,아이폰
+/// ```
+///
+/// # Examples
+///
+/// ```bash
+/// # Import from file
+/// mecab-ko dict import backup.csv
+/// ```
 fn import_dict(dicdir: Option<&PathBuf>, input: &PathBuf) -> Result<()> {
     let dict = create_hot_reload_dict(dicdir)?;
 
@@ -282,7 +589,29 @@ fn import_dict(dicdir: Option<&PathBuf>, input: &PathBuf) -> Result<()> {
     Ok(())
 }
 
-/// 버전 정보 표시
+/// Shows dictionary version information
+///
+/// Displays the current dictionary version and optionally shows
+/// the complete version history with timestamps.
+///
+/// # Arguments
+///
+/// * `dicdir` - Optional path to dictionary directory
+/// * `show_history` - If true, displays complete version history
+///
+/// # Errors
+///
+/// Returns an error if dictionary cannot be loaded or version history cannot be retrieved.
+///
+/// # Examples
+///
+/// ```bash
+/// # Show current version
+/// mecab-ko dict version
+///
+/// # Show version history
+/// mecab-ko dict version --history
+/// ```
 fn show_version(dicdir: Option<&PathBuf>, show_history: bool) -> Result<()> {
     let dict = create_hot_reload_dict(dicdir)?;
     let current_version = dict.current_version();
@@ -329,7 +658,32 @@ fn show_version(dicdir: Option<&PathBuf>, show_history: bool) -> Result<()> {
     Ok(())
 }
 
-/// 버전 롤백
+/// Rolls back to a previous dictionary version
+///
+/// Restores the dictionary state to a specific version from the history.
+/// This operation is reversible - you can rollback the rollback.
+///
+/// # Arguments
+///
+/// * `dicdir` - Optional path to dictionary directory
+/// * `target_version` - The version number to rollback to
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - Target version does not exist
+/// - Rollback operation fails
+/// - Dictionary state is corrupted
+///
+/// # Examples
+///
+/// ```bash
+/// # View version history first
+/// mecab-ko dict version --history
+///
+/// # Rollback to version 5
+/// mecab-ko dict rollback 5
+/// ```
 fn rollback_version(dicdir: Option<&PathBuf>, target_version: u64) -> Result<()> {
     let dict = create_hot_reload_dict(dicdir)?;
     let current_version = dict.current_version();
@@ -349,7 +703,33 @@ fn rollback_version(dicdir: Option<&PathBuf>, target_version: u64) -> Result<()>
     Ok(())
 }
 
-/// 사용자 사전 초기화
+/// Clears all user dictionary entries
+///
+/// Removes all entries from the user dictionary, resetting it to empty state.
+/// System dictionary is not affected. Prompts for confirmation unless
+/// `skip_confirm` is true.
+///
+/// # Arguments
+///
+/// * `dicdir` - Optional path to dictionary directory
+/// * `skip_confirm` - If true, skips confirmation prompt
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - Dictionary cannot be cleared
+/// - User cancels operation
+/// - I/O operations fail
+///
+/// # Examples
+///
+/// ```bash
+/// # Clear with confirmation
+/// mecab-ko dict clear
+///
+/// # Clear without confirmation (use with caution)
+/// mecab-ko dict clear --yes
+/// ```
 fn clear_dict(dicdir: Option<&PathBuf>, skip_confirm: bool) -> Result<()> {
     let dict = create_hot_reload_dict(dicdir)?;
     let user_dict = dict.export_user_dict().context("Failed to export user dictionary")?;
@@ -384,7 +764,28 @@ fn clear_dict(dicdir: Option<&PathBuf>, skip_confirm: bool) -> Result<()> {
     Ok(())
 }
 
-/// 사전 정보 표시
+/// Displays comprehensive dictionary information
+///
+/// Shows detailed information about the dictionary including path,
+/// version, entry counts, and history size.
+///
+/// # Arguments
+///
+/// * `dicdir` - Optional path to dictionary directory
+///
+/// # Errors
+///
+/// Returns an error if dictionary cannot be loaded or information cannot be retrieved.
+///
+/// # Examples
+///
+/// ```bash
+/// # Show dictionary information
+/// mecab-ko dict info
+///
+/// # Show info for specific dictionary
+/// mecab-ko dict info --dicdir /path/to/dict
+/// ```
 fn show_info(dicdir: Option<&PathBuf>) -> Result<()> {
     let dict = create_hot_reload_dict(dicdir)?;
 
@@ -404,7 +805,25 @@ fn show_info(dicdir: Option<&PathBuf>) -> Result<()> {
     Ok(())
 }
 
-/// 핫 리로드 사전 생성
+/// Creates a hot-reload dictionary instance
+///
+/// Helper function to create a `HotReloadDictionary` with the specified
+/// or default dictionary path.
+///
+/// # Arguments
+///
+/// * `dicdir` - Optional path to dictionary directory
+///
+/// # Returns
+///
+/// Returns an `Arc<HotReloadDictionary>` for thread-safe shared access.
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - Dictionary path is invalid
+/// - Dictionary files cannot be loaded
+/// - Initialization fails
 fn create_hot_reload_dict(dicdir: Option<&PathBuf>) -> Result<Arc<HotReloadDictionary>> {
     let dict = if let Some(path) = dicdir {
         HotReloadDictionary::new(path).context("Failed to create hot reload dictionary")?
