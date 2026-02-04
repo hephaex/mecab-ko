@@ -1,0 +1,170 @@
+name: Benchmarks
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_benchmarks:
+        description: 'Run full benchmarks'
+        required: false
+        default: 'quick'
+        type: choice
+        options:
+          - quick
+          - core
+          - all
+  pull_request:
+    paths:
+      - 'rust/crates/mecab-ko-core/**'
+      - 'rust/crates/mecab-ko-dict/**'
+      - 'rust/crates/benchmarks/**'
+  schedule:
+    # Run benchmarks weekly on Sunday at 00:00 UTC
+    - cron: '0 0 * * 0'
+
+jobs:
+  benchmark:
+    name: Run Benchmarks
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache target directory
+        uses: actions/cache@v4
+        with:
+          path: rust/target
+          key: ${{ runner.os }}-target-bench-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Determine benchmark mode
+        id: bench_mode
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "mode=${{ github.event.inputs.run_benchmarks }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "mode=quick" >> $GITHUB_OUTPUT
+          else
+            echo "mode=all" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run benchmarks
+        working-directory: rust/crates/benchmarks
+        run: |
+          chmod +x run_benchmarks.sh
+          ./run_benchmarks.sh --${{ steps.bench_mode.outputs.mode }} --output-json --output-csv
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-results-${{ github.sha }}
+          path: rust/crates/benchmarks/benchmark_results_*
+          retention-days: 30
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            // Find the results directory
+            const resultsDir = fs.readdirSync('rust/crates/benchmarks')
+              .filter(f => f.startsWith('benchmark_results_'))
+              .sort()
+              .pop();
+
+            if (!resultsDir) {
+              console.log('No results found');
+              return;
+            }
+
+            const summaryPath = path.join('rust/crates/benchmarks', resultsDir, 'summary.csv');
+            if (!fs.existsSync(summaryPath)) {
+              console.log('No summary.csv found');
+              return;
+            }
+
+            const summary = fs.readFileSync(summaryPath, 'utf8');
+            const lines = summary.split('\n').filter(l => l.trim());
+
+            const table = lines.map(line => {
+              const [name, status] = line.split(',');
+              return `| ${name} | ${status} |`;
+            }).join('\n');
+
+            const comment = `## Benchmark Results
+
+            | Benchmark | Status |
+            |-----------|--------|
+            ${table}
+
+            <details>
+            <summary>View detailed results</summary>
+
+            See the uploaded artifacts for detailed benchmark reports.
+
+            </details>
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: Compare with baseline
+        if: github.event_name == 'pull_request'
+        working-directory: rust/crates/benchmarks
+        continue-on-error: true
+        run: |
+          # This would compare with a saved baseline
+          # For now, just a placeholder
+          echo "Baseline comparison would go here"
+
+  # Optional: Store baseline for main branch
+  save-baseline:
+    name: Save Baseline
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run benchmarks and save baseline
+        working-directory: rust/crates/benchmarks
+        run: |
+          chmod +x run_benchmarks.sh
+          ./run_benchmarks.sh --core --save-baseline main
+
+      - name: Upload baseline
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-baseline-main
+          path: rust/target/criterion
+          retention-days: 90
