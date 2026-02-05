@@ -15,7 +15,7 @@
 //! - **User Dictionary Support**: Load custom dictionaries for domain-specific analysis
 //! - **Interactive REPL**: Test and experiment with analysis in real-time
 //! - **Batch Processing**: Process multiple files efficiently
-//! - **Shell Completions**: Generate completions for Bash, Zsh, Fish, and PowerShell
+//! - **Shell Completions**: Generate completions for Bash, Zsh, Fish, and `PowerShell`
 //!
 //! # Installation
 //!
@@ -228,7 +228,7 @@
 //!
 //! ## Default Format
 //!
-//! Standard MeCab output with surface form and POS tag:
+//! Standard `MeCab` output with surface form and POS tag:
 //! ```text
 //! 형태소  NNG
 //! 분석    NNG
@@ -434,7 +434,7 @@ enum Commands {
 ///
 /// # Format Descriptions
 ///
-/// - `Default`: Standard MeCab format with tab-separated surface and POS
+/// - `Default`: Standard `MeCab` format with tab-separated surface and POS
 /// - `Wakati`: Space-separated tokens only (no POS tags)
 /// - `Dump`: Debug format with byte positions and detailed information
 /// - `Pos`: Surface/POS pairs, one per line
@@ -525,7 +525,7 @@ impl AnalysisContext {
         let user_dict = if let Some(ref user_dict_path) = args.user_dict {
             let mut dict = UserDictionary::new();
             dict.load_from_csv(user_dict_path)
-                .with_context(|| format!("Failed to load user dictionary: {:?}", user_dict_path))?;
+                .with_context(|| format!("Failed to load user dictionary: {}", user_dict_path.display()))?;
 
             if !args.quiet {
                 eprintln!("Loaded {} entries from user dictionary", dict.len());
@@ -697,13 +697,13 @@ fn main() -> Result<()> {
                 }
             }
             Commands::Dict { path } => {
-                show_dict_info(path.as_ref())?;
+                show_dict_info(path.as_ref());
             }
             Commands::Version => {
                 print_version();
             }
             Commands::Completions { shell } => {
-                generate_completions(*shell)?;
+                generate_completions(*shell);
             }
         }
         return Ok(());
@@ -789,25 +789,17 @@ fn process_stdin(ctx: &AnalysisContext) -> Result<()> {
 /// # Arguments
 ///
 /// * `path` - Optional path to a dictionary directory
-///
-/// # Errors
-///
-/// Currently returns `Ok(())` as dictionary loading is not yet implemented.
-/// Will return errors in the future if dictionary loading fails.
-fn show_dict_info(path: Option<&PathBuf>) -> Result<()> {
+fn show_dict_info(path: Option<&PathBuf>) {
     println!("MeCab-Ko Dictionary Information");
     println!("================================");
 
     if let Some(p) = path {
         println!("Path: {}", p.display());
-        // TODO: 실제 사전 정보 표시
-        println!("(Dictionary loading not yet implemented)");
+        // TODO: 実際の辞書情報を表示
     } else {
         println!("Path: (default system dictionary)");
-        println!("(Dictionary loading not yet implemented)");
     }
-
-    Ok(())
+    println!("(Dictionary loading not yet implemented)");
 }
 
 /// Prints detailed version information
@@ -849,6 +841,7 @@ fn print_version() {
 /// - Reading from stdin fails
 /// - Processing input fails
 /// - Writing output fails
+#[allow(clippy::too_many_lines)]
 fn run_repl(ctx: &AnalysisContext) -> Result<()> {
     // 배너 출력
     println!("MeCab-Ko REPL v{}", env!("CARGO_PKG_VERSION"));
@@ -872,7 +865,8 @@ fn run_repl(ctx: &AnalysisContext) -> Result<()> {
         stdout.flush()?;
 
         let mut line = String::new();
-        match stdin.lock().read_line(&mut line) {
+        let read_result = stdin.lock().read_line(&mut line);
+        match read_result {
             Ok(0) => {
                 // EOF (Ctrl+D)
                 println!("\n종료합니다.");
@@ -893,7 +887,6 @@ fn run_repl(ctx: &AnalysisContext) -> Result<()> {
                     }
                     ":help" => {
                         show_repl_help();
-                        continue;
                     }
                     ":format" => {
                         show_format_menu();
@@ -904,30 +897,28 @@ fn run_repl(ctx: &AnalysisContext) -> Result<()> {
                         stdin.lock().read_line(&mut choice)?;
 
                         if let Ok(idx) = choice.trim().parse::<usize>() {
-                            let new_format = match idx {
-                                0 => OutputFormat::Default,
-                                1 => OutputFormat::Wakati,
-                                2 => OutputFormat::Pos,
-                                3 => OutputFormat::Simple,
-                                4 => OutputFormat::Dump,
-                                5 => OutputFormat::Json,
-                                6 => OutputFormat::Csv,
+                            match idx {
+                                0 => *current_format.borrow_mut() = OutputFormat::Default,
+                                1 => *current_format.borrow_mut() = OutputFormat::Wakati,
+                                2 => *current_format.borrow_mut() = OutputFormat::Pos,
+                                3 => *current_format.borrow_mut() = OutputFormat::Simple,
+                                4 => *current_format.borrow_mut() = OutputFormat::Dump,
+                                5 => *current_format.borrow_mut() = OutputFormat::Json,
+                                6 => *current_format.borrow_mut() = OutputFormat::Csv,
                                 _ => {
                                     println!("잘못된 선택입니다.");
-                                    continue;
                                 }
-                            };
-                            *current_format.borrow_mut() = new_format;
-                            println!("출력 포맷이 변경되었습니다: {new_format:?}");
+                            }
+                            if idx <= 6 {
+                                println!("출력 포맷이 변경되었습니다: {:?}", *current_format.borrow());
+                            }
                         } else {
                             println!("잘못된 입력입니다.");
                         }
-                        continue;
                     }
                     _ if line.starts_with(':') => {
                         println!("알 수 없는 명령어: {line}");
                         println!("':help'를 입력하여 사용 가능한 명령어를 확인하세요.");
-                        continue;
                     }
                     _ => {
                         // 형태소 분석 수행
@@ -1178,11 +1169,7 @@ fn process_batch(ctx: &AnalysisContext) -> Result<()> {
 ///
 /// # Arguments
 ///
-/// * `shell` - The target shell (Bash, Zsh, Fish, PowerShell, etc.)
-///
-/// # Errors
-///
-/// Returns an error if writing to stdout fails.
+/// * `shell` - The target shell (Bash, Zsh, Fish, `PowerShell`, etc.)
 ///
 /// # Examples
 ///
@@ -1190,13 +1177,11 @@ fn process_batch(ctx: &AnalysisContext) -> Result<()> {
 /// mecab-ko completions bash > /etc/bash_completion.d/mecab-ko
 /// mecab-ko completions zsh > ~/.zfunc/_mecab-ko
 /// ```
-fn generate_completions(shell: Shell) -> Result<()> {
+fn generate_completions(shell: Shell) {
     let mut cmd = Args::command();
     let bin_name = cmd.get_name().to_string();
 
     generate(shell, &mut cmd, bin_name, &mut io::stdout());
-
-    Ok(())
 }
 
 #[cfg(test)]

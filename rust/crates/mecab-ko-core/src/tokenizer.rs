@@ -39,7 +39,6 @@
 
 use std::borrow::Cow;
 use std::path::Path;
-use std::str::FromStr;
 
 use mecab_ko_dict::{SystemDictionary, UserDictionary};
 
@@ -93,7 +92,7 @@ pub struct Token {
 impl Token {
     /// 새 토큰 생성
     #[must_use]
-    pub fn new(
+    pub const fn new(
         surface: String,
         pos: String,
         start_pos: usize,
@@ -595,13 +594,13 @@ impl Tokenizer {
 
     /// 외래어 정규화기 참조 반환
     #[must_use]
-    pub fn normalizer(&self) -> Option<&Normalizer> {
+    pub const fn normalizer(&self) -> Option<&Normalizer> {
         self.normalizer.as_ref()
     }
 
     /// 정규화가 활성화되어 있는지 확인
     #[must_use]
-    pub fn is_normalization_enabled(&self) -> bool {
+    pub const fn is_normalization_enabled(&self) -> bool {
         self.enable_normalization
     }
 

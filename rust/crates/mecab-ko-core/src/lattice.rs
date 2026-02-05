@@ -295,7 +295,7 @@ impl NodeBuilder {
 
     /// Node 빌드 (ID는 Lattice에서 할당)
     #[must_use]
-    pub const fn build(self) -> NodeBuilder {
+    pub const fn build(self) -> Self {
         self
     }
 }
@@ -354,7 +354,7 @@ impl CharPositions {
     /// 총 바이트 수
     #[inline]
     #[must_use]
-    pub fn byte_count(&self) -> usize {
+    pub const fn byte_count(&self) -> usize {
         self.total_bytes
     }
 }
@@ -520,7 +520,7 @@ impl Lattice {
     /// 바이트 길이
     #[inline]
     #[must_use]
-    pub fn byte_len(&self) -> usize {
+    pub const fn byte_len(&self) -> usize {
         self.char_positions.byte_count()
     }
 
@@ -597,11 +597,12 @@ impl Lattice {
     ///
     /// # Arguments
     ///
-    /// * `builder` - NodeBuilder로 구성된 노드 정보
+    /// * `builder` - `NodeBuilder`로 구성된 노드 정보
     ///
     /// # Returns
     ///
     /// 추가된 노드의 ID
+    #[allow(clippy::cast_possible_truncation)]
     pub fn add_node(&mut self, builder: NodeBuilder) -> NodeId {
         let id = self.nodes.len() as NodeId;
 

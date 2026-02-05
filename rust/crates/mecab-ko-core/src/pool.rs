@@ -266,7 +266,7 @@ impl Default for NodeVecPool {
 
 /// ID 벡터 풀
 ///
-/// Lattice의 starts_at, ends_at 벡터 재사용
+/// Lattice의 `starts_at`, `ends_at` 벡터 재사용
 pub struct IdVecPool {
     pool: RefCell<Vec<Vec<u32>>>,
     max_size: usize,

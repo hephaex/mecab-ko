@@ -66,39 +66,31 @@ pub use mecab_ko_hangul::{
 // Re-export dictionary types
 pub use mecab_ko_dict::{Dictionary, Entry};
 
-/// 한글 처리 유틸리티
+/// 한글 자모 처리
+///
+/// 한글 음절의 자모 분리/결합, 종성 판별 등을 제공합니다.
 pub mod hangul {
-    //! 한글 자모 처리
-    //!
-    //! 한글 음절의 자모 분리/결합, 종성 판별 등을 제공합니다.
-
     pub use mecab_ko_hangul::*;
 }
 
-/// 품사 태그
+/// 품사 태그 정의
+///
+/// 세종 품사 태그 체계 + mecab-ko-dic 확장 태그
 pub mod pos_tag {
-    //! 품사 태그 정의
-    //!
-    //! 세종 품사 태그 체계 + mecab-ko-dic 확장 태그
-
     pub use mecab_ko_core::pos_tag::*;
 }
 
-/// 토크나이저
+/// 형태소 분석기
+///
+/// 메인 형태소 분석 인터페이스
 pub mod tokenizer {
-    //! 형태소 분석기
-    //!
-    //! 메인 형태소 분석 인터페이스
-
     pub use mecab_ko_core::tokenizer::*;
 }
 
-/// 사전
+/// 형태소 사전
+///
+/// 사전 로딩, 검색, 연접 비용 조회
 pub mod dict {
-    //! 형태소 사전
-    //!
-    //! 사전 로딩, 검색, 연접 비용 조회
-
     pub use mecab_ko_dict::*;
 }
 

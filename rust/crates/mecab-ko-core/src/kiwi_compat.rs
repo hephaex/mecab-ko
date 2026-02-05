@@ -204,6 +204,7 @@ impl KiwiPosTag {
     /// assert_eq!(KiwiPosTag::from_str("INVALID"), None);
     /// ```
     #[must_use]
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(s: &str) -> Option<Self> {
         match s {
             // 체언

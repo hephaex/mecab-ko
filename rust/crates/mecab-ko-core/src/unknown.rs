@@ -274,7 +274,7 @@ impl CharCategoryMap {
             }
 
             // 카테고리 정의 줄: CATEGORY_NAME INVOKE GROUP LENGTH
-            if !line.starts_with("0x") && !line.chars().next().map_or(false, |c| c.is_ascii_digit())
+            if !line.starts_with("0x") && !line.chars().next().is_some_and(|c| c.is_ascii_digit())
             {
                 let parts: Vec<&str> = line.split_whitespace().collect();
                 if parts.len() >= 4 {
@@ -340,6 +340,7 @@ pub struct UnknownDictionary {
 
 impl UnknownDictionary {
     /// 새로운 미등록어 사전 생성
+    #[must_use]
     pub fn new() -> Self {
         Self {
             entries: HashMap::new(),
@@ -347,6 +348,7 @@ impl UnknownDictionary {
     }
 
     /// 한국어 기본 미등록어 사전 생성
+    #[must_use]
     pub fn korean_default() -> Self {
         let mut dict = Self::new();
 
@@ -384,11 +386,11 @@ impl UnknownDictionary {
     }
 
     /// 카테고리별 미등록어 정의 조회
+    #[must_use]
     pub fn get_entries(&self, category_id: CategoryId) -> &[UnknownDef] {
         self.entries
             .get(&category_id)
-            .map(|v| v.as_slice())
-            .unwrap_or(&[])
+            .map_or(&[], std::vec::Vec::as_slice)
     }
 
     /// unk.def 형식에서 로드
@@ -398,6 +400,10 @@ impl UnknownDictionary {
     /// ```text
     /// CATEGORY,left_id,right_id,cost,POS,semantic,jongseong,reading,type,first,last,expr
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// I/O 오류 또는 형식 오류 시 `Error::Init` 반환
     pub fn from_unk_def<R: BufRead>(reader: R, category_map: &CharCategoryMap) -> Result<Self> {
         let mut dict = Self::new();
 
@@ -470,7 +476,8 @@ impl Default for UnknownHandler {
 
 impl UnknownHandler {
     /// 새로운 미등록어 처리기 생성
-    pub fn new(category_map: CharCategoryMap, unknown_dict: UnknownDictionary) -> Self {
+    #[must_use]
+    pub const fn new(category_map: CharCategoryMap, unknown_dict: UnknownDictionary) -> Self {
         Self {
             category_map,
             unknown_dict,

@@ -23,6 +23,8 @@
 //! ```
 
 #![deny(clippy::all)]
+// Allow missing docs for NAPI macro-generated code
+#![allow(missing_docs)]
 
 use mecab_ko_core::{Token as CoreToken, Tokenizer as CoreTokenizer};
 use napi::bindgen_prelude::*;
@@ -51,6 +53,7 @@ pub struct Token {
 }
 
 impl From<CoreToken> for Token {
+    #[allow(clippy::cast_possible_truncation)]
     fn from(token: CoreToken) -> Self {
         Self {
             surface: token.surface,
@@ -118,6 +121,7 @@ impl Mecab {
     /// const mecab = Mecab.withDict('/path/to/dict');
     /// ```
     #[napi(factory)]
+    #[allow(clippy::needless_pass_by_value)]
     pub fn with_dict(dict_path: String) -> Result<Self> {
         let tokenizer = CoreTokenizer::with_dict(&dict_path)
             .map_err(|e| Error::from_reason(format!("Failed to load dictionary: {e}")))?;
@@ -149,6 +153,7 @@ impl Mecab {
     /// // ]
     /// ```
     #[napi]
+    #[allow(clippy::needless_pass_by_value)]
     pub fn tokenize(&self, text: String) -> Vec<Token> {
         self.tokenizer
             .lock()
@@ -177,6 +182,7 @@ impl Mecab {
     /// // Returns: ['형태소', '분석']
     /// ```
     #[napi]
+    #[allow(clippy::needless_pass_by_value)]
     pub fn morphs(&self, text: String) -> Vec<String> {
         self.tokenizer.lock().morphs(&text)
     }
@@ -200,6 +206,7 @@ impl Mecab {
     /// // Returns: ['대한민국', '수도', '서울']
     /// ```
     #[napi]
+    #[allow(clippy::needless_pass_by_value)]
     pub fn nouns(&self, text: String) -> Vec<String> {
         self.tokenizer.lock().nouns(&text)
     }
@@ -223,6 +230,7 @@ impl Mecab {
     /// // Returns: [['안녕하세요', 'NNG']]
     /// ```
     #[napi]
+    #[allow(clippy::needless_pass_by_value)]
     pub fn pos(&self, text: String) -> Vec<Vec<String>> {
         self.tokenizer
             .lock()
@@ -258,6 +266,7 @@ impl Mecab {
     /// // EOS
     /// ```
     #[napi]
+    #[allow(clippy::needless_pass_by_value)]
     pub fn parse(&self, text: String) -> String {
         let tokens = self.tokenizer.lock().tokenize(&text);
         format_mecab_output(&tokens)
@@ -294,7 +303,7 @@ fn format_mecab_output(tokens: &[CoreToken]) -> String {
 /// ```javascript
 /// const version = getVersion();
 /// console.log(version); // "0.1.0"
-/// ```
+#[must_use]
 #[napi]
 pub fn get_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()

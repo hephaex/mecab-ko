@@ -58,6 +58,7 @@ pub mod samples {
     ];
 
     /// All samples combined
+    #[must_use]
     pub fn all() -> Vec<&'static str> {
         SHORT
             .iter()
@@ -86,16 +87,19 @@ pub struct BenchmarkResult {
 }
 
 /// Helper function to generate repeated text
+#[must_use]
 pub fn generate_text(base: &str, repeat: usize) -> String {
     base.repeat(repeat)
 }
 
 /// Helper function to create batch of texts
+#[must_use]
 pub fn create_batch(template: &str, count: usize) -> Vec<String> {
     (0..count).map(|_| template.to_string()).collect()
 }
 
 /// Helper function to create mixed-length batch
+#[must_use]
 pub fn create_mixed_batch(count: usize) -> Vec<String> {
     let templates = samples::all();
     (0..count)

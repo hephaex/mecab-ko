@@ -62,6 +62,13 @@ impl DecompoundMode {
         }
     }
 
+    /// 문자열에서 파싱 (parse의 별칭)
+    #[must_use]
+    #[allow(clippy::should_implement_trait)]
+    pub fn from_str(s: &str) -> Option<Self> {
+        Self::parse(s)
+    }
+
     /// 문자열 표현
     #[must_use]
     pub const fn as_str(&self) -> &'static str {
