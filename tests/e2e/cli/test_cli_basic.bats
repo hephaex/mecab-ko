@@ -3,7 +3,7 @@
 
 setup() {
     # Set up test environment
-    export MECAB_BIN="${MECAB_BIN:-/home/mare/mecab-ko/rust/target/debug/mecab-ko}"
+    export MECAB_BIN="${MECAB_BIN:-/home/mare/mecab-ko/rust/target/debug/mecab}"
     export FIXTURES_DIR="/home/mare/mecab-ko/tests/e2e/fixtures"
     export TEMP_DIR="${BATS_TEST_TMPDIR}"
 }

@@ -66,19 +66,19 @@ fn main() -> Result<(), mecab_ko::Error> {
 
 ```bash
 # 빌드
-cargo build --release --bin mecab-ko
+cargo build --release --bin mecab
 
 # 기본 분석
-./target/release/mecab-ko "안녕하세요"
+./target/release/mecab "안녕하세요"
 
 # 파이프 입력
-echo "형태소 분석" | ./target/release/mecab-ko
+echo "형태소 분석" | ./target/release/mecab
 
 # wakati 모드
-./target/release/mecab-ko -O wakati "한국어 처리"
+./target/release/mecab -O wakati "한국어 처리"
 
 # 사전 경로 지정
-./target/release/mecab-ko -d /path/to/dict "텍스트"
+./target/release/mecab -d /path/to/dict "텍스트"
 ```
 
 ## 🔧 개발

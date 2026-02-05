@@ -57,23 +57,23 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact_name: mecab-ko
+            artifact_name: mecab
             asset_name: mecab-ko-x86_64-linux-gnu
           - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
-            artifact_name: mecab-ko
+            artifact_name: mecab
             asset_name: mecab-ko-aarch64-linux-gnu
           - os: macos-latest
             target: x86_64-apple-darwin
-            artifact_name: mecab-ko
+            artifact_name: mecab
             asset_name: mecab-ko-x86_64-darwin
           - os: macos-latest
             target: aarch64-apple-darwin
-            artifact_name: mecab-ko
+            artifact_name: mecab
             asset_name: mecab-ko-aarch64-darwin
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            artifact_name: mecab-ko.exe
+            artifact_name: mecab.exe
             asset_name: mecab-ko-x86_64-windows-msvc
     steps:
       - name: Checkout code
@@ -97,7 +97,7 @@ jobs:
             ${{ matrix.os }}-cargo-release-${{ matrix.target }}-
 
       - name: Build CLI release
-        run: cargo build --manifest-path rust/Cargo.toml --release --target ${{ matrix.target }} --bin mecab-ko-cli
+        run: cargo build --manifest-path rust/Cargo.toml --release --target ${{ matrix.target }} --bin mecab
         env:
           RUSTFLAGS: "-C target-cpu=generic"
 
@@ -107,7 +107,7 @@ jobs:
       - name: Prepare assets (Linux/macOS)
         if: runner.os != 'Windows'
         run: |
-          cp rust/target/${{ matrix.target }}/release/mecab-ko-cli release-assets/${{ matrix.asset_name }}
+          cp rust/target/${{ matrix.target }}/release/mecab release-assets/${{ matrix.asset_name }}
           chmod +x release-assets/${{ matrix.asset_name }}
           cd release-assets
           tar czf ${{ matrix.asset_name }}.tar.gz ${{ matrix.asset_name }}
@@ -116,7 +116,7 @@ jobs:
       - name: Prepare assets (Windows)
         if: runner.os == 'Windows'
         run: |
-          copy rust/target/${{ matrix.target }}/release/mecab-ko-cli.exe release-assets/${{ matrix.asset_name }}.exe
+          copy rust/target/${{ matrix.target }}/release/mecab.exe release-assets/${{ matrix.asset_name }}.exe
           cd release-assets
           powershell Compress-Archive -Path ${{ matrix.asset_name }}.exe -DestinationPath ${{ matrix.asset_name }}.zip
           dir

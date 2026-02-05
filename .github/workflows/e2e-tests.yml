@@ -53,12 +53,12 @@ jobs:
 
       - name: Build CLI
         working-directory: rust
-        run: cargo build --bin mecab-ko --release
+        run: cargo build --bin mecab --release
 
       - name: Run CLI E2E tests
         working-directory: tests/e2e/cli
         run: |
-          export MECAB_BIN="${GITHUB_WORKSPACE}/rust/target/release/mecab-ko"
+          export MECAB_BIN="${GITHUB_WORKSPACE}/rust/target/release/mecab"
           bats test_cli_basic.bats test_cli_output_formats.bats || echo "Some tests skipped"
         if: runner.os != 'Windows'
 

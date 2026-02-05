@@ -323,7 +323,7 @@ use std::path::PathBuf;
 /// Command-line arguments for MeCab-Ko
 ///
 /// This structure defines all command-line options and arguments
-/// accepted by the `mecab-ko` binary.
+/// accepted by the `mecab` binary.
 ///
 /// # Examples
 ///

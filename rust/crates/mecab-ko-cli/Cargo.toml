@@ -14,7 +14,7 @@ keywords = ["korean", "morphological-analysis", "cli", "nlp"]
 categories = ["command-line-utilities", "text-processing"]
 
 [[bin]]
-name = "mecab-ko"
+name = "mecab"
 path = "src/main.rs"
 
 [dependencies]

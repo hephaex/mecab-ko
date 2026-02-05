@@ -39,13 +39,13 @@ cargo install mecab-ko-cli
 
 ```bash
 # Analyze text from stdin
-echo "안녕하세요" | mecab-ko
+echo "안녕하세요" | mecab
 
 # Analyze text directly
-mecab-ko "오늘 날씨가 좋습니다"
+mecab "오늘 날씨가 좋습니다"
 
 # Analyze from file
-cat input.txt | mecab-ko
+cat input.txt | mecab
 ```
 
 ### Output
@@ -60,7 +60,7 @@ EOS
 ## Usage
 
 ```bash
-mecab-ko [OPTIONS] [INPUT] [COMMAND]
+mecab [OPTIONS] [INPUT] [COMMAND]
 ```
 
 ## Options
@@ -97,7 +97,7 @@ mecab-ko [OPTIONS] [INPUT] [COMMAND]
 Standard MeCab output with tab-separated surface form and POS tag:
 
 ```bash
-mecab-ko "형태소 분석"
+mecab "형태소 분석"
 ```
 
 Output:
@@ -112,7 +112,7 @@ EOS
 Space-separated tokens only (no POS tags):
 
 ```bash
-mecab-ko -O wakati "형태소 분석 테스트"
+mecab -O wakati "형태소 분석 테스트"
 ```
 
 Output:
@@ -125,7 +125,7 @@ Output:
 Surface/POS pairs, one per line:
 
 ```bash
-mecab-ko -O pos "형태소 분석"
+mecab -O pos "형태소 분석"
 ```
 
 Output:
@@ -139,7 +139,7 @@ Output:
 Space-separated surface/POS pairs:
 
 ```bash
-mecab-ko -O simple "형태소 분석"
+mecab -O simple "형태소 분석"
 ```
 
 Output:
@@ -152,7 +152,7 @@ Output:
 Debug information including byte positions:
 
 ```bash
-mecab-ko -O dump "형태소"
+mecab -O dump "형태소"
 ```
 
 Output:
@@ -165,7 +165,7 @@ Output:
 Machine-readable JSON array:
 
 ```bash
-mecab-ko -O json "형태소"
+mecab -O json "형태소"
 ```
 
 Output:
@@ -187,7 +187,7 @@ Output:
 Comma-separated values with header:
 
 ```bash
-mecab-ko -O csv "형태소"
+mecab -O csv "형태소"
 ```
 
 Output:
@@ -218,7 +218,7 @@ Fields:
 ### Using a User Dictionary
 
 ```bash
-mecab-ko --user-dic custom.csv "카카오톡으로 메시지 보내기"
+mecab --user-dic custom.csv "카카오톡으로 메시지 보내기"
 ```
 
 ### Common POS Tags
@@ -237,7 +237,7 @@ mecab-ko --user-dic custom.csv "카카오톡으로 메시지 보내기"
 Start an interactive session for testing:
 
 ```bash
-mecab-ko --repl
+mecab --repl
 ```
 
 ### REPL Commands
@@ -253,16 +253,16 @@ mecab-ko --repl
 MeCab-Ko REPL v0.1.0
 한국어 형태소 분석기 대화형 모드
 
-mecab-ko> 안녕하세요
+mecab> 안녕하세요
 안녕	NNG
 하	XSV
 세요	EF
 EOS
 
-mecab-ko> :format
+mecab> :format
 [Format selection menu]
 
-mecab-ko> :quit
+mecab> :quit
 종료합니다.
 ```
 
@@ -271,7 +271,7 @@ mecab-ko> :quit
 Process multiple files at once:
 
 ```bash
-mecab-ko -i file1.txt -i file2.txt -i file3.txt -o output_dir/
+mecab -i file1.txt -i file2.txt -i file3.txt -o output_dir/
 ```
 
 Each input file generates a corresponding output file with the `.analyzed` extension in the output directory.
@@ -279,7 +279,7 @@ Each input file generates a corresponding output file with the `.analyzed` exten
 ### Batch Processing with Different Format
 
 ```bash
-mecab-ko -O json -i input1.txt -i input2.txt -o results/
+mecab -O json -i input1.txt -i input2.txt -o results/
 ```
 
 ## Dictionary Management Commands
@@ -289,7 +289,7 @@ The CLI includes powerful dictionary management capabilities:
 ### Dictionary Commands
 
 ```bash
-mecab-ko dict <SUBCOMMAND>
+mecab dict <SUBCOMMAND>
 ```
 
 #### Available Subcommands
@@ -323,68 +323,68 @@ mecab-ko dict <SUBCOMMAND>
 
 ```bash
 # Add a proper noun
-mecab-ko dict add "카카오톡" NNP -1000
+mecab dict add "카카오톡" NNP -1000
 
 # Add with reading
-mecab-ko dict add "iPhone" NNP -1000 --reading "아이폰"
+mecab dict add "iPhone" NNP -1000 --reading "아이폰"
 
 # Add with custom cost
-mecab-ko dict add "API" SL -2000
+mecab dict add "API" SL -2000
 ```
 
 #### Managing Entries
 
 ```bash
 # List all entries
-mecab-ko dict list
+mecab dict list
 
 # Search for specific entries
-mecab-ko dict list --pattern "카카오"
+mecab dict list --pattern "카카오"
 
 # Remove an entry
-mecab-ko dict remove "카카오톡"
+mecab dict remove "카카오톡"
 
 # Clear all entries (with confirmation)
-mecab-ko dict clear
+mecab dict clear
 
 # Clear without confirmation
-mecab-ko dict clear --yes
+mecab dict clear --yes
 ```
 
 #### Backup and Restore
 
 ```bash
 # Export user dictionary
-mecab-ko dict export my-dictionary.csv
+mecab dict export my-dictionary.csv
 
 # Import user dictionary
-mecab-ko dict import my-dictionary.csv
+mecab dict import my-dictionary.csv
 ```
 
 #### Version Management
 
 ```bash
 # Check current version
-mecab-ko dict version
+mecab dict version
 
 # View version history
-mecab-ko dict version --history
+mecab dict version --history
 
 # Rollback to previous version
-mecab-ko dict rollback 5
+mecab dict rollback 5
 ```
 
 #### Dictionary Information
 
 ```bash
 # Show dictionary info
-mecab-ko dict info
+mecab dict info
 
 # Show info for specific dictionary
-mecab-ko dict info --dicdir /path/to/dict
+mecab dict info --dicdir /path/to/dict
 
 # Reload dictionary files
-mecab-ko dict reload
+mecab dict reload
 ```
 
 ## Shell Completions
@@ -394,19 +394,19 @@ Generate shell completions for your shell:
 ### Bash
 
 ```bash
-mecab-ko completions bash > /etc/bash_completion.d/mecab-ko
+mecab completions bash > /etc/bash_completion.d/mecab-ko
 ```
 
 Or for user-only installation:
 
 ```bash
-mecab-ko completions bash > ~/.local/share/bash-completion/completions/mecab-ko
+mecab completions bash > ~/.local/share/bash-completion/completions/mecab-ko
 ```
 
 ### Zsh
 
 ```bash
-mecab-ko completions zsh > ~/.zfunc/_mecab-ko
+mecab completions zsh > ~/.zfunc/_mecab-ko
 ```
 
 Add to `.zshrc`:
@@ -419,13 +419,13 @@ autoload -Uz compinit && compinit
 ### Fish
 
 ```bash
-mecab-ko completions fish > ~/.config/fish/completions/mecab-ko.fish
+mecab completions fish > ~/.config/fish/completions/mecab-ko.fish
 ```
 
 ### PowerShell
 
 ```powershell
-mecab-ko completions powershell > mecab-ko.ps1
+mecab completions powershell > mecab-ko.ps1
 ```
 
 ## Advanced Examples
@@ -433,39 +433,39 @@ mecab-ko completions powershell > mecab-ko.ps1
 ### Custom Separator in Wakati Mode
 
 ```bash
-mecab-ko -O wakati --separator "|" "형태소 분석 테스트"
+mecab -O wakati --separator "|" "형태소 분석 테스트"
 # Output: 형태소|분석|테스트
 ```
 
 ### Processing with Custom Dictionary and Format
 
 ```bash
-mecab-ko --user-dic custom.csv -O json "카스텀 단어 테스트" > output.json
+mecab --user-dic custom.csv -O json "카스텀 단어 테스트" > output.json
 ```
 
 ### Batch Processing with Progress Messages
 
 ```bash
-mecab-ko -i doc1.txt -i doc2.txt -i doc3.txt -o results/
+mecab -i doc1.txt -i doc2.txt -i doc3.txt -o results/
 ```
 
 ### Quiet Mode for Scripts
 
 ```bash
-mecab-ko -q --user-dic custom.csv input.txt -o output.txt
+mecab -q --user-dic custom.csv input.txt -o output.txt
 ```
 
 ### File Output
 
 ```bash
 # Single file input to single file output
-mecab-ko "텍스트 분석" -o result.txt
+mecab "텍스트 분석" -o result.txt
 
 # Stdin to file
-cat input.txt | mecab-ko -o output.txt
+cat input.txt | mecab -o output.txt
 
 # File with custom format
-mecab-ko -O json input.txt -o output.json
+mecab -O json input.txt -o output.json
 ```
 
 ## Performance Tips
@@ -494,33 +494,33 @@ Currently, no environment variables are used. Dictionary paths and options must 
 
 ```bash
 # Simple sentence
-mecab-ko "서울시는 대한민국의 수도입니다"
+mecab "서울시는 대한민국의 수도입니다"
 
 # From stdin
-echo "형태소 분석기" | mecab-ko
+echo "형태소 분석기" | mecab
 
 # From file
-cat document.txt | mecab-ko
+cat document.txt | mecab
 ```
 
 ### Data Processing Pipeline
 
 ```bash
 # Extract nouns only (requires jq for JSON processing)
-mecab-ko -O json "텍스트 분석" | jq -r '.[] | select(.pos | startswith("NN")) | .surface'
+mecab -O json "텍스트 분석" | jq -r '.[] | select(.pos | startswith("NN")) | .surface'
 
 # Count word frequencies
-cat corpus.txt | mecab-ko -O wakati | tr ' ' '\n' | sort | uniq -c | sort -rn
+cat corpus.txt | mecab -O wakati | tr ' ' '\n' | sort | uniq -c | sort -rn
 ```
 
 ### Integration with Other Tools
 
 ```bash
 # Convert to JSON and process
-mecab-ko -O json input.txt | jq '.[] | {word: .surface, tag: .pos}'
+mecab -O json input.txt | jq '.[] | {word: .surface, tag: .pos}'
 
 # CSV for spreadsheet import
-mecab-ko -O csv document.txt > analysis.csv
+mecab -O csv document.txt > analysis.csv
 ```
 
 ## Troubleshooting
@@ -531,7 +531,7 @@ If you see "Failed to load dictionary" errors:
 
 ```bash
 # Specify dictionary path explicitly
-mecab-ko -d /path/to/mecab-ko-dic "텍스트"
+mecab -d /path/to/mecab-ko-dic "텍스트"
 
 # Or check system dictionary installation
 ls /usr/local/lib/mecab/dic/mecab-ko-dic
@@ -552,7 +552,7 @@ surface,pos,cost,reading
 Make sure you're using the `--repl` flag:
 
 ```bash
-mecab-ko --repl
+mecab --repl
 ```
 
 ## Development

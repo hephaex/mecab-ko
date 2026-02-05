@@ -2,7 +2,7 @@
 # CLI output format E2E tests for MeCab-Ko
 
 setup() {
-    export MECAB_BIN="${MECAB_BIN:-/home/mare/mecab-ko/rust/target/debug/mecab-ko}"
+    export MECAB_BIN="${MECAB_BIN:-/home/mare/mecab-ko/rust/target/debug/mecab}"
     export TEMP_DIR="${BATS_TEST_TMPDIR}"
     export TEST_SENTENCE="나는 학교에 갑니다."
 }
