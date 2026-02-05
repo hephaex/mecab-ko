@@ -488,7 +488,8 @@ pub const fn from_kiwi_tag(kiwi_tag: KiwiPosTag) -> PosTag {
         KiwiPosTag::SS => PosTag::SSO, // SS -> SSO (기본값, SSC는 손실)
         KiwiPosTag::SE => PosTag::SE,
         KiwiPosTag::SO | KiwiPosTag::SW => PosTag::SY, // SO, SW -> SY (붙임표를 기타기호로)
-        KiwiPosTag::SL | KiwiPosTag::W_URL
+        KiwiPosTag::SL
+        | KiwiPosTag::W_URL
         | KiwiPosTag::W_EMAIL
         | KiwiPosTag::W_HASHTAG
         | KiwiPosTag::W_MENTION

@@ -8,9 +8,6 @@
 
 mod common;
 
-use common::fixtures::SampleTextGenerator;
-use common::perf;
-
 /// Performance baseline thresholds (in microseconds)
 const BASELINE_SIMPLE_SENTENCE_US: f64 = 100.0;
 const BASELINE_COMPLEX_SENTENCE_US: f64 = 500.0;
@@ -105,7 +102,7 @@ fn test_memory_usage() {
 #[test]
 #[ignore = "Requires tokenizer implementation"]
 fn test_throughput() {
-    use std::time::Instant;
+    // use std::time::Instant;
 
     // TODO: Implement once tokenizer is available
     // let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
@@ -134,7 +131,7 @@ fn test_throughput() {
 #[test]
 #[ignore = "Requires tokenizer implementation"]
 fn test_cold_start_performance() {
-    use std::time::Instant;
+    // use std::time::Instant;
 
     // TODO: Implement once tokenizer is available
     // let start = Instant::now();
@@ -174,8 +171,8 @@ fn test_warm_performance() {
 #[test]
 #[ignore = "Requires parallel implementation"]
 fn test_parallel_performance() {
-    use std::sync::Arc;
-    use std::thread;
+    // use std::sync::Arc;
+    // use std::thread;
 
     // TODO: Implement once parallel processing is supported
     // let tokenizer = Arc::new(Tokenizer::new().expect("Failed to create tokenizer"));
@@ -338,7 +335,7 @@ fn test_worst_case_performance() {
 
 #[cfg(test)]
 mod micro_benchmarks {
-    use super::*;
+    use crate::common::perf;
 
     /// Micro-benchmark: character classification
     #[test]
@@ -386,7 +383,6 @@ mod micro_benchmarks {
 
 #[cfg(test)]
 mod memory_benchmarks {
-    use super::*;
 
     /// Test memory allocation patterns
     #[test]

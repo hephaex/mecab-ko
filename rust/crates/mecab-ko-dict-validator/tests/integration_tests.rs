@@ -4,7 +4,6 @@ use mecab_ko_dict_validator::{
     config::{load_config, save_config},
     DictValidator, IssueCategory, Severity, ValidationConfig,
 };
-use std::fs;
 use std::io::Write;
 use tempfile::{NamedTempFile, TempDir};
 

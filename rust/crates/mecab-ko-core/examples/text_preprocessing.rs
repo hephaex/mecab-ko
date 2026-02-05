@@ -133,16 +133,55 @@ impl PreprocessingPipeline {
     fn load_stopwords() -> HashSet<String> {
         let stopwords = vec![
             // 조사
-            "은", "는", "이", "가", "을", "를", "의", "에", "에서", "로", "으로", "와", "과",
-            "도", "만", "까지", "부터", "하고", "및", "그리고", "또는",
+            "은",
+            "는",
+            "이",
+            "가",
+            "을",
+            "를",
+            "의",
+            "에",
+            "에서",
+            "로",
+            "으로",
+            "와",
+            "과",
+            "도",
+            "만",
+            "까지",
+            "부터",
+            "하고",
+            "및",
+            "그리고",
+            "또는",
             // 어미
-            "ㄴ다", "ㅂ니다", "습니다", "입니다", "였습니다", "했습니다",
+            "ㄴ다",
+            "ㅂ니다",
+            "습니다",
+            "입니다",
+            "였습니다",
+            "했습니다",
             // 보조용언
-            "있", "없", "하", "되", "수", "것",
+            "있",
+            "없",
+            "하",
+            "되",
+            "수",
+            "것",
             // 지시사
-            "이", "그", "저", "이것", "그것", "저것",
+            "이",
+            "그",
+            "저",
+            "이것",
+            "그것",
+            "저것",
             // 기타
-            "등", "및", "또", "또한", "때문", "위해",
+            "등",
+            "및",
+            "또",
+            "또한",
+            "때문",
+            "위해",
         ];
 
         stopwords.into_iter().map(String::from).collect()
@@ -235,7 +274,7 @@ impl PreprocessingPipeline {
             .filter(|token| {
                 token.pos.starts_with("NN")  // NNG, NNP, NNB 등
                     || token.pos == "SL"      // 외래어
-                    || token.pos == "SN"      // 숫자
+                    || token.pos == "SN" // 숫자
             })
             .map(|token| token.surface)
             .collect())
@@ -350,7 +389,7 @@ impl PreprocessingPipeline {
                 token.pos.starts_with("NN")
                     || token.pos.starts_with("V")
                     || token.pos.starts_with("A")
-                    || token.pos.starts_with("MA")  // 부사
+                    || token.pos.starts_with("MA") // 부사
             })
             .map(|token| token.lemma.unwrap_or(token.surface))
             .collect())

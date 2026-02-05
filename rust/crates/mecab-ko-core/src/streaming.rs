@@ -85,6 +85,7 @@ impl StreamingTokenizer {
     /// # Arguments
     ///
     /// * `size` - 청크 크기 (바이트)
+    #[must_use]
     pub fn with_chunk_size(mut self, size: usize) -> Self {
         self.chunk_size = size;
         self.buffer = String::with_capacity(size);
@@ -96,6 +97,7 @@ impl StreamingTokenizer {
     /// # Arguments
     ///
     /// * `delimiters` - 문장 구분자 목록
+    #[must_use]
     pub fn with_sentence_delimiters(mut self, delimiters: Vec<char>) -> Self {
         self.sentence_delimiters = delimiters;
         self
@@ -271,7 +273,7 @@ impl StreamingTokenizer {
 
     /// 처리된 문자 수
     #[must_use]
-    pub fn total_chars_processed(&self) -> usize {
+    pub const fn total_chars_processed(&self) -> usize {
         self.total_chars_processed
     }
 
@@ -323,6 +325,7 @@ where
     }
 
     /// 청크 크기 설정
+    #[must_use]
     pub fn with_chunk_size(mut self, size: usize) -> Self {
         self.streaming = self.streaming.with_chunk_size(size);
         self
@@ -347,7 +350,7 @@ where
         }
 
         // 다음 청크 처리
-        while let Some(chunk) = self.chunks.next() {
+        for chunk in self.chunks.by_ref() {
             let tokens = self.streaming.process_chunk(&chunk);
 
             if !tokens.is_empty() {

@@ -137,7 +137,6 @@ fn test_profiling_report_text() {
 
 #[cfg(feature = "profilers")]
 mod profiler_tests {
-    use super::*;
     use mecab_ko_profiler::dict_profiler::DictProfiler;
     use mecab_ko_profiler::tokenizer_profiler::TokenizerProfiler;
     use mecab_ko_profiler::trie_profiler::TrieProfiler;

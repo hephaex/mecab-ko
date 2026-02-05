@@ -285,7 +285,6 @@ fn test_tokenization_consistency() {
 
 #[cfg(test)]
 mod hangul_tests {
-    use super::*;
 
     /// Test mecab-ko-hangul crate integration
     #[test]

@@ -304,7 +304,6 @@ impl TokenFilter for LengthFilter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tokenizer::WordType;
 
     fn create_test_token(surface: &str, pos_tag: &str) -> Token {
         Token::new(surface.to_string(), pos_tag.to_string(), 0, surface.len())

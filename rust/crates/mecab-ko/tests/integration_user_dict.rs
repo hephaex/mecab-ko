@@ -9,7 +9,7 @@
 
 mod common;
 
-use mecab_ko_dict::{UserDictionary, UserDictionaryBuilder, UserEntry};
+use mecab_ko_dict::UserEntry;
 
 /// Test user dictionary entry creation
 #[test]
@@ -125,8 +125,8 @@ fn test_merge_user_and_system_dict() {
 #[test]
 #[ignore = "Requires persistence implementation"]
 fn test_user_dict_persistence() {
-    use std::fs;
-    use tempfile::TempDir;
+    // use std::fs;
+    // use tempfile::TempDir;
 
     // TODO: Implement once persistence is available
     // let temp_dir = TempDir::new().expect("Failed to create temp dir");
@@ -336,7 +336,6 @@ fn test_duplicate_entries() {
 
 #[cfg(test)]
 mod csv_tests {
-    use super::*;
 
     /// Test CSV with various encodings
     #[test]

@@ -85,7 +85,8 @@ pub struct FixedConnectionCost {
 
 impl FixedConnectionCost {
     /// 새 고정 비용 생성
-    pub fn new(cost: i32) -> Self {
+    #[must_use]
+    pub const fn new(cost: i32) -> Self {
         Self { default_cost: cost }
     }
 }
@@ -96,7 +97,7 @@ impl ConnectionCost for FixedConnectionCost {
     }
 }
 
-/// mecab-ko-dict의 Matrix trait에 대한 ConnectionCost 구현
+/// mecab-ko-dict의 `Matrix` trait에 대한 `ConnectionCost` 구현
 ///
 /// 사전 모듈의 연접 비용 행렬을 Viterbi 알고리즘에서 직접 사용할 수 있습니다.
 impl<T: mecab_ko_dict::Matrix> ConnectionCost for T {
@@ -121,23 +122,16 @@ impl<T: mecab_ko_dict::Matrix> ConnectionCost for T {
 /// // dicrc 형식에서 생성
 /// let penalty = SpacePenalty::from_dicrc("1785,6000;1786,6000");
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct SpacePenalty {
     /// 페널티를 적용할 품사 ID 목록과 페널티 값
-    /// (left_id, penalty)
+    /// `(left_id, penalty)`
     penalties: Vec<(u16, i32)>,
-}
-
-impl Default for SpacePenalty {
-    fn default() -> Self {
-        Self {
-            penalties: Vec::new(),
-        }
-    }
 }
 
 impl SpacePenalty {
     /// 빈 페널티 설정 생성
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -146,6 +140,7 @@ impl SpacePenalty {
     ///
     /// 조사(JK*)와 어미(E*)가 띄어쓰기 직후 나타나면 높은 페널티를 부여합니다.
     /// 이는 "아버지가방에" → "아버지가 방에"로 분석하는 데 도움이 됩니다.
+    #[must_use]
     pub fn korean_default() -> Self {
         // mecab-ko-dic의 left-id 기준 (실제 값은 사전에 따라 다름)
         // 여기서는 대표적인 조사/어미 ID 범위를 사용
@@ -182,6 +177,7 @@ impl SpacePenalty {
     /// assert_eq!(penalty.get(1786), 6000);
     /// assert_eq!(penalty.get(9999), 0);  // 미등록
     /// ```
+    #[must_use]
     pub fn from_dicrc(config: &str) -> Self {
         let mut penalties = Vec::new();
 
@@ -210,6 +206,7 @@ impl SpacePenalty {
     /// # Returns
     ///
     /// 해당 ID에 설정된 페널티, 없으면 0
+    #[must_use]
     #[inline]
     pub fn get(&self, left_id: u16) -> i32 {
         for &(id, penalty) in &self.penalties {
@@ -221,12 +218,14 @@ impl SpacePenalty {
     }
 
     /// 페널티가 설정되어 있는지 확인
+    #[must_use]
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.penalties.is_empty()
     }
 
     /// 설정된 페널티 개수
+    #[must_use]
     #[inline]
     pub fn len(&self) -> usize {
         self.penalties.len()
@@ -250,6 +249,7 @@ impl Default for ViterbiSearcher {
 
 impl ViterbiSearcher {
     /// 새 탐색기 생성
+    #[must_use]
     pub fn new() -> Self {
         Self {
             space_penalty: SpacePenalty::default(),
@@ -257,6 +257,7 @@ impl ViterbiSearcher {
     }
 
     /// 띄어쓰기 패널티 설정
+    #[must_use]
     pub fn with_space_penalty(mut self, penalty: SpacePenalty) -> Self {
         self.space_penalty = penalty;
         self
@@ -287,7 +288,7 @@ impl ViterbiSearcher {
         self.forward_pass(lattice, conn_cost);
 
         // Backward pass
-        self.backward_pass(lattice)
+        Self::backward_pass(lattice)
     }
 
     /// Forward Pass: 각 노드의 최소 비용 계산
@@ -317,9 +318,8 @@ impl ViterbiSearcher {
     ) {
         // 현재 노드 정보 추출
         let (left_id, word_cost, has_space) = {
-            let node = match lattice.node(node_id) {
-                Some(n) => n,
-                None => return,
+            let Some(node) = lattice.node(node_id) else {
+                return;
             };
             (node.left_id, node.word_cost, node.has_space_before)
         };
@@ -371,7 +371,7 @@ impl ViterbiSearcher {
     /// Backward Pass: EOS에서 BOS까지 역추적
     ///
     /// 최적 경로의 노드 ID 목록을 반환합니다 (BOS, EOS 제외).
-    fn backward_pass(&self, lattice: &Lattice) -> Vec<NodeId> {
+    fn backward_pass(lattice: &Lattice) -> Vec<NodeId> {
         let mut path = Vec::new();
         let mut current_id = lattice.eos().id;
 
@@ -392,6 +392,7 @@ impl ViterbiSearcher {
     }
 
     /// 최적 경로의 총 비용 조회
+    #[must_use]
     pub fn get_best_cost(&self, lattice: &Lattice) -> i32 {
         lattice.eos().total_cost
     }
@@ -399,6 +400,7 @@ impl ViterbiSearcher {
     /// 경로가 유효한지 확인
     ///
     /// EOS까지의 경로가 존재하는지 확인합니다.
+    #[must_use]
     pub fn has_valid_path(&self, lattice: &Lattice) -> bool {
         lattice.eos().total_cost != i32::MAX && lattice.eos().prev_node_id != INVALID_NODE_ID
     }
@@ -453,6 +455,7 @@ pub struct NbestSearcher {
 
 impl NbestSearcher {
     /// 새 N-best 탐색기 생성
+    #[must_use]
     pub fn new(n: usize) -> Self {
         Self {
             viterbi: ViterbiSearcher::new(),
@@ -461,6 +464,7 @@ impl NbestSearcher {
     }
 
     /// 띄어쓰기 패널티 설정
+    #[must_use]
     pub fn with_space_penalty(mut self, penalty: SpacePenalty) -> Self {
         self.viterbi.space_penalty = penalty;
         self
@@ -491,7 +495,7 @@ impl NbestSearcher {
 
         // 1-best인 경우 단순 backward pass
         if self.max_results == 1 {
-            let path = self.viterbi.backward_pass(lattice);
+            let path = ViterbiSearcher::backward_pass(lattice);
             let cost = self.viterbi.get_best_cost(lattice);
             return vec![(path, cost)];
         }
@@ -529,9 +533,8 @@ impl NbestSearcher {
                 break;
             }
 
-            let node = match lattice.node(candidate.node_id) {
-                Some(n) => n,
-                None => continue,
+            let Some(node) = lattice.node(candidate.node_id) else {
+                continue;
             };
 
             // 현재까지의 경로
@@ -578,7 +581,8 @@ pub struct ViterbiResult<'a> {
 
 impl<'a> ViterbiResult<'a> {
     /// 결과 생성
-    pub fn new(lattice: &'a Lattice, path: Vec<NodeId>, total_cost: i32) -> Self {
+    #[must_use]
+    pub const fn new(lattice: &'a Lattice, path: Vec<NodeId>, total_cost: i32) -> Self {
         Self {
             lattice,
             path,
@@ -592,21 +596,25 @@ impl<'a> ViterbiResult<'a> {
     }
 
     /// 총 비용
-    pub fn cost(&self) -> i32 {
+    #[must_use]
+    pub const fn cost(&self) -> i32 {
         self.total_cost
     }
 
     /// 노드 개수
+    #[must_use]
     pub fn len(&self) -> usize {
         self.path.len()
     }
 
     /// 비어있는지 확인
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.path.is_empty()
     }
 
     /// 표면형 목록
+    #[must_use]
     pub fn surfaces(&self) -> Vec<&str> {
         self.nodes().map(|n| n.surface.as_ref()).collect()
     }

@@ -57,6 +57,7 @@ pub struct SharedStringInterner {
 
 impl SharedStringInterner {
     /// 새 인터너 생성
+    #[must_use]
     pub fn new() -> Self {
         Self {
             interner: Arc::new(Mutex::new(Interner::new())),
@@ -67,26 +68,34 @@ impl SharedStringInterner {
     ///
     /// 이미 존재하는 문자열이면 기존 참조를 반환하고,
     /// 새로운 문자열이면 저장 후 참조를 반환합니다.
+    #[must_use]
     pub fn intern(&self, s: &str) -> Symbol {
         self.interner.lock().get_or_intern(s)
     }
 
     /// 심볼을 문자열로 해석
+    #[must_use]
     pub fn resolve(&self, symbol: Symbol) -> Option<String> {
-        self.interner.lock().resolve(symbol).map(|s| s.to_string())
+        self.interner
+            .lock()
+            .resolve(symbol)
+            .map(ToString::to_string)
     }
 
     /// 저장된 문자열 개수
+    #[must_use]
     pub fn len(&self) -> usize {
         self.interner.lock().len()
     }
 
     /// 비어있는지 확인
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.interner.lock().is_empty()
     }
 
     /// 메모리 사용량 (바이트)
+    #[must_use]
     pub fn memory_usage(&self) -> usize {
         let interner = self.interner.lock();
         // 대략적인 추정: 문자열 개수 * 평균 길이 + 오버헤드
@@ -110,11 +119,13 @@ pub struct TokenPool {
 
 impl TokenPool {
     /// 기본 크기로 풀 생성
+    #[must_use]
     pub fn new() -> Self {
         Self::with_capacity(128)
     }
 
     /// 지정된 용량으로 풀 생성
+    #[must_use]
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
             pool: RefCell::new(Vec::with_capacity(capacity)),
@@ -195,11 +206,13 @@ pub struct NodeVecPool {
 
 impl NodeVecPool {
     /// 기본 크기로 풀 생성
+    #[must_use]
     pub fn new() -> Self {
         Self::with_capacity(32)
     }
 
     /// 지정된 용량으로 풀 생성
+    #[must_use]
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
             pool: RefCell::new(Vec::with_capacity(capacity)),
@@ -209,7 +222,7 @@ impl NodeVecPool {
 
     /// 풀에서 Node 벡터 획득
     pub fn acquire(&self) -> Vec<Node> {
-        self.pool.borrow_mut().pop().unwrap_or_else(Vec::new)
+        self.pool.borrow_mut().pop().unwrap_or_default()
     }
 
     /// Node 벡터를 풀에 반환
@@ -261,11 +274,13 @@ pub struct IdVecPool {
 
 impl IdVecPool {
     /// 기본 크기로 풀 생성
+    #[must_use]
     pub fn new() -> Self {
         Self::with_capacity(64)
     }
 
     /// 지정된 용량으로 풀 생성
+    #[must_use]
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
             pool: RefCell::new(Vec::with_capacity(capacity)),
@@ -275,7 +290,7 @@ impl IdVecPool {
 
     /// 풀에서 ID 벡터 획득
     pub fn acquire(&self) -> Vec<u32> {
-        self.pool.borrow_mut().pop().unwrap_or_else(Vec::new)
+        self.pool.borrow_mut().pop().unwrap_or_default()
     }
 
     /// ID 벡터를 풀에 반환
@@ -324,6 +339,7 @@ pub struct PoolManager {
 
 impl PoolManager {
     /// 새 풀 관리자 생성
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -372,6 +388,7 @@ pub struct PoolStats {
 
 impl PoolStats {
     /// 통계를 사람이 읽기 좋은 문자열로 변환
+    #[must_use]
     pub fn format_human_readable(&self) -> String {
         format!(
             "Token Pool: {}, Node Vec Pool: {}, ID Vec Pool: {}, Interned Strings: {}, Memory: {} KB",

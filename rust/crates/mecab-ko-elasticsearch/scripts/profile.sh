@@ -69,11 +69,11 @@ if command -v valgrind &> /dev/null; then
     echo -e "\n${GREEN}Running memory profiling with valgrind...${NC}"
 
     # Build test binary
-    cargo build --release --example basic_usage
+    cargo build --release --example analyzer_demo
 
     # Run with massif
     valgrind --tool=massif --massif-out-file="$OUTPUT_DIR/massif.out" \
-        "$CRATE_DIR/../../target/release/examples/basic_usage" 2>&1 | \
+        "$CRATE_DIR/../../target/release/examples/analyzer_demo" 2>&1 | \
         tee "$OUTPUT_DIR/massif.log"
 
     # Generate massif visualization if available

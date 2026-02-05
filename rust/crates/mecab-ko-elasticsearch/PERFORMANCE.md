@@ -210,7 +210,7 @@ Using valgrind massif:
 
 ```bash
 valgrind --tool=massif --massif-out-file=massif.out \
-    target/release/examples/basic_usage
+    target/release/examples/analyzer_demo
 
 ms_print massif.out
 ```

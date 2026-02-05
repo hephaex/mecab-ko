@@ -66,7 +66,7 @@ pub struct NormalizationRule {
 impl NormalizationRule {
     /// 새 규칙 생성
     #[must_use]
-    pub fn new(rule_type: RuleType, from: String, to: String, confidence: f32) -> Self {
+    pub const fn new(rule_type: RuleType, from: String, to: String, confidence: f32) -> Self {
         Self {
             rule_type,
             from,
@@ -78,6 +78,7 @@ impl NormalizationRule {
 
 /// 정규화 설정
 #[derive(Debug, Clone)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct NormalizationConfig {
     /// 장단음 정규화 활성화
     pub vowel_length: bool,
@@ -215,6 +216,7 @@ impl Normalizer {
     /// # Errors
     ///
     /// 데이터 로딩 실패 시 에러 반환
+    #[allow(clippy::should_implement_trait)]
     pub fn default() -> Result<Self> {
         Self::new(NormalizationConfig::default())
     }
@@ -244,7 +246,7 @@ impl Normalizer {
         }
 
         // 규칙 기반 정규화 시도
-        self.apply_rules(text)
+        Self::apply_rules(text)
     }
 
     /// 표준형의 모든 변이형 조회
@@ -327,8 +329,8 @@ impl Normalizer {
             return 1.0;
         }
 
-        let jamo1 = self.to_phonetic_jamo(word1);
-        let jamo2 = self.to_phonetic_jamo(word2);
+        let jamo1 = Self::to_phonetic_jamo(word1);
+        let jamo2 = Self::to_phonetic_jamo(word2);
 
         Self::string_similarity(&jamo1, &jamo2)
     }
@@ -391,8 +393,18 @@ impl Normalizer {
     /// 받침 변이 규칙
     fn jongseong_variation_rules() -> Vec<NormalizationRule> {
         vec![
-            NormalizationRule::new(RuleType::JongseongVariation, "ㄹ".into(), "".into(), 0.85),
-            NormalizationRule::new(RuleType::JongseongVariation, "".into(), "ㄹ".into(), 0.85),
+            NormalizationRule::new(
+                RuleType::JongseongVariation,
+                "ㄹ".into(),
+                String::new(),
+                0.85,
+            ),
+            NormalizationRule::new(
+                RuleType::JongseongVariation,
+                String::new(),
+                "ㄹ".into(),
+                0.85,
+            ),
             NormalizationRule::new(RuleType::JongseongVariation, "ㅁ".into(), "ㅂ".into(), 0.8),
             NormalizationRule::new(RuleType::JongseongVariation, "ㅂ".into(), "ㅁ".into(), 0.8),
         ]
@@ -469,7 +481,7 @@ impl Normalizer {
     }
 
     /// 규칙 기반 정규화 적용
-    fn apply_rules(&self, text: &str) -> String {
+    fn apply_rules(text: &str) -> String {
         let chars: Vec<char> = text.chars().collect();
         let mut result = String::with_capacity(text.len());
 
@@ -486,19 +498,19 @@ impl Normalizer {
 
         // 장단음 변이형 생성
         if self.config.vowel_length {
-            variants.extend(self.generate_vowel_length_variants(text));
+            variants.extend(Self::generate_vowel_length_variants(text));
         }
 
         // 받침 변이형 생성
         if self.config.jongseong_variation {
-            variants.extend(self.generate_jongseong_variants(text));
+            variants.extend(Self::generate_jongseong_variants(text));
         }
 
         variants.into_iter().collect()
     }
 
     /// 장단음 변이형 생성
-    fn generate_vowel_length_variants(&self, text: &str) -> Vec<String> {
+    fn generate_vowel_length_variants(text: &str) -> Vec<String> {
         let mut variants = Vec::new();
 
         for i in 0..text.chars().count() {
@@ -531,7 +543,7 @@ impl Normalizer {
     }
 
     /// 받침 변이형 생성
-    fn generate_jongseong_variants(&self, text: &str) -> Vec<String> {
+    fn generate_jongseong_variants(text: &str) -> Vec<String> {
         let mut variants = Vec::new();
 
         for i in 0..text.chars().count() {
@@ -568,7 +580,7 @@ impl Normalizer {
     }
 
     /// 발음 기반 자모 변환 (유사도 계산용)
-    fn to_phonetic_jamo(&self, text: &str) -> String {
+    fn to_phonetic_jamo(text: &str) -> String {
         let mut result = String::new();
 
         for ch in text.chars() {
@@ -598,7 +610,9 @@ impl Normalizer {
         let max_len = len1.max(len2);
         let distance = Self::levenshtein_distance(s1, s2);
 
-        1.0 - (distance as f32 / max_len as f32)
+        #[allow(clippy::cast_precision_loss)]
+        let result = 1.0 - (distance as f32 / max_len as f32);
+        result
     }
 
     /// Levenshtein distance 계산
@@ -617,8 +631,8 @@ impl Normalizer {
 
         let mut matrix = vec![vec![0; len2 + 1]; len1 + 1];
 
-        for i in 0..=len1 {
-            matrix[i][0] = i;
+        for (i, row) in matrix.iter_mut().enumerate().take(len1 + 1) {
+            row[0] = i;
         }
         for j in 0..=len2 {
             matrix[0][j] = j;
@@ -626,7 +640,7 @@ impl Normalizer {
 
         for i in 1..=len1 {
             for j in 1..=len2 {
-                let cost = if chars1[i - 1] == chars2[j - 1] { 0 } else { 1 };
+                let cost = usize::from(chars1[i - 1] != chars2[j - 1]);
                 matrix[i][j] = (matrix[i - 1][j] + 1)
                     .min(matrix[i][j - 1] + 1)
                     .min(matrix[i - 1][j - 1] + cost);
@@ -700,19 +714,15 @@ mod tests {
 
     #[test]
     fn test_vowel_length_variants() {
-        let normalizer = Normalizer::default().unwrap();
-
         // 장단음 변이형 테스트
-        let variants = normalizer.generate_vowel_length_variants("커피");
+        let variants = Normalizer::generate_vowel_length_variants("커피");
         assert!(!variants.is_empty());
     }
 
     #[test]
     fn test_jongseong_variants() {
-        let normalizer = Normalizer::default().unwrap();
-
         // 받침 변이형 테스트
-        let variants = normalizer.generate_jongseong_variants("소프트웨어");
+        let variants = Normalizer::generate_jongseong_variants("소프트웨어");
         assert!(!variants.is_empty());
     }
 

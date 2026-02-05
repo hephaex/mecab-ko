@@ -4,7 +4,7 @@
 //!
 //! ## 개요
 //!
-//! MeCab의 미등록어 처리는 두 가지 정의 파일을 기반으로 합니다:
+//! `MeCab`의 미등록어 처리는 두 가지 정의 파일을 기반으로 합니다:
 //! - `char.def`: 문자 카테고리 정의
 //! - `unk.def`: 미등록어 품사/비용 정의
 //!
@@ -72,6 +72,7 @@ pub struct CharCategoryDef {
 
 impl CharCategoryDef {
     /// 새로운 카테고리 정의 생성
+    #[must_use]
     pub fn new(name: &str, id: CategoryId, invoke: bool, group: bool, length: usize) -> Self {
         Self {
             name: name.to_string(),
@@ -104,6 +105,7 @@ pub struct UnknownDef {
 
 impl UnknownDef {
     /// 새로운 미등록어 정의 생성
+    #[must_use]
     pub fn new(
         category_id: CategoryId,
         left_id: u16,
@@ -132,7 +134,7 @@ pub struct CharCategoryMap {
     categories: Vec<CharCategoryDef>,
     /// 카테고리 이름 -> ID 매핑
     name_to_id: HashMap<String, CategoryId>,
-    /// CharType -> CategoryId 매핑 (기본 매핑)
+    /// `CharType` -> `CategoryId` 매핑 (기본 매핑)
     type_to_category: HashMap<CharType, CategoryId>,
     /// Unicode 범위별 카테고리 오버라이드
     range_overrides: Vec<(u32, u32, CategoryId)>,
@@ -146,6 +148,7 @@ impl Default for CharCategoryMap {
 
 impl CharCategoryMap {
     /// 빈 카테고리 맵 생성
+    #[must_use]
     pub fn new() -> Self {
         Self {
             categories: Vec::new(),
@@ -158,6 +161,7 @@ impl CharCategoryMap {
     /// 한국어 기본 카테고리 맵 생성
     ///
     /// mecab-ko-dic의 char.def 기반 기본 설정
+    #[must_use]
     pub fn korean_default() -> Self {
         let mut map = Self::new();
 
@@ -213,6 +217,7 @@ impl CharCategoryMap {
     }
 
     /// 문자의 카테고리 ID 반환
+    #[must_use]
     pub fn get_category(&self, c: char) -> CategoryId {
         let code = c as u32;
 
@@ -232,11 +237,13 @@ impl CharCategoryMap {
     }
 
     /// 카테고리 정의 조회
+    #[must_use]
     pub fn get_category_def(&self, id: CategoryId) -> Option<&CharCategoryDef> {
         self.categories.iter().find(|c| c.id == id)
     }
 
     /// 카테고리 이름으로 ID 조회
+    #[must_use]
     pub fn get_id_by_name(&self, name: &str) -> Option<CategoryId> {
         self.name_to_id.get(name).copied()
     }
@@ -249,6 +256,10 @@ impl CharCategoryMap {
     /// CATEGORY_NAME  INVOKE  GROUP  LENGTH
     /// 0xHHHH..0xJJJJ CATEGORY_NAME
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// I/O 에러 또는 파싱 실패 시 에러 반환
     pub fn from_char_def<R: BufRead>(reader: R) -> Result<Self> {
         let mut map = Self::new();
         let mut next_id: CategoryId = 0;
@@ -467,6 +478,7 @@ impl UnknownHandler {
     }
 
     /// 한국어 기본 설정으로 생성
+    #[must_use]
     pub fn korean_default() -> Self {
         Self::new(
             CharCategoryMap::korean_default(),
@@ -485,6 +497,7 @@ impl UnknownHandler {
     /// # Returns
     ///
     /// 미등록어 후보 목록
+    #[must_use]
     pub fn generate_candidates(
         &self,
         text: &str,
@@ -498,9 +511,8 @@ impl UnknownHandler {
 
         let first_char = chars[start_pos];
         let category_id = self.category_map.get_category(first_char);
-        let category_def = match self.category_map.get_category_def(category_id) {
-            Some(def) => def,
-            None => return Vec::new(),
+        let Some(category_def) = self.category_map.get_category_def(category_id) else {
+            return Vec::new();
         };
 
         // INVOKE가 false이고 사전 엔트리가 있으면 미등록어 생성 생략
@@ -610,7 +622,7 @@ impl UnknownHandler {
                 NodeBuilder::new(&candidate.surface, candidate.start_pos, candidate.end_pos)
                     .left_id(candidate.left_id)
                     .right_id(candidate.right_id)
-                    .word_cost(candidate.cost as i32)
+                    .word_cost(i32::from(candidate.cost))
                     .node_type(NodeType::Unknown),
             );
             count += 1;

@@ -93,7 +93,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let reading_filter = NoriReadingFormFilter::new();
 
     // 읽기 정보가 있는 토큰 생성 (예제용)
-    use mecab_ko_elasticsearch::tokenizer::{Token, WordType};
+    use mecab_ko_elasticsearch::tokenizer::Token;
     let tokens_with_reading = vec![
         Token::new("形態素".to_string(), "NNG".to_string(), 0, 3)
             .with_reading(Some("형태소".to_string())),

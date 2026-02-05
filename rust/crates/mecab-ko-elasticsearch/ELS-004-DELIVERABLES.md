@@ -132,7 +132,7 @@ mecab-ko-elasticsearch/
 │   ├── analyzer_bench.rs       [수정] Throughput 추가
 │   └── performance_bench.rs    [신규] 종합 벤치마크
 ├── examples/
-│   ├── basic_usage.rs          [기존]
+│   ├── analyzer_demo.rs        [기존] 기본 사용 예제
 │   ├── config_examples.rs      [기존]
 │   ├── filter_usage.rs         [기존]
 │   └── performance_demo.rs     [신규] 성능 데모
@@ -196,7 +196,7 @@ cargo bench --bench performance_bench
 cargo run --example performance_demo --release
 
 # 기본 사용
-cargo run --example basic_usage
+cargo run --example analyzer_demo
 ```
 
 ## 성능 지표 (예상)

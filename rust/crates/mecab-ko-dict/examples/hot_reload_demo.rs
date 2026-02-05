@@ -15,9 +15,7 @@
 //! 3. 버전 관리 및 롤백
 //! 4. 파일 변경 감지 (선택적)
 
-use mecab_ko_dict::{
-    DeltaUpdate, HotReloadDictionary, UserDictionary, UserDictionaryBuilder, Version,
-};
+use mecab_ko_dict::{DeltaUpdate, HotReloadDictionary, UserDictionary};
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;

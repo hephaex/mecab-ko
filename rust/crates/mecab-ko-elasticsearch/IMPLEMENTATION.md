@@ -26,7 +26,7 @@ mecab-ko-elasticsearch/
 ├── benches/
 │   └── analyzer_bench.rs   # 벤치마크
 └── examples/
-    ├── basic_usage.rs      # 기본 사용 예제
+    ├── analyzer_demo.rs    # 기본 사용 예제
     ├── filter_usage.rs     # 필터 사용 예제
     └── config_examples.rs  # 설정 예제
 ```
@@ -168,7 +168,7 @@ Java/Elasticsearch 통합을 위한 네이티브 함수:
 
 #### 4.1 기본 사용
 
-**파일**: `examples/basic_usage.rs`
+**파일**: `examples/analyzer_demo.rs`
 
 - 기본 분석기 생성
 - Mixed 모드 복합명사 분해
@@ -323,7 +323,7 @@ cargo bench -p mecab-ko-elasticsearch
 #### 8.4 예제 실행
 
 ```bash
-cargo run -p mecab-ko-elasticsearch --example basic_usage
+cargo run -p mecab-ko-elasticsearch --example analyzer_demo
 cargo run -p mecab-ko-elasticsearch --example filter_usage
 cargo run -p mecab-ko-elasticsearch --example config_examples
 ```
@@ -428,7 +428,7 @@ ELS-001 이슈의 모든 요구사항이 완료되었습니다:
 ├── benches/
 │   └── analyzer_bench.rs
 └── examples/
-    ├── basic_usage.rs
+    ├── analyzer_demo.rs
     ├── filter_usage.rs
     └── config_examples.rs
 ```

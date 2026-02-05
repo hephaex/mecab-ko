@@ -9,7 +9,7 @@
 
 mod common;
 
-use mecab_ko_dict::{DictEntry, Entry, Matrix, Trie};
+use mecab_ko_dict::Entry;
 
 /// Test that dictionary entry struct is properly defined
 #[test]
@@ -287,7 +287,7 @@ fn test_entry_serialization() {
 #[test]
 #[ignore = "Requires actual dictionary"]
 fn test_lookup_performance() {
-    use common::perf;
+    // use common::perf;
 
     // TODO: Implement once dictionary is available
     // let dict = create_test_dictionary();
@@ -310,8 +310,8 @@ fn test_lookup_performance() {
 #[test]
 #[ignore = "Requires thread-safe dictionary implementation"]
 fn test_concurrent_access() {
-    use std::sync::Arc;
-    use std::thread;
+    // use std::sync::Arc;
+    // use std::thread;
 
     // TODO: Implement once dictionary is thread-safe
     // let dict = Arc::new(create_test_dictionary());
@@ -356,7 +356,6 @@ fn test_dictionary_stats() {
 
 #[cfg(test)]
 mod matrix_tests {
-    use super::*;
 
     /// Test matrix bounds checking
     #[test]
@@ -392,7 +391,6 @@ mod matrix_tests {
 
 #[cfg(test)]
 mod trie_tests {
-    use super::*;
 
     /// Test trie with Korean text
     #[test]

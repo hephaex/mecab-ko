@@ -54,11 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for doc in &documents {
         search_engine.index_document(doc)?;
-        println!(
-            "문서 #{} 인덱싱 완료: {}",
-            doc.id,
-            doc.title
-        );
+        println!("문서 #{} 인덱싱 완료: {}", doc.id, doc.title);
     }
     println!();
 
@@ -138,7 +134,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== 6. 퍼지 검색 (오타 허용) ===\n");
 
     let fuzzy_queries = vec![
-        ("프로그래밍", "프로그레밍"),  // 오타
+        ("프로그래밍", "프로그레밍"), // 오타
         ("형태소", "형대소"),         // 오타
         ("자연어", "자연이"),         // 오타
     ];
@@ -260,7 +256,10 @@ impl SearchEngine {
     /// - 모든 형태소 보존
     /// - 복합명사 분해
     /// - 동의어 확장
-    fn tokenize_for_indexing(&mut self, text: &str) -> Result<Vec<Token>, Box<dyn std::error::Error>> {
+    fn tokenize_for_indexing(
+        &mut self,
+        text: &str,
+    ) -> Result<Vec<Token>, Box<dyn std::error::Error>> {
         let tokens = self.tokenizer.tokenize(text);
 
         // 검색 가능한 토큰만 필터링
@@ -284,7 +283,10 @@ impl SearchEngine {
     /// - 불용어 제거
     /// - 어간 추출
     /// - 정규화 적용
-    fn tokenize_for_query(&mut self, query: &str) -> Result<Vec<Token>, Box<dyn std::error::Error>> {
+    fn tokenize_for_query(
+        &mut self,
+        query: &str,
+    ) -> Result<Vec<Token>, Box<dyn std::error::Error>> {
         // 정규화 적용
         let normalized = self.normalizer.normalize(query);
         let tokens = self.tokenizer.tokenize(&normalized);
@@ -369,7 +371,10 @@ impl SearchEngine {
     ) -> Result<Vec<(u64, String)>, Box<dyn std::error::Error>> {
         if let Some(matches) = self.chosung_index.get(chosung_query) {
             // Convert (String, u64) to (u64, String)
-            Ok(matches.iter().map(|(word, doc_id)| (*doc_id, word.clone())).collect())
+            Ok(matches
+                .iter()
+                .map(|(word, doc_id)| (*doc_id, word.clone()))
+                .collect())
         } else {
             Ok(Vec::new())
         }
@@ -388,10 +393,7 @@ impl SearchEngine {
     }
 
     /// 퍼지 검색 (오타 허용)
-    fn fuzzy_search(
-        &self,
-        query: &str,
-    ) -> Result<Vec<(u64, String)>, Box<dyn std::error::Error>> {
+    fn fuzzy_search(&self, query: &str) -> Result<Vec<(u64, String)>, Box<dyn std::error::Error>> {
         let mut results = Vec::new();
 
         // 모든 인덱싱된 토큰과 비교

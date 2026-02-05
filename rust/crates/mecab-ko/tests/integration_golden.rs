@@ -7,8 +7,7 @@
 
 mod common;
 
-use common::{load_golden_tests, MorphTestCase};
-use std::fs;
+use common::load_golden_tests;
 use std::path::PathBuf;
 
 /// Get path to golden tests directory
@@ -202,7 +201,7 @@ fn test_golden_statistics() {
 #[test]
 #[ignore = "Requires tokenizer implementation"]
 fn test_generate_report() {
-    use std::io::Write;
+    // use std::io::Write;
 
     // TODO: Implement once tokenizer is available
     // let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");

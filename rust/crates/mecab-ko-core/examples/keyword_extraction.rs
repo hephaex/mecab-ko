@@ -344,11 +344,11 @@ impl KeywordExtractor {
 
         // 품사별 가중치
         let weights = HashMap::from([
-            ("NN", 1.0),   // 명사
-            ("VV", 0.8),   // 동사
-            ("VA", 0.8),   // 형용사
-            ("SL", 0.9),   // 외래어
-            ("SN", 0.6),   // 숫자
+            ("NN", 1.0), // 명사
+            ("VV", 0.8), // 동사
+            ("VA", 0.8), // 형용사
+            ("SL", 0.9), // 외래어
+            ("SN", 0.6), // 숫자
         ]);
 
         let mut score_map: HashMap<String, f64> = HashMap::new();

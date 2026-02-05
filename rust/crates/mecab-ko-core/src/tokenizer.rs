@@ -628,7 +628,7 @@ impl Tokenizer {
     ///
     /// # Returns
     ///
-    /// (표준형, [변이형들]) 튜플
+    /// (표준형, \[변이형들\]) 튜플
     #[must_use]
     pub fn get_word_variants(&self, word: &str) -> (String, Vec<String>) {
         if let Some(normalizer) = &self.normalizer {
