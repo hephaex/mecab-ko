@@ -708,6 +708,7 @@ impl Matrix for ConnectionMatrix {
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used, clippy::unwrap_used, clippy::cast_lossless)]
 mod tests {
     use super::*;
 

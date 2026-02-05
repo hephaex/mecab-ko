@@ -466,6 +466,7 @@ impl DictionaryLoader {
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used, clippy::unwrap_used)]
 mod tests {
     use super::*;
     use crate::matrix::DenseMatrix;
@@ -488,12 +489,13 @@ mod tests {
         let matrix = ConnectionMatrix::Dense(matrix);
 
         // 테스트용 엔트리 생성
-        let mut dict_entries = Vec::new();
-        dict_entries.push(DictEntry::new("가", 1, 1, 100, "NNG,*,T,가,*,*,*,*"));
-        dict_entries.push(DictEntry::new("가다", 2, 2, 200, "VV,*,F,가다,*,*,*,*"));
-        dict_entries.push(DictEntry::new("가방", 3, 3, 300, "NNG,*,T,가방,*,*,*,*"));
-        dict_entries.push(DictEntry::new("나", 4, 4, 400, "NP,*,F,나,*,*,*,*"));
-        dict_entries.push(DictEntry::new("나다", 5, 5, 500, "VV,*,F,나다,*,*,*,*"));
+        let dict_entries = vec![
+            DictEntry::new("가", 1, 1, 100, "NNG,*,T,가,*,*,*,*"),
+            DictEntry::new("가다", 2, 2, 200, "VV,*,F,가다,*,*,*,*"),
+            DictEntry::new("가방", 3, 3, 300, "NNG,*,T,가방,*,*,*,*"),
+            DictEntry::new("나", 4, 4, 400, "NP,*,F,나,*,*,*,*"),
+            DictEntry::new("나다", 5, 5, 500, "VV,*,F,나다,*,*,*,*"),
+        ];
 
         SystemDictionary {
             dicdir: PathBuf::from("./test_dic"),

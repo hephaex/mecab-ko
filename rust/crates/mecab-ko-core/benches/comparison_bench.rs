@@ -3,7 +3,9 @@
 //! 다양한 분석 패턴에 대한 성능 비교
 //! 실제 경쟁 라이브러리가 없으므로, 다양한 내부 구현 방식을 비교
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+#![allow(clippy::semicolon_if_nothing_returned, missing_docs)]
+
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use mecab_ko_core::Tokenizer;
 
 /// 분석 모드별 성능 비교

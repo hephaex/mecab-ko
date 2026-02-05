@@ -2,6 +2,8 @@
 //!
 //! 실제 사용 시나리오에서 풀링 시스템이 올바르게 동작하는지 검증합니다.
 
+#![allow(clippy::expect_used, clippy::unwrap_used)]
+
 use mecab_ko_core::pool::{PoolManager, SharedStringInterner, TokenPool};
 use mecab_ko_core::Tokenizer;
 
@@ -149,8 +151,8 @@ fn test_tokenizer_pool_integration() {
     // 풀이 사용되었는지 확인 (정확한 크기는 구현에 따라 다름)
     let stats2 = tokenizer.pool_stats();
     // Token들이 생성되고 반환되었을 수 있음
-    // (정확한 값은 보장 안 하지만 0 이상이어야 함)
-    assert!(stats2.token_pool_size >= 0);
+    // token_pool_size is usize which is always >= 0, so we just verify it exists
+    let _ = stats2.token_pool_size;
 }
 
 #[test]

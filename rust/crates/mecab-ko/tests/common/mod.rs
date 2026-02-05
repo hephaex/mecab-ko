@@ -52,6 +52,7 @@ pub struct TestResult {
 /// # Errors
 ///
 /// Returns error if file cannot be read or parsed
+#[allow(dead_code)]
 pub fn load_fixtures(filename: &str) -> Result<Vec<MorphTestCase>, Box<dyn std::error::Error>> {
     let fixtures_path = get_fixtures_path();
     let file_path = fixtures_path.join(filename);
@@ -78,6 +79,7 @@ pub fn load_fixtures(filename: &str) -> Result<Vec<MorphTestCase>, Box<dyn std::
 /// # Errors
 ///
 /// Returns error if file cannot be read or parsed
+#[allow(dead_code)]
 pub fn load_golden_tests(filename: &str) -> Result<Vec<MorphTestCase>, Box<dyn std::error::Error>> {
     let golden_path = get_golden_path();
     let file_path = golden_path.join(filename);
@@ -234,6 +236,7 @@ macro_rules! assert_test_result {
 ///
 /// This is a stub that will be replaced with actual dictionary creation
 /// once the dictionary builder is implemented.
+#[allow(dead_code)]
 pub fn create_test_dict() -> PathBuf {
     // For now, return a path that would contain a test dictionary
     // This will be implemented when DIC-001 is complete
@@ -249,6 +252,7 @@ pub mod perf {
 
     /// Performance measurement result
     #[derive(Debug, Clone)]
+    #[allow(dead_code)]
     pub struct PerfResult {
         /// Operation name
         pub name: String,
@@ -262,6 +266,7 @@ pub mod perf {
 
     impl PerfResult {
         /// Format as human-readable string
+        #[allow(dead_code)]
         pub fn format(&self) -> String {
             format!(
                 "{}: {:.2}ms total, {:.2}μs per iteration ({} iterations)",
@@ -284,6 +289,7 @@ pub mod perf {
     /// # Returns
     ///
     /// Performance measurement result
+    #[allow(dead_code)]
     pub fn measure<F>(name: &str, iterations: usize, mut f: F) -> PerfResult
     where
         F: FnMut(),
@@ -312,6 +318,7 @@ pub mod perf {
     /// # Panics
     ///
     /// Panics if performance is worse than threshold
+    #[allow(dead_code)]
     pub fn assert_performance(result: &PerfResult, max_avg_micros: f64) {
         let actual_micros = result.avg_per_iter.as_secs_f64() * 1_000_000.0;
         assert!(

@@ -2,6 +2,8 @@
 //!
 //! 다양한 입력 크기와 텍스트 유형에 대한 형태소 분석 성능 벤치마크
 
+#![allow(clippy::semicolon_if_nothing_returned, missing_docs)]
+
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use mecab_ko_core::Tokenizer;
 
@@ -69,11 +71,6 @@ mod sample_texts {
     /// 100KB 크기 텍스트 생성
     pub fn generate_100kb() -> String {
         LONG.repeat(500) // 약 100KB
-    }
-
-    /// 1MB 크기 텍스트 생성
-    pub fn generate_1mb() -> String {
-        LONG.repeat(5000) // 약 1MB
     }
 }
 

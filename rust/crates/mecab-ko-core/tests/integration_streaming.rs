@@ -2,6 +2,8 @@
 //!
 //! These tests verify the streaming tokenizer functionality
 
+#![allow(clippy::expect_used, clippy::unwrap_used)]
+
 use mecab_ko_core::streaming::{StreamingTokenizer, TokenStream};
 use mecab_ko_core::Tokenizer;
 

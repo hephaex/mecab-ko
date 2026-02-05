@@ -15,6 +15,15 @@
 //! 3. 버전 관리 및 롤백
 //! 4. 파일 변경 감지 (선택적)
 
+#![allow(
+    clippy::too_many_lines,
+    clippy::uninlined_format_args,
+    clippy::expect_used,
+    clippy::map_unwrap_or,
+    clippy::single_match_else,
+    clippy::option_if_let_else
+)]
+
 use mecab_ko_dict::{DeltaUpdate, HotReloadDictionary, UserDictionary};
 use std::sync::Arc;
 use std::thread;

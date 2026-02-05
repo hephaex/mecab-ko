@@ -1,6 +1,6 @@
 //! Dictionary usage examples
 //!
-//! This example demonstrates how to use the SystemDictionary and UserDictionary.
+//! This example demonstrates how to use the `SystemDictionary` and `UserDictionary`.
 
 use mecab_ko_dict::{DictionaryLoader, Matrix, UserDictionaryBuilder};
 
@@ -68,26 +68,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Some(trie) = user_dict.get_trie() {
         let text = "딥러닝모델을사용한자연어처리시스템";
         let results: Vec<_> = trie.common_prefix_search(text).collect();
-        println!("   Text: '{}'", text);
+        println!("   Text: '{text}'");
         println!("   Found {} prefix matches:", results.len());
         for (value, byte_len) in results {
             let matched = &text[..byte_len];
-            println!(
-                "      - '{}' (value: {}, bytes: {})",
-                matched, value, byte_len
-            );
+            println!("      - '{matched}' (value: {value}, bytes: {byte_len})");
         }
     }
 
     // 5. Load from CSV
     println!("\n5. Loading from CSV...");
-    let csv = r#"
+    let csv = r"
 # AI 용어 사전
 GPT,NNP,-1000,지피티
 LLM,NNP,-1000,엘엘엠
 트랜스포머,NNG,-800,트랜스포머
 어텐션,NNG,-700,어텐션
-"#;
+";
 
     let csv_dict = UserDictionaryBuilder::new()
         .load_str(csv)?

@@ -640,6 +640,7 @@ impl UnknownHandler {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::needless_collect)]
 mod tests {
     use super::*;
 
@@ -778,7 +779,7 @@ mod tests {
 
     #[test]
     fn test_char_def_parsing() {
-        let char_def = r#"
+        let char_def = r"
 # Comment line
 DEFAULT        0 1 0
 SPACE          0 1 0
@@ -787,7 +788,7 @@ ALPHA          1 1 0
 
 0xAC00..0xD7A3 HANGUL
 0x0041..0x005A ALPHA
-"#;
+";
 
         let map = CharCategoryMap::from_char_def(char_def.as_bytes()).unwrap();
 
@@ -808,10 +809,10 @@ ALPHA          1 1 0
         let char_def = "DEFAULT 0 1 0\nHANGUL 0 1 2\n";
         let map = CharCategoryMap::from_char_def(char_def.as_bytes()).unwrap();
 
-        let unk_def = r#"
+        let unk_def = r"
 DEFAULT,1800,3562,7000,SY,*,*,*,*,*,*,*
 HANGUL,1800,3565,5000,UNKNOWN,*,*,*,*,*,*,*
-"#;
+";
 
         let dict = UnknownDictionary::from_unk_def(unk_def.as_bytes(), &map).unwrap();
 

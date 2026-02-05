@@ -474,6 +474,7 @@ fn char_offset(text: &str, byte_offset: usize) -> usize {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
 

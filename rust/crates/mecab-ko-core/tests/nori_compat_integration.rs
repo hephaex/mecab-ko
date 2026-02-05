@@ -1,5 +1,7 @@
 //! Integration tests for Nori compatibility layer
 
+#![allow(clippy::expect_used, clippy::unwrap_used, unused_mut)]
+
 use mecab_ko_core::nori_compat::{
     mecab_to_nori_tag, nori_to_mecab_tag, DecompoundMode, NoriAnalyzer, NoriTokenizer,
 };
@@ -7,7 +9,7 @@ use mecab_ko_core::nori_compat::{
 #[test]
 #[ignore = "Requires system dictionary"]
 fn test_nori_tokenizer_none_mode() {
-    let mut tokenizer = NoriTokenizer::new(DecompoundMode::None, false);
+    let tokenizer = NoriTokenizer::new(DecompoundMode::None, false);
     assert!(tokenizer.is_ok());
 
     let mut tokenizer = tokenizer.unwrap();
@@ -21,7 +23,7 @@ fn test_nori_tokenizer_none_mode() {
 #[test]
 #[ignore = "Requires system dictionary"]
 fn test_nori_tokenizer_mixed_mode() {
-    let mut tokenizer = NoriTokenizer::new(DecompoundMode::Mixed, false);
+    let tokenizer = NoriTokenizer::new(DecompoundMode::Mixed, false);
     assert!(tokenizer.is_ok());
 
     let mut tokenizer = tokenizer.unwrap();
@@ -32,7 +34,7 @@ fn test_nori_tokenizer_mixed_mode() {
 #[test]
 #[ignore = "Requires system dictionary"]
 fn test_nori_tokenizer_discard_mode() {
-    let mut tokenizer = NoriTokenizer::new(DecompoundMode::Discard, false);
+    let tokenizer = NoriTokenizer::new(DecompoundMode::Discard, false);
     assert!(tokenizer.is_ok());
 
     let mut tokenizer = tokenizer.unwrap();
@@ -43,7 +45,7 @@ fn test_nori_tokenizer_discard_mode() {
 #[test]
 #[ignore = "Requires system dictionary"]
 fn test_nori_tokenizer_with_unknown_unigrams() {
-    let mut tokenizer = NoriTokenizer::new(DecompoundMode::None, true);
+    let tokenizer = NoriTokenizer::new(DecompoundMode::None, true);
     assert!(tokenizer.is_ok());
 
     let mut tokenizer = tokenizer.unwrap();
@@ -54,7 +56,7 @@ fn test_nori_tokenizer_with_unknown_unigrams() {
 #[test]
 #[ignore = "Requires system dictionary"]
 fn test_nori_analyzer_default() {
-    let mut analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None);
+    let analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None);
     assert!(analyzer.is_ok());
 
     let mut analyzer = analyzer.unwrap();
@@ -71,10 +73,10 @@ fn test_nori_analyzer_default() {
 #[ignore = "Requires system dictionary"]
 fn test_nori_analyzer_with_custom_stoptags() {
     let stoptags = vec!["J".to_string(), "E".to_string(), "SF".to_string()];
-    let mut analyzer = NoriAnalyzer::new(None, DecompoundMode::None, stoptags, false);
+    let analyzer = NoriAnalyzer::new(None, DecompoundMode::None, stoptags, false);
     assert!(analyzer.is_ok());
 
-    let mut analyzer = analyzer.unwrap();
+    let analyzer = analyzer.unwrap();
     let stoptags = analyzer.stoptags();
     assert_eq!(stoptags.len(), 3);
     assert!(stoptags.contains(&"SF"));
@@ -188,14 +190,14 @@ fn test_all_decompound_modes() {
     ];
 
     for mode in modes {
-        let mut tokenizer = NoriTokenizer::new(mode, false);
+        let tokenizer = NoriTokenizer::new(mode, false);
         assert!(
             tokenizer.is_ok(),
             "Failed to create tokenizer with mode: {}",
             mode.as_str()
         );
 
-        let mut analyzer = NoriAnalyzer::default_with_decompound(mode);
+        let analyzer = NoriAnalyzer::default_with_decompound(mode);
         assert!(
             analyzer.is_ok(),
             "Failed to create analyzer with mode: {}",

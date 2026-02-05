@@ -523,4 +523,325 @@ mod tests {
         assert_eq!(classify_char(' '), CharType::Whitespace);
         assert_eq!(classify_char('.'), CharType::Punctuation);
     }
+
+    #[test]
+    fn test_is_jamo() {
+        // Test choseong jamo
+        assert!(is_jamo('ㄱ'));
+        assert!(is_jamo('ㄲ'));
+        assert!(is_jamo('ㅎ'));
+
+        // Test jungseong jamo
+        assert!(is_jamo('ㅏ'));
+        assert!(is_jamo('ㅐ'));
+        assert!(is_jamo('ㅣ'));
+
+        // Test complex jongseong jamo
+        assert!(is_jamo('ㄳ'));
+        assert!(is_jamo('ㄵ'));
+        assert!(is_jamo('ㅄ'));
+
+        // Non-jamo characters
+        assert!(!is_jamo('가'));
+        assert!(!is_jamo('a'));
+        assert!(!is_jamo('1'));
+        assert!(!is_jamo(' '));
+    }
+
+    #[test]
+    fn test_is_choseong() {
+        // All valid choseong
+        assert!(is_choseong('ㄱ'));
+        assert!(is_choseong('ㄲ'));
+        assert!(is_choseong('ㄴ'));
+        assert!(is_choseong('ㄷ'));
+        assert!(is_choseong('ㄸ'));
+        assert!(is_choseong('ㅎ'));
+
+        // Not choseong
+        assert!(!is_choseong('ㅏ')); // jungseong
+        assert!(!is_choseong('ㄳ')); // complex jongseong
+        assert!(!is_choseong('가')); // syllable
+        assert!(!is_choseong('a'));
+    }
+
+    #[test]
+    fn test_is_jungseong() {
+        // All valid jungseong
+        assert!(is_jungseong('ㅏ'));
+        assert!(is_jungseong('ㅐ'));
+        assert!(is_jungseong('ㅘ'));
+        assert!(is_jungseong('ㅣ'));
+
+        // Not jungseong
+        assert!(!is_jungseong('ㄱ')); // choseong
+        assert!(!is_jungseong('ㄳ')); // jongseong
+        assert!(!is_jungseong('가')); // syllable
+        assert!(!is_jungseong('a'));
+    }
+
+    #[test]
+    fn test_boundary_hangul_syllables() {
+        // First hangul syllable
+        assert!(is_hangul_syllable('가'));
+        assert_eq!(decompose('가'), Some(('ㄱ', 'ㅏ', None)));
+
+        // Last hangul syllable
+        assert!(is_hangul_syllable('힣'));
+        assert_eq!(decompose('힣'), Some(('ㅎ', 'ㅣ', Some('ㅎ'))));
+
+        // One before first (should not be hangul syllable)
+        let before_first = char::from_u32(0xAC00 - 1).unwrap();
+        assert!(!is_hangul_syllable(before_first));
+
+        // One after last (should not be hangul syllable)
+        let after_last = char::from_u32(0xD7A3 + 1).unwrap();
+        assert!(!is_hangul_syllable(after_last));
+    }
+
+    #[test]
+    fn test_compose_invalid_jamo() {
+        // Invalid choseong
+        assert_eq!(compose('ㅏ', 'ㅏ', None), None);
+
+        // Invalid jungseong
+        assert_eq!(compose('ㄱ', 'ㄱ', None), None);
+
+        // Invalid jongseong
+        assert_eq!(compose('ㄱ', 'ㅏ', Some('ㅏ')), None);
+
+        // Non-jamo characters
+        assert_eq!(compose('a', 'ㅏ', None), None);
+        assert_eq!(compose('ㄱ', 'b', None), None);
+        assert_eq!(compose('ㄱ', 'ㅏ', Some('c')), None);
+    }
+
+    #[test]
+    fn test_decompose_all_choseong() {
+        let expected_choseong = [
+            'ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ',
+            'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ',
+        ];
+
+        for &cho in &expected_choseong {
+            let syllable = compose(cho, 'ㅏ', None).unwrap();
+            let (decomposed_cho, _, _) = decompose(syllable).unwrap();
+            assert_eq!(cho, decomposed_cho, "Choseong mismatch for {syllable}");
+        }
+    }
+
+    #[test]
+    fn test_decompose_all_jungseong() {
+        let expected_jungseong = [
+            'ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 'ㅗ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ',
+            'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ', 'ㅡ', 'ㅢ', 'ㅣ',
+        ];
+
+        for &jung in &expected_jungseong {
+            let syllable = compose('ㄱ', jung, None).unwrap();
+            let (_, decomposed_jung, _) = decompose(syllable).unwrap();
+            assert_eq!(jung, decomposed_jung, "Jungseong mismatch for {syllable}");
+        }
+    }
+
+    #[test]
+    fn test_decompose_all_jongseong() {
+        let expected_jongseong = [
+            Some('ㄱ'),
+            Some('ㄲ'),
+            Some('ㄳ'),
+            Some('ㄴ'),
+            Some('ㄵ'),
+            Some('ㄶ'),
+            Some('ㄷ'),
+            Some('ㄹ'),
+            Some('ㄺ'),
+            Some('ㄻ'),
+            Some('ㄼ'),
+            Some('ㄽ'),
+            Some('ㄾ'),
+            Some('ㄿ'),
+            Some('ㅀ'),
+            Some('ㅁ'),
+            Some('ㅂ'),
+            Some('ㅄ'),
+            Some('ㅅ'),
+            Some('ㅆ'),
+            Some('ㅇ'),
+            Some('ㅈ'),
+            Some('ㅊ'),
+            Some('ㅋ'),
+            Some('ㅌ'),
+            Some('ㅍ'),
+            Some('ㅎ'),
+        ];
+
+        for &jong in &expected_jongseong {
+            let syllable = compose('ㄱ', 'ㅏ', jong).unwrap();
+            let (_, _, decomposed_jong) = decompose(syllable).unwrap();
+            assert_eq!(jong, decomposed_jong, "Jongseong mismatch for {syllable}");
+        }
+    }
+
+    #[test]
+    fn test_complex_jongseong() {
+        // Test double consonant jongseong
+        assert_eq!(compose('ㄱ', 'ㅏ', Some('ㄳ')), Some('갃'));
+        assert_eq!(decompose('갃'), Some(('ㄱ', 'ㅏ', Some('ㄳ'))));
+
+        assert_eq!(compose('ㄱ', 'ㅏ', Some('ㄵ')), Some('갅'));
+        assert_eq!(decompose('갅'), Some(('ㄱ', 'ㅏ', Some('ㄵ'))));
+
+        assert_eq!(compose('ㄱ', 'ㅏ', Some('ㅄ')), Some('값'));
+        assert_eq!(decompose('값'), Some(('ㄱ', 'ㅏ', Some('ㅄ'))));
+    }
+
+    #[test]
+    fn test_decompose_str_empty() {
+        assert_eq!(decompose_str(""), "");
+    }
+
+    #[test]
+    fn test_decompose_str_no_hangul() {
+        assert_eq!(decompose_str("Hello World"), "Hello World");
+        assert_eq!(decompose_str("123"), "123");
+        assert_eq!(decompose_str("!@#$%"), "!@#$%");
+    }
+
+    #[test]
+    fn test_decompose_str_mixed() {
+        assert_eq!(decompose_str("안녕하세요"), "ㅇㅏㄴㄴㅕㅇㅎㅏㅅㅔㅇㅛ");
+        assert_eq!(decompose_str("Hello 안녕"), "Hello ㅇㅏㄴㄴㅕㅇ");
+        assert_eq!(decompose_str("한글123"), "ㅎㅏㄴㄱㅡㄹ123");
+    }
+
+    #[test]
+    fn test_compose_str_empty() {
+        assert_eq!(compose_str(""), "");
+    }
+
+    #[test]
+    fn test_compose_str_no_jamo() {
+        assert_eq!(compose_str("Hello"), "Hello");
+        assert_eq!(compose_str("123"), "123");
+    }
+
+    #[test]
+    fn test_compose_str_incomplete_jamo() {
+        // Isolated choseong without jungseong
+        assert_eq!(compose_str("ㄱ"), "ㄱ");
+
+        // Isolated jungseong
+        assert_eq!(compose_str("ㅏ"), "ㅏ");
+
+        // Choseong + choseong (can't compose)
+        assert_eq!(compose_str("ㄱㄴ"), "ㄱㄴ");
+    }
+
+    #[test]
+    fn test_compose_str_with_jongseong_ambiguity() {
+        // ㄱㅏㄴㄴㅕㅇ should become 간녕 (not 간영)
+        // The ㄴ should be jongseong of first syllable, not choseong of second
+        assert_eq!(compose_str("ㄱㅏㄴㄴㅕㅇ"), "간녕");
+
+        // ㄱㅏㄹㄱㅏ should become 갈가 (not 가ㄹ가)
+        assert_eq!(compose_str("ㄱㅏㄹㄱㅏ"), "갈가");
+    }
+
+    #[test]
+    fn test_decompose_compose_str_roundtrip() {
+        let test_strings = ["한글", "안녕하세요", "대한민국", "가나다라마바사"];
+
+        for &s in &test_strings {
+            let decomposed = decompose_str(s);
+            let recomposed = compose_str(&decomposed);
+            assert_eq!(s, recomposed, "Roundtrip failed for '{s}'");
+        }
+    }
+
+    #[test]
+    fn test_has_jongseong_all_combinations() {
+        // Test syllable with no jongseong
+        assert_eq!(has_jongseong('가'), Some(false));
+        assert_eq!(has_jongseong('나'), Some(false));
+        assert_eq!(has_jongseong('다'), Some(false));
+
+        // Test syllable with jongseong
+        assert_eq!(has_jongseong('각'), Some(true));
+        assert_eq!(has_jongseong('난'), Some(true));
+        assert_eq!(has_jongseong('닭'), Some(true));
+
+        // Test with complex jongseong
+        assert_eq!(has_jongseong('갃'), Some(true)); // ㄳ
+        assert_eq!(has_jongseong('닭'), Some(true)); // ㄹ
+    }
+
+    #[test]
+    fn test_classify_char_edge_cases() {
+        // CJK Extension A
+        assert_eq!(classify_char('\u{3400}'), CharType::Hanja);
+        assert_eq!(classify_char('\u{4DBF}'), CharType::Hanja);
+
+        // CJK Unified Ideographs
+        assert_eq!(classify_char('\u{4E00}'), CharType::Hanja);
+        assert_eq!(classify_char('\u{9FFF}'), CharType::Hanja);
+
+        // Katakana range
+        assert_eq!(classify_char('\u{30A0}'), CharType::Katakana);
+        assert_eq!(classify_char('\u{30FF}'), CharType::Katakana);
+
+        // Hiragana range
+        assert_eq!(classify_char('\u{3040}'), CharType::Hiragana);
+        assert_eq!(classify_char('\u{309F}'), CharType::Hiragana);
+
+        // Other punctuation
+        assert_eq!(classify_char('!'), CharType::Punctuation);
+        assert_eq!(classify_char(','), CharType::Punctuation);
+        assert_eq!(classify_char(';'), CharType::Punctuation);
+
+        // Various whitespace
+        assert_eq!(classify_char('\t'), CharType::Whitespace);
+        assert_eq!(classify_char('\n'), CharType::Whitespace);
+
+        // Other characters
+        assert_eq!(classify_char('™'), CharType::Other);
+        assert_eq!(classify_char('€'), CharType::Other);
+    }
+
+    #[test]
+    fn test_all_hangul_syllables_decompose_compose() {
+        // Test a sample of syllables across the entire range
+        let sample_codes: Vec<u32> = vec![
+            0xAC00, // 가 (first)
+            0xAC01, // 각 (second)
+            0xB098, // 나
+            0xB2E4, // 다
+            0xB77C, // 라
+            0xB9C8, // 마
+            0xBC14, // 바
+            0xC0AC, // 사
+            0xC544, // 아
+            0xC790, // 자
+            0xCC28, // 차
+            0xCE74, // 카
+            0xD0C0, // 타
+            0xD30C, // 파
+            0xD558, // 하
+            0xD7A3, // 힣 (last)
+        ];
+
+        for code in sample_codes {
+            let c = char::from_u32(code).unwrap();
+            let (cho, jung, jong) = decompose(c).unwrap();
+            let recomposed = compose(cho, jung, jong).unwrap();
+            assert_eq!(c, recomposed, "Failed for U+{code:04X} ({c})");
+        }
+    }
+
+    #[test]
+    fn test_compose_str_real_words() {
+        assert_eq!(compose_str("ㅎㅏㄴㄱㅡㄹ"), "한글");
+        assert_eq!(compose_str("ㅇㅏㄴㄴㅕㅇㅎㅏㅅㅔㅇㅛ"), "안녕하세요");
+        assert_eq!(compose_str("ㄷㅐㅎㅏㄴㅁㅣㄴㄱㅜㄱ"), "대한민국");
+    }
 }

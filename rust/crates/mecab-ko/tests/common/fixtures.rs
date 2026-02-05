@@ -7,7 +7,9 @@ use std::path::PathBuf;
 /// Fixture manager for cached loading
 pub struct FixtureManager {
     cache: HashMap<String, Vec<MorphTestCase>>,
+    #[allow(dead_code)]
     fixtures_dir: PathBuf,
+    #[allow(dead_code)]
     golden_dir: PathBuf,
 }
 
@@ -35,6 +37,7 @@ impl FixtureManager {
     /// # Errors
     ///
     /// Returns error if file cannot be loaded
+    #[allow(dead_code)]
     pub fn get_fixture(&mut self, filename: &str) -> Result<&[MorphTestCase], String> {
         if !self.cache.contains_key(filename) {
             let path = self.fixtures_dir.join(filename);
@@ -61,6 +64,7 @@ impl FixtureManager {
     /// # Errors
     ///
     /// Returns error if file cannot be loaded
+    #[allow(dead_code)]
     pub fn get_golden(&mut self, filename: &str) -> Result<&[MorphTestCase], String> {
         let key = format!("golden:{filename}");
         if !self.cache.contains_key(&key) {
@@ -76,6 +80,7 @@ impl FixtureManager {
     }
 
     /// Load test cases from a path
+    #[allow(dead_code)]
     fn load_from_path(path: &PathBuf) -> Result<Vec<MorphTestCase>, String> {
         let content =
             std::fs::read_to_string(path).map_err(|e| format!("Failed to read {path:?}: {e}"))?;
@@ -84,6 +89,7 @@ impl FixtureManager {
     }
 
     /// Clear the cache
+    #[allow(dead_code)]
     pub fn clear(&mut self) {
         self.cache.clear();
     }

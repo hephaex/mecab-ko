@@ -267,7 +267,7 @@ fn test_whitespace_only_text() {
     let result = analyzer.analyze("   \t\n   ");
     assert!(result.is_ok());
 
-    let tokens = result.unwrap();
+    let _tokens = result.unwrap();
     // 공백만 있는 경우 토큰이 없거나 공백 토큰만 있을 수 있음
     // 구현에 따라 달라질 수 있으므로 에러가 없는지만 확인
 }

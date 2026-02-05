@@ -2,6 +2,14 @@
 //!
 //! Lattice 생성, 노드 추가, 검색 등의 성능 벤치마크
 
+#![allow(
+    clippy::semicolon_if_nothing_returned,
+    clippy::useless_asref,
+    clippy::cast_possible_truncation,
+    clippy::cast_possible_wrap,
+    missing_docs
+)]
+
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use mecab_ko_core::lattice::{Lattice, NodeBuilder, NodeType};
 

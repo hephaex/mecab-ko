@@ -526,6 +526,7 @@ impl UserDictionaryBuilder {
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used, clippy::unwrap_used)]
 mod tests {
     use super::*;
 
@@ -552,12 +553,12 @@ mod tests {
 
     #[test]
     fn test_load_from_str() {
-        let csv = r#"
+        let csv = r"
 # 사용자 사전
 형태소분석,NNG,-1000,형태소분석
 딥러닝,NNG,-500,
 자연어처리,NNG,,자연어처리
-"#;
+";
         let mut dict = UserDictionary::new();
         dict.load_from_str(csv).expect("should load");
 
@@ -668,8 +669,7 @@ mod tests {
         let trie = dict.get_trie().expect("should have trie");
 
         // "형태소분석기" 에서 공통 접두사 검색
-        let results: Vec<_> = trie.common_prefix_search("형태소분석기").collect();
-        assert_eq!(results.len(), 3); // 형태, 형태소, 형태소분석
+        assert_eq!(trie.common_prefix_search("형태소분석기").count(), 3); // 형태, 형태소, 형태소분석
     }
 
     #[test]

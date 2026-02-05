@@ -11,6 +11,7 @@ use common::load_golden_tests;
 use std::path::PathBuf;
 
 /// Get path to golden tests directory
+#[allow(dead_code)]
 fn golden_path() -> PathBuf {
     // CARGO_MANIFEST_DIR = /home/mare/mecab-ko/rust/crates/mecab-ko
     // Golden tests are in /home/mare/mecab-ko/tests/golden

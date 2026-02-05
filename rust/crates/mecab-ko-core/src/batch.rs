@@ -345,6 +345,7 @@ impl ParallelStreamProcessor {
 // can fail (dictionary loading, thread pool setup, etc.). Use ParallelStreamProcessor::new() explicitly instead.
 
 #[cfg(test)]
+#[allow(clippy::expect_used)]
 mod tests {
     use super::*;
 
@@ -399,7 +400,6 @@ mod tests {
     #[test]
     #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_split_into_chunks() {
-        let batch = BatchTokenizer::new().expect("should create");
         let text = "안녕하세요 감사합니다";
 
         let chunks = BatchTokenizer::split_into_chunks(text, 5);

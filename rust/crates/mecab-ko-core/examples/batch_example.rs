@@ -2,6 +2,12 @@
 //!
 //! Rayon 기반 병렬 배치 처리 예제
 
+#![allow(
+    clippy::uninlined_format_args,
+    clippy::redundant_closure_for_method_calls,
+    clippy::cast_precision_loss
+)]
+
 use mecab_ko_core::batch::{BatchTokenizer, ParallelStreamProcessor};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

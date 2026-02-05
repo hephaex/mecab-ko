@@ -2,6 +2,12 @@
 //!
 //! These tests verify the batch tokenizer functionality
 
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::redundant_closure_for_method_calls
+)]
+
 use mecab_ko_core::batch::{BatchTokenizer, ParallelStreamProcessor};
 
 #[test]

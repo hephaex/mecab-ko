@@ -9,8 +9,11 @@
 mod common;
 
 /// Performance baseline thresholds (in microseconds)
+#[allow(dead_code)]
 const BASELINE_SIMPLE_SENTENCE_US: f64 = 100.0;
+#[allow(dead_code)]
 const BASELINE_COMPLEX_SENTENCE_US: f64 = 500.0;
+#[allow(dead_code)]
 const BASELINE_DICT_LOOKUP_US: f64 = 10.0;
 
 /// Test tokenization performance for simple sentences
@@ -344,7 +347,7 @@ mod micro_benchmarks {
         use mecab_ko_hangul::is_hangul;
 
         let result = perf::measure("Hangul detection", 100000, || {
-            is_hangul('가');
+            let _ = is_hangul('가');
         });
 
         println!("{}", result.format());

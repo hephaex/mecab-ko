@@ -2,6 +2,18 @@
 //!
 //! 메모리 할당, 재사용, 복사 비용 등을 측정하는 벤치마크
 
+#![allow(
+    clippy::semicolon_if_nothing_returned,
+    clippy::redundant_closure_for_method_calls,
+    clippy::inefficient_to_string,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::iter_cloned_collect,
+    clippy::explicit_iter_loop,
+    clippy::useless_vec,
+    missing_docs
+)]
+
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use mecab_ko_core::tokenizer::Token;
 use mecab_ko_core::Tokenizer;

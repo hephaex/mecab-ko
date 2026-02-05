@@ -17,6 +17,7 @@ categories = ["text-processing", "science"]
 name = "mecab_ko"
 crate-type = ["cdylib"]
 test = false  # Skip lib tests for cdylib (PyO3 requires Python runtime)
+doc = false   # Skip docs to avoid filename collision with root mecab-ko crate
 
 [dependencies]
 mecab-ko-core = { path = "../mecab-ko-core" }

@@ -2,12 +2,14 @@
 //!
 //! Viterbi 탐색, 연접 비용 계산 등의 성능 벤치마크
 
+#![allow(clippy::semicolon_if_nothing_returned, missing_docs)]
+
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use mecab_ko_core::lattice::{Lattice, NodeBuilder, NodeType};
 use mecab_ko_core::viterbi::{ConnectionCost, FixedConnectionCost, SpacePenalty, ViterbiSearcher};
 
 /// 간단한 연접 행렬 생성 (테스트용)
-fn create_test_matrix() -> FixedConnectionCost {
+const fn create_test_matrix() -> FixedConnectionCost {
     FixedConnectionCost::new(100)
 }
 
@@ -22,10 +24,10 @@ fn create_test_lattice(text: &str) -> Lattice {
             if pos + len <= char_len {
                 let substr = lattice.substring(pos, pos + len);
                 lattice.add_node(
-                    NodeBuilder::new(substr.as_ref(), pos, pos + len)
-                        .left_id((pos % 50) as u16)
-                        .right_id((len % 50) as u16)
-                        .word_cost((1000 - pos * 10) as i32)
+                    NodeBuilder::new(substr, pos, pos + len)
+                        .left_id(u16::try_from(pos % 50).unwrap_or(0))
+                        .right_id(u16::try_from(len % 50).unwrap_or(0))
+                        .word_cost(i32::try_from(1000 - pos * 10).unwrap_or(0))
                         .node_type(NodeType::Known)
                         .feature("NNG,*,T,테스트,*,*,*,*"),
                 );

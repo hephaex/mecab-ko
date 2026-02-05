@@ -15,6 +15,7 @@ categories = ["text-processing", "science", "wasm"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]
+doc = false  # Skip docs for WASM bindings (FFI crate, not meant for Rust docs)
 
 [dependencies]
 mecab-ko-core = { path = "../mecab-ko-core" }

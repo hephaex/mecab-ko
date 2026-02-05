@@ -371,6 +371,7 @@ impl Drop for FileWatcher {
 }
 
 #[cfg(test)]
+#[allow(clippy::panic)]
 mod tests {
     use super::*;
 
@@ -418,24 +419,24 @@ mod tests {
             to: PathBuf::from("new.dic"),
         };
 
-        match created {
-            FileEvent::Created(_) => {}
-            _ => panic!("should be Created"),
-        }
+        assert!(
+            matches!(created, FileEvent::Created(_)),
+            "Expected Created event"
+        );
 
-        match modified {
-            FileEvent::Modified(_) => {}
-            _ => panic!("should be Modified"),
-        }
+        assert!(
+            matches!(modified, FileEvent::Modified(_)),
+            "Expected Modified event"
+        );
 
-        match deleted {
-            FileEvent::Deleted(_) => {}
-            _ => panic!("should be Deleted"),
-        }
+        assert!(
+            matches!(deleted, FileEvent::Deleted(_)),
+            "Expected Deleted event"
+        );
 
-        match renamed {
-            FileEvent::Renamed { .. } => {}
-            _ => panic!("should be Renamed"),
-        }
+        assert!(
+            matches!(renamed, FileEvent::Renamed { .. }),
+            "Expected Renamed event"
+        );
     }
 }

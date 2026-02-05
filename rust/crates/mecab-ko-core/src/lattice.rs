@@ -746,6 +746,8 @@ impl Lattice {
 
     /// 디버그용: Lattice 시각화
     #[cfg(test)]
+    #[must_use]
+    #[allow(clippy::format_push_string, clippy::uninlined_format_args)]
     pub fn visualize(&self) -> String {
         let mut output = String::new();
         output.push_str(&format!("Lattice for: \"{}\"\n", self.text));
@@ -807,6 +809,7 @@ impl Lattice {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::needless_collect)]
 mod tests {
     use super::*;
 

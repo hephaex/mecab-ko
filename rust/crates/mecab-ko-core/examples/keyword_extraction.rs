@@ -13,6 +13,15 @@
 //!
 //! - 문서 요약
 //! - 태그 생성
+
+#![allow(
+    clippy::uninlined_format_args,
+    clippy::unnecessary_wraps,
+    clippy::if_not_else,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_wrap,
+    clippy::option_if_let_else
+)]
 //! - 검색어 추천
 //! - 토픽 모델링 전처리
 

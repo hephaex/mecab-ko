@@ -856,6 +856,7 @@ impl VersionInfo {
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used, clippy::unwrap_used, clippy::vec_init_then_push)]
 mod tests {
     use super::*;
     use crate::matrix::DenseMatrix;

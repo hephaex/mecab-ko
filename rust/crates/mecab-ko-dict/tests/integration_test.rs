@@ -2,6 +2,8 @@
 //!
 //! 시스템 사전과 사용자 사전의 통합 테스트
 
+#![allow(clippy::expect_used, clippy::unwrap_used)]
+
 use mecab_ko_dict::{
     DictEntry, DictionaryLoader, SystemDictionary, UserDictionary, UserDictionaryBuilder,
 };
@@ -56,8 +58,7 @@ fn test_user_dictionary_integration() {
 
     // 공통 접두사 검색
     let trie = user_dict.get_trie().expect("should have trie");
-    let results: Vec<_> = trie.common_prefix_search("딥러닝모델").collect();
-    assert_eq!(results.len(), 1); // "딥러닝" 매칭
+    assert_eq!(trie.common_prefix_search("딥러닝모델").count(), 1); // "딥러닝" 매칭
 }
 
 #[test]
@@ -77,13 +78,13 @@ fn test_user_dictionary_builder() {
 
 #[test]
 fn test_user_dictionary_from_csv() {
-    let csv = r#"
+    let csv = r"
 # AI 모델 사전
 챗GPT,NNP,-1000,챗지피티
 클로드,NNP,-1000,클로드
 라마,NNP,-800,라마
 메타,NNP,-500,메타
-"#;
+";
 
     let dict = UserDictionaryBuilder::new()
         .load_str(csv)
@@ -143,12 +144,10 @@ fn test_common_prefix_search_korean() {
     let trie = user_dict.get_trie().expect("should have trie");
 
     // "형태소분석기" 검색
-    let results: Vec<_> = trie.common_prefix_search("형태소분석기").collect();
-    assert_eq!(results.len(), 4); // 모든 접두사 매칭
+    assert_eq!(trie.common_prefix_search("형태소분석기").count(), 4); // 모든 접두사 매칭
 
     // "형태소분석" 검색
-    let results: Vec<_> = trie.common_prefix_search("형태소분석").collect();
-    assert_eq!(results.len(), 3); // 형태, 형태소, 형태소분석
+    assert_eq!(trie.common_prefix_search("형태소분석").count(), 3); // 형태, 형태소, 형태소분석
 }
 
 #[test]

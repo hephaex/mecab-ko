@@ -8,6 +8,8 @@
 //! cargo run --example memory_pooling
 //! ```
 
+#![allow(clippy::unnecessary_wraps)]
+
 use mecab_ko_core::pool::{PoolManager, SharedStringInterner, TokenPool};
 use mecab_ko_core::Tokenizer;
 
@@ -27,7 +29,7 @@ fn main() {
     println!();
 
     // 4. Tokenizer 통합 데모
-    if let Ok(()) = demo_tokenizer_pooling() {
+    if matches!(demo_tokenizer_pooling(), Ok(())) {
         println!();
     }
 
@@ -93,7 +95,7 @@ fn demo_string_interning() {
     println!("\nInterning various POS tags...");
     let pos_tags = vec!["NNG", "VV", "JKS", "EP", "NNP"];
     for tag in &pos_tags {
-        interner.intern(tag);
+        let _ = interner.intern(tag);
     }
 
     println!("Total unique strings: {}", interner.len());
@@ -128,7 +130,7 @@ fn demo_pool_manager() {
     // String interning
     let pos_tags = vec!["NNG", "VV", "JKS", "EP", "NNP", "VV", "NNG"];
     for tag in pos_tags {
-        manager.string_interner.intern(tag);
+        let _ = manager.string_interner.intern(tag);
     }
 
     // 업데이트된 통계

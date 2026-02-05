@@ -17,6 +17,8 @@
 //! - 문서 분류
 //! - 키워드 추출
 
+#![allow(clippy::uninlined_format_args)]
+
 use mecab_ko_core::{Normalizer, Token, Tokenizer};
 use std::collections::HashSet;
 
@@ -111,6 +113,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// 전처리 파이프라인
 struct PreprocessingPipeline {
     tokenizer: Tokenizer,
+    #[allow(dead_code)]
     normalizer: Normalizer,
     stopwords: HashSet<String>,
 }

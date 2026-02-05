@@ -656,6 +656,7 @@ impl Tokenizer {
 // can fail (dictionary loading, etc.). Use Tokenizer::new() explicitly instead.
 
 #[cfg(test)]
+#[allow(clippy::expect_used, clippy::vec_init_then_push)]
 mod tests {
     use super::*;
     use mecab_ko_dict::{matrix::DenseMatrix, trie::TrieBuilder, DictEntry};

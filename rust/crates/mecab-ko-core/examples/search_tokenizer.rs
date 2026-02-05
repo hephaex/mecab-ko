@@ -17,6 +17,14 @@
 //! - 자동완성 기능
 //! - 검색어 추천
 
+#![allow(
+    clippy::uninlined_format_args,
+    clippy::unnecessary_wraps,
+    clippy::option_if_let_else,
+    clippy::bool_to_int_with_if,
+    clippy::too_many_lines
+)]
+
 use mecab_ko_core::{Normalizer, Token, Tokenizer};
 use std::collections::{HashMap, HashSet};
 
@@ -197,6 +205,7 @@ struct SearchEngine {
     // 역색인: 토큰 -> 문서 ID 목록
     inverted_index: HashMap<String, HashSet<u64>>,
     // 문서별 토큰 위치: (문서 ID, 토큰) -> 위치 목록
+    #[allow(dead_code)]
     position_index: HashMap<(u64, String), Vec<usize>>,
     // 초성 인덱스: 초성 -> (단어, 문서 ID)
     chosung_index: HashMap<String, Vec<(String, u64)>>,

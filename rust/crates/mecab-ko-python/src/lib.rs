@@ -2,14 +2,14 @@
 //!
 //! Python bindings for MeCab-Ko (Korean morphological analyzer)
 //!
-//! This crate provides Python bindings compatible with the KoNLPy Mecab API.
+//! This crate provides Python bindings compatible with the `KoNLPy` Mecab API.
 //!
 //! ## Features
 //!
 //! - `morphs(text)` - Extract morphemes
 //! - `nouns(text)` - Extract nouns
 //! - `pos(text)` - Part-of-speech tagging
-//! - `parse(text)` - MeCab format output
+//! - `parse(text)` - `MeCab` format output
 //!
 //! ## Example (Python)
 //!
@@ -70,15 +70,13 @@ impl PyMecab {
         let tokenizer = if let Some(path) = dicpath {
             Tokenizer::with_dict(path).map_err(|e| {
                 PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
-                    "Failed to initialize tokenizer with dictionary: {}",
-                    e
+                    "Failed to initialize tokenizer with dictionary: {e}"
                 ))
             })?
         } else {
             Tokenizer::new().map_err(|e| {
                 PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
-                    "Failed to initialize tokenizer: {}",
-                    e
+                    "Failed to initialize tokenizer: {e}"
                 ))
             })?
         };
@@ -106,8 +104,8 @@ impl PyMecab {
     /// # ['안녕', '하', '세요']
     /// ```
     #[pyo3(text_signature = "($self, text)")]
-    fn morphs(&self, text: &str) -> PyResult<Vec<String>> {
-        Ok(self.tokenizer.lock().morphs(text))
+    fn morphs(&self, text: &str) -> Vec<String> {
+        self.tokenizer.lock().morphs(text)
     }
 
     /// Extract nouns from text.
@@ -128,8 +126,8 @@ impl PyMecab {
     /// # ['아버지', '가방']
     /// ```
     #[pyo3(text_signature = "($self, text)")]
-    fn nouns(&self, text: &str) -> PyResult<Vec<String>> {
-        Ok(self.tokenizer.lock().nouns(text))
+    fn nouns(&self, text: &str) -> Vec<String> {
+        self.tokenizer.lock().nouns(text)
     }
 
     /// Perform part-of-speech tagging.
@@ -150,8 +148,8 @@ impl PyMecab {
     /// # [('나', 'NP'), ('는', 'JX'), ('학생', 'NNG'), ('이', 'VCP'), ('ㅂ니다', 'EF')]
     /// ```
     #[pyo3(text_signature = "($self, text)")]
-    fn pos(&self, text: &str) -> PyResult<Vec<(String, String)>> {
-        Ok(self.tokenizer.lock().pos(text))
+    fn pos(&self, text: &str) -> Vec<(String, String)> {
+        self.tokenizer.lock().pos(text)
     }
 
     /// Parse text and return MeCab format output.
@@ -172,7 +170,9 @@ impl PyMecab {
     /// # "안녕\tNNG,*,F,안녕,*,*,*,*\n하\tXSV,*,F,하,*,*,*,*\n세요\tEF,*,F,세요,*,*,*,*\nEOS\n"
     /// ```
     #[pyo3(text_signature = "($self, text)")]
-    fn parse(&self, text: &str) -> PyResult<String> {
+    fn parse(&self, text: &str) -> String {
+        use std::fmt::Write;
+
         let tokens = self.tokenizer.lock().tokenize(text);
         let mut result = String::new();
 
@@ -184,27 +184,29 @@ impl PyMecab {
                 token.pos,
                 token.lemma.as_deref().unwrap_or(&token.surface)
             );
-            result.push_str(&format!("{}\t{}\n", token.surface, features));
+            let _ = writeln!(result, "{}\t{}", token.surface, features);
         }
 
         result.push_str("EOS\n");
-        Ok(result)
+        result
     }
 
     /// Alias for morphs() - extract morphemes.
     ///
     /// This method is provided for compatibility with some interfaces.
     #[pyo3(text_signature = "($self, text)")]
-    fn wakati(&self, text: &str) -> PyResult<Vec<String>> {
+    fn wakati(&self, text: &str) -> Vec<String> {
         self.morphs(text)
     }
 
     /// Python __repr__ method.
+    #[allow(clippy::unused_self)]
     fn __repr__(&self) -> String {
         "Mecab()".to_string()
     }
 
     /// Python __str__ method.
+    #[allow(clippy::unused_self)]
     fn __str__(&self) -> String {
         "MeCab-Ko tokenizer".to_string()
     }
@@ -235,34 +237,28 @@ mod tests {
     #[test]
     fn test_morphs() {
         let mecab = PyMecab::new(None).unwrap();
-        let result = mecab.morphs("테스트");
-        assert!(result.is_ok());
-        let morphemes = result.unwrap();
+        let morphemes = mecab.morphs("테스트");
         assert!(!morphemes.is_empty());
     }
 
     #[test]
     fn test_nouns() {
         let mecab = PyMecab::new(None).unwrap();
-        let result = mecab.nouns("테스트");
-        assert!(result.is_ok());
+        let _result = mecab.nouns("테스트");
+        // No assertions needed, just verify it doesn't panic
     }
 
     #[test]
     fn test_pos() {
         let mecab = PyMecab::new(None).unwrap();
-        let result = mecab.pos("테스트");
-        assert!(result.is_ok());
-        let tagged = result.unwrap();
+        let tagged = mecab.pos("테스트");
         assert!(!tagged.is_empty());
     }
 
     #[test]
     fn test_parse() {
         let mecab = PyMecab::new(None).unwrap();
-        let result = mecab.parse("테스트");
-        assert!(result.is_ok());
-        let output = result.unwrap();
+        let output = mecab.parse("테스트");
         assert!(output.contains("EOS"));
     }
 }

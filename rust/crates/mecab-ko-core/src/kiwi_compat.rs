@@ -583,6 +583,7 @@ impl fmt::Display for KiwiToken {
 }
 
 #[cfg(test)]
+#[allow(clippy::float_cmp)]
 mod tests {
     use super::*;
 

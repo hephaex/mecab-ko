@@ -2,6 +2,8 @@
 //!
 //! 외래어 표기 정규화 모듈 사용 예제
 
+#![allow(clippy::uninlined_format_args, clippy::field_reassign_with_default)]
+
 use mecab_ko_core::normalizer::{NormalizationConfig, Normalizer};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -23,12 +25,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     for (variant, expected) in test_words {
-        let normalized = normalizer.normalize(variant);
+        let norm_result = normalizer.normalize(variant);
         println!(
             "   {} → {} {}",
             variant,
-            normalized,
-            if normalized == expected { "✓" } else { "✗" }
+            norm_result,
+            if norm_result == expected { "✓" } else { "✗" }
         );
     }
     println!();
@@ -90,8 +92,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     for term in it_terms {
-        let normalized = normalizer.normalize(term);
-        println!("   {} → {}", term, normalized);
+        let norm_result = normalizer.normalize(term);
+        println!("   {} → {}", term, norm_result);
     }
     println!();
 
@@ -101,7 +103,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     custom_config.min_confidence = 0.9;
     custom_config.vowel_variation = false;
 
-    let custom_normalizer = Normalizer::new(custom_config)?;
+    let _custom_normalizer = Normalizer::new(custom_config)?;
     println!("   ✓ Custom normalizer created with min_confidence=0.9\n");
 
     // 8. 생성된 변이형 테스트
