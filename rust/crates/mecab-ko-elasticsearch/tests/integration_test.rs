@@ -135,7 +135,7 @@ fn test_composite_filter_chain() {
 
     // 1. 품사 필터 (조사 제거)
     composite.add_filter(Box::new(NoriPartOfSpeechStopFilter::new(vec![
-        "J".to_string(),
+        "J".to_string()
     ])));
 
     // 2. 길이 필터 (2자 이상)

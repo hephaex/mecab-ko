@@ -6,7 +6,7 @@
 //!
 //! - `NoriTokenizer`: Nori 스타일 토크나이저
 //! - `NoriAnalyzer`: 분석기 래퍼 (사용자 사전, stoptags 지원)
-//! - POS 태그 매핑: MeCab ↔ Nori 변환
+//! - POS 태그 매핑: `MeCab` ↔ Nori 변환
 //!
 //! # 예제
 //!
@@ -34,26 +34,26 @@ pub enum DecompoundMode {
     /// 분해하지 않음 - 복합명사를 그대로 출력
     ///
     /// # Example
-    /// "형태소분석기" → ["형태소분석기/NNG"]
+    /// "형태소분석기" → \["형태소분석기/NNG"\]
     None,
 
     /// 분해만 출력 - 원본은 버리고 분해된 형태소만 출력
     ///
     /// # Example
-    /// "형태소분석기" → ["형태소/NNG", "분석/NNG", "기/NNG"]
+    /// "형태소분석기" → \["형태소/NNG", "분석/NNG", "기/NNG"\]
     Discard,
 
     /// 혼합 출력 - 원본과 분해된 형태소 모두 출력
     ///
     /// # Example
-    /// "형태소분석기" → ["형태소분석기/NNG", "형태소/NNG", "분석/NNG", "기/NNG"]
+    /// "형태소분석기" → \["형태소분석기/NNG", "형태소/NNG", "분석/NNG", "기/NNG"\]
     Mixed,
 }
 
 impl DecompoundMode {
     /// 문자열에서 파싱
     #[must_use]
-    pub fn from_str(s: &str) -> Option<Self> {
+    pub fn parse(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
             "none" => Some(Self::None),
             "discard" => Some(Self::Discard),
@@ -76,7 +76,7 @@ impl DecompoundMode {
 /// Nori 토큰
 ///
 /// Lucene Nori의 Token 속성과 호환
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NoriToken {
     /// 표면형
     pub surface: String,
@@ -121,9 +121,9 @@ impl WordType {
 
 /// Nori 토크나이저
 ///
-/// Lucene Nori의 KoreanTokenizer와 호환되는 인터페이스
+/// Lucene Nori의 `KoreanTokenizer`와 호환되는 인터페이스
 pub struct NoriTokenizer {
-    /// 내부 MeCab 토크나이저
+    /// 내부 `MeCab` 토크나이저
     tokenizer: Tokenizer,
     /// 복합명사 분해 모드
     decompound_mode: DecompoundMode,
@@ -193,21 +193,17 @@ impl NoriTokenizer {
         let mecab_tokens = self.tokenizer.tokenize(text);
         let mut nori_tokens = Vec::new();
 
-        for token in mecab_tokens {
-            let nori_token = self.convert_token(token, text)?;
+        for token in &mecab_tokens {
+            let nori_token = self.convert_token(token, text);
             nori_tokens.extend(nori_token);
         }
 
         Ok(nori_tokens)
     }
 
-    /// MeCab 토큰을 Nori 토큰으로 변환
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if token conversion fails.
-    fn convert_token(&self, token: Token, text: &str) -> Result<Vec<NoriToken>> {
-        let pos_tag = PosTag::from_str(&token.pos).unwrap_or(PosTag::Unknown);
+    /// `MeCab` 토큰을 Nori 토큰으로 변환
+    fn convert_token(&self, token: &Token, text: &str) -> Vec<NoriToken> {
+        let pos_tag = token.pos.parse::<PosTag>().unwrap_or(PosTag::Unknown);
         let nori_tag = pos_tag.to_nori_compat();
 
         // 기본 토큰 생성
@@ -227,26 +223,26 @@ impl NoriTokenizer {
         }];
 
         // 복합명사 분해 처리
-        if self.should_decompound(&pos_tag) {
-            let decompounded = self.decompound_token(&token, text);
+        if self.should_decompound(pos_tag) {
+            let decompounded = Self::decompound_token(token, text);
             tokens = self.apply_decompound_mode(tokens, decompounded);
         }
 
         // 미등록어 유니그램 처리
         if self.output_unknown_unigrams && pos_tag == PosTag::Unknown {
-            tokens = self.split_unknown_to_unigrams(&token, text);
+            tokens = Self::split_unknown_to_unigrams(token, text);
         }
 
-        Ok(tokens)
+        tokens
     }
 
     /// 복합명사 분해 대상인지 확인
-    fn should_decompound(&self, pos_tag: &PosTag) -> bool {
+    fn should_decompound(&self, pos_tag: PosTag) -> bool {
         self.decompound_mode != DecompoundMode::None && matches!(pos_tag, PosTag::NNG | PosTag::NNP)
     }
 
     /// 복합명사 분해 (실제 구현은 추후)
-    fn decompound_token(&self, _token: &Token, _text: &str) -> Vec<NoriToken> {
+    const fn decompound_token(_token: &Token, _text: &str) -> Vec<NoriToken> {
         // TODO: 복합명사 분해 로직 구현
         // 현재는 빈 벡터 반환
         Vec::new()
@@ -276,7 +272,7 @@ impl NoriTokenizer {
     }
 
     /// 미등록어를 유니그램으로 분리
-    fn split_unknown_to_unigrams(&self, token: &Token, text: &str) -> Vec<NoriToken> {
+    fn split_unknown_to_unigrams(token: &Token, text: &str) -> Vec<NoriToken> {
         let chars: Vec<char> = token.surface.chars().collect();
         let mut tokens = Vec::new();
         let mut char_pos = token.start_byte;
@@ -305,7 +301,7 @@ impl NoriTokenizer {
 
 /// Nori 분석기
 ///
-/// Lucene Nori의 KoreanAnalyzer와 호환되는 인터페이스
+/// Lucene Nori의 `KoreanAnalyzer`와 호환되는 인터페이스
 pub struct NoriAnalyzer {
     /// Nori 토크나이저
     tokenizer: NoriTokenizer,
@@ -322,7 +318,7 @@ impl NoriAnalyzer {
     ///
     /// * `user_dictionary` - 사용자 사전 경로 (옵션)
     /// * `decompound_mode` - 복합명사 분해 모드
-    /// * `stoptags` - 필터링할 품사 태그 (예: ["J", "E"])
+    /// * `stoptags` - 필터링할 품사 태그 (예: \["J", "E"\])
     /// * `output_unknown_unigrams` - 미등록어 유니그램 출력 여부
     ///
     /// # Example
@@ -417,11 +413,11 @@ impl NoriAnalyzer {
     /// stoptags 목록 반환
     #[must_use]
     pub fn stoptags(&self) -> Vec<&str> {
-        self.stoptags.iter().map(|s| s.as_str()).collect()
+        self.stoptags.iter().map(String::as_str).collect()
     }
 }
 
-/// MeCab 태그를 Nori 태그로 변환
+/// `MeCab` 태그를 Nori 태그로 변환
 ///
 /// # Example
 ///
@@ -432,13 +428,15 @@ impl NoriAnalyzer {
 /// assert_eq!(mecab_to_nori_tag("EF"), "E");   // 종결 어미 → E
 /// assert_eq!(mecab_to_nori_tag("NNG"), "NNG"); // 일반 명사 → NNG
 /// ```
+#[must_use]
 pub fn mecab_to_nori_tag(mecab_tag: &str) -> String {
-    PosTag::from_str(mecab_tag)
-        .map(|tag| tag.to_nori_compat().as_str().to_string())
-        .unwrap_or_else(|| mecab_tag.to_string())
+    mecab_tag.parse::<PosTag>().map_or_else(
+        |_| mecab_tag.to_string(),
+        |tag| tag.to_nori_compat().as_str().to_string(),
+    )
 }
 
-/// Nori 태그를 MeCab 태그로 변환 (부분 변환)
+/// Nori 태그를 `MeCab` 태그로 변환 (부분 변환)
 ///
 /// Nori의 통합 태그(J, E)는 대표 태그로 변환합니다.
 ///
@@ -451,6 +449,7 @@ pub fn mecab_to_nori_tag(mecab_tag: &str) -> String {
 /// assert_eq!(nori_to_mecab_tag("E"), "EF");   // 어미 → 종결어미(대표)
 /// assert_eq!(nori_to_mecab_tag("NNG"), "NNG"); // 일반명사 → NNG
 /// ```
+#[must_use]
 pub fn nori_to_mecab_tag(nori_tag: &str) -> String {
     match nori_tag {
         // 조사 통합 → 보조사를 대표로 사용
@@ -473,17 +472,17 @@ mod tests {
 
     #[test]
     fn test_decompound_mode_from_str() {
-        assert_eq!(DecompoundMode::from_str("none"), Some(DecompoundMode::None));
+        assert_eq!(DecompoundMode::parse("none"), Some(DecompoundMode::None));
         assert_eq!(
-            DecompoundMode::from_str("discard"),
+            DecompoundMode::parse("discard"),
             Some(DecompoundMode::Discard)
         );
         assert_eq!(
-            DecompoundMode::from_str("mixed"),
+            DecompoundMode::parse("mixed"),
             Some(DecompoundMode::Mixed)
         );
-        assert_eq!(DecompoundMode::from_str("NONE"), Some(DecompoundMode::None));
-        assert_eq!(DecompoundMode::from_str("invalid"), None);
+        assert_eq!(DecompoundMode::parse("NONE"), Some(DecompoundMode::None));
+        assert_eq!(DecompoundMode::parse("invalid"), None);
     }
 
     #[test]

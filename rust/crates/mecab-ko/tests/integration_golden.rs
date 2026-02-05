@@ -327,7 +327,10 @@ fn test_golden_coverage() {
 
     // Should have reasonable coverage
     assert!(has_noun, "Should have noun examples");
-    assert!(has_verb || has_adjective, "Should have verb or adjective examples");
+    assert!(
+        has_verb || has_adjective,
+        "Should have verb or adjective examples"
+    );
 }
 
 #[cfg(test)]
@@ -353,8 +356,11 @@ mod golden_utils {
             for (i, test_case) in test_cases.iter().enumerate() {
                 // Check that expected_morphs and expected_pos are consistent
                 if !test_case.expected_morphs.is_empty() && !test_case.expected_pos.is_empty() {
-                    let morphs_from_pos: Vec<String> =
-                        test_case.expected_pos.iter().map(|(m, _)| m.clone()).collect();
+                    let morphs_from_pos: Vec<String> = test_case
+                        .expected_pos
+                        .iter()
+                        .map(|(m, _)| m.clone())
+                        .collect();
 
                     assert_eq!(
                         test_case.expected_morphs, morphs_from_pos,

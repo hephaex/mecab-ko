@@ -80,21 +80,21 @@ fn main() -> Result<()> {
     println!("Input:       {}", args.input);
     println!("Output:      {}", args.output);
     println!("Compression: level {}", args.compression);
-    println!("Encoding:    {:?}", encoding);
+    println!("Encoding:    {encoding:?}");
     println!();
 
     // 진행 표시
-    let progress = if !args.no_progress {
+    let progress = if args.no_progress {
+        None
+    } else {
         let pb = ProgressBar::new_spinner();
         pb.set_style(
             ProgressStyle::default_spinner()
                 .template("{spinner:.green} {msg}")
-                .expect("invalid template"),
+                .unwrap_or_else(|_| ProgressStyle::default_spinner()),
         );
         pb.enable_steady_tick(std::time::Duration::from_millis(100));
         Some(pb)
-    } else {
-        None
     };
 
     // 빌드 시작

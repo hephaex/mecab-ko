@@ -158,10 +158,10 @@ fn test_csv_format_variations() {
     // - Quoted fields
 
     let csv_formats = vec![
-        "MeCab,NNP,-1000,메캅",                  // Basic format
-        "\"MeCab\",\"NNP\",-1000,\"메캅\"",       // Quoted
-        "MeCab\tNNP\t-1000\t메캅",                // Tab-separated
-        "MeCab,NNP,-1000",                        // Without reading
+        "MeCab,NNP,-1000,메캅",             // Basic format
+        "\"MeCab\",\"NNP\",-1000,\"메캅\"", // Quoted
+        "MeCab\tNNP\t-1000\t메캅",          // Tab-separated
+        "MeCab,NNP,-1000",                  // Without reading
     ];
 
     // Each format should be parseable
@@ -210,7 +210,10 @@ fn test_technical_terms() {
     // let user_dict = builder.build().expect("Failed to build");
     // assert_eq!(user_dict.entry_count(), technical_terms.len());
 
-    println!("Technical terms test prepared: {} terms", technical_terms.len());
+    println!(
+        "Technical terms test prepared: {} terms",
+        technical_terms.len()
+    );
 }
 
 /// Test proper names in user dictionary
@@ -262,7 +265,10 @@ fn test_special_characters() {
     //
     // let user_dict = builder.build().expect("Failed to build");
 
-    println!("Special characters test prepared: {} entries", entries_with_special.len());
+    println!(
+        "Special characters test prepared: {} entries",
+        entries_with_special.len()
+    );
 }
 
 /// Test user dictionary update (add new entries)

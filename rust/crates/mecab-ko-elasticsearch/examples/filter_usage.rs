@@ -48,7 +48,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let filtered3 = length_filter.filter(tokens.clone())?;
     println!("결과: {} 토큰", filtered3.len());
     for token in &filtered3 {
-        println!("  {} [{}] ({}자)", token.surface, token.pos_tag, token.len());
+        println!(
+            "  {} [{}] ({}자)",
+            token.surface,
+            token.pos_tag,
+            token.len()
+        );
     }
 
     // 5. 소문자 필터 (영문 포함 텍스트)
@@ -104,7 +109,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("원본:");
     for token in &tokens_with_reading {
-        println!("  {} [{}] {:?}", token.surface, token.pos_tag, token.reading);
+        println!(
+            "  {} [{}] {:?}",
+            token.surface, token.pos_tag, token.reading
+        );
     }
 
     let filtered6 = reading_filter.filter(tokens_with_reading)?;

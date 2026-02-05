@@ -67,8 +67,7 @@ fn decompound_mode_benchmark(c: &mut Criterion) {
     });
 
     // Discard 모드
-    let analyzer_discard =
-        NoriAnalyzer::default_with_decompound(DecompoundMode::Discard).unwrap();
+    let analyzer_discard = NoriAnalyzer::default_with_decompound(DecompoundMode::Discard).unwrap();
     group.bench_with_input(BenchmarkId::new("mode", "discard"), &text, |b, text| {
         b.iter(|| analyzer_discard.analyze(black_box(text)));
     });
@@ -145,8 +144,7 @@ fn throughput_benchmark(c: &mut Criterion) {
 
     // 다양한 텍스트 크기로 처리량 측정
     for size in [100, 500, 1000, 5000] {
-        let text = "한국어 형태소 분석기를 사용하여 자연어 처리를 수행합니다. "
-            .repeat(size / 50);
+        let text = "한국어 형태소 분석기를 사용하여 자연어 처리를 수행합니다. ".repeat(size / 50);
 
         group.throughput(Throughput::Bytes(text.len() as u64));
         group.bench_with_input(BenchmarkId::new("chars", size), &text, |b, text| {

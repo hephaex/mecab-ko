@@ -2,9 +2,7 @@
 //!
 //! 실제 사용 시나리오를 시뮬레이션하여 성능 측정
 
-use criterion::{
-    black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput,
-};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use mecab_ko_elasticsearch::analyzer::NoriAnalyzer;
 use mecab_ko_elasticsearch::config::{AnalyzerConfig, DecompoundMode};
 
@@ -100,8 +98,7 @@ fn bench_short_queries(c: &mut Criterion) {
     let analyzer = NoriAnalyzer::with_cache_size(config, 100).unwrap();
 
     // 평균 쿼리 길이
-    let avg_len: usize = SHORT_QUERIES.iter().map(|q| q.len()).sum::<usize>()
-        / SHORT_QUERIES.len();
+    let avg_len: usize = SHORT_QUERIES.iter().map(|q| q.len()).sum::<usize>() / SHORT_QUERIES.len();
 
     group.throughput(Throughput::Bytes(avg_len as u64));
 
@@ -129,26 +126,25 @@ fn bench_batch_processing(c: &mut Criterion) {
     let analyzer = NoriAnalyzer::without_cache(config).unwrap();
 
     for size in [10, 50, 100] {
-        let total_len: usize =
-            MEDIUM_SENTENCES.iter().take(size.min(MEDIUM_SENTENCES.len())).map(|s| s.len()).sum();
+        let total_len: usize = MEDIUM_SENTENCES
+            .iter()
+            .take(size.min(MEDIUM_SENTENCES.len()))
+            .map(|s| s.len())
+            .sum();
 
         group.throughput(Throughput::Bytes(total_len as u64));
 
         // 순차 처리
-        group.bench_with_input(
-            BenchmarkId::new("sequential", size),
-            &size,
-            |b, &size| {
-                b.iter(|| {
-                    let mut results = Vec::new();
-                    for i in 0..size {
-                        let text = MEDIUM_SENTENCES[i % MEDIUM_SENTENCES.len()];
-                        results.push(analyzer.analyze(black_box(text)));
-                    }
-                    results
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("sequential", size), &size, |b, &size| {
+            b.iter(|| {
+                let mut results = Vec::new();
+                for i in 0..size {
+                    let text = MEDIUM_SENTENCES[i % MEDIUM_SENTENCES.len()];
+                    results.push(analyzer.analyze(black_box(text)));
+                }
+                results
+            });
+        });
 
         // 병렬 배치 처리
         group.bench_with_input(BenchmarkId::new("parallel", size), &size, |b, &size| {
@@ -200,20 +196,20 @@ fn bench_decompound_modes(c: &mut Criterion) {
 
     let text = "형태소분석기를 사용하여 자연어처리를 수행합니다. 복합명사분해 기능이 중요합니다.";
 
-    for mode in [DecompoundMode::None, DecompoundMode::Discard, DecompoundMode::Mixed] {
+    for mode in [
+        DecompoundMode::None,
+        DecompoundMode::Discard,
+        DecompoundMode::Mixed,
+    ] {
         let config = AnalyzerConfig::new()
             .with_decompound_mode(mode)
             .with_stoptags(vec![]);
 
         let analyzer = NoriAnalyzer::without_cache(config).unwrap();
 
-        group.bench_with_input(
-            BenchmarkId::new("mode", mode.as_str()),
-            &mode,
-            |b, _| {
-                b.iter(|| analyzer.analyze(black_box(text)));
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("mode", mode.as_str()), &mode, |b, _| {
+            b.iter(|| analyzer.analyze(black_box(text)));
+        });
     }
 
     group.finish();

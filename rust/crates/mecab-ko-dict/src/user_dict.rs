@@ -62,11 +62,7 @@ impl UserEntry {
     ) -> Self {
         let surface = surface.into();
         let pos = pos.into();
-        let feature = format!(
-            "{},*,*,{},*,*,*,*",
-            pos,
-            reading.as_deref().unwrap_or("*")
-        );
+        let feature = format!("{},*,*,{},*,*,*,*", pos, reading.as_deref().unwrap_or("*"));
         Self {
             surface,
             left_id: 0, // 기본 컨텍스트 ID
@@ -80,7 +76,8 @@ impl UserEntry {
     }
 
     /// 컨텍스트 ID 설정
-    #[must_use] pub const fn with_context_ids(mut self, left_id: u16, right_id: u16) -> Self {
+    #[must_use]
+    pub const fn with_context_ids(mut self, left_id: u16, right_id: u16) -> Self {
         self.left_id = left_id;
         self.right_id = right_id;
         self
@@ -94,7 +91,8 @@ impl UserEntry {
     }
 
     /// Entry로 변환
-    #[must_use] pub fn to_entry(&self) -> Entry {
+    #[must_use]
+    pub fn to_entry(&self) -> Entry {
         let feature = format!(
             "{},*,*,*,*,*,{},*",
             self.pos,
@@ -134,7 +132,8 @@ impl Default for UserDictionary {
 
 impl UserDictionary {
     /// 새 사용자 사전 생성
-    #[must_use] pub fn new() -> Self {
+    #[must_use]
+    pub fn new() -> Self {
         Self {
             entries: Vec::new(),
             surface_map: HashMap::new(),
@@ -144,7 +143,8 @@ impl UserDictionary {
     }
 
     /// 기본 비용 설정
-    #[must_use] pub const fn with_default_cost(mut self, cost: i16) -> Self {
+    #[must_use]
+    pub const fn with_default_cost(mut self, cost: i16) -> Self {
         self.default_cost = cost;
         self
     }
@@ -297,7 +297,8 @@ impl UserDictionary {
     }
 
     /// 표면형으로 엔트리 검색
-    #[must_use] pub fn lookup(&self, surface: &str) -> Vec<&UserEntry> {
+    #[must_use]
+    pub fn lookup(&self, surface: &str) -> Vec<&UserEntry> {
         self.surface_map
             .get(surface)
             .map(|indices| {
@@ -320,7 +321,8 @@ impl UserDictionary {
     /// # Returns
     ///
     /// 일치하는 엔트리의 벡터
-    #[must_use] pub fn common_prefix_search(&self, text: &str) -> Vec<&UserEntry> {
+    #[must_use]
+    pub fn common_prefix_search(&self, text: &str) -> Vec<&UserEntry> {
         let mut results = Vec::new();
 
         // 각 엔트리의 표면형을 텍스트의 접두사로 확인
@@ -334,17 +336,20 @@ impl UserDictionary {
     }
 
     /// 모든 엔트리 반환
-    #[must_use] pub fn entries(&self) -> &[UserEntry] {
+    #[must_use]
+    pub fn entries(&self) -> &[UserEntry] {
         &self.entries
     }
 
     /// 엔트리 수 반환
-    #[must_use] pub fn len(&self) -> usize {
+    #[must_use]
+    pub fn len(&self) -> usize {
         self.entries.len()
     }
 
     /// 사전이 비어있는지 확인
-    #[must_use] pub fn is_empty(&self) -> bool {
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }
 
@@ -387,12 +392,14 @@ impl UserDictionary {
     }
 
     /// 빌드된 Trie 가져오기
-    #[must_use] pub fn get_trie(&self) -> Option<Trie<'_>> {
+    #[must_use]
+    pub fn get_trie(&self) -> Option<Trie<'_>> {
         self.trie_cache.as_ref().map(|bytes| Trie::new(bytes))
     }
 
     /// Entry 목록으로 변환
-    #[must_use] pub fn to_entries(&self) -> Vec<Entry> {
+    #[must_use]
+    pub fn to_entries(&self) -> Vec<Entry> {
         self.entries.iter().map(UserEntry::to_entry).collect()
     }
 
@@ -443,26 +450,30 @@ impl Default for UserDictionaryBuilder {
 
 impl UserDictionaryBuilder {
     /// 새 빌더 생성
-    #[must_use] pub fn new() -> Self {
+    #[must_use]
+    pub fn new() -> Self {
         Self {
             dict: UserDictionary::new(),
         }
     }
 
     /// 기본 비용 설정
-    #[must_use] pub fn default_cost(mut self, cost: i16) -> Self {
+    #[must_use]
+    pub fn default_cost(mut self, cost: i16) -> Self {
         self.dict = self.dict.with_default_cost(cost);
         self
     }
 
     /// 엔트리 추가
-    #[must_use] pub fn add(mut self, surface: &str, pos: &str) -> Self {
+    #[must_use]
+    pub fn add(mut self, surface: &str, pos: &str) -> Self {
         self.dict.add_entry(surface, pos, None, None);
         self
     }
 
     /// 비용과 함께 엔트리 추가
-    #[must_use] pub fn add_with_cost(mut self, surface: &str, pos: &str, cost: i16) -> Self {
+    #[must_use]
+    pub fn add_with_cost(mut self, surface: &str, pos: &str, cost: i16) -> Self {
         self.dict.add_entry(surface, pos, Some(cost), None);
         self
     }
@@ -496,7 +507,8 @@ impl UserDictionaryBuilder {
     }
 
     /// 사전 빌드
-    #[must_use] pub fn build(self) -> UserDictionary {
+    #[must_use]
+    pub fn build(self) -> UserDictionary {
         self.dict
     }
 

@@ -66,9 +66,9 @@ use std::time::{Duration, SystemTime};
 
 use crate::error::{DictError, Result};
 use crate::user_dict::{UserDictionary, UserEntry};
-use crate::{Entry, SystemDictionary};
 #[cfg(test)]
 use crate::DictEntry;
+use crate::{Entry, SystemDictionary};
 
 /// 사전 버전
 ///
@@ -531,10 +531,9 @@ impl HotReloadDictionary {
     /// Returns an error if the version is not found in history or locks cannot be acquired.
     pub fn rollback(&self, target_version: Version) -> Result<()> {
         let target = {
-            let history = self
-                .history
-                .read()
-                .map_err(|_| DictError::Format("Failed to acquire read lock on history".to_string()))?;
+            let history = self.history.read().map_err(|_| {
+                DictError::Format("Failed to acquire read lock on history".to_string())
+            })?;
 
             history
                 .iter()

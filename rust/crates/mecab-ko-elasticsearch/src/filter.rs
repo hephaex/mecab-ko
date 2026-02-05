@@ -394,7 +394,7 @@ mod tests {
     fn test_composite_filter() {
         let mut composite = CompositeFilter::new();
         composite.add_filter(Box::new(NoriPartOfSpeechStopFilter::new(vec![
-            "J".to_string(),
+            "J".to_string()
         ])));
         composite.add_filter(Box::new(LowercaseFilter::new()));
 
@@ -431,9 +431,9 @@ mod tests {
         let filter = LengthFilter::new(2, 4);
 
         let tokens = vec![
-            create_test_token("가", "NNG"),     // 1자 - 제거
-            create_test_token("형태소", "NNG"),  // 3자 - 유지
-            create_test_token("분석기", "NNG"),  // 3자 - 유지
+            create_test_token("가", "NNG"),           // 1자 - 제거
+            create_test_token("형태소", "NNG"),       // 3자 - 유지
+            create_test_token("분석기", "NNG"),       // 3자 - 유지
             create_test_token("형태소분석기", "NNG"), // 6자 - 제거
         ];
 

@@ -104,7 +104,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let config6_deserialized: AnalyzerConfig = serde_json::from_str(&json)?;
     println!("JSON에서 설정 역직렬화:");
-    println!("  decompound_mode: {}", config6_deserialized.decompound_mode.as_str());
+    println!(
+        "  decompound_mode: {}",
+        config6_deserialized.decompound_mode.as_str()
+    );
     println!("  stoptags: {:?}", config6_deserialized.stoptags);
 
     // 7. 설정 유효성 검증
@@ -127,7 +130,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Builder 패턴으로 생성한 설정:");
     println!("  decompound_mode: {}", config8.decompound_mode.as_str());
     println!("  stoptags: {:?}", config8.stoptags);
-    println!("  output_unknown_unigrams: {}", config8.output_unknown_unigrams);
+    println!(
+        "  output_unknown_unigrams: {}",
+        config8.output_unknown_unigrams
+    );
 
     let analyzer8 = NoriAnalyzer::new(config8)?;
     let tokens8 = analyzer8.analyze("한국어 분석 예제입니다.")?;

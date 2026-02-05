@@ -77,11 +77,10 @@ impl FixtureManager {
 
     /// Load test cases from a path
     fn load_from_path(path: &PathBuf) -> Result<Vec<MorphTestCase>, String> {
-        let content = std::fs::read_to_string(path)
-            .map_err(|e| format!("Failed to read {path:?}: {e}"))?;
+        let content =
+            std::fs::read_to_string(path).map_err(|e| format!("Failed to read {path:?}: {e}"))?;
 
-        serde_json::from_str(&content)
-            .map_err(|e| format!("Failed to parse {path:?}: {e}"))
+        serde_json::from_str(&content).map_err(|e| format!("Failed to parse {path:?}: {e}"))
     }
 
     /// Clear the cache
@@ -140,16 +139,16 @@ impl SampleTextGenerator {
     #[must_use]
     pub fn edge_cases() -> Vec<String> {
         vec![
-            "".to_string(),                      // Empty string
-            " ".to_string(),                     // Single space
-            "ㅋㅋㅋ".to_string(),                  // Consonants only
-            "123".to_string(),                   // Numbers only
-            "Hello 안녕".to_string(),             // Mixed Korean/English
-            "가나다@#$".to_string(),               // With symbols
-            "ㄱ".to_string(),                     // Single consonant
-            "ㅏ".to_string(),                     // Single vowel
-            "ABC".to_string(),                   // English only
-            "😀🎉".to_string(),                   // Emojis
+            "".to_string(),           // Empty string
+            " ".to_string(),          // Single space
+            "ㅋㅋㅋ".to_string(),     // Consonants only
+            "123".to_string(),        // Numbers only
+            "Hello 안녕".to_string(), // Mixed Korean/English
+            "가나다@#$".to_string(),  // With symbols
+            "ㄱ".to_string(),         // Single consonant
+            "ㅏ".to_string(),         // Single vowel
+            "ABC".to_string(),        // English only
+            "😀🎉".to_string(),       // Emojis
         ]
     }
 

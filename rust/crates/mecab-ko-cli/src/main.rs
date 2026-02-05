@@ -727,8 +727,9 @@ fn main() -> Result<()> {
     if let Some(ref text) = ctx.args.input {
         if let Some(ref output_path) = ctx.args.output {
             // 단일 파일 출력
-            let file = File::create(output_path)
-                .with_context(|| format!("Failed to create output file: {}", output_path.display()))?;
+            let file = File::create(output_path).with_context(|| {
+                format!("Failed to create output file: {}", output_path.display())
+            })?;
             let mut writer = BufWriter::new(file);
             ctx.process_text_to_writer(text, &mut writer)?;
             writer.flush()?;
@@ -945,7 +946,8 @@ fn run_repl(ctx: &AnalysisContext) -> Result<()> {
                                 println!("EOS");
                             }
                             OutputFormat::Wakati => {
-                                let words: Vec<_> = tokens.iter().map(|t| t.surface.as_str()).collect();
+                                let words: Vec<_> =
+                                    tokens.iter().map(|t| t.surface.as_str()).collect();
                                 println!("{}", words.join(separator));
                             }
                             OutputFormat::Pos => {
@@ -964,7 +966,11 @@ fn run_repl(ctx: &AnalysisContext) -> Result<()> {
                                 for (i, token) in tokens.iter().enumerate() {
                                     println!(
                                         "[{:03}] surface=\"{}\" pos={} span=[{},{})",
-                                        i, token.surface, token.pos, token.start_byte, token.end_byte
+                                        i,
+                                        token.surface,
+                                        token.pos,
+                                        token.start_byte,
+                                        token.end_byte
                                     );
                                 }
                             }
@@ -1073,14 +1079,20 @@ fn show_format_menu() {
 /// mecab-ko -i file1.txt -i file2.txt -o output_dir/
 /// ```
 fn process_batch(ctx: &AnalysisContext) -> Result<()> {
-    let output_dir = ctx.args.output.as_ref().ok_or_else(|| {
-        anyhow::anyhow!("배치 처리 모드에서는 -o/--output 옵션이 필요합니다")
-    })?;
+    let output_dir = ctx
+        .args
+        .output
+        .as_ref()
+        .ok_or_else(|| anyhow::anyhow!("배치 처리 모드에서는 -o/--output 옵션이 필요합니다"))?;
 
     // 출력 디렉터리 생성
     if !output_dir.exists() {
-        fs::create_dir_all(output_dir)
-            .with_context(|| format!("Failed to create output directory: {}", output_dir.display()))?;
+        fs::create_dir_all(output_dir).with_context(|| {
+            format!(
+                "Failed to create output directory: {}",
+                output_dir.display()
+            )
+        })?;
     }
 
     if !output_dir.is_dir() {
@@ -1095,7 +1107,12 @@ fn process_batch(ctx: &AnalysisContext) -> Result<()> {
 
     for (idx, input_path) in ctx.args.input_files.iter().enumerate() {
         if !ctx.args.quiet {
-            println!("[{}/{}] 처리 중: {}", idx + 1, total_files, input_path.display());
+            println!(
+                "[{}/{}] 처리 중: {}",
+                idx + 1,
+                total_files,
+                input_path.display()
+            );
         }
 
         // 입력 파일 읽기
@@ -1119,7 +1136,11 @@ fn process_batch(ctx: &AnalysisContext) -> Result<()> {
         // 라인별 처리
         for (line_num, line) in reader.lines().enumerate() {
             let line = line.with_context(|| {
-                format!("Failed to read line {} from {}", line_num + 1, input_path.display())
+                format!(
+                    "Failed to read line {} from {}",
+                    line_num + 1,
+                    input_path.display()
+                )
             })?;
 
             if line.trim().is_empty() {
@@ -1244,15 +1265,7 @@ mod tests {
 
     #[test]
     fn test_all_output_formats() {
-        let formats = [
-            "default",
-            "wakati",
-            "dump",
-            "pos",
-            "json",
-            "simple",
-            "csv",
-        ];
+        let formats = ["default", "wakati", "dump", "pos", "json", "simple", "csv"];
 
         for name in formats {
             let args = Args::try_parse_from(["mecab-ko", "-O", name, "테스트"]).unwrap();

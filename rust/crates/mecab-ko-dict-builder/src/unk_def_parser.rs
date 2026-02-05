@@ -39,6 +39,13 @@ impl UnkDef {
     /// SPACE,0,0,0,*
     /// ALPHA,1,2,100,UNK,*,*,*,*,*,*,*
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The file cannot be opened or read
+    /// - A line has fewer than 5 fields
+    /// - The `left_id`, `right_id`, or cost fields cannot be parsed
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::open(path.as_ref()).map_err(BuildError::Io)?;
         let reader = BufReader::new(file);
@@ -87,15 +94,23 @@ impl UnkDef {
             });
         }
 
-        Ok(UnkDef { entries })
+        Ok(Self { entries })
     }
 
     /// 문자 타입으로 엔트리 조회
+    #[must_use]
     pub fn get_entry(&self, char_type: &str) -> Option<&UnkEntry> {
         self.entries.iter().find(|e| e.char_type == char_type)
     }
 
     /// 바이너리로 직렬화
+    ///
+    /// # Panics
+    ///
+    /// Writing to a `Vec<u8>` should never fail in practice.
+    /// If it does, the process is in an unrecoverable state.
+    #[must_use]
+    #[allow(clippy::cast_possible_truncation)]
     pub fn to_bytes(&self) -> Vec<u8> {
         use byteorder::{LittleEndian, WriteBytesExt};
         use std::io::Write;
@@ -103,30 +118,31 @@ impl UnkDef {
         let mut buf = Vec::new();
 
         // 엔트리 개수
+        // SAFETY: Writing to Vec<u8> in memory should never fail
         buf.write_u32::<LittleEndian>(self.entries.len() as u32)
-            .expect("write failed");
+            .unwrap_or_else(|_| unreachable!("Vec write failed"));
 
         // 엔트리 데이터
         for entry in &self.entries {
             // 문자 타입
             buf.write_u32::<LittleEndian>(entry.char_type.len() as u32)
-                .expect("write failed");
+                .unwrap_or_else(|_| unreachable!("Vec write failed"));
             buf.write_all(entry.char_type.as_bytes())
-                .expect("write failed");
+                .unwrap_or_else(|_| unreachable!("Vec write failed"));
 
             // IDs와 비용
             buf.write_u16::<LittleEndian>(entry.left_id)
-                .expect("write failed");
+                .unwrap_or_else(|_| unreachable!("Vec write failed"));
             buf.write_u16::<LittleEndian>(entry.right_id)
-                .expect("write failed");
+                .unwrap_or_else(|_| unreachable!("Vec write failed"));
             buf.write_i16::<LittleEndian>(entry.cost)
-                .expect("write failed");
+                .unwrap_or_else(|_| unreachable!("Vec write failed"));
 
             // Feature
             buf.write_u32::<LittleEndian>(entry.feature.len() as u32)
-                .expect("write failed");
+                .unwrap_or_else(|_| unreachable!("Vec write failed"));
             buf.write_all(entry.feature.as_bytes())
-                .expect("write failed");
+                .unwrap_or_else(|_| unreachable!("Vec write failed"));
         }
 
         buf

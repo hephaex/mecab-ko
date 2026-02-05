@@ -4,8 +4,8 @@ use crate::error::Result;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-/// 토큰 (Lucene AttributeSource 호환)
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+/// 토큰 (`Lucene` `AttributeSource` 호환)
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Token {
     /// 표면형 (term)
     pub surface: String,
@@ -45,12 +45,7 @@ pub struct Token {
 impl Token {
     /// 새 토큰 생성
     #[must_use]
-    pub fn new(
-        surface: String,
-        pos_tag: String,
-        start_offset: usize,
-        end_offset: usize,
-    ) -> Self {
+    pub const fn new(surface: String, pos_tag: String, start_offset: usize, end_offset: usize) -> Self {
         Self {
             surface,
             pos_tag,
@@ -68,7 +63,7 @@ impl Token {
 
     /// 토큰 길이 (문자 수)
     #[must_use]
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.end_offset.saturating_sub(self.start_offset)
     }
 
@@ -92,28 +87,28 @@ impl Token {
         self
     }
 
-    /// Builder 패턴: word_type 설정
+    /// Builder 패턴: `word_type` 설정
     #[must_use]
     pub const fn with_word_type(mut self, word_type: WordType) -> Self {
         self.word_type = word_type;
         self
     }
 
-    /// Builder 패턴: is_decompound 설정
+    /// Builder 패턴: `is_decompound` 설정
     #[must_use]
     pub const fn with_is_decompound(mut self, is_decompound: bool) -> Self {
         self.is_decompound = is_decompound;
         self
     }
 
-    /// Builder 패턴: position_increment 설정
+    /// Builder 패턴: `position_increment` 설정
     #[must_use]
     pub const fn with_position_increment(mut self, increment: u32) -> Self {
         self.position_increment = increment;
         self
     }
 
-    /// Builder 패턴: position_length 설정
+    /// Builder 패턴: `position_length` 설정
     #[must_use]
     pub const fn with_position_length(mut self, length: u32) -> Self {
         self.position_length = length;
@@ -132,7 +127,7 @@ impl fmt::Display for Token {
 }
 
 /// 토큰 추가 속성
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TokenAttributes {
     /// 좌측 문맥 ID
     pub left_id: Option<u32>,
@@ -156,6 +151,7 @@ pub enum WordType {
 
 impl WordType {
     /// 문자열 표현
+    #[must_use]
     pub const fn as_str(&self) -> &'static str {
         match self {
             Self::Known => "KNOWN",
@@ -190,9 +186,7 @@ pub trait Tokenizer: Send + Sync {
 
     /// 토큰 스트림 생성 (스트리밍 API)
     fn token_stream<'a>(&'a self, text: &'a str) -> Box<dyn TokenStream + 'a> {
-        Box::new(VecTokenStream::new(
-            self.tokenize(text).unwrap_or_default(),
-        ))
+        Box::new(VecTokenStream::new(self.tokenize(text).unwrap_or_default()))
     }
 }
 
@@ -205,7 +199,7 @@ pub struct VecTokenStream {
 impl VecTokenStream {
     /// 새 토큰 스트림 생성
     #[must_use]
-    pub fn new(tokens: Vec<Token>) -> Self {
+    pub const fn new(tokens: Vec<Token>) -> Self {
         Self { tokens, index: 0 }
     }
 }

@@ -16,7 +16,10 @@ fn bench_per_tokenization_memory(c: &mut Criterion) {
 
     let texts = [
         ("short", "짧은 텍스트"),
-        ("medium", "한국어 형태소 분석기는 자연어 처리의 핵심 기술입니다"),
+        (
+            "medium",
+            "한국어 형태소 분석기는 자연어 처리의 핵심 기술입니다",
+        ),
         (
             "long",
             "이것은 매우 긴 텍스트입니다. \
@@ -119,16 +122,12 @@ fn bench_memory_scalability(c: &mut Criterion) {
         let text = "가".repeat(char_count);
 
         group.throughput(Throughput::Bytes(text.len() as u64));
-        group.bench_with_input(
-            BenchmarkId::from_parameter(char_count),
-            &text,
-            |b, text| {
-                b.iter(|| {
-                    let tokens = tokenizer.tokenize(black_box(text));
-                    black_box(tokens);
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::from_parameter(char_count), &text, |b, text| {
+            b.iter(|| {
+                let tokens = tokenizer.tokenize(black_box(text));
+                black_box(tokens);
+            });
+        });
     }
 
     group.finish();

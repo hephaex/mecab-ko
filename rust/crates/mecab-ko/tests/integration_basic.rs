@@ -68,9 +68,7 @@ fn test_empty_input() {
 /// Test single character inputs (Korean syllables, jamo, numbers, symbols)
 #[test]
 fn test_single_character_input() {
-    let single_chars = vec![
-        "가", "ㄱ", "ㅏ", "1", "a", "A", "!", "?", ".", ",", " ",
-    ];
+    let single_chars = vec!["가", "ㄱ", "ㅏ", "1", "a", "A", "!", "?", ".", ",", " "];
 
     // TODO: Implement once tokenizer is available
     // let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
@@ -109,7 +107,10 @@ fn test_common_sentences() {
     //     }
     // }
 
-    println!("Common sentence test cases prepared: {} cases", sentences.len());
+    println!(
+        "Common sentence test cases prepared: {} cases",
+        sentences.len()
+    );
 }
 
 /// Test that morpheme boundaries are correctly identified
@@ -146,10 +147,10 @@ fn test_morpheme_boundaries() {
 fn test_pos_tagging_accuracy() {
     // Test cases with expected POS tags
     let test_cases = vec![
-        ("사람", vec![("사람", "NNG")]),        // General noun
-        ("서울", vec![("서울", "NNP")]),        // Proper noun
-        ("나", vec![("나", "NP")]),              // Pronoun
-        ("가다", vec![("가", "VV"), ("다", "EF")]), // Verb
+        ("사람", vec![("사람", "NNG")]),                // General noun
+        ("서울", vec![("서울", "NNP")]),                // Proper noun
+        ("나", vec![("나", "NP")]),                     // Pronoun
+        ("가다", vec![("가", "VV"), ("다", "EF")]),     // Verb
         ("예쁘다", vec![("예쁘", "VA"), ("다", "EF")]), // Adjective
     ];
 
@@ -169,7 +170,10 @@ fn test_pos_tagging_accuracy() {
     //             input, expected_pos, actual_pos);
     // }
 
-    println!("POS tagging test cases prepared: {} cases", test_cases.len());
+    println!(
+        "POS tagging test cases prepared: {} cases",
+        test_cases.len()
+    );
 }
 
 /// Test handling of particles (조사)
@@ -196,7 +200,10 @@ fn test_particle_handling() {
     //                "Particle handling failed for '{}'", input);
     // }
 
-    println!("Particle handling test cases prepared: {} cases", test_cases.len());
+    println!(
+        "Particle handling test cases prepared: {} cases",
+        test_cases.len()
+    );
 }
 
 /// Test handling of verb conjugations
@@ -204,7 +211,10 @@ fn test_particle_handling() {
 fn test_verb_conjugations() {
     let test_cases = vec![
         ("먹었다", vec![("먹", "VV"), ("었", "EP"), ("다", "EF")]),
-        ("갔습니다", vec![("가", "VV"), ("았", "EP"), ("습니다", "EF")]),
+        (
+            "갔습니다",
+            vec![("가", "VV"), ("았", "EP"), ("습니다", "EF")],
+        ),
         ("하고", vec![("하", "VV"), ("고", "EC")]),
         ("먹어요", vec![("먹", "VV"), ("어요", "EF")]),
     ];

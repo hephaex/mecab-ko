@@ -9,7 +9,7 @@
 //! - **Matrix**: 연접 비용 계산
 //! - **Lattice**: 후보 그래프 구축
 //! - **Viterbi**: 최적 경로 탐색
-//! - **UnknownHandler**: 미등록어 처리
+//! - `UnknownHandler`: 미등록어 처리
 //!
 //! ## 분석 과정
 //!
@@ -39,6 +39,7 @@
 
 use std::borrow::Cow;
 use std::path::Path;
+use std::str::FromStr;
 
 use mecab_ko_dict::{SystemDictionary, UserDictionary};
 
@@ -53,7 +54,7 @@ use crate::viterbi::{SpacePenalty, ViterbiSearcher};
 /// 토큰
 ///
 /// 형태소 분석 결과의 개별 토큰을 표현합니다.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Token {
     /// 표면형 (원본 텍스트의 형태)
     pub surface: String,
@@ -91,6 +92,7 @@ pub struct Token {
 
 impl Token {
     /// 새 토큰 생성
+    #[must_use]
     pub fn new(
         surface: String,
         pos: String,
@@ -119,6 +121,7 @@ impl Token {
     /// # Arguments
     ///
     /// * `node` - Lattice 노드
+    #[must_use]
     pub fn from_node(node: &Node) -> Self {
         let features = node.feature.to_string();
         let (pos, reading, lemma) = parse_features(&features);
@@ -140,25 +143,28 @@ impl Token {
 
     /// 토큰 길이 (문자 단위)
     #[inline]
-    pub fn char_len(&self) -> usize {
+    #[must_use]
+    pub const fn char_len(&self) -> usize {
         self.end_pos - self.start_pos
     }
 
     /// 토큰 길이 (바이트 단위)
     #[inline]
-    pub fn byte_len(&self) -> usize {
+    #[must_use]
+    pub const fn byte_len(&self) -> usize {
         self.end_byte - self.start_byte
     }
 
-    /// 품사 태그를 PosTag enum으로 파싱
+    /// 품사 태그를 `PosTag` 타입으로 파싱
+    #[must_use]
     pub fn pos_tag(&self) -> Option<PosTag> {
-        PosTag::from_str(&self.pos)
+        self.pos.parse().ok()
     }
 }
 
 /// Feature 문자열 파싱
 ///
-/// MeCab feature 포맷: `품사,의미분류,종성유무,읽기,타입,첫번째품사,마지막품사,표현`
+/// `MeCab` feature 포맷: `품사,의미분류,종성유무,읽기,타입,첫번째품사,마지막품사,표현`
 ///
 /// # Returns
 ///
@@ -176,7 +182,7 @@ fn parse_features(features: &str) -> (Cow<'_, str>, Option<String>, Option<Strin
     let reading = parts
         .get(3)
         .filter(|s| !s.is_empty() && **s != "*")
-        .map(|s| s.to_string());
+        .map(std::string::ToString::to_string);
 
     // 원형 (일반적으로 읽기와 동일하거나 표면형)
     let lemma = reading.clone();
@@ -302,6 +308,7 @@ impl Tokenizer {
     /// let tokenizer = Tokenizer::new()?
     ///     .with_user_dict(user_dict);
     /// ```
+    #[must_use]
     pub fn with_user_dict(mut self, user_dict: UserDictionary) -> Self {
         self.dictionary.set_user_dictionary(user_dict);
         self
@@ -317,6 +324,7 @@ impl Tokenizer {
     /// # Arguments
     ///
     /// * `penalty` - 띄어쓰기 패널티 설정
+    #[must_use]
     pub fn with_space_penalty(mut self, penalty: SpacePenalty) -> Self {
         self.viterbi_searcher = ViterbiSearcher::new().with_space_penalty(penalty);
         self
@@ -350,8 +358,9 @@ impl Tokenizer {
         // Lattice 재설정
         self.lattice.reset(text);
 
-        // Lattice 구축
-        self.build_lattice(&self.lattice.text().to_string());
+        // Lattice 구축 (소유권 문제 때문에 복사 필요)
+        let text_copy = self.lattice.text().to_string();
+        self.build_lattice(&text_copy);
 
         // Viterbi 탐색
         let path = self
@@ -425,7 +434,7 @@ impl Tokenizer {
                     NodeBuilder::new(&entry.surface, start_pos, end_pos)
                         .left_id(entry.left_id)
                         .right_id(entry.right_id)
-                        .word_cost(entry.cost as i32)
+                        .word_cost(i32::from(entry.cost))
                         .node_type(NodeType::Known)
                         .feature(&entry.feature),
                 );
@@ -447,7 +456,7 @@ impl Tokenizer {
                     NodeBuilder::new(&user_entry.surface, start_pos, end_pos)
                         .left_id(user_entry.left_id)
                         .right_id(user_entry.right_id)
-                        .word_cost(user_entry.cost as i32)
+                        .word_cost(i32::from(user_entry.cost))
                         .node_type(NodeType::User)
                         .feature(&user_entry.feature),
                 );
@@ -473,7 +482,8 @@ impl Tokenizer {
     pub fn tokenize_to_lattice(&mut self, text: &str) -> &Lattice {
         if !text.is_empty() {
             self.lattice.reset(text);
-            self.build_lattice(&self.lattice.text().to_string());
+            let text_copy = self.lattice.text().to_string();
+            self.build_lattice(&text_copy);
         }
         &self.lattice
     }
@@ -530,7 +540,8 @@ impl Tokenizer {
     }
 
     /// 시스템 사전 참조 반환
-    pub fn dictionary(&self) -> &SystemDictionary {
+    #[must_use]
+    pub const fn dictionary(&self) -> &SystemDictionary {
         &self.dictionary
     }
 
@@ -628,16 +639,17 @@ impl Tokenizer {
     ///
     /// # Returns
     ///
-    /// (표준형, \[변이형들\]) 튜플
+    /// `(표준형, [변이형들])` 튜플
     #[must_use]
     pub fn get_word_variants(&self, word: &str) -> (String, Vec<String>) {
-        if let Some(normalizer) = &self.normalizer {
-            let standard = normalizer.normalize(word);
-            let variants = normalizer.get_variants(&standard);
-            (standard, variants)
-        } else {
-            (word.to_string(), Vec::new())
-        }
+        self.normalizer.as_ref().map_or_else(
+            || (word.to_string(), Vec::new()),
+            |normalizer| {
+                let standard = normalizer.normalize(word);
+                let variants = normalizer.get_variants(&standard);
+                (standard, variants)
+            },
+        )
     }
 }
 

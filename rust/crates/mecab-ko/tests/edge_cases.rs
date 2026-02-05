@@ -20,10 +20,7 @@ fn test_edge_empty_string() {
     let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let tokens = tokenizer.tokenize("");
 
-    assert!(
-        tokens.is_empty(),
-        "Empty string should produce no tokens"
-    );
+    assert!(tokens.is_empty(), "Empty string should produce no tokens");
 
     // Should be safe to call multiple times
     let tokens2 = tokenizer.tokenize("");
@@ -57,7 +54,10 @@ fn test_edge_whitespace_only() {
         // Whitespace-only input should produce no meaningful tokens
         // (implementation may strip whitespace)
         println!("Input: {:?}", input);
-        println!("Tokens: {:?}", tokens.iter().map(|t| &t.surface).collect::<Vec<_>>());
+        println!(
+            "Tokens: {:?}",
+            tokens.iter().map(|t| &t.surface).collect::<Vec<_>>()
+        );
         println!("Token count: {}", tokens.len());
         println!();
     }
@@ -130,10 +130,7 @@ fn test_edge_very_long_word() {
     let long_word = "가".repeat(1000);
     let tokens = tokenizer.tokenize(&long_word);
 
-    assert!(
-        !tokens.is_empty(),
-        "Very long word should be tokenized"
-    );
+    assert!(!tokens.is_empty(), "Very long word should be tokenized");
 
     println!("Long word length: {} chars", long_word.chars().count());
     println!("Token count: {}", tokens.len());
@@ -155,14 +152,14 @@ fn test_edge_very_long_text() {
 
     let tokens = tokenizer.tokenize(&very_long_text);
 
-    assert!(
-        !tokens.is_empty(),
-        "Very long text should be tokenized"
-    );
+    assert!(!tokens.is_empty(), "Very long text should be tokenized");
 
     // Verify position integrity
     for token in &tokens {
-        assert!(token.start_pos < token.end_pos, "Token positions should be valid");
+        assert!(
+            token.start_pos < token.end_pos,
+            "Token positions should be valid"
+        );
         assert!(
             token.end_pos <= very_long_text.chars().count(),
             "Token end position should not exceed text length"
@@ -443,9 +440,9 @@ fn test_edge_control_characters() {
     let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
 
     let test_cases = vec![
-        "안녕\u{0000}하세요", // NULL character
+        "안녕\u{0000}하세요",   // NULL character
         "테스트\u{200B}입니다", // Zero-width space
-        "문장\u{FEFF}시작", // BOM
+        "문장\u{FEFF}시작",     // BOM
         "줄\n바꿈",
         "탭\t문자",
         "캐리지\r리턴",
@@ -488,8 +485,12 @@ fn test_edge_rapid_context_switching() {
 
     for (i, input) in test_sequence.iter().enumerate() {
         let tokens = tokenizer.tokenize(input);
-        println!("Iteration {}: input_len={}, token_count={}",
-                 i, input.chars().count(), tokens.len());
+        println!(
+            "Iteration {}: input_len={}, token_count={}",
+            i,
+            input.chars().count(),
+            tokens.len()
+        );
     }
 }
 
@@ -586,9 +587,10 @@ fn test_edge_zero_width_characters() {
         println!("Input: {:?} ({})", input, description);
         println!("Token count: {}", tokens.len());
         for token in &tokens {
-            println!("  '{}' [{}] pos={}..{}",
-                     token.surface, token.pos,
-                     token.start_pos, token.end_pos);
+            println!(
+                "  '{}' [{}] pos={}..{}",
+                token.surface, token.pos, token.start_pos, token.end_pos
+            );
         }
         println!();
     }
@@ -610,11 +612,17 @@ fn test_edge_unicode_normalization_forms() {
     let tokens_nfd = tokenizer.tokenize(nfd);
 
     println!("NFC form: {:?}", nfc);
-    println!("Tokens: {:?}", tokens_nfc.iter().map(|t| &t.surface).collect::<Vec<_>>());
+    println!(
+        "Tokens: {:?}",
+        tokens_nfc.iter().map(|t| &t.surface).collect::<Vec<_>>()
+    );
     println!();
 
     println!("NFD-like form: {:?}", nfd);
-    println!("Tokens: {:?}", tokens_nfd.iter().map(|t| &t.surface).collect::<Vec<_>>());
+    println!(
+        "Tokens: {:?}",
+        tokens_nfd.iter().map(|t| &t.surface).collect::<Vec<_>>()
+    );
     println!();
 }
 

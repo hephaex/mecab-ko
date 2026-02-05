@@ -50,14 +50,16 @@ impl<'a> Trie<'a> {
     /// # Arguments
     ///
     /// * `bytes` - 직렬화된 Trie 데이터
-    #[must_use] pub fn new(bytes: &'a [u8]) -> Self {
+    #[must_use]
+    pub fn new(bytes: &'a [u8]) -> Self {
         Self {
             da: DoubleArray::new(Cow::Borrowed(bytes)),
         }
     }
 
     /// 소유 바이트 벡터에서 Trie 생성
-    #[must_use] pub fn from_vec(bytes: Vec<u8>) -> Trie<'static> {
+    #[must_use]
+    pub fn from_vec(bytes: Vec<u8>) -> Trie<'static> {
         Trie {
             da: DoubleArray::new(Cow::Owned(bytes)),
         }
@@ -102,12 +104,14 @@ impl<'a> Trie<'a> {
     /// let value = trie.exact_match("가다");
     /// assert_eq!(value, Some(1));
     /// ```
-    #[must_use] pub fn exact_match(&self, key: &str) -> Option<u32> {
+    #[must_use]
+    pub fn exact_match(&self, key: &str) -> Option<u32> {
         self.da.exact_match_search(key.as_bytes())
     }
 
     /// 바이트 키로 정확히 일치하는 키 검색
-    #[must_use] pub fn exact_match_bytes(&self, key: &[u8]) -> Option<u32> {
+    #[must_use]
+    pub fn exact_match_bytes(&self, key: &[u8]) -> Option<u32> {
         self.da.exact_match_search(key)
     }
 
@@ -160,7 +164,8 @@ impl<'a> Trie<'a> {
     /// (value, `end_byte`) 쌍의 벡터
     /// - value: 일치하는 키의 값
     /// - `end_byte`: 일치하는 키의 끝 바이트 위치
-    #[must_use] pub fn common_prefix_search_at(&self, text: &str, start_byte: usize) -> Vec<(u32, usize)> {
+    #[must_use]
+    pub fn common_prefix_search_at(&self, text: &str, start_byte: usize) -> Vec<(u32, usize)> {
         if start_byte >= text.len() {
             return Vec::new();
         }
@@ -286,12 +291,14 @@ pub struct EntryIndex(pub u32);
 
 impl EntryIndex {
     /// 새 인덱스 생성
-    #[must_use] pub const fn new(index: u32) -> Self {
+    #[must_use]
+    pub const fn new(index: u32) -> Self {
         Self(index)
     }
 
     /// 인덱스 값 반환
-    #[must_use] pub const fn value(&self) -> u32 {
+    #[must_use]
+    pub const fn value(&self) -> u32 {
         self.0
     }
 }
@@ -323,7 +330,8 @@ pub struct PrefixMatch {
 
 impl PrefixMatch {
     /// 새 `PrefixMatch` 생성
-    #[must_use] pub const fn new(index: u32, byte_length: usize, start_byte: usize) -> Self {
+    #[must_use]
+    pub const fn new(index: u32, byte_length: usize, start_byte: usize) -> Self {
         Self {
             index: EntryIndex(index),
             start_byte,
@@ -350,13 +358,15 @@ impl<'a, E> DictionarySearcher<'a, E> {
     }
 
     /// 정확히 일치하는 엔트리 검색
-    #[must_use] pub fn exact_match(&self, key: &str) -> Option<&E> {
+    #[must_use]
+    pub fn exact_match(&self, key: &str) -> Option<&E> {
         let index = self.trie.exact_match(key)?;
         self.entries.get(index as usize)
     }
 
     /// 공통 접두사 검색으로 모든 일치 엔트리 반환
-    #[must_use] pub fn common_prefix_search(&self, text: &str) -> Vec<(&E, PrefixMatch)> {
+    #[must_use]
+    pub fn common_prefix_search(&self, text: &str) -> Vec<(&E, PrefixMatch)> {
         self.trie
             .common_prefix_search(text)
             .filter_map(|(index, byte_len)| {
@@ -368,7 +378,8 @@ impl<'a, E> DictionarySearcher<'a, E> {
     }
 
     /// 특정 위치에서 공통 접두사 검색
-    #[must_use] pub fn common_prefix_search_at(&self, text: &str, start_byte: usize) -> Vec<(&E, PrefixMatch)> {
+    #[must_use]
+    pub fn common_prefix_search_at(&self, text: &str, start_byte: usize) -> Vec<(&E, PrefixMatch)> {
         self.trie
             .common_prefix_search_at(text, start_byte)
             .into_iter()

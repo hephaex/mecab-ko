@@ -3,7 +3,7 @@
 //! 이 모듈은 21세기 세종계획의 품사 태그 체계를 기반으로
 //! mecab-ko-dic 확장 태그를 포함한 품사 태그를 정의합니다.
 
-use std::fmt;
+use std::{fmt, str::FromStr};
 
 /// 품사 태그 (Part-of-Speech Tag)
 ///
@@ -12,6 +12,7 @@ use std::fmt;
 /// # Example
 /// ```
 /// use mecab_ko_core::pos_tag::PosTag;
+/// use std::str::FromStr;
 ///
 /// let tag = PosTag::from_str("NNG").unwrap();
 /// assert_eq!(tag.as_str(), "NNG");
@@ -231,78 +232,89 @@ pub enum PosTag {
     Unknown = 99,
 }
 
-impl PosTag {
-    /// 문자열에서 품사 태그 파싱
-    ///
-    /// # Example
-    /// ```
-    /// use mecab_ko_core::pos_tag::PosTag;
-    ///
-    /// assert_eq!(PosTag::from_str("NNG"), Some(PosTag::NNG));
-    /// assert_eq!(PosTag::from_str("VV"), Some(PosTag::VV));
-    /// assert_eq!(PosTag::from_str("INVALID"), None);
-    /// ```
-    pub fn from_str(s: &str) -> Option<Self> {
+/// Error type for `PosTag` parsing
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ParsePosTagError {
+    invalid_tag: String,
+}
+
+impl fmt::Display for ParsePosTagError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "invalid POS tag: {}", self.invalid_tag)
+    }
+}
+
+impl std::error::Error for ParsePosTagError {}
+
+impl FromStr for PosTag {
+    type Err = ParsePosTagError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             // 체언
-            "NNG" => Some(Self::NNG),
-            "NNP" => Some(Self::NNP),
-            "NNB" => Some(Self::NNB),
-            "NNBC" => Some(Self::NNBC),
-            "NP" => Some(Self::NP),
-            "NR" => Some(Self::NR),
+            "NNG" => Ok(Self::NNG),
+            "NNP" => Ok(Self::NNP),
+            "NNB" => Ok(Self::NNB),
+            "NNBC" => Ok(Self::NNBC),
+            "NP" => Ok(Self::NP),
+            "NR" => Ok(Self::NR),
             // 용언
-            "VV" => Some(Self::VV),
-            "VA" => Some(Self::VA),
-            "VX" => Some(Self::VX),
-            "VCP" => Some(Self::VCP),
-            "VCN" => Some(Self::VCN),
+            "VV" => Ok(Self::VV),
+            "VA" => Ok(Self::VA),
+            "VX" => Ok(Self::VX),
+            "VCP" => Ok(Self::VCP),
+            "VCN" => Ok(Self::VCN),
             // 수식언
-            "MM" => Some(Self::MM),
-            "MAG" => Some(Self::MAG),
-            "MAJ" => Some(Self::MAJ),
+            "MM" => Ok(Self::MM),
+            "MAG" => Ok(Self::MAG),
+            "MAJ" => Ok(Self::MAJ),
             // 독립언
-            "IC" => Some(Self::IC),
+            "IC" => Ok(Self::IC),
             // 조사
-            "JKS" => Some(Self::JKS),
-            "JKC" => Some(Self::JKC),
-            "JKG" => Some(Self::JKG),
-            "JKO" => Some(Self::JKO),
-            "JKB" => Some(Self::JKB),
-            "JKV" => Some(Self::JKV),
-            "JKQ" => Some(Self::JKQ),
-            "JX" => Some(Self::JX),
-            "JC" => Some(Self::JC),
+            "JKS" => Ok(Self::JKS),
+            "JKC" => Ok(Self::JKC),
+            "JKG" => Ok(Self::JKG),
+            "JKO" => Ok(Self::JKO),
+            "JKB" => Ok(Self::JKB),
+            "JKV" => Ok(Self::JKV),
+            "JKQ" => Ok(Self::JKQ),
+            "JX" => Ok(Self::JX),
+            "JC" => Ok(Self::JC),
             // 어미
-            "EP" => Some(Self::EP),
-            "EF" => Some(Self::EF),
-            "EC" => Some(Self::EC),
-            "ETN" => Some(Self::ETN),
-            "ETM" => Some(Self::ETM),
+            "EP" => Ok(Self::EP),
+            "EF" => Ok(Self::EF),
+            "EC" => Ok(Self::EC),
+            "ETN" => Ok(Self::ETN),
+            "ETM" => Ok(Self::ETM),
             // 접사
-            "XPN" => Some(Self::XPN),
-            "XSN" => Some(Self::XSN),
-            "XSV" => Some(Self::XSV),
-            "XSA" => Some(Self::XSA),
-            "XR" => Some(Self::XR),
+            "XPN" => Ok(Self::XPN),
+            "XSN" => Ok(Self::XSN),
+            "XSV" => Ok(Self::XSV),
+            "XSA" => Ok(Self::XSA),
+            "XR" => Ok(Self::XR),
             // 기호
-            "SF" => Some(Self::SF),
-            "SP" => Some(Self::SP),
-            "SSO" => Some(Self::SSO),
-            "SSC" => Some(Self::SSC),
-            "SC" => Some(Self::SC),
-            "SE" => Some(Self::SE),
-            "SY" => Some(Self::SY),
-            "SL" => Some(Self::SL),
-            "SH" => Some(Self::SH),
-            "SN" => Some(Self::SN),
+            "SF" => Ok(Self::SF),
+            "SP" => Ok(Self::SP),
+            "SSO" => Ok(Self::SSO),
+            "SSC" => Ok(Self::SSC),
+            "SC" => Ok(Self::SC),
+            "SE" => Ok(Self::SE),
+            "SY" => Ok(Self::SY),
+            "SL" => Ok(Self::SL),
+            "SH" => Ok(Self::SH),
+            "SN" => Ok(Self::SN),
             // 특수
-            "UNKNOWN" | "UN" => Some(Self::Unknown),
-            _ => None,
+            "UNKNOWN" | "UN" => Ok(Self::Unknown),
+            _ => Err(ParsePosTagError {
+                invalid_tag: s.to_string(),
+            }),
         }
     }
+}
 
+impl PosTag {
     /// 품사 태그 문자열 반환
+    #[must_use]
     pub const fn as_str(&self) -> &'static str {
         match self {
             // 체언
@@ -363,6 +375,7 @@ impl PosTag {
     }
 
     /// 한글 명칭 반환
+    #[must_use]
     pub const fn korean_name(&self) -> &'static str {
         match self {
             // 체언
@@ -423,6 +436,7 @@ impl PosTag {
     }
 
     /// 품사 대분류 반환
+    #[must_use]
     pub const fn category(&self) -> PosCategory {
         match self {
             Self::NNG | Self::NNP | Self::NNB | Self::NNBC | Self::NP | Self::NR => {
@@ -459,6 +473,7 @@ impl PosTag {
     /// 내용어 여부 (검색 인덱싱에 유용)
     ///
     /// 명사, 동사, 형용사, 어근 등 의미를 담고 있는 형태소
+    #[must_use]
     pub const fn is_content_word(&self) -> bool {
         matches!(
             self,
@@ -469,11 +484,13 @@ impl PosTag {
     /// 기능어 여부
     ///
     /// 조사, 어미, 접사 등 문법적 기능을 담당하는 형태소
+    #[must_use]
     pub const fn is_function_word(&self) -> bool {
         matches!(self.category(), PosCategory::Particle | PosCategory::Ending)
     }
 
     /// 명사 여부
+    #[must_use]
     pub const fn is_noun(&self) -> bool {
         matches!(
             self,
@@ -482,11 +499,13 @@ impl PosTag {
     }
 
     /// 용언 여부 (동사/형용사)
+    #[must_use]
     pub const fn is_predicate(&self) -> bool {
         matches!(self, Self::VV | Self::VA | Self::VX | Self::VCP | Self::VCN)
     }
 
     /// 조사 여부
+    #[must_use]
     pub const fn is_particle(&self) -> bool {
         matches!(
             self,
@@ -503,11 +522,13 @@ impl PosTag {
     }
 
     /// 어미 여부
+    #[must_use]
     pub const fn is_ending(&self) -> bool {
         matches!(self, Self::EP | Self::EF | Self::EC | Self::ETN | Self::ETM)
     }
 
     /// 기호 여부
+    #[must_use]
     pub const fn is_symbol(&self) -> bool {
         matches!(
             self,
@@ -525,6 +546,7 @@ impl PosTag {
     }
 
     /// Nori 호환 태그로 변환 (조사/어미 통합)
+    #[must_use]
     pub const fn to_nori_compat(&self) -> NoriTag {
         match self {
             // 조사 통합 → J
@@ -545,6 +567,7 @@ impl PosTag {
     }
 
     /// 세종 기본 태그로 정규화
+    #[must_use]
     pub const fn to_sejong_base(&self) -> Self {
         match self {
             // NNBC → NNB (단위명사 → 의존명사)
@@ -555,7 +578,8 @@ impl PosTag {
     }
 
     /// 모든 태그 목록 반환
-    pub const fn all() -> &'static [PosTag] {
+    #[must_use]
+    pub const fn all() -> &'static [Self] {
         &[
             // 체언
             Self::NNG,
@@ -646,6 +670,7 @@ pub enum PosCategory {
 
 impl PosCategory {
     /// 대분류 한글 명칭
+    #[must_use]
     pub const fn korean_name(&self) -> &'static str {
         match self {
             Self::Nominal => "체언",
@@ -676,7 +701,8 @@ pub enum NoriTag {
 
 impl NoriTag {
     /// 문자열 표현
-    pub fn as_str(&self) -> &'static str {
+    #[must_use]
+    pub const fn as_str(&self) -> &'static str {
         match self {
             Self::J => "J",
             Self::E => "E",
@@ -697,11 +723,11 @@ mod tests {
 
     #[test]
     fn test_from_str() {
-        assert_eq!(PosTag::from_str("NNG"), Some(PosTag::NNG));
-        assert_eq!(PosTag::from_str("VV"), Some(PosTag::VV));
-        assert_eq!(PosTag::from_str("JKS"), Some(PosTag::JKS));
-        assert_eq!(PosTag::from_str("UNKNOWN"), Some(PosTag::Unknown));
-        assert_eq!(PosTag::from_str("INVALID"), None);
+        assert_eq!(PosTag::from_str("NNG"), Ok(PosTag::NNG));
+        assert_eq!(PosTag::from_str("VV"), Ok(PosTag::VV));
+        assert_eq!(PosTag::from_str("JKS"), Ok(PosTag::JKS));
+        assert_eq!(PosTag::from_str("UNKNOWN"), Ok(PosTag::Unknown));
+        assert!(PosTag::from_str("INVALID").is_err());
     }
 
     #[test]

@@ -167,10 +167,7 @@ impl NoriAnalyzer {
     pub fn analyze_batch(&self, texts: &[&str]) -> Result<Vec<Vec<Token>>> {
         use rayon::prelude::*;
 
-        texts
-            .par_iter()
-            .map(|text| self.analyze(text))
-            .collect()
+        texts.par_iter().map(|text| self.analyze(text)).collect()
     }
 
     /// 토큰 스트림 생성
@@ -191,7 +188,7 @@ impl NoriAnalyzer {
     pub fn remove_stoptag(&mut self, tag: &str) -> bool {
         self.pos_filter
             .as_mut()
-            .map_or(false, |filter| filter.remove_tag(tag))
+            .is_some_and(|filter| filter.remove_tag(tag))
     }
 
     /// stoptags 목록 반환
@@ -234,7 +231,7 @@ impl NoriTokenizerImpl {
     ///
     /// # Errors
     ///
-    /// MeCab 코어 초기화 실패 시 에러 반환
+    /// `MeCab` 코어 초기화 실패 시 에러 반환
     pub fn new(config: TokenizerConfig) -> Result<Self> {
         let tokenizer = if let Some(dict_path) = &config.user_dictionary_path {
             CoreNoriTokenizer::with_dict(
@@ -280,7 +277,7 @@ impl Tokenizer for NoriTokenizerImpl {
 }
 
 /// Core의 `DecompoundMode`를 ES의 `DecompoundMode`로 변환
-fn convert_decompound_mode(
+const fn convert_decompound_mode(
     mode: DecompoundMode,
 ) -> mecab_ko_core::nori_compat::DecompoundMode {
     match mode {
@@ -308,9 +305,7 @@ fn convert_nori_token(nori: NoriToken) -> Token {
 }
 
 /// Core의 `WordType`을 ES의 `WordType`으로 변환
-fn convert_word_type(
-    wt: mecab_ko_core::nori_compat::WordType,
-) -> WordType {
+const fn convert_word_type(wt: mecab_ko_core::nori_compat::WordType) -> WordType {
     match wt {
         mecab_ko_core::nori_compat::WordType::Known => WordType::Known,
         mecab_ko_core::nori_compat::WordType::Unknown => WordType::Unknown,
@@ -413,10 +408,7 @@ mod tests {
         use mecab_ko_core::nori_compat::WordType as CoreWordType;
 
         assert_eq!(convert_word_type(CoreWordType::Known), WordType::Known);
-        assert_eq!(
-            convert_word_type(CoreWordType::Unknown),
-            WordType::Unknown
-        );
+        assert_eq!(convert_word_type(CoreWordType::Unknown), WordType::Unknown);
         assert_eq!(convert_word_type(CoreWordType::User), WordType::User);
     }
 }

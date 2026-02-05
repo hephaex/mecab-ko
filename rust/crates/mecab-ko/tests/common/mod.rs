@@ -150,10 +150,7 @@ pub fn compare_morphs(expected: &[String], actual: &[String]) -> TestResult {
 /// # Returns
 ///
 /// Test result with comparison details
-pub fn compare_pos_tags(
-    expected: &[(String, String)],
-    actual: &[(String, String)],
-) -> TestResult {
+pub fn compare_pos_tags(expected: &[(String, String)], actual: &[(String, String)]) -> TestResult {
     let passed = expected == actual;
     let expected_str = format!("{expected:?}");
     let actual_str = format!("{actual:?}");

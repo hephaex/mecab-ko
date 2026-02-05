@@ -98,7 +98,8 @@ impl DenseMatrix {
     /// * `lsize` - 좌문맥 크기
     /// * `rsize` - 우문맥 크기
     /// * `default_cost` - 기본 비용 값
-    #[must_use] pub fn new(lsize: usize, rsize: usize, default_cost: i16) -> Self {
+    #[must_use]
+    pub fn new(lsize: usize, rsize: usize, default_cost: i16) -> Self {
         let costs = vec![default_cost; lsize * rsize];
         Self {
             lsize,
@@ -304,7 +305,8 @@ impl DenseMatrix {
     }
 
     /// 바이너리 형식으로 저장
-    #[must_use] pub fn to_bin_bytes(&self) -> Vec<u8> {
+    #[must_use]
+    pub fn to_bin_bytes(&self) -> Vec<u8> {
         let mut buf = Vec::with_capacity(MATRIX_HEADER_SIZE + self.costs.len() * 2);
 
         // 헤더
@@ -346,12 +348,14 @@ impl DenseMatrix {
     }
 
     /// 원본 비용 배열 참조
-    #[must_use] pub fn costs(&self) -> &[i16] {
+    #[must_use]
+    pub fn costs(&self) -> &[i16] {
         &self.costs
     }
 
     /// 메모리 사용량 (바이트)
-    #[must_use] pub fn memory_size(&self) -> usize {
+    #[must_use]
+    pub fn memory_size(&self) -> usize {
         std::mem::size_of::<Self>() + self.costs.len() * std::mem::size_of::<i16>()
     }
 }
@@ -492,7 +496,8 @@ pub struct SparseMatrix {
 
 impl SparseMatrix {
     /// 새로운 희소 행렬 생성
-    #[must_use] pub fn new(lsize: usize, rsize: usize, default_cost: i16) -> Self {
+    #[must_use]
+    pub fn new(lsize: usize, rsize: usize, default_cost: i16) -> Self {
         Self {
             lsize,
             rsize,
@@ -512,7 +517,8 @@ impl SparseMatrix {
     }
 
     /// `DenseMatrix에서` 변환 (기본값과 다른 엔트리만 저장)
-    #[must_use] pub fn from_dense(dense: &DenseMatrix, default_cost: i16) -> Self {
+    #[must_use]
+    pub fn from_dense(dense: &DenseMatrix, default_cost: i16) -> Self {
         let mut sparse = Self::new(dense.lsize, dense.rsize, default_cost);
         for (index, &cost) in dense.costs.iter().enumerate() {
             if cost != default_cost {
@@ -523,7 +529,8 @@ impl SparseMatrix {
     }
 
     /// `DenseMatrix로` 변환
-    #[must_use] pub fn to_dense(&self) -> DenseMatrix {
+    #[must_use]
+    pub fn to_dense(&self) -> DenseMatrix {
         let mut costs = vec![self.default_cost; self.lsize * self.rsize];
         for (&index, &cost) in &self.entries {
             if index < costs.len() {
@@ -538,12 +545,14 @@ impl SparseMatrix {
     }
 
     /// 엔트리 수
-    #[must_use] pub fn entry_count_stored(&self) -> usize {
+    #[must_use]
+    pub fn entry_count_stored(&self) -> usize {
         self.entries.len()
     }
 
     /// 희소도 (0.0 ~ 1.0, 1.0 = 완전 희소)
-    #[must_use] pub fn sparsity(&self) -> f64 {
+    #[must_use]
+    pub fn sparsity(&self) -> f64 {
         let total = self.lsize * self.rsize;
         if total == 0 {
             return 0.0;
@@ -556,7 +565,8 @@ impl SparseMatrix {
     }
 
     /// 메모리 사용량 (바이트, 대략적)
-    #[must_use] pub fn memory_size(&self) -> usize {
+    #[must_use]
+    pub fn memory_size(&self) -> usize {
         std::mem::size_of::<Self>()
             + self.entries.capacity() * (std::mem::size_of::<usize>() + std::mem::size_of::<i16>())
     }

@@ -114,7 +114,10 @@ fn test_common_word_lookup() {
     //             "Common word '{}' should be in dictionary", word);
     // }
 
-    println!("Common word lookup test prepared: {} words", common_words.len());
+    println!(
+        "Common word lookup test prepared: {} words",
+        common_words.len()
+    );
 }
 
 /// Test connection cost matrix loading
@@ -254,10 +257,7 @@ fn test_feature_parsing() {
     for f in features {
         let parts: Vec<&str> = f.split(',').collect();
         assert!(parts.len() >= 4, "Feature should have at least 4 fields");
-        assert!(
-            !parts[0].is_empty(),
-            "POS tag should not be empty: '{f}'"
-        );
+        assert!(!parts[0].is_empty(), "POS tag should not be empty: '{f}'");
     }
 }
 

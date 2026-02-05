@@ -68,10 +68,7 @@ fn test_e2e_sentence_types() {
     for sentence in sentences {
         let tokens = tokenizer.tokenize(&sentence);
 
-        assert!(
-            !tokens.is_empty(),
-            "Should tokenize sentence: '{sentence}'"
-        );
+        assert!(!tokens.is_empty(), "Should tokenize sentence: '{sentence}'");
 
         // Verify all tokens have valid positions
         for (i, token) in tokens.iter().enumerate() {
@@ -92,7 +89,10 @@ fn test_e2e_sentence_types() {
         println!("Sentence: {sentence}");
         println!("Token count: {}", tokens.len());
         for token in &tokens {
-            println!("  {} [{}] ({}-{})", token.surface, token.pos, token.start_pos, token.end_pos);
+            println!(
+                "  {} [{}] ({}-{})",
+                token.surface, token.pos, token.start_pos, token.end_pos
+            );
         }
         println!();
     }
@@ -225,9 +225,10 @@ fn test_e2e_token_positions() {
             "Token {i}: end_byte must be on char boundary"
         );
 
-        println!("Token {i}: '{}' pos={}..{} bytes={}..{}",
-                 token.surface, token.start_pos, token.end_pos,
-                 token.start_byte, token.end_byte);
+        println!(
+            "Token {i}: '{}' pos={}..{} bytes={}..{}",
+            token.surface, token.start_pos, token.end_pos, token.start_byte, token.end_byte
+        );
     }
 }
 
@@ -235,7 +236,7 @@ fn test_e2e_token_positions() {
 #[test]
 #[ignore = "Requires system dictionary"]
 fn test_e2e_with_user_dictionary() {
-    use mecab_ko::{Tokenizer, dict::UserDictionary};
+    use mecab_ko::{dict::UserDictionary, Tokenizer};
 
     let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
 
@@ -243,7 +244,12 @@ fn test_e2e_with_user_dictionary() {
     let mut user_dict = UserDictionary::new();
     user_dict.add_entry("딥러닝", "NNG", Some(-1000), Some("딥러닝".to_string()));
     user_dict.add_entry("머신러닝", "NNG", Some(-1000), Some("머신러닝".to_string()));
-    user_dict.add_entry("자연어처리", "NNG", Some(-1000), Some("자연어처리".to_string()));
+    user_dict.add_entry(
+        "자연어처리",
+        "NNG",
+        Some(-1000),
+        Some("자연어처리".to_string()),
+    );
 
     tokenizer.set_user_dict(user_dict);
 
@@ -313,10 +319,7 @@ fn test_e2e_sequential_tokenizations() {
     for (i, input) in test_cases.iter().enumerate() {
         let tokens = tokenizer.tokenize(input);
 
-        assert!(
-            !tokens.is_empty(),
-            "Tokenization {i} should produce tokens"
-        );
+        assert!(!tokens.is_empty(), "Tokenization {i} should produce tokens");
 
         // Verify tokens belong to current input, not previous ones
         for token in &tokens {
@@ -326,7 +329,12 @@ fn test_e2e_sequential_tokenizations() {
             );
         }
 
-        println!("Tokenization {}: {} -> {} tokens", i + 1, input, tokens.len());
+        println!(
+            "Tokenization {}: {} -> {} tokens",
+            i + 1,
+            input,
+            tokens.len()
+        );
     }
 }
 
@@ -524,7 +532,10 @@ fn test_e2e_special_characters() {
         );
 
         println!("Input: {input}");
-        println!("Tokens: {:?}", tokens.iter().map(|t| &t.surface).collect::<Vec<_>>());
+        println!(
+            "Tokens: {:?}",
+            tokens.iter().map(|t| &t.surface).collect::<Vec<_>>()
+        );
         println!();
     }
 }
@@ -543,10 +554,7 @@ fn test_e2e_long_text() {
 
     let tokens = tokenizer.tokenize(&long_text);
 
-    assert!(
-        !tokens.is_empty(),
-        "Should tokenize long text"
-    );
+    assert!(!tokens.is_empty(), "Should tokenize long text");
 
     // Verify no position overflow or corruption
     let mut prev_end_pos = 0;

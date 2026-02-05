@@ -5,7 +5,7 @@ use thiserror::Error;
 /// Elasticsearch 플러그인 에러
 #[derive(Error, Debug)]
 pub enum Error {
-    /// MeCab 코어 엔진 에러
+    /// `MeCab` 코어 엔진 에러
     #[error("MeCab core error: {0}")]
     MecabCore(#[from] mecab_ko_core::Error),
 

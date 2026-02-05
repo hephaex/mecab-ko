@@ -322,8 +322,8 @@ fn generate_report_from_file(input: PathBuf, format: &str, output: Option<PathBu
 }
 
 fn write_report(report: &ProfilingReport, format: &str, output: Option<PathBuf>) -> Result<()> {
-    let report_format = ReportFormat::parse(format)
-        .ok_or_else(|| anyhow::anyhow!("Unknown format: {format}"))?;
+    let report_format =
+        ReportFormat::parse(format).ok_or_else(|| anyhow::anyhow!("Unknown format: {format}"))?;
 
     let content = match report_format {
         ReportFormat::Json => report.to_json()?,

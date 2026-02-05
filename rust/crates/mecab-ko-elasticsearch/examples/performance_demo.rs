@@ -60,11 +60,12 @@ fn demo_cache_performance(config: &AnalyzerConfig) -> Result<(), Box<dyn std::er
     }
 
     let no_cache_time = start.elapsed();
-    let no_cache_qps = (ITERATIONS * SAMPLE_QUERIES.len()) as f64
-        / no_cache_time.as_secs_f64();
+    let no_cache_qps = (ITERATIONS * SAMPLE_QUERIES.len()) as f64 / no_cache_time.as_secs_f64();
 
-    println!("   No cache:    {:?} ({:.0} queries/sec)",
-             no_cache_time, no_cache_qps);
+    println!(
+        "   No cache:    {:?} ({:.0} queries/sec)",
+        no_cache_time, no_cache_qps
+    );
 
     // With cache
     let analyzer_with_cache = NoriAnalyzer::with_cache_size(config.clone(), 1024)?;
@@ -77,11 +78,12 @@ fn demo_cache_performance(config: &AnalyzerConfig) -> Result<(), Box<dyn std::er
     }
 
     let cache_time = start.elapsed();
-    let cache_qps = (ITERATIONS * SAMPLE_QUERIES.len()) as f64
-        / cache_time.as_secs_f64();
+    let cache_qps = (ITERATIONS * SAMPLE_QUERIES.len()) as f64 / cache_time.as_secs_f64();
 
-    println!("   With cache:  {:?} ({:.0} queries/sec)",
-             cache_time, cache_qps);
+    println!(
+        "   With cache:  {:?} ({:.0} queries/sec)",
+        cache_time, cache_qps
+    );
 
     let speedup = no_cache_time.as_secs_f64() / cache_time.as_secs_f64();
     println!("   Speedup:     {:.1}x faster with cache\n", speedup);
@@ -95,9 +97,7 @@ fn demo_batch_processing(config: &AnalyzerConfig) -> Result<(), Box<dyn std::err
     println!("   Testing parallel vs sequential processing...\n");
 
     const BATCH_SIZE: usize = 100;
-    let documents: Vec<_> = (0..BATCH_SIZE)
-        .map(|_| SAMPLE_DOCUMENT)
-        .collect();
+    let documents: Vec<_> = (0..BATCH_SIZE).map(|_| SAMPLE_DOCUMENT).collect();
 
     let analyzer = NoriAnalyzer::without_cache(config.clone())?;
 
@@ -109,8 +109,10 @@ fn demo_batch_processing(config: &AnalyzerConfig) -> Result<(), Box<dyn std::err
     let seq_time = start.elapsed();
     let seq_throughput = BATCH_SIZE as f64 / seq_time.as_secs_f64();
 
-    println!("   Sequential:  {:?} ({:.0} docs/sec)",
-             seq_time, seq_throughput);
+    println!(
+        "   Sequential:  {:?} ({:.0} docs/sec)",
+        seq_time, seq_throughput
+    );
 
     // Batch processing
     let start = Instant::now();
@@ -119,11 +121,16 @@ fn demo_batch_processing(config: &AnalyzerConfig) -> Result<(), Box<dyn std::err
     let batch_time = start.elapsed();
     let batch_throughput = BATCH_SIZE as f64 / batch_time.as_secs_f64();
 
-    println!("   Parallel:    {:?} ({:.0} docs/sec)",
-             batch_time, batch_throughput);
+    println!(
+        "   Parallel:    {:?} ({:.0} docs/sec)",
+        batch_time, batch_throughput
+    );
 
     let speedup = seq_time.as_secs_f64() / batch_time.as_secs_f64();
-    println!("   Speedup:     {:.1}x faster with batch processing\n", speedup);
+    println!(
+        "   Speedup:     {:.1}x faster with batch processing\n",
+        speedup
+    );
 
     Ok(())
 }
@@ -154,7 +161,10 @@ fn demo_cache_statistics(config: &AnalyzerConfig) -> Result<(), Box<dyn std::err
     }
 
     if let Some((capacity, size)) = analyzer.cache_stats() {
-        println!("   After 28:    {}/{} entries (LRU eviction)", size, capacity);
+        println!(
+            "   After 28:    {}/{} entries (LRU eviction)",
+            size, capacity
+        );
     }
 
     // Clear cache

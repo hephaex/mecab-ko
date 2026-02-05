@@ -63,11 +63,12 @@ pub mod error {
     pub type Result<T> = std::result::Result<T, BuildError>;
 }
 
-/// CSV 파서 모듈
+/// mecab-ko-dic CSV 형식 파서
+///
+/// 12컬럼 CSV 형식을 파싱합니다.
+#[allow(clippy::mixed_attributes_style)]
 pub mod csv_parser {
-    //! mecab-ko-dic CSV 형식 파서
-    //!
-    //! 12컬럼 CSV 형식을 파싱합니다.
+    //! mecab-ko-dic CSV 형식 파서 구현
 
     use super::{BuildError, Result};
     use std::fs::File;
@@ -110,9 +111,10 @@ pub mod csv_parser {
     }
 
     impl CsvEntry {
-        /// Feature 문자열 생성 (MeCab 형식)
+        /// Feature 문자열 생성 (`MeCab` 형식)
         ///
         /// 형식: 품사,품사세분류,종성유무,읽기,타입,첫품사,마지막품사,표현
+        #[must_use]
         pub fn to_feature(&self) -> String {
             format!(
                 "{},{},{},{},{},{},{},{}",
@@ -167,6 +169,7 @@ pub mod csv_parser {
 
     impl CsvParser {
         /// 새 파서 생성
+        #[must_use]
         pub fn new<P: AsRef<Path>>(dir_path: P) -> Self {
             Self {
                 dir_path: dir_path.as_ref().to_string_lossy().to_string(),
@@ -176,13 +179,15 @@ pub mod csv_parser {
         }
 
         /// 인코딩 설정
-        pub fn with_encoding(mut self, encoding: Encoding) -> Self {
+        #[must_use]
+        pub const fn with_encoding(mut self, encoding: Encoding) -> Self {
             self.encoding = encoding;
             self
         }
 
         /// 자세한 출력 설정
-        pub fn verbose(mut self, verbose: bool) -> Self {
+        #[must_use]
+        pub const fn verbose(mut self, verbose: bool) -> Self {
             self.verbose = verbose;
             self
         }
@@ -190,6 +195,13 @@ pub mod csv_parser {
         /// 모든 CSV 파일 파싱
         ///
         /// 디렉토리 내의 모든 *.csv 파일을 파싱합니다.
+        ///
+        /// # Errors
+        ///
+        /// Returns an error if:
+        /// - The directory cannot be read
+        /// - Any CSV file cannot be opened or parsed
+        /// - CSV entries have invalid format or field values
         pub fn parse_all(&self) -> Result<Vec<CsvEntry>> {
             let dir = Path::new(&self.dir_path);
             if !dir.is_dir() {
@@ -200,7 +212,7 @@ pub mod csv_parser {
             }
 
             let mut all_entries = Vec::new();
-            let csv_files = self.find_csv_files(dir)?;
+            let csv_files = Self::find_csv_files(dir)?;
 
             if self.verbose {
                 tracing::info!("Found {} CSV files", csv_files.len());
@@ -223,7 +235,7 @@ pub mod csv_parser {
         }
 
         /// CSV 파일 목록 찾기
-        fn find_csv_files(&self, dir: &Path) -> Result<Vec<std::path::PathBuf>> {
+        fn find_csv_files(dir: &Path) -> Result<Vec<std::path::PathBuf>> {
             let mut csv_files = Vec::new();
 
             for entry in std::fs::read_dir(dir).map_err(BuildError::Io)? {
@@ -244,6 +256,13 @@ pub mod csv_parser {
         }
 
         /// 단일 CSV 파일 파싱
+        ///
+        /// # Errors
+        ///
+        /// Returns an error if:
+        /// - The file cannot be opened or read
+        /// - The file encoding cannot be detected or decoded
+        /// - CSV content is malformed or has invalid field values
         pub fn parse_file<P: AsRef<Path>>(&self, path: P) -> Result<Vec<CsvEntry>> {
             let file = File::open(path.as_ref()).map_err(BuildError::Io)?;
             let content = self.read_with_encoding(file)?;
@@ -253,6 +272,8 @@ pub mod csv_parser {
 
         /// 인코딩을 고려하여 파일 읽기
         fn read_with_encoding(&self, file: File) -> Result<String> {
+            use std::io::Read;
+
             let mut reader = BufReader::new(file);
             let mut first_bytes = vec![0u8; 1024];
             let n = reader
@@ -263,7 +284,6 @@ pub mod csv_parser {
             first_bytes.truncate(n);
 
             // 전체 파일 읽기
-            use std::io::Read;
             let mut all_bytes = first_bytes.clone();
             reader.read_to_end(&mut all_bytes).map_err(BuildError::Io)?;
 
@@ -290,6 +310,12 @@ pub mod csv_parser {
         }
 
         /// CSV 내용 파싱
+        ///
+        /// # Errors
+        ///
+        /// Returns an error if:
+        /// - CSV content is malformed
+        /// - Fields cannot be parsed to the expected types (`left_id`, `right_id`, cost)
         pub fn parse_csv_content(&self, content: &str) -> Result<Vec<CsvEntry>> {
             let mut entries = Vec::new();
             let mut csv_reader = csv::ReaderBuilder::new()
@@ -342,11 +368,12 @@ pub mod csv_parser {
     }
 }
 
-/// 사전 빌더 모듈
+/// 사전 빌드 파이프라인
+///
+/// CSV → 바이너리 사전 변환
+#[allow(clippy::mixed_attributes_style)]
 pub mod builder {
-    //! 사전 빌드 파이프라인
-    //!
-    //! CSV → 바이너리 사전 변환
+    //! 사전 빌더 구현
 
     use super::char_def_parser::CharDef;
     use super::csv_parser::{CsvEntry, CsvParser, Encoding};
@@ -392,11 +419,20 @@ pub mod builder {
 
     impl DictionaryBuilder {
         /// 새 빌더 생성
-        pub fn new(config: BuildConfig) -> Self {
+        #[must_use]
+        pub const fn new(config: BuildConfig) -> Self {
             Self { config }
         }
 
         /// 사전 빌드 실행
+        ///
+        /// # Errors
+        ///
+        /// Returns an error if:
+        /// - CSV files cannot be parsed
+        /// - `matrix.def` is missing or malformed
+        /// - Trie building fails
+        /// - Output files cannot be written
         pub fn build(&self) -> Result<BuildResult> {
             if self.config.verbose {
                 tracing::info!("Starting dictionary build");
@@ -503,6 +539,10 @@ pub mod builder {
         }
 
         /// Trie 및 사전 엔트리 빌드
+        ///
+        /// # Errors
+        ///
+        /// Returns an error if the trie cannot be built from the entries.
         pub fn build_trie_and_entries(
             &self,
             csv_entries: &[CsvEntry],
@@ -531,6 +571,7 @@ pub mod builder {
                 let entries = &surface_map[surface];
 
                 // 이 표면형의 첫 번째 인덱스를 Trie 값으로 사용
+                #[allow(clippy::cast_possible_truncation)]
                 let first_index = dict_entries.len() as u32;
                 trie_entries.push((surface.as_str(), first_index));
 
@@ -554,7 +595,7 @@ pub mod builder {
 
             // Trie 빌드 (이미 정렬됨)
             let trie_bytes = TrieBuilder::build(&trie_entries)
-                .map_err(|e| BuildError::Trie(format!("Failed to build trie: {}", e)))?;
+                .map_err(|e| BuildError::Trie(format!("Failed to build trie: {e}")))?;
 
             if self.config.verbose {
                 tracing::info!("  Trie size: {} bytes", trie_bytes.len());
@@ -600,10 +641,12 @@ pub mod builder {
                     let compressed_size = std::fs::metadata(&compressed_path)
                         .map_err(BuildError::Io)?
                         .len();
+                    #[allow(clippy::cast_precision_loss)]
+                    let ratio = (compressed_size as f64 / trie_bytes.len() as f64) * 100.0;
                     tracing::info!(
                         "  Compressed trie: {} bytes (ratio: {:.2}%)",
                         compressed_size,
-                        (compressed_size as f64 / trie_bytes.len() as f64) * 100.0
+                        ratio
                     );
                 }
             } else {
@@ -652,19 +695,22 @@ pub mod builder {
         }
 
         /// 입력 디렉토리 설정
+        #[must_use]
         pub fn input_dir<P: AsRef<Path>>(mut self, path: P) -> Self {
             self.config.input_dir = path.as_ref().to_string_lossy().to_string();
             self
         }
 
         /// 출력 디렉토리 설정
+        #[must_use]
         pub fn output_dir<P: AsRef<Path>>(mut self, path: P) -> Self {
             self.config.output_dir = path.as_ref().to_string_lossy().to_string();
             self
         }
 
         /// 압축 레벨 설정
-        pub fn compression_level(mut self, level: i32) -> Self {
+        #[must_use]
+        pub const fn compression_level(mut self, level: i32) -> Self {
             self.config.compression_level = level;
             self
         }

@@ -17,9 +17,9 @@
 use super::{DenseMatrix, Matrix, INVALID_CONNECTION_COST};
 use std::simd::{
     cmp::{SimdOrd, SimdPartialOrd},
+    i32x8,
     num::SimdInt,
-    i32x8, u16x16, u16x8, LaneCount, Simd,
-    SupportedLaneCount,
+    u16x16, u16x8, LaneCount, Simd, SupportedLaneCount,
 };
 
 /// SIMD 레인 크기 (i32x8 사용)
@@ -97,7 +97,11 @@ impl SimdMatrix for DenseMatrix {
 
 /// SIMD를 사용한 배치 조회 (8개)
 #[inline]
-fn batch_lookup_simd_8(matrix: &DenseMatrix, right_ids: &[u16; 8], left_ids: &[u16; 8]) -> [i32; 8] {
+fn batch_lookup_simd_8(
+    matrix: &DenseMatrix,
+    right_ids: &[u16; 8],
+    left_ids: &[u16; 8],
+) -> [i32; 8] {
     let lsize = matrix.left_size() as u16;
     let costs_ref = matrix.costs();
 
@@ -355,7 +359,8 @@ mod tests {
         let word_cost = 1000;
         let space_penalty = 500;
 
-        let totals = simd_calculate_total_costs_8(&prev_costs, &conn_costs, word_cost, space_penalty);
+        let totals =
+            simd_calculate_total_costs_8(&prev_costs, &conn_costs, word_cost, space_penalty);
 
         // total = prev + conn + word + penalty
         assert_eq!(totals[0], 100 + 10 + 1000 + 500); // 1610

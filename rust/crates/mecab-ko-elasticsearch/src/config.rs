@@ -13,19 +13,19 @@ pub enum DecompoundMode {
     /// 분해하지 않음 - 복합명사를 그대로 출력
     ///
     /// # Example
-    /// "형태소분석기" → ["형태소분석기/NNG"]
+    /// `"형태소분석기" → ["형태소분석기/NNG"]`
     None,
 
     /// 분해만 출력 - 원본은 버리고 분해된 형태소만 출력
     ///
     /// # Example
-    /// "형태소분석기" → ["형태소/NNG", "분석/NNG", "기/NNG"]
+    /// `"형태소분석기" → ["형태소/NNG", "분석/NNG", "기/NNG"]`
     Discard,
 
     /// 혼합 출력 - 원본과 분해된 형태소 모두 출력
     ///
     /// # Example
-    /// "형태소분석기" → ["형태소분석기/NNG", "형태소/NNG", "분석/NNG", "기/NNG"]
+    /// `"형태소분석기" → ["형태소분석기/NNG", "형태소/NNG", "분석/NNG", "기/NNG"]`
     Mixed,
 }
 
@@ -35,6 +35,7 @@ impl DecompoundMode {
     /// # Errors
     ///
     /// 유효하지 않은 모드 문자열인 경우 에러 반환
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(s: &str) -> Result<Self> {
         match s.to_lowercase().as_str() {
             "none" => Ok(Self::None),
@@ -45,6 +46,7 @@ impl DecompoundMode {
     }
 
     /// 문자열 표현
+    #[must_use]
     pub const fn as_str(&self) -> &'static str {
         match self {
             Self::None => "none",
@@ -61,7 +63,7 @@ impl Default for DecompoundMode {
 }
 
 /// 분석기 설정
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AnalyzerConfig {
     /// 복합명사 분해 모드
     #[serde(default)]
@@ -154,7 +156,7 @@ fn default_stoptags() -> Vec<String> {
 }
 
 /// 토크나이저 설정
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TokenizerConfig {
     /// 복합명사 분해 모드
     #[serde(default)]
@@ -189,7 +191,7 @@ impl From<&AnalyzerConfig> for TokenizerConfig {
 }
 
 /// 필터 설정
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FilterConfig {
     /// 필터 타입
     pub filter_type: FilterType,

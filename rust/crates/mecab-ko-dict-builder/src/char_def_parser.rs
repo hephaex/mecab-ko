@@ -53,6 +53,13 @@ impl CharDef {
     /// 0x0020 SPACE    # 공백
     /// 0x0009 SPACE    # 탭
     /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The file cannot be opened or read
+    /// - The format is invalid (malformed type definitions or mappings)
+    /// - Hex codes cannot be parsed
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::open(path.as_ref()).map_err(BuildError::Io)?;
         let reader = BufReader::new(file);
@@ -134,7 +141,7 @@ impl CharDef {
             }
         }
 
-        Ok(CharDef {
+        Ok(Self {
             types,
             mappings,
             default_type,
@@ -142,11 +149,13 @@ impl CharDef {
     }
 
     /// 타입 이름으로 타입 정의 조회
+    #[must_use]
     pub fn get_type(&self, name: &str) -> Option<&CharType> {
         self.types.iter().find(|t| t.name == name)
     }
 
     /// 문자 코드로 타입 조회
+    #[must_use]
     pub fn get_type_for_char(&self, ch: char) -> Option<&CharType> {
         let code = ch as u32;
 
@@ -164,6 +173,13 @@ impl CharDef {
     }
 
     /// 바이너리로 직렬화
+    ///
+    /// # Panics
+    ///
+    /// Writing to a `Vec<u8>` should never fail in practice.
+    /// If it does, the process is in an unrecoverable state.
+    #[must_use]
+    #[allow(clippy::cast_possible_truncation)]
     pub fn to_bytes(&self) -> Vec<u8> {
         use byteorder::{LittleEndian, WriteBytesExt};
         use std::io::Write;
@@ -171,35 +187,39 @@ impl CharDef {
         let mut buf = Vec::new();
 
         // 타입 개수
+        // SAFETY: Writing to Vec<u8> in memory should never fail
         buf.write_u32::<LittleEndian>(self.types.len() as u32)
-            .expect("write failed");
+            .unwrap_or_else(|_| unreachable!("Vec write failed"));
 
         // 타입 정의
         for typ in &self.types {
             // 이름 길이 + 이름
             buf.write_u32::<LittleEndian>(typ.name.len() as u32)
-                .expect("write failed");
-            buf.write_all(typ.name.as_bytes()).expect("write failed");
+                .unwrap_or_else(|_| unreachable!("Vec write failed"));
+            buf.write_all(typ.name.as_bytes())
+                .unwrap_or_else(|_| unreachable!("Vec write failed"));
 
             // 플래그
-            buf.write_u8(typ.invoke as u8).expect("write failed");
-            buf.write_u8(typ.group as u8).expect("write failed");
+            buf.write_u8(u8::from(typ.invoke))
+                .unwrap_or_else(|_| unreachable!("Vec write failed"));
+            buf.write_u8(u8::from(typ.group))
+                .unwrap_or_else(|_| unreachable!("Vec write failed"));
             buf.write_u32::<LittleEndian>(typ.length)
-                .expect("write failed");
+                .unwrap_or_else(|_| unreachable!("Vec write failed"));
         }
 
         // 매핑 개수
         buf.write_u32::<LittleEndian>(self.mappings.len() as u32)
-            .expect("write failed");
+            .unwrap_or_else(|_| unreachable!("Vec write failed"));
 
         // 매핑 데이터
         for mapping in &self.mappings {
             buf.write_u32::<LittleEndian>(mapping.code)
-                .expect("write failed");
+                .unwrap_or_else(|_| unreachable!("Vec write failed"));
             buf.write_u32::<LittleEndian>(mapping.type_name.len() as u32)
-                .expect("write failed");
+                .unwrap_or_else(|_| unreachable!("Vec write failed"));
             buf.write_all(mapping.type_name.as_bytes())
-                .expect("write failed");
+                .unwrap_or_else(|_| unreachable!("Vec write failed"));
         }
 
         buf
