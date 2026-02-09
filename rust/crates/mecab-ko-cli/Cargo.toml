@@ -12,6 +12,7 @@ readme = "README.md"
 description = "한국어 형태소 분석기 CLI 도구"
 keywords = ["korean", "morphological-analysis", "cli", "nlp"]
 categories = ["command-line-utilities", "text-processing"]
+publish = false
 
 [[bin]]
 name = "mecab"

@@ -485,10 +485,7 @@ mod tests {
             DecompoundMode::parse("discard"),
             Some(DecompoundMode::Discard)
         );
-        assert_eq!(
-            DecompoundMode::parse("mixed"),
-            Some(DecompoundMode::Mixed)
-        );
+        assert_eq!(DecompoundMode::parse("mixed"), Some(DecompoundMode::Mixed));
         assert_eq!(DecompoundMode::parse("NONE"), Some(DecompoundMode::None));
         assert_eq!(DecompoundMode::parse("invalid"), None);
     }

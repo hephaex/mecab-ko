@@ -12,6 +12,7 @@ readme = "README.md"
 description = "Elasticsearch/Lucene Nori 호환 레이어 - JNI 바인딩 및 분석기 플러그인"
 keywords = ["korean", "elasticsearch", "lucene", "nori", "analyzer"]
 categories = ["text-processing", "api-bindings"]
+publish = false
 
 [lib]
 crate-type = ["cdylib", "rlib"]

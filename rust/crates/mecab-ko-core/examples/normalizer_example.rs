@@ -30,7 +30,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "   {} → {} {}",
             variant,
             norm_result,
-            if norm_result == expected { "✓" } else { "✗" }
+            if norm_result == expected {
+                "✓"
+            } else {
+                "✗"
+            }
         );
     }
     println!();

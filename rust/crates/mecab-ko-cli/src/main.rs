@@ -524,8 +524,12 @@ impl AnalysisContext {
         // 사용자 사전 로드
         let user_dict = if let Some(ref user_dict_path) = args.user_dict {
             let mut dict = UserDictionary::new();
-            dict.load_from_csv(user_dict_path)
-                .with_context(|| format!("Failed to load user dictionary: {}", user_dict_path.display()))?;
+            dict.load_from_csv(user_dict_path).with_context(|| {
+                format!(
+                    "Failed to load user dictionary: {}",
+                    user_dict_path.display()
+                )
+            })?;
 
             if !args.quiet {
                 eprintln!("Loaded {} entries from user dictionary", dict.len());
@@ -910,7 +914,10 @@ fn run_repl(ctx: &AnalysisContext) -> Result<()> {
                                 }
                             }
                             if idx <= 6 {
-                                println!("출력 포맷이 변경되었습니다: {:?}", *current_format.borrow());
+                                println!(
+                                    "출력 포맷이 변경되었습니다: {:?}",
+                                    *current_format.borrow()
+                                );
                             }
                         } else {
                             println!("잘못된 입력입니다.");

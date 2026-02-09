@@ -652,7 +652,11 @@ impl Normalizer {
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used, clippy::float_cmp, clippy::field_reassign_with_default)]
+#[allow(
+    clippy::unwrap_used,
+    clippy::float_cmp,
+    clippy::field_reassign_with_default
+)]
 mod tests {
     use super::*;
 

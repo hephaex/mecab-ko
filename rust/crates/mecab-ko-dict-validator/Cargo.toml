@@ -7,11 +7,11 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 homepage.workspace = true
-documentation.workspace = true
+documentation = "https://docs.rs/mecab-ko-dict-validator"
 readme = "README.md"
-keywords.workspace = true
-categories.workspace = true
-description = "Dictionary validation tool for MeCab-Ko"
+keywords = ["korean", "dictionary", "validation", "mecab", "nlp"]
+categories = ["text-processing", "development-tools"]
+description = "한국어 형태소 사전 검증 도구 - CSV 형식 검증, 품사 체계 검사"
 
 [[bin]]
 name = "dict-validate"

@@ -1090,6 +1090,7 @@ dependencies = [
  "memmap2",
  "notify",
  "serde",
+ "tempfile",
  "thiserror",
  "yada",
  "zstd",

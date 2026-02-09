@@ -274,8 +274,7 @@ impl CharCategoryMap {
             }
 
             // 카테고리 정의 줄: CATEGORY_NAME INVOKE GROUP LENGTH
-            if !line.starts_with("0x") && !line.chars().next().is_some_and(|c| c.is_ascii_digit())
-            {
+            if !line.starts_with("0x") && !line.chars().next().is_some_and(|c| c.is_ascii_digit()) {
                 let parts: Vec<&str> = line.split_whitespace().collect();
                 if parts.len() >= 4 {
                     let name = parts[0];

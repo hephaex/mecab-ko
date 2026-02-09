@@ -7,11 +7,12 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 homepage.workspace = true
-documentation.workspace = true
+documentation = "https://docs.rs/mecab-ko-profiler"
 readme = "README.md"
 description = "Memory profiling tools for MeCab-Ko components"
 keywords = ["profiling", "memory", "benchmark", "mecab", "korean"]
 categories = ["development-tools::profiling", "memory-management"]
+publish = false
 
 [dependencies]
 # Core dependencies

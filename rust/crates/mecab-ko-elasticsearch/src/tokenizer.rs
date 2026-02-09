@@ -45,7 +45,12 @@ pub struct Token {
 impl Token {
     /// 새 토큰 생성
     #[must_use]
-    pub const fn new(surface: String, pos_tag: String, start_offset: usize, end_offset: usize) -> Self {
+    pub const fn new(
+        surface: String,
+        pos_tag: String,
+        start_offset: usize,
+        end_offset: usize,
+    ) -> Self {
         Self {
             surface,
             pos_tag,

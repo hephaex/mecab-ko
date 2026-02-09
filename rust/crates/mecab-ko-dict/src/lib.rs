@@ -25,7 +25,7 @@
 pub mod dictionary;
 pub mod file_watcher;
 pub mod hot_reload;
-// pub mod loader; // NOTE: Disabled temporarily - compilation errors to be fixed separately
+pub mod loader;
 pub mod matrix;
 pub mod trie;
 pub mod user_dict;
@@ -36,7 +36,7 @@ pub use file_watcher::{FileEvent, FileWatcher, WatchConfig};
 pub use hot_reload::{
     DeltaUpdate, DeltaUpdateBuilder, EntryChange, HotReloadDictionary, Version, VersionInfo,
 };
-// pub use loader::{LazyDictionary, LoaderConfig, MmapDictionary}; // Disabled with loader module
+pub use loader::{LazyDictionary, LoaderConfig, MmapDictionary};
 pub use matrix::{ConnectionMatrix, DenseMatrix, Matrix, MatrixLoader, MmapMatrix, SparseMatrix};
 pub use trie::{DictionarySearcher, EntryIndex, PrefixMatch, Trie, TrieBuilder};
 pub use user_dict::{UserDictionary, UserDictionaryBuilder, UserEntry};

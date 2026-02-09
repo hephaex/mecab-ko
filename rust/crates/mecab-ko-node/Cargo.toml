@@ -12,6 +12,7 @@ readme = "README.md"
 description = "Node.js bindings for MeCab-Ko Korean morphological analyzer"
 keywords = ["korean", "morphological-analysis", "nlp", "nodejs", "napi"]
 categories = ["text-processing", "science", "api-bindings"]
+publish = false
 
 [lib]
 crate-type = ["cdylib"]

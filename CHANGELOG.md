@@ -139,6 +139,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance tuning guide
 - Migration guide from legacy C/C++ implementation
 
+### Known Limitations (v0.1.0)
+
+The following features are incomplete or have placeholder implementations in this release. Full implementations are planned for v0.2.0:
+
+- **User dictionary support**: The user dictionary feature has placeholder tests and requires full implementation for production use. CSV loading and custom entry registration are not yet functional.
+- **Compound noun decomposition**: The Nori compatibility layer (`nori_compat.rs`) has incomplete compound noun decomposition logic (TODO at line 253). Decompound modes may not produce expected results for all compound nouns.
+- **Kiwi POS tagging export**: The Kiwi POS tag export functionality has placeholder tests only. Full POS tag mapping to Kiwi format is not yet implemented.
+- **Dictionary entry loading**: The dictionary loader (`loader.rs`) contains placeholder implementation. Binary dictionary loading from mecab-ko-dic is not fully functional.
+
+These limitations will be addressed in v0.2.0. See the Roadmap section below for planned improvements.
+
 ---
 
 ## Legacy Versions (C/C++ Implementation)
