@@ -3,6 +3,7 @@
 use mecab_ko_elasticsearch::analyzer::NoriAnalyzer;
 use mecab_ko_elasticsearch::config::{AnalyzerConfig, DecompoundMode};
 
+#[allow(clippy::too_many_lines)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== 설정 예제 ===\n");
 

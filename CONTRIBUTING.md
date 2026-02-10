@@ -43,6 +43,7 @@ To suggest new features:
 
 - Rust toolchain (1.75.0 or later recommended)
 - Git
+- Python 3.8+ with development headers (for `mecab-ko-python` crate only)
 
 ### Getting Started
 
@@ -233,6 +234,25 @@ Run tests with:
 ```bash
 cargo test --all-features
 ```
+
+### Python Bindings (mecab-ko-python)
+
+The `mecab-ko-python` crate requires additional setup:
+
+```bash
+# Install Python development headers
+# Ubuntu/Debian: sudo apt install python3-dev
+# Fedora/RHEL: sudo dnf install python3-devel
+
+# Install maturin
+pip install maturin
+
+# Build and test
+cd rust/crates/mecab-ko-python
+maturin develop && pytest tests/
+```
+
+**Note:** `cargo test` alone does not work for `mecab-ko-python` because PyO3 cdylib requires a Python environment. Use `maturin develop` followed by `pytest` instead.
 
 ---
 

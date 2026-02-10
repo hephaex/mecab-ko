@@ -329,7 +329,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // Requires global allocator to be installed
+    #[ignore = "Requires global allocator to be installed"]
     fn test_dict_profiler_load() {
         let mut profiler = DictProfiler::new();
 

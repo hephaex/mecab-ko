@@ -254,7 +254,7 @@ fn bench_under_memory_pressure(c: &mut Criterion) {
 
 /// 반복 사용 패턴 (웹 서버 시뮬레이션)
 fn bench_web_server_pattern(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("memory_web_server_pattern");
 
     let requests = [

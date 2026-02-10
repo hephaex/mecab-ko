@@ -19,15 +19,15 @@ fn main() {
     // Example 2: Manual snapshot collection
     println!("Example 2: Manual Snapshots");
     let start = snapshot();
-    println!("Start: {:?}", start);
+    println!("Start: {start:?}");
 
     let _test_data = vec![42u64; 10000];
 
     let end = snapshot();
-    println!("End: {:?}", end);
+    println!("End: {end:?}");
 
     let diff = end.diff(&start);
-    println!("Diff: {:?}\n", diff);
+    println!("Diff: {diff:?}\n");
 
     // Example 3: Using StatsCollector
     println!("Example 3: Stats Collector");

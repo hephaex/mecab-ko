@@ -365,7 +365,7 @@ impl KeywordExtractor {
         for token in tokens {
             let pos_prefix = &token.pos[..2.min(token.pos.len())];
             if let Some(&weight) = weights.get(pos_prefix) {
-                let score = weight * (1.0 + token.surface.chars().count() as f64 * 0.1);
+                let score = weight * (token.surface.chars().count() as f64).mul_add(0.1, 1.0);
                 *score_map.entry(token.surface).or_insert(0.0) += score;
             }
         }
@@ -392,7 +392,7 @@ impl KeywordExtractor {
             .map(|(word, _)| word)
             .filter(|word| {
                 let len = word.chars().count();
-                len >= 2 && len <= 6
+                (2..=6).contains(&len)
             })
             .take(max_tags)
             .collect();
@@ -401,6 +401,7 @@ impl KeywordExtractor {
     }
 
     /// 내용어 여부 판단
+    #[allow(clippy::unused_self)]
     fn is_content_word(&self, token: &Token) -> bool {
         // 명사, 동사, 형용사, 외래어
         token.pos.starts_with("NN")

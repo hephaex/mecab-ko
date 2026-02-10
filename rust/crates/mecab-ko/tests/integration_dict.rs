@@ -44,39 +44,63 @@ fn test_dict_entry_clone() {
     assert_eq!(entry1, entry2);
 }
 
-/// Test system dictionary loading (stub test)
-///
-/// This will be fully implemented once the dictionary builder is complete.
+/// Test system dictionary loading with mini test dictionary
 #[test]
-#[ignore = "Requires actual dictionary file"]
 fn test_load_system_dictionary() {
-    // TODO: Implement once dictionary builder is available
-    // let dict_path = common::create_test_dict();
-    // let dict = SystemDictionary::load(&dict_path)
-    //     .expect("Failed to load system dictionary");
-    //
-    // // Verify dictionary is loaded
-    // assert!(dict.entry_count() > 0, "Dictionary should have entries");
+    use mecab_ko_dict::loader::MmapDictionary;
 
-    println!("System dictionary loading test (placeholder)");
+    let dict_path = common::mini_dict::mini_dict_path();
+
+    if !common::mini_dict::mini_dict_exists() {
+        println!("Skipping test: mini dictionary not found at {:?}", dict_path);
+        println!("Run: cd rust/test-fixtures && cargo run --release");
+        return;
+    }
+
+    let dict = MmapDictionary::load(&dict_path)
+        .expect("Failed to load mini test dictionary");
+
+    // Verify dictionary is loaded and has entries
+    assert!(
+        !dict.entries().is_empty(),
+        "Dictionary should have entries"
+    );
+    println!("Loaded {} entries from mini dictionary", dict.entries().len());
 }
 
-/// Test dictionary lookup functionality (stub test)
+/// Test dictionary lookup functionality with mini test dictionary
 #[test]
-#[ignore = "Requires actual dictionary implementation"]
 fn test_dictionary_lookup() {
-    // TODO: Implement once dictionary is available
-    // let dict = create_test_dictionary();
-    //
-    // let entries = dict.lookup("안녕");
-    // assert!(!entries.is_empty(), "Should find entries for '안녕'");
-    //
-    // for entry in entries {
-    //     assert_eq!(entry.surface, "안녕");
-    //     assert!(!entry.feature.is_empty());
-    // }
+    use mecab_ko_dict::{loader::MmapDictionary, Dictionary};
 
-    println!("Dictionary lookup test (placeholder)");
+    let dict_path = common::mini_dict::mini_dict_path();
+
+    if !common::mini_dict::mini_dict_exists() {
+        println!("Skipping test: mini dictionary not found at {:?}", dict_path);
+        println!("Run: cd rust/test-fixtures && cargo run --release");
+        return;
+    }
+
+    let dict = MmapDictionary::load(&dict_path)
+        .expect("Failed to load mini test dictionary");
+
+    // Test lookup for common Korean words in the mini dictionary
+    let test_words = vec!["안녕", "감사", "한국어", "사람"];
+
+    for word in test_words {
+        let entries = dict.lookup(word);
+        assert!(
+            !entries.is_empty(),
+            "Should find entries for '{}'",
+            word
+        );
+
+        for entry in &entries {
+            assert_eq!(entry.surface, word);
+            assert!(!entry.feature.is_empty(), "Feature should not be empty");
+            println!("Found: {} -> {}", word, entry.feature);
+        }
+    }
 }
 
 /// Test prefix matching in dictionary

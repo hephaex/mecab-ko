@@ -174,7 +174,7 @@ fn bench_reuse_vs_recreate(c: &mut Criterion) {
 
     // 재사용
     group.bench_function("reuse_tokenizer", |b| {
-        let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+        let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
 
         b.iter(|| {
             let tokens = tokenizer.tokenize(black_box(text));

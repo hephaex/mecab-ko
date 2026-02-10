@@ -494,7 +494,7 @@ mod tests {
         for c in test_chars {
             let (cho, jung, jong) = decompose(c).unwrap();
             let result = compose(cho, jung, jong).unwrap();
-            assert_eq!(c, result, "Roundtrip failed for '{}'", c);
+            assert_eq!(c, result, "Roundtrip failed for '{c}'");
         }
     }
 

@@ -6,6 +6,12 @@
 //! - 캐시 효율성
 //! - 다양한 행렬 크기에서의 성능
 
+#![allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    missing_docs
+)]
+
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use mecab_ko_dict::matrix::{DenseMatrix, Matrix};
 use rand::Rng;
@@ -112,7 +118,7 @@ fn bench_batch_lookup(c: &mut Criterion) {
 
     let mut group = c.benchmark_group("matrix_batch_lookup");
 
-    for batch_size in [10, 100, 1000].iter() {
+    for batch_size in &[10, 100, 1000] {
         group.throughput(Throughput::Elements(*batch_size));
 
         group.bench_with_input(
@@ -158,7 +164,7 @@ fn bench_viterbi_access_pattern(c: &mut Criterion) {
             for &left_id in &current_left_ids {
                 for &right_id in &prev_right_ids {
                     let cost = matrix.get(black_box(right_id), black_box(left_id));
-                    min_cost = min_cost.min(i32::from(cost));
+                    min_cost = min_cost.min(cost);
                 }
             }
             black_box(min_cost);
@@ -301,7 +307,7 @@ fn bench_cache_locality(c: &mut Criterion) {
 fn bench_memory_footprint(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_memory");
 
-    for &size in [100, 500, 1000, 2000].iter() {
+    for &size in &[100, 500, 1000, 2000] {
         group.bench_with_input(BenchmarkId::from_parameter(size), &size, |b, &size| {
             b.iter(|| {
                 let matrix = DenseMatrix::new(size, size, 100);

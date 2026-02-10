@@ -138,7 +138,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore] // Requires global allocator to be installed
+    #[ignore = "Requires global allocator to be installed"]
     fn test_basic_tracking() {
         allocator::reset_stats();
 

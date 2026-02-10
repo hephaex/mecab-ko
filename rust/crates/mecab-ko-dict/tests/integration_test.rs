@@ -10,8 +10,25 @@ use mecab_ko_dict::{
 
 #[test]
 fn test_system_dictionary_integration() {
-    // 테스트용 사전은 실제 파일이 필요하므로,
-    // 여기서는 API 호출만 검증
+    // First try loading from mini test dictionary
+    let mini_dict_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .expect("parent")
+        .parent()
+        .expect("workspace")
+        .join("test-fixtures")
+        .join("mini-dict");
+
+    if mini_dict_path.join("sys.dic").exists() {
+        println!("Testing with mini dictionary at {:?}", mini_dict_path);
+        let dict = SystemDictionary::load(&mini_dict_path)
+            .expect("Failed to load mini test dictionary");
+        assert!(dict.dicdir().exists());
+        println!("Mini dictionary loaded successfully");
+        return;
+    }
+
+    // Fall back to system dictionary
     let result = SystemDictionary::load_default();
 
     // 사전이 설치되어 있지 않으면 실패할 수 있음

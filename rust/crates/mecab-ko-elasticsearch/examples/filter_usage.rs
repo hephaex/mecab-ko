@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 4. 길이 필터
     println!("\n4. 길이 필터 (2자 이상)");
     let length_filter = LengthFilter::new(2, 100);
-    let filtered3 = length_filter.filter(tokens.clone())?;
+    let filtered3 = length_filter.filter(tokens)?;
     println!("결과: {} 토큰", filtered3.len());
     for token in &filtered3 {
         println!(
@@ -97,9 +97,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n7. 읽기 변환 필터");
     let reading_filter = NoriReadingFormFilter::new();
 
-    // 읽기 정보가 있는 토큰 생성 (예제용)
-    use mecab_ko_elasticsearch::tokenizer::Token;
-    let tokens_with_reading = vec![
+    {
+        // 읽기 정보가 있는 토큰 생성 (예제용)
+        use mecab_ko_elasticsearch::tokenizer::Token;
+        let tokens_with_reading = vec![
         Token::new("形態素".to_string(), "NNG".to_string(), 0, 3)
             .with_reading(Some("형태소".to_string())),
         Token::new("分析".to_string(), "NNG".to_string(), 3, 5)
@@ -115,10 +116,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     }
 
-    let filtered6 = reading_filter.filter(tokens_with_reading)?;
-    println!("\n읽기 변환 후:");
-    for token in &filtered6 {
-        println!("  {} [{}]", token.surface, token.pos_tag);
+        let filtered6 = reading_filter.filter(tokens_with_reading)?;
+        println!("\n읽기 변환 후:");
+        for token in &filtered6 {
+            println!("  {} [{}]", token.surface, token.pos_tag);
+        }
     }
 
     Ok(())

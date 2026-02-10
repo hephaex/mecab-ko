@@ -44,14 +44,12 @@ fn bench_dict_operations(c: &mut Criterion) {
 fn bench_tokenization(c: &mut Criterion) {
     let mut group = c.benchmark_group("tokenization");
 
-    let test_texts = vec![
-        ("short", "한국어"),
+    let test_texts = [("short", "한국어"),
         ("medium", "한국어 형태소 분석 테스트"),
         (
             "long",
             "한국어 형태소 분석은 자연어 처리의 기본 기술입니다.",
-        ),
-    ];
+        )];
 
     for (name, text) in test_texts.iter() {
         group.bench_with_input(BenchmarkId::new("tokenize", name), text, |b, &text| {

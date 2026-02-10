@@ -1,10 +1,17 @@
 //! Trie 검색 성능 벤치마크
 //!
 //! 측정 항목:
-//! - exact_match: 정확한 키 검색
-//! - common_prefix_search: 공통 접두사 검색
+//! - `exact_match`: 정확한 키 검색
+//! - `common_prefix_search`: 공통 접두사 검색
 //! - 대용량 사전에서의 성능
 //! - 한글 특화 패턴 검색
+
+#![allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::doc_markdown,
+    missing_docs
+)]
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use mecab_ko_dict::trie::{Trie, TrieBuilder};
@@ -65,7 +72,7 @@ fn create_medium_dictionary() -> Vec<(String, u32)> {
 
     // 명사 조합
     for (i, noun) in nouns.iter().enumerate() {
-        entries.push((noun.to_string(), i as u32));
+        entries.push(((*noun).to_string(), i as u32));
         entries.push((format!("{noun}에"), (i + 100) as u32));
         entries.push((format!("{noun}의"), (i + 200) as u32));
         entries.push((format!("{noun}를"), (i + 300) as u32));
@@ -103,7 +110,7 @@ fn create_large_dictionary() -> Vec<(String, u32)> {
     entries
 }
 
-/// 소형 사전 - exact_match 벤치마크
+/// 소형 사전 - `exact_match` 벤치마크
 fn bench_exact_match_small(c: &mut Criterion) {
     let mut entries = create_small_dictionary();
     let bytes = TrieBuilder::build_unsorted(&mut entries).expect("Failed to build trie");
@@ -146,7 +153,7 @@ fn bench_exact_match_small(c: &mut Criterion) {
     group.finish();
 }
 
-/// 중형 사전 - exact_match 벤치마크
+/// 중형 사전 - `exact_match` 벤치마크
 fn bench_exact_match_medium(c: &mut Criterion) {
     let mut entries = create_medium_dictionary();
     entries.sort_by(|a, b| a.0.as_bytes().cmp(b.0.as_bytes()));
@@ -184,7 +191,7 @@ fn bench_exact_match_medium(c: &mut Criterion) {
     group.finish();
 }
 
-/// 대형 사전 - exact_match 벤치마크
+/// 대형 사전 - `exact_match` 벤치마크
 fn bench_exact_match_large(c: &mut Criterion) {
     let mut entries = create_large_dictionary();
     entries.sort_by(|a, b| a.0.as_bytes().cmp(b.0.as_bytes()));
@@ -216,7 +223,7 @@ fn bench_exact_match_large(c: &mut Criterion) {
     group.finish();
 }
 
-/// common_prefix_search 벤치마크
+/// `common_prefix_search` 벤치마크
 fn bench_common_prefix_search(c: &mut Criterion) {
     let mut entries = create_small_dictionary();
     let bytes = TrieBuilder::build_unsorted(&mut entries).expect("Failed to build trie");
@@ -279,8 +286,7 @@ fn bench_morpheme_analysis_scenario(c: &mut Criterion) {
                 let byte_pos = text
                     .char_indices()
                     .nth(i)
-                    .map(|(pos, _)| pos)
-                    .unwrap_or(text.len());
+                    .map_or(text.len(), |(pos, _)| pos);
                 let results = trie.common_prefix_search_at(black_box(text), byte_pos);
                 total_matches += results.len();
             }
@@ -335,7 +341,7 @@ fn bench_trie_build(c: &mut Criterion) {
 fn bench_trie_memory_efficiency(c: &mut Criterion) {
     let mut group = c.benchmark_group("trie_memory");
 
-    for size in [100, 1000, 5000].iter() {
+    for size in &[100, 1000, 5000] {
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, &size| {
             let mut entries: Vec<(String, u32)> = (0..size)
                 .map(|i| (format!("단어{i:05}"), i as u32))

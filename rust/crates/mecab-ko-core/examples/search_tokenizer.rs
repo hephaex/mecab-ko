@@ -332,7 +332,7 @@ impl SearchEngine {
         }
 
         let mut results: Vec<u64> = result_set.into_iter().collect();
-        results.sort();
+        results.sort_unstable();
 
         Ok(results)
     }
@@ -361,13 +361,13 @@ impl SearchEngine {
             }
         }
 
-        matched_docs.sort();
+        matched_docs.sort_unstable();
         Ok(matched_docs)
     }
 
     /// 문서 내 구문 매칭 확인
-    #[allow(unused_variables)]
-    fn check_phrase_in_document(&self, doc_id: u64, tokens: &[Token]) -> bool {
+    #[allow(unused_variables, clippy::unused_self)]
+    const fn check_phrase_in_document(&self, doc_id: u64, tokens: &[Token]) -> bool {
         // 위치 정보를 이용한 연속성 체크
         // 간단한 구현을 위해 true 반환 (실제로는 position_index 활용)
         true

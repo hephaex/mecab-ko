@@ -170,23 +170,59 @@ mecab.nouns("아버지가방에들어가신다")
 mecab.pos("나는 학생입니다")
 ```
 
-## Development
+## Development Requirements
+
+This crate uses [PyO3](https://pyo3.rs/) to create Python bindings. Building requires Python development headers.
+
+### System Dependencies
+
+**Ubuntu/Debian:**
+```bash
+sudo apt install python3-dev
+```
+
+**Fedora/RHEL:**
+```bash
+sudo dnf install python3-devel
+```
+
+**macOS (with Homebrew):**
+```bash
+brew install python
+```
+
+**Windows:**
+Install Python from [python.org](https://www.python.org/downloads/) with "Development headers" option selected.
+
+### Build Tools
 
 ```bash
-# Build in development mode
+# Install maturin (PyO3 build tool)
+pip install maturin
+```
+
+### Building and Testing
+
+```bash
+# Build and install in development mode
 maturin develop
-
-# Run Rust tests
-cargo test
-
-# Run Python tests
-pytest
 
 # Build release wheel
 maturin build --release
 
-# Lint and format
+# Run Python tests
+maturin develop && pytest tests/
+```
+
+**Note:** Standard `cargo test` does not work for this crate because PyO3 cdylib requires Python development headers and a proper Python environment. Use `maturin develop` followed by `pytest` instead.
+
+### Linting
+
+```bash
+# Clippy (requires Python dev headers installed)
 cargo clippy
+
+# Format
 cargo fmt
 ```
 

@@ -552,7 +552,7 @@ mod tests {
         // 테스트 Matrix 생성
         let matrix = DenseMatrix::new(10, 10, 100);
         matrix
-            .to_bin_file(&temp_dir.path().join("matrix.bin"))
+            .to_bin_file(temp_dir.path().join("matrix.bin"))
             .expect("write matrix");
 
         // 테스트 엔트리 생성 (CSV)
@@ -683,7 +683,7 @@ mod tests {
 
         let matrix = DenseMatrix::new(30, 30, 100);
         matrix
-            .to_bin_file(&temp_dir.path().join("matrix.bin"))
+            .to_bin_file(temp_dir.path().join("matrix.bin"))
             .expect("write matrix");
 
         // 로드 및 검증
@@ -707,7 +707,7 @@ mod tests {
 
         let matrix = DenseMatrix::new(2, 2, 100);
         matrix
-            .to_bin_file(&temp_dir.path().join("matrix.bin"))
+            .to_bin_file(temp_dir.path().join("matrix.bin"))
             .expect("write matrix");
 
         // 로드 성공 (빈 엔트리 벡터)

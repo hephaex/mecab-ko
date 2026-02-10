@@ -356,7 +356,7 @@ mod tests {
         };
 
         let stats = ComponentStats::from_snapshot("test", snapshot);
-        assert_eq!(stats.efficiency(), 500.0 / 800.0);
+        assert!((stats.efficiency() - 500.0 / 800.0).abs() < f64::EPSILON);
     }
 
     #[test]

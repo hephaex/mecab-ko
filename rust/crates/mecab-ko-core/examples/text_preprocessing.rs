@@ -213,7 +213,7 @@ impl PreprocessingPipeline {
         // 1. 공백 정규화
         let mut normalized = text
             .lines()
-            .map(|line| line.trim())
+            .map(str::trim)
             .filter(|line| !line.is_empty())
             .collect::<Vec<_>>()
             .join(" ");
@@ -292,9 +292,9 @@ impl PreprocessingPipeline {
             .filter(|token| {
                 // 불용어가 아니고, 내용어인 것만
                 !self.stopwords.contains(&token.surface)
-                    && !token.pos.starts_with("J")   // 조사 제외
-                    && !token.pos.starts_with("E")   // 어미 제외
-                    && !token.pos.starts_with("S")   // 부호 제외 (일부)
+                    && !token.pos.starts_with('J')   // 조사 제외
+                    && !token.pos.starts_with('E')   // 어미 제외
+                    && !token.pos.starts_with('S')   // 부호 제외 (일부)
                     && token.surface.chars().all(|c| !c.is_whitespace())
             })
             .map(|token| token.surface)
@@ -311,7 +311,7 @@ impl PreprocessingPipeline {
                 // lemma가 있으면 사용, 없으면 surface 사용
                 if let Some(lemma) = token.lemma {
                     Some(lemma)
-                } else if token.pos.starts_with("V") || token.pos.starts_with("A") {
+                } else if token.pos.starts_with('V') || token.pos.starts_with('A') {
                     // 동사/형용사는 표면형 사용
                     Some(token.surface)
                 } else {
@@ -335,9 +335,9 @@ impl PreprocessingPipeline {
         for token in tokens {
             if token.pos.starts_with("NN") {
                 nouns.push(token.surface);
-            } else if token.pos.starts_with("V") {
+            } else if token.pos.starts_with('V') {
                 verbs.push(token.lemma.unwrap_or(token.surface));
-            } else if token.pos.starts_with("A") {
+            } else if token.pos.starts_with('A') {
                 adjectives.push(token.lemma.unwrap_or(token.surface));
             }
         }
@@ -362,13 +362,13 @@ impl PreprocessingPipeline {
             .filter(|token| {
                 // 명사, 동사, 형용사, 외래어만 인덱싱
                 token.pos.starts_with("NN")
-                    || token.pos.starts_with("V")
-                    || token.pos.starts_with("A")
+                    || token.pos.starts_with('V')
+                    || token.pos.starts_with('A')
                     || token.pos == "SL"
             })
             .map(|token| {
                 // 동사/형용사는 기본형 사용
-                if token.pos.starts_with("V") || token.pos.starts_with("A") {
+                if token.pos.starts_with('V') || token.pos.starts_with('A') {
                     token.lemma.unwrap_or(token.surface)
                 } else {
                     token.surface
@@ -390,8 +390,8 @@ impl PreprocessingPipeline {
             .filter(|token| {
                 // 감성과 관련된 품사: 명사, 동사, 형용사, 부사
                 token.pos.starts_with("NN")
-                    || token.pos.starts_with("V")
-                    || token.pos.starts_with("A")
+                    || token.pos.starts_with('V')
+                    || token.pos.starts_with('A')
                     || token.pos.starts_with("MA") // 부사
             })
             .map(|token| token.lemma.unwrap_or(token.surface))

@@ -145,7 +145,7 @@ impl SampleTextGenerator {
     #[must_use]
     pub fn edge_cases() -> Vec<String> {
         vec![
-            "".to_string(),           // Empty string
+            String::new(),           // Empty string
             " ".to_string(),          // Single space
             "ㅋㅋㅋ".to_string(),     // Consonants only
             "123".to_string(),        // Numbers only

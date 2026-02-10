@@ -127,14 +127,13 @@ fn test_all_golden_tests() {
                 println!("{}: {} tests", file, test_cases.len());
             }
             Err(e) => {
-                eprintln!("Failed to load {}: {}", file, e);
+                eprintln!("Failed to load {file}: {e}");
             }
         }
     }
 
     println!(
-        "Total golden tests: {}/{} passed",
-        passed_tests, total_tests
+        "Total golden tests: {passed_tests}/{total_tests} passed"
     );
 }
 
@@ -144,27 +143,25 @@ fn test_golden_file_format() {
     let golden_files = vec!["basic.json", "nouns.json", "complex.json"];
 
     for file in golden_files {
-        let test_cases = load_golden_tests(file).expect(&format!("Failed to load {}", file));
+        let test_cases = load_golden_tests(file).unwrap_or_else(|_| panic!("Failed to load {file}"));
 
         for (i, test_case) in test_cases.iter().enumerate() {
             // Verify required fields
             assert!(
                 !test_case.input.is_empty() || file == "basic.json",
-                "{}: Test case {} has empty input",
-                file,
-                i
+                "{file}: Test case {i} has empty input"
             );
 
             // Verify expected_pos format if present
             if !test_case.expected_pos.is_empty() {
                 for (morph, pos) in &test_case.expected_pos {
-                    assert!(!morph.is_empty(), "{}: Empty morpheme in test {}", file, i);
-                    assert!(!pos.is_empty(), "{}: Empty POS tag in test {}", file, i);
+                    assert!(!morph.is_empty(), "{file}: Empty morpheme in test {i}");
+                    assert!(!pos.is_empty(), "{file}: Empty POS tag in test {i}");
                 }
             }
         }
 
-        println!("{}: Format validation passed", file);
+        println!("{file}: Format validation passed");
     }
 }
 
@@ -189,11 +186,11 @@ fn test_golden_statistics() {
                 .filter(|tc| tc.description.is_some())
                 .count();
 
-            println!("\n{} statistics:", file);
-            println!("  Total test cases: {}", total);
-            println!("  With morphemes: {}", with_morphs);
-            println!("  With POS tags: {}", with_pos);
-            println!("  With descriptions: {}", with_description);
+            println!("\n{file} statistics:");
+            println!("  Total test cases: {total}");
+            println!("  With morphemes: {with_morphs}");
+            println!("  With POS tags: {with_pos}");
+            println!("  With descriptions: {with_description}");
         }
     }
 }
@@ -321,10 +318,10 @@ fn test_golden_coverage() {
     }
 
     println!("Coverage check:");
-    println!("  Nouns: {}", has_noun);
-    println!("  Verbs: {}", has_verb);
-    println!("  Adjectives: {}", has_adjective);
-    println!("  Particles: {}", has_particle);
+    println!("  Nouns: {has_noun}");
+    println!("  Verbs: {has_verb}");
+    println!("  Adjectives: {has_adjective}");
+    println!("  Particles: {has_particle}");
 
     // Should have reasonable coverage
     assert!(has_noun, "Should have noun examples");
@@ -365,13 +362,12 @@ mod golden_utils {
 
                     assert_eq!(
                         test_case.expected_morphs, morphs_from_pos,
-                        "{}: Test case {} has inconsistent morphs and pos",
-                        file, i
+                        "{file}: Test case {i} has inconsistent morphs and pos"
                     );
                 }
             }
 
-            println!("{}: Consistency check passed", file);
+            println!("{file}: Consistency check passed");
         }
     }
 }

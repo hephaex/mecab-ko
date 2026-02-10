@@ -53,7 +53,7 @@ fn test_edge_whitespace_only() {
 
         // Whitespace-only input should produce no meaningful tokens
         // (implementation may strip whitespace)
-        println!("Input: {:?}", input);
+        println!("Input: {input:?}");
         println!(
             "Tokens: {:?}",
             tokens.iter().map(|t| &t.surface).collect::<Vec<_>>()
@@ -106,7 +106,7 @@ fn test_edge_single_characters() {
     for (input, description) in test_cases {
         let tokens = tokenizer.tokenize(input);
 
-        println!("Input: '{}' ({})", input, description);
+        println!("Input: '{input}' ({description})");
         if tokens.is_empty() {
             println!("  No tokens produced");
         } else {
@@ -451,7 +451,7 @@ fn test_edge_control_characters() {
     for input in test_cases {
         let tokens = tokenizer.tokenize(input);
 
-        println!("Input: {:?}", input);
+        println!("Input: {input:?}");
         println!("Token count: {}", tokens.len());
         for token in &tokens {
             println!("  '{}' [{}]", token.surface, token.pos);
@@ -470,8 +470,7 @@ fn test_edge_rapid_context_switching() {
 
     // Rapidly switch between very different input types
     let long_text = "매우 긴 문장을 여러 번 반복합니다. ".repeat(10);
-    let test_sequence = vec![
-        "",
+    let test_sequence = ["",
         "안녕하세요",
         "",
         "123",
@@ -480,8 +479,7 @@ fn test_edge_rapid_context_switching() {
         "",
         long_text.as_str(),
         "😀",
-        "",
-    ];
+        ""];
 
     for (i, input) in test_sequence.iter().enumerate() {
         let tokens = tokenizer.tokenize(input);
@@ -557,7 +555,7 @@ fn test_edge_unicode_categories() {
     for (input, description) in test_cases {
         let tokens = tokenizer.tokenize(input);
 
-        println!("Input: {} ({})", input, description);
+        println!("Input: {input} ({description})");
         println!("Token count: {}", tokens.len());
         for token in &tokens {
             println!("  '{}' [{}]", token.surface, token.pos);
@@ -584,7 +582,7 @@ fn test_edge_zero_width_characters() {
     for (input, description) in test_cases {
         let tokens = tokenizer.tokenize(input);
 
-        println!("Input: {:?} ({})", input, description);
+        println!("Input: {input:?} ({description})");
         println!("Token count: {}", tokens.len());
         for token in &tokens {
             println!(
@@ -611,14 +609,14 @@ fn test_edge_unicode_normalization_forms() {
     let tokens_nfc = tokenizer.tokenize(nfc);
     let tokens_nfd = tokenizer.tokenize(nfd);
 
-    println!("NFC form: {:?}", nfc);
+    println!("NFC form: {nfc:?}");
     println!(
         "Tokens: {:?}",
         tokens_nfc.iter().map(|t| &t.surface).collect::<Vec<_>>()
     );
     println!();
 
-    println!("NFD-like form: {:?}", nfd);
+    println!("NFD-like form: {nfd:?}");
     println!(
         "Tokens: {:?}",
         tokens_nfd.iter().map(|t| &t.surface).collect::<Vec<_>>()

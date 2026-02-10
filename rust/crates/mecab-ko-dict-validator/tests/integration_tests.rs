@@ -16,9 +16,9 @@ fn create_test_dict(content: &str) -> NamedTempFile {
 
 #[test]
 fn test_validate_valid_dictionary() {
-    let content = r#"한글,1,2,100,NNG,*,F,한글,*,*,*,*,*
+    let content = r"한글,1,2,100,NNG,*,F,한글,*,*,*,*,*
 테스트,3,4,200,NNG,*,T,테스트,*,*,*,*,*
-사전,5,6,150,NNG,*,T,사전,*,*,*,*,*"#;
+사전,5,6,150,NNG,*,T,사전,*,*,*,*,*";
 
     let file = create_test_dict(content);
     let validator = DictValidator::with_defaults();
@@ -33,7 +33,7 @@ fn test_validate_valid_dictionary() {
 
 #[test]
 fn test_validate_invalid_pos_tag() {
-    let content = r#"한글,1,2,100,INVALID,*,F,한글,*,*,*,*,*"#;
+    let content = r"한글,1,2,100,INVALID,*,F,한글,*,*,*,*,*";
 
     let file = create_test_dict(content);
     let validator = DictValidator::with_defaults();
@@ -55,7 +55,7 @@ fn test_validate_invalid_pos_tag() {
 
 #[test]
 fn test_validate_invalid_field_count() {
-    let content = r#"한글,1,2,100"#; // Only 4 fields instead of 13
+    let content = r"한글,1,2,100"; // Only 4 fields instead of 13
 
     let file = create_test_dict(content);
     let validator = DictValidator::with_defaults();
@@ -76,7 +76,7 @@ fn test_validate_invalid_field_count() {
 
 #[test]
 fn test_validate_invalid_cost() {
-    let content = r#"한글,1,2,50000,NNG,*,F,한글,*,*,*,*,*"#; // Cost too high
+    let content = r"한글,1,2,50000,NNG,*,F,한글,*,*,*,*,*"; // Cost too high
 
     let file = create_test_dict(content);
     let validator = DictValidator::with_defaults();
@@ -96,9 +96,9 @@ fn test_validate_invalid_cost() {
 
 #[test]
 fn test_detect_exact_duplicates() {
-    let content = r#"한글,1,2,100,NNG,*,F,한글,*,*,*,*,*
+    let content = r"한글,1,2,100,NNG,*,F,한글,*,*,*,*,*
 테스트,3,4,200,NNG,*,T,테스트,*,*,*,*,*
-한글,1,2,100,NNG,*,F,한글,*,*,*,*,*"#; // Exact duplicate of first line
+한글,1,2,100,NNG,*,F,한글,*,*,*,*,*"; // Exact duplicate of first line
 
     let file = create_test_dict(content);
     let validator = DictValidator::with_defaults();
@@ -119,13 +119,13 @@ fn test_detect_exact_duplicates() {
 
 #[test]
 fn test_skip_empty_lines_and_comments() {
-    let content = r#"# This is a comment
+    let content = r"# This is a comment
 한글,1,2,100,NNG,*,F,한글,*,*,*,*,*
 
 # Another comment
 테스트,3,4,200,NNG,*,T,테스트,*,*,*,*,*
 
-"#;
+";
 
     let file = create_test_dict(content);
     let validator = DictValidator::with_defaults();
@@ -161,7 +161,7 @@ fn test_normalization_warning() {
 
 #[test]
 fn test_json_output() {
-    let content = r#"한글,1,2,100,NNG,*,F,한글,*,*,*,*,*"#;
+    let content = r"한글,1,2,100,NNG,*,F,한글,*,*,*,*,*";
 
     let file = create_test_dict(content);
     let validator = DictValidator::with_defaults();
@@ -177,7 +177,7 @@ fn test_json_output() {
 
 #[test]
 fn test_text_output() {
-    let content = r#"한글,1,2,100,NNG,*,F,한글,*,*,*,*,*"#;
+    let content = r"한글,1,2,100,NNG,*,F,한글,*,*,*,*,*";
 
     let file = create_test_dict(content);
     let validator = DictValidator::with_defaults();
@@ -199,7 +199,7 @@ fn test_custom_config() {
 
     let validator = DictValidator::new(config);
 
-    let content = r#"한글,1,2,100,NNG,*,F,한글,*,*"#; // 10 fields
+    let content = r"한글,1,2,100,NNG,*,F,한글,*,*"; // 10 fields
 
     let file = create_test_dict(content);
     let report = validator
@@ -229,10 +229,10 @@ fn test_config_save_and_load() {
 
 #[test]
 fn test_statistics_calculation() {
-    let content = r#"한글,1,2,100,NNG,*,F,한글,*,*,*,*,*
+    let content = r"한글,1,2,100,NNG,*,F,한글,*,*,*,*,*
 테스트,3,4,200,NNG,*,T,테스트,*,*,*,*,*
 사전,5,6,150,NNG,*,T,사전,*,*,*,*,*
-처리,7,8,300,VV,*,F,처리,*,*,*,*,*"#;
+처리,7,8,300,VV,*,F,처리,*,*,*,*,*";
 
     let file = create_test_dict(content);
     let validator = DictValidator::with_defaults();
@@ -251,7 +251,7 @@ fn test_statistics_calculation() {
 
 #[test]
 fn test_compound_pos_tags() {
-    let content = r#"한글은,1,2,100,NNG+JKS,*,F,한글은,*,*,*,*,*"#;
+    let content = r"한글은,1,2,100,NNG+JKS,*,F,한글은,*,*,*,*,*";
 
     let file = create_test_dict(content);
     let validator = DictValidator::with_defaults();
@@ -271,7 +271,7 @@ fn test_compound_pos_tags() {
 
 #[test]
 fn test_multiple_warnings() {
-    let content = r#"한글,1,2,9000,NNG,*,F,한글,*,*,*,*,*"#; // High cost
+    let content = r"한글,1,2,9000,NNG,*,F,한글,*,*,*,*,*"; // High cost
 
     let file = create_test_dict(content);
     let validator = DictValidator::with_defaults();

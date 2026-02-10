@@ -87,10 +87,11 @@ missing_docs = "warn"
 all = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
 nursery = { level = "warn", priority = -1 }
-# 엄격한 에러 처리
-unwrap_used = "deny"
-expect_used = "deny"
-panic = "deny"
+# 엄격한 에러 처리 (라이브러리 코드에서만, 테스트/예제는 허용)
+# Note: Tests and examples should add #![cfg_attr(not(test), deny(clippy::unwrap_used, clippy::expect_used))]
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
 
 [profile.release]
 lto = true

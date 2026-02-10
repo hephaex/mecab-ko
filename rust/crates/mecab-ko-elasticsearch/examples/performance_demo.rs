@@ -2,6 +2,8 @@
 //!
 //! This example demonstrates the performance improvements from caching and batch processing.
 
+#![allow(clippy::cast_precision_loss)]
+
 use mecab_ko_elasticsearch::analyzer::NoriAnalyzer;
 use mecab_ko_elasticsearch::config::{AnalyzerConfig, DecompoundMode};
 use std::time::Instant;
@@ -63,8 +65,7 @@ fn demo_cache_performance(config: &AnalyzerConfig) -> Result<(), Box<dyn std::er
     let no_cache_qps = (ITERATIONS * SAMPLE_QUERIES.len()) as f64 / no_cache_time.as_secs_f64();
 
     println!(
-        "   No cache:    {:?} ({:.0} queries/sec)",
-        no_cache_time, no_cache_qps
+        "   No cache:    {no_cache_time:?} ({no_cache_qps:.0} queries/sec)"
     );
 
     // With cache
@@ -81,12 +82,11 @@ fn demo_cache_performance(config: &AnalyzerConfig) -> Result<(), Box<dyn std::er
     let cache_qps = (ITERATIONS * SAMPLE_QUERIES.len()) as f64 / cache_time.as_secs_f64();
 
     println!(
-        "   With cache:  {:?} ({:.0} queries/sec)",
-        cache_time, cache_qps
+        "   With cache:  {cache_time:?} ({cache_qps:.0} queries/sec)"
     );
 
     let speedup = no_cache_time.as_secs_f64() / cache_time.as_secs_f64();
-    println!("   Speedup:     {:.1}x faster with cache\n", speedup);
+    println!("   Speedup:     {speedup:.1}x faster with cache\n");
 
     Ok(())
 }
@@ -110,26 +110,23 @@ fn demo_batch_processing(config: &AnalyzerConfig) -> Result<(), Box<dyn std::err
     let seq_throughput = BATCH_SIZE as f64 / seq_time.as_secs_f64();
 
     println!(
-        "   Sequential:  {:?} ({:.0} docs/sec)",
-        seq_time, seq_throughput
+        "   Sequential:  {seq_time:?} ({seq_throughput:.0} docs/sec)"
     );
 
     // Batch processing
     let start = Instant::now();
-    let docs_slice: Vec<&str> = documents.iter().map(|s| s.as_ref()).collect();
+    let docs_slice: Vec<&str> = documents.iter().map(std::convert::AsRef::as_ref).collect();
     let _ = analyzer.analyze_batch(&docs_slice)?;
     let batch_time = start.elapsed();
     let batch_throughput = BATCH_SIZE as f64 / batch_time.as_secs_f64();
 
     println!(
-        "   Parallel:    {:?} ({:.0} docs/sec)",
-        batch_time, batch_throughput
+        "   Parallel:    {batch_time:?} ({batch_throughput:.0} docs/sec)"
     );
 
     let speedup = seq_time.as_secs_f64() / batch_time.as_secs_f64();
     println!(
-        "   Speedup:     {:.1}x faster with batch processing\n",
-        speedup
+        "   Speedup:     {speedup:.1}x faster with batch processing\n"
     );
 
     Ok(())
@@ -142,7 +139,7 @@ fn demo_cache_statistics(config: &AnalyzerConfig) -> Result<(), Box<dyn std::err
     let analyzer = NoriAnalyzer::with_cache_size(config.clone(), 16)?;
 
     if let Some((capacity, size)) = analyzer.cache_stats() {
-        println!("   Initial:     {}/{} entries", size, capacity);
+        println!("   Initial:     {size}/{capacity} entries");
     }
 
     // Add some queries to cache
@@ -151,19 +148,18 @@ fn demo_cache_statistics(config: &AnalyzerConfig) -> Result<(), Box<dyn std::err
     }
 
     if let Some((capacity, size)) = analyzer.cache_stats() {
-        println!("   After 8:     {}/{} entries", size, capacity);
+        println!("   After 8:     {size}/{capacity} entries");
     }
 
     // Add more queries (will exceed cache size)
     for i in 0..20 {
-        let query = format!("추가 쿼리 {}", i);
+        let query = format!("추가 쿼리 {i}");
         let _ = analyzer.analyze(&query)?;
     }
 
     if let Some((capacity, size)) = analyzer.cache_stats() {
         println!(
-            "   After 28:    {}/{} entries (LRU eviction)",
-            size, capacity
+            "   After 28:    {size}/{capacity} entries (LRU eviction)"
         );
     }
 
@@ -171,7 +167,7 @@ fn demo_cache_statistics(config: &AnalyzerConfig) -> Result<(), Box<dyn std::err
     analyzer.clear_cache();
 
     if let Some((capacity, size)) = analyzer.cache_stats() {
-        println!("   After clear: {}/{} entries\n", size, capacity);
+        println!("   After clear: {size}/{capacity} entries\n");
     }
 
     Ok(())

@@ -280,15 +280,15 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Requires global allocator to be installed
+    #[ignore = "Requires global allocator to be installed"]
     fn test_memory_guard() {
         reset_stats();
 
         {
-            let _guard = MemoryGuard::new("test");
+            let guard = MemoryGuard::new("test");
             let _v = vec![0u8; 1024];
 
-            let current = _guard.current();
+            let current = guard.current();
             assert!(current.allocations > 0);
         }
     }

@@ -357,7 +357,7 @@ fn bench_tokenizer_throughput(c: &mut Criterion) {
 
 /// 특수 케이스 처리
 fn bench_tokenizer_edge_cases(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
 
     let mut group = c.benchmark_group("tokenizer_edge_cases");
 

@@ -337,7 +337,7 @@ mod tests {
             entry_size: 10,
         };
 
-        assert_eq!(analysis.overhead_percentage(), 50.0);
+        assert!((analysis.overhead_percentage() - 50.0).abs() < f64::EPSILON);
         assert!(analysis.is_acceptable(0.6));
         assert!(!analysis.is_acceptable(0.4));
     }
@@ -351,7 +351,7 @@ mod tests {
             wasted_space: 1000,
         };
 
-        assert_eq!(analysis.fill_percentage(), 75.0);
+        assert!((analysis.fill_percentage() - 75.0).abs() < f64::EPSILON);
         assert!(analysis.is_acceptable(0.7));
         assert!(!analysis.is_acceptable(0.8));
     }

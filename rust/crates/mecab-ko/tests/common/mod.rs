@@ -3,12 +3,13 @@
 //! This module provides shared functionality for integration tests.
 
 pub mod fixtures;
+pub mod mini_dict;
 
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 /// Test fixture for morphological analysis
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct MorphTestCase {
     /// Input text to analyze
     pub input: String,
@@ -27,7 +28,7 @@ pub struct MorphTestCase {
 }
 
 /// Test result comparison
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TestResult {
     /// Whether the test passed
     pub passed: bool,
@@ -128,10 +129,10 @@ pub fn compare_morphs(expected: &[String], actual: &[String]) -> TestResult {
     let expected_str = format!("{expected:?}");
     let actual_str = format!("{actual:?}");
 
-    let diff = if !passed {
-        Some(generate_diff(expected, actual))
-    } else {
+    let diff = if passed {
         None
+    } else {
+        Some(generate_diff(expected, actual))
     };
 
     TestResult {
@@ -157,10 +158,10 @@ pub fn compare_pos_tags(expected: &[(String, String)], actual: &[(String, String
     let expected_str = format!("{expected:?}");
     let actual_str = format!("{actual:?}");
 
-    let diff = if !passed {
-        Some(generate_pos_diff(expected, actual))
-    } else {
+    let diff = if passed {
         None
+    } else {
+        Some(generate_pos_diff(expected, actual))
     };
 
     TestResult {
@@ -178,8 +179,8 @@ fn generate_diff(expected: &[String], actual: &[String]) -> String {
 
     let max_len = expected.len().max(actual.len());
     for i in 0..max_len {
-        let exp = expected.get(i).map(|s| s.as_str()).unwrap_or("<missing>");
-        let act = actual.get(i).map(|s| s.as_str()).unwrap_or("<missing>");
+        let exp = expected.get(i).map_or("<missing>", std::string::String::as_str);
+        let act = actual.get(i).map_or("<missing>", std::string::String::as_str);
 
         if exp != act {
             diff.push_str(&format!("  Position {i}: expected '{exp}', got '{act}'\n"));
@@ -197,13 +198,9 @@ fn generate_pos_diff(expected: &[(String, String)], actual: &[(String, String)])
     let max_len = expected.len().max(actual.len());
     for i in 0..max_len {
         let exp = expected
-            .get(i)
-            .map(|(m, p)| format!("{m}/{p}"))
-            .unwrap_or_else(|| "<missing>".to_string());
+            .get(i).map_or_else(|| "<missing>".to_string(), |(m, p)| format!("{m}/{p}"));
         let act = actual
-            .get(i)
-            .map(|(m, p)| format!("{m}/{p}"))
-            .unwrap_or_else(|| "<missing>".to_string());
+            .get(i).map_or_else(|| "<missing>".to_string(), |(m, p)| format!("{m}/{p}"));
 
         if exp != act {
             diff.push_str(&format!("  Position {i}: expected '{exp}', got '{act}'\n"));

@@ -1,0 +1,17 @@
+[package]
+name = "test-fixtures"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+
+[[bin]]
+name = "create_mini_dict"
+path = "create_mini_dict.rs"
+
+[dependencies]
+yada = "0.5"
+byteorder = "1.5"
+
+[dev-dependencies]
+tempfile = "3.8"

@@ -320,7 +320,7 @@ fn bench_normalization_chain(c: &mut Criterion) {
 
 /// 정규화 오버헤드 측정
 fn bench_normalization_overhead(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("normalization_overhead");
 
     // 정규화 불필요 (깨끗한 텍스트)

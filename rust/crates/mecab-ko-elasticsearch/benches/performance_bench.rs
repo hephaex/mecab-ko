@@ -2,6 +2,8 @@
 //!
 //! 실제 사용 시나리오를 시뮬레이션하여 성능 측정
 
+#![allow(missing_docs)]
+
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use mecab_ko_elasticsearch::analyzer::NoriAnalyzer;
 use mecab_ko_elasticsearch::config::{AnalyzerConfig, DecompoundMode};

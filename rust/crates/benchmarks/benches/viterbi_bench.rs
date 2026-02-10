@@ -7,10 +7,12 @@
 //! - 노드 수에 따른 확장성
 //! - N-best 성능
 
+#![allow(clippy::cast_possible_truncation, missing_docs)]
+
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use mecab_ko_core::lattice::{Lattice, NodeBuilder};
 use mecab_ko_core::viterbi::{NbestSearcher, SpacePenalty, ViterbiSearcher, ZeroConnectionCost};
-use mecab_ko_dict::matrix::{DenseMatrix, Matrix};
+use mecab_ko_dict::matrix::DenseMatrix;
 use rand::Rng;
 
 /// 테스트용 연접 비용 행렬
@@ -269,7 +271,7 @@ fn bench_nbest_search(c: &mut Criterion) {
 
     let mut group = c.benchmark_group("viterbi_nbest");
 
-    for n in [1, 3, 5, 10].iter() {
+    for n in &[1, 3, 5, 10] {
         group.bench_with_input(BenchmarkId::from_parameter(n), n, |b, &n| {
             let searcher = NbestSearcher::new(n);
 
@@ -291,7 +293,7 @@ fn bench_scalability_by_nodes(c: &mut Criterion) {
 
     let mut group = c.benchmark_group("viterbi_scalability");
 
-    for num_positions in [5, 10, 20, 50].iter() {
+    for num_positions in &[5, 10, 20, 50] {
         group.bench_with_input(
             BenchmarkId::from_parameter(num_positions),
             num_positions,
