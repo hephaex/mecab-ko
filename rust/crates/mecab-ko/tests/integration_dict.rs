@@ -52,20 +52,22 @@ fn test_load_system_dictionary() {
     let dict_path = common::mini_dict::mini_dict_path();
 
     if !common::mini_dict::mini_dict_exists() {
-        println!("Skipping test: mini dictionary not found at {:?}", dict_path);
+        println!(
+            "Skipping test: mini dictionary not found at {:?}",
+            dict_path
+        );
         println!("Run: cd rust/test-fixtures && cargo run --release");
         return;
     }
 
-    let dict = MmapDictionary::load(&dict_path)
-        .expect("Failed to load mini test dictionary");
+    let dict = MmapDictionary::load(&dict_path).expect("Failed to load mini test dictionary");
 
     // Verify dictionary is loaded and has entries
-    assert!(
-        !dict.entries().is_empty(),
-        "Dictionary should have entries"
+    assert!(!dict.entries().is_empty(), "Dictionary should have entries");
+    println!(
+        "Loaded {} entries from mini dictionary",
+        dict.entries().len()
     );
-    println!("Loaded {} entries from mini dictionary", dict.entries().len());
 }
 
 /// Test dictionary lookup functionality with mini test dictionary
@@ -76,24 +78,22 @@ fn test_dictionary_lookup() {
     let dict_path = common::mini_dict::mini_dict_path();
 
     if !common::mini_dict::mini_dict_exists() {
-        println!("Skipping test: mini dictionary not found at {:?}", dict_path);
+        println!(
+            "Skipping test: mini dictionary not found at {:?}",
+            dict_path
+        );
         println!("Run: cd rust/test-fixtures && cargo run --release");
         return;
     }
 
-    let dict = MmapDictionary::load(&dict_path)
-        .expect("Failed to load mini test dictionary");
+    let dict = MmapDictionary::load(&dict_path).expect("Failed to load mini test dictionary");
 
     // Test lookup for common Korean words in the mini dictionary
     let test_words = vec!["안녕", "감사", "한국어", "사람"];
 
     for word in test_words {
         let entries = dict.lookup(word);
-        assert!(
-            !entries.is_empty(),
-            "Should find entries for '{}'",
-            word
-        );
+        assert!(!entries.is_empty(), "Should find entries for '{}'", word);
 
         for entry in &entries {
             assert_eq!(entry.surface, word);

@@ -18,8 +18,8 @@ name = "mecab-ko-dict-builder"
 path = "src/main.rs"
 
 [dependencies]
-mecab-ko-hangul = { path = "../mecab-ko-hangul" }
-mecab-ko-dict = { path = "../mecab-ko-dict" }
+mecab-ko-hangul = { version = "0.1.0", path = "../mecab-ko-hangul" }
+mecab-ko-dict = { version = "0.1.0", path = "../mecab-ko-dict" }
 thiserror.workspace = true
 anyhow.workspace = true
 serde.workspace = true

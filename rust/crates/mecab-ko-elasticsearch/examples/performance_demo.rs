@@ -64,9 +64,7 @@ fn demo_cache_performance(config: &AnalyzerConfig) -> Result<(), Box<dyn std::er
     let no_cache_time = start.elapsed();
     let no_cache_qps = (ITERATIONS * SAMPLE_QUERIES.len()) as f64 / no_cache_time.as_secs_f64();
 
-    println!(
-        "   No cache:    {no_cache_time:?} ({no_cache_qps:.0} queries/sec)"
-    );
+    println!("   No cache:    {no_cache_time:?} ({no_cache_qps:.0} queries/sec)");
 
     // With cache
     let analyzer_with_cache = NoriAnalyzer::with_cache_size(config.clone(), 1024)?;
@@ -81,9 +79,7 @@ fn demo_cache_performance(config: &AnalyzerConfig) -> Result<(), Box<dyn std::er
     let cache_time = start.elapsed();
     let cache_qps = (ITERATIONS * SAMPLE_QUERIES.len()) as f64 / cache_time.as_secs_f64();
 
-    println!(
-        "   With cache:  {cache_time:?} ({cache_qps:.0} queries/sec)"
-    );
+    println!("   With cache:  {cache_time:?} ({cache_qps:.0} queries/sec)");
 
     let speedup = no_cache_time.as_secs_f64() / cache_time.as_secs_f64();
     println!("   Speedup:     {speedup:.1}x faster with cache\n");
@@ -109,9 +105,7 @@ fn demo_batch_processing(config: &AnalyzerConfig) -> Result<(), Box<dyn std::err
     let seq_time = start.elapsed();
     let seq_throughput = BATCH_SIZE as f64 / seq_time.as_secs_f64();
 
-    println!(
-        "   Sequential:  {seq_time:?} ({seq_throughput:.0} docs/sec)"
-    );
+    println!("   Sequential:  {seq_time:?} ({seq_throughput:.0} docs/sec)");
 
     // Batch processing
     let start = Instant::now();
@@ -120,14 +114,10 @@ fn demo_batch_processing(config: &AnalyzerConfig) -> Result<(), Box<dyn std::err
     let batch_time = start.elapsed();
     let batch_throughput = BATCH_SIZE as f64 / batch_time.as_secs_f64();
 
-    println!(
-        "   Parallel:    {batch_time:?} ({batch_throughput:.0} docs/sec)"
-    );
+    println!("   Parallel:    {batch_time:?} ({batch_throughput:.0} docs/sec)");
 
     let speedup = seq_time.as_secs_f64() / batch_time.as_secs_f64();
-    println!(
-        "   Speedup:     {speedup:.1}x faster with batch processing\n"
-    );
+    println!("   Speedup:     {speedup:.1}x faster with batch processing\n");
 
     Ok(())
 }
@@ -158,9 +148,7 @@ fn demo_cache_statistics(config: &AnalyzerConfig) -> Result<(), Box<dyn std::err
     }
 
     if let Some((capacity, size)) = analyzer.cache_stats() {
-        println!(
-            "   After 28:    {size}/{capacity} entries (LRU eviction)"
-        );
+        println!("   After 28:    {size}/{capacity} entries (LRU eviction)");
     }
 
     // Clear cache

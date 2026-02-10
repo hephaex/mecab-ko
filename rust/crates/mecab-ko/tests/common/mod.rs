@@ -179,8 +179,12 @@ fn generate_diff(expected: &[String], actual: &[String]) -> String {
 
     let max_len = expected.len().max(actual.len());
     for i in 0..max_len {
-        let exp = expected.get(i).map_or("<missing>", std::string::String::as_str);
-        let act = actual.get(i).map_or("<missing>", std::string::String::as_str);
+        let exp = expected
+            .get(i)
+            .map_or("<missing>", std::string::String::as_str);
+        let act = actual
+            .get(i)
+            .map_or("<missing>", std::string::String::as_str);
 
         if exp != act {
             diff.push_str(&format!("  Position {i}: expected '{exp}', got '{act}'\n"));
@@ -198,9 +202,11 @@ fn generate_pos_diff(expected: &[(String, String)], actual: &[(String, String)])
     let max_len = expected.len().max(actual.len());
     for i in 0..max_len {
         let exp = expected
-            .get(i).map_or_else(|| "<missing>".to_string(), |(m, p)| format!("{m}/{p}"));
+            .get(i)
+            .map_or_else(|| "<missing>".to_string(), |(m, p)| format!("{m}/{p}"));
         let act = actual
-            .get(i).map_or_else(|| "<missing>".to_string(), |(m, p)| format!("{m}/{p}"));
+            .get(i)
+            .map_or_else(|| "<missing>".to_string(), |(m, p)| format!("{m}/{p}"));
 
         if exp != act {
             diff.push_str(&format!("  Position {i}: expected '{exp}', got '{act}'\n"));

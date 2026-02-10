@@ -470,7 +470,8 @@ fn test_edge_rapid_context_switching() {
 
     // Rapidly switch between very different input types
     let long_text = "매우 긴 문장을 여러 번 반복합니다. ".repeat(10);
-    let test_sequence = ["",
+    let test_sequence = [
+        "",
         "안녕하세요",
         "",
         "123",
@@ -479,7 +480,8 @@ fn test_edge_rapid_context_switching() {
         "",
         long_text.as_str(),
         "😀",
-        ""];
+        "",
+    ];
 
     for (i, input) in test_sequence.iter().enumerate() {
         let tokens = tokenizer.tokenize(input);

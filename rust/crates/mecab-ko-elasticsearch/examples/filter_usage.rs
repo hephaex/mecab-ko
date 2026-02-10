@@ -101,20 +101,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // 읽기 정보가 있는 토큰 생성 (예제용)
         use mecab_ko_elasticsearch::tokenizer::Token;
         let tokens_with_reading = vec![
-        Token::new("形態素".to_string(), "NNG".to_string(), 0, 3)
-            .with_reading(Some("형태소".to_string())),
-        Token::new("分析".to_string(), "NNG".to_string(), 3, 5)
-            .with_reading(Some("분석".to_string())),
-        Token::new("한자".to_string(), "NNG".to_string(), 5, 7), // 읽기 없음
-    ];
+            Token::new("形態素".to_string(), "NNG".to_string(), 0, 3)
+                .with_reading(Some("형태소".to_string())),
+            Token::new("分析".to_string(), "NNG".to_string(), 3, 5)
+                .with_reading(Some("분석".to_string())),
+            Token::new("한자".to_string(), "NNG".to_string(), 5, 7), // 읽기 없음
+        ];
 
-    println!("원본:");
-    for token in &tokens_with_reading {
-        println!(
-            "  {} [{}] {:?}",
-            token.surface, token.pos_tag, token.reading
-        );
-    }
+        println!("원본:");
+        for token in &tokens_with_reading {
+            println!(
+                "  {} [{}] {:?}",
+                token.surface, token.pos_tag, token.reading
+            );
+        }
 
         let filtered6 = reading_filter.filter(tokens_with_reading)?;
         println!("\n읽기 변환 후:");

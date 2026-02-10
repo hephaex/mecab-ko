@@ -132,9 +132,7 @@ fn test_all_golden_tests() {
         }
     }
 
-    println!(
-        "Total golden tests: {passed_tests}/{total_tests} passed"
-    );
+    println!("Total golden tests: {passed_tests}/{total_tests} passed");
 }
 
 /// Verify golden test file format
@@ -143,7 +141,8 @@ fn test_golden_file_format() {
     let golden_files = vec!["basic.json", "nouns.json", "complex.json"];
 
     for file in golden_files {
-        let test_cases = load_golden_tests(file).unwrap_or_else(|_| panic!("Failed to load {file}"));
+        let test_cases =
+            load_golden_tests(file).unwrap_or_else(|_| panic!("Failed to load {file}"));
 
         for (i, test_case) in test_cases.iter().enumerate() {
             // Verify required fields

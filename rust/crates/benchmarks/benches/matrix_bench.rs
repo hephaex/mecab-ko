@@ -6,11 +6,7 @@
 //! - 캐시 효율성
 //! - 다양한 행렬 크기에서의 성능
 
-#![allow(
-    clippy::cast_possible_truncation,
-    clippy::cast_sign_loss,
-    missing_docs
-)]
+#![allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, missing_docs)]
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use mecab_ko_dict::matrix::{DenseMatrix, Matrix};

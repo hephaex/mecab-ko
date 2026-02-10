@@ -117,9 +117,11 @@ fn test_common_sentences() {
 #[test]
 fn test_morpheme_boundaries() {
     // Test cases with known morpheme boundaries
-    let test_cases = [("안녕하세요", vec!["안녕", "하", "세요"]),
+    let test_cases = [
+        ("안녕하세요", vec!["안녕", "하", "세요"]),
         ("감사합니다", vec!["감사", "하", "ㅂ니다"]),
-        ("좋은", vec!["좋", "은"])];
+        ("좋은", vec!["좋", "은"]),
+    ];
 
     // TODO: Implement once tokenizer is available
     // let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
@@ -177,10 +179,12 @@ fn test_pos_tagging_accuracy() {
 /// Test handling of particles (조사)
 #[test]
 fn test_particle_handling() {
-    let test_cases = [("나는", vec![("나", "NP"), ("는", "JX")]),
+    let test_cases = [
+        ("나는", vec![("나", "NP"), ("는", "JX")]),
         ("책을", vec![("책", "NNG"), ("을", "JKO")]),
         ("학교에서", vec![("학교", "NNG"), ("에서", "JKB")]),
-        ("친구와", vec![("친구", "NNG"), ("와", "JC")])];
+        ("친구와", vec![("친구", "NNG"), ("와", "JC")]),
+    ];
 
     // TODO: Implement once tokenizer is available
     // let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
@@ -205,13 +209,15 @@ fn test_particle_handling() {
 /// Test handling of verb conjugations
 #[test]
 fn test_verb_conjugations() {
-    let test_cases = [("먹었다", vec![("먹", "VV"), ("었", "EP"), ("다", "EF")]),
+    let test_cases = [
+        ("먹었다", vec![("먹", "VV"), ("었", "EP"), ("다", "EF")]),
         (
             "갔습니다",
             vec![("가", "VV"), ("았", "EP"), ("습니다", "EF")],
         ),
         ("하고", vec![("하", "VV"), ("고", "EC")]),
-        ("먹어요", vec![("먹", "VV"), ("어요", "EF")])];
+        ("먹어요", vec![("먹", "VV"), ("어요", "EF")]),
+    ];
 
     // TODO: Implement once tokenizer is available
     // let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");

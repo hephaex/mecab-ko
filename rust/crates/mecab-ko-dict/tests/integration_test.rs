@@ -21,8 +21,8 @@ fn test_system_dictionary_integration() {
 
     if mini_dict_path.join("sys.dic").exists() {
         println!("Testing with mini dictionary at {:?}", mini_dict_path);
-        let dict = SystemDictionary::load(&mini_dict_path)
-            .expect("Failed to load mini test dictionary");
+        let dict =
+            SystemDictionary::load(&mini_dict_path).expect("Failed to load mini test dictionary");
         assert!(dict.dicdir().exists());
         println!("Mini dictionary loaded successfully");
         return;
