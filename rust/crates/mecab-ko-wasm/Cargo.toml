@@ -10,7 +10,7 @@ homepage.workspace = true
 documentation = "https://docs.rs/mecab-ko-wasm"
 readme = "README.md"
 description = "WebAssembly bindings for MeCab-Ko (Korean morphological analyzer)"
-keywords = ["korean", "morphological-analysis", "wasm", "nlp", "mecab"]
+keywords = ["korean", "morphology", "wasm", "nlp", "mecab"]
 categories = ["text-processing", "science", "wasm"]
 publish = false
 

@@ -10,7 +10,7 @@ homepage.workspace = true
 documentation = "https://docs.rs/mecab-ko-node"
 readme = "README.md"
 description = "Node.js bindings for MeCab-Ko Korean morphological analyzer"
-keywords = ["korean", "morphological-analysis", "nlp", "nodejs", "napi"]
+keywords = ["korean", "morphology", "nlp", "nodejs", "napi"]
 categories = ["text-processing", "science", "api-bindings"]
 publish = false
 

@@ -10,7 +10,7 @@ homepage.workspace = true
 documentation = "https://docs.rs/mecab-ko-core"
 readme = "README.md"
 description = "한국어 형태소 분석 핵심 엔진 - Lattice, Viterbi, 토크나이저"
-keywords = ["korean", "morphological-analysis", "viterbi", "nlp", "tokenizer"]
+keywords = ["korean", "morphology", "viterbi", "nlp", "tokenizer"]
 categories = ["text-processing", "science"]
 
 [dependencies]

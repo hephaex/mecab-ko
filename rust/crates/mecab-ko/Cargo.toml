@@ -10,7 +10,7 @@ homepage.workspace = true
 documentation = "https://docs.rs/mecab-ko"
 readme = "README.md"
 description = "한국어 형태소 분석기 - MeCab-Ko의 순수 Rust 구현"
-keywords = ["korean", "morphological-analysis", "nlp", "tokenizer", "mecab"]
+keywords = ["korean", "morphology", "nlp", "tokenizer", "mecab"]
 categories = ["text-processing", "science"]
 
 [dependencies]

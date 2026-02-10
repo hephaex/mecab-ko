@@ -10,7 +10,7 @@ homepage.workspace = true
 documentation = "https://docs.rs/mecab-ko-python"
 readme = "README.md"
 description = "Python bindings for MeCab-Ko (Korean morphological analyzer)"
-keywords = ["korean", "morphological-analysis", "python", "nlp", "mecab"]
+keywords = ["korean", "morphology", "python", "nlp", "mecab"]
 categories = ["text-processing", "science"]
 publish = false
 
