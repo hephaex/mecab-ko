@@ -23,6 +23,7 @@ Memory profiling tools for MeCab-Ko components.
 - `cli`: Command-line tool support
 - `profilers`: Component-specific profilers (Trie, Dict, Tokenizer)
 - `flamegraph`: Flamegraph generation support (optional)
+- `test-allocator`: Enable global allocator for integration tests
 - `full`: All features enabled
 
 ## Installation
@@ -338,6 +339,33 @@ Analysis & Recommendations:
     ]
   }
 }
+```
+
+## Testing
+
+### Running All Tests
+
+By default, some integration tests that require a global allocator are ignored:
+
+```bash
+# Run tests without allocator-dependent tests (default)
+cargo test -p mecab-ko-profiler
+```
+
+### Running Tests with Memory Tracking
+
+To run all tests including those that require memory tracking, use the `test-allocator` feature:
+
+```bash
+# Run all tests including allocator-dependent tests
+cargo test -p mecab-ko-profiler --features test-allocator
+```
+
+The `test-allocator` feature installs a global allocator for integration tests, enabling tests that track memory allocations, deallocations, and usage patterns.
+
+Tests that require the allocator will be ignored without this feature and display a helpful message:
+```
+test test_basic_memory_tracking ... ignored, Requires global allocator - run with --features test-allocator
 ```
 
 ## Benchmarks

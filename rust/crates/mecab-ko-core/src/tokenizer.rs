@@ -357,9 +357,8 @@ impl Tokenizer {
         // Lattice 재설정
         self.lattice.reset(text);
 
-        // Lattice 구축 (소유권 문제 때문에 복사 필요)
-        let text_copy = self.lattice.text().to_string();
-        self.build_lattice(&text_copy);
+        // Lattice 구축
+        self.build_lattice();
 
         // Viterbi 탐색
         let path = self
@@ -377,11 +376,7 @@ impl Tokenizer {
     ///
     /// 입력 텍스트의 각 위치에서 사전 검색 및 미등록어 처리를 수행하여
     /// Lattice에 노드를 추가합니다.
-    ///
-    /// # Arguments
-    ///
-    /// * `_text` - 분석할 텍스트 (공백 제거됨)
-    fn build_lattice(&mut self, _text: &str) {
+    fn build_lattice(&mut self) {
         let char_len = self.lattice.char_len();
 
         // 각 문자 위치에서 사전 검색 및 미등록어 처리
@@ -481,8 +476,7 @@ impl Tokenizer {
     pub fn tokenize_to_lattice(&mut self, text: &str) -> &Lattice {
         if !text.is_empty() {
             self.lattice.reset(text);
-            let text_copy = self.lattice.text().to_string();
-            self.build_lattice(&text_copy);
+            self.build_lattice();
         }
         &self.lattice
     }

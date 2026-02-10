@@ -50,6 +50,7 @@ default = ["cli", "profilers"]
 cli = ["dep:clap", "dep:colored"]
 profilers = ["dep:mecab-ko-core", "dep:mecab-ko-dict"]
 flamegraph = ["dep:inferno"]
+test-allocator = [] # Enable global allocator for integration tests
 full = ["cli", "profilers", "flamegraph"]
 
 [[bin]]

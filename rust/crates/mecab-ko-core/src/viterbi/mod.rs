@@ -38,6 +38,7 @@
 use crate::lattice::{Lattice, Node, NodeId, NodeType, INVALID_NODE_ID};
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
+use std::rc::Rc;
 
 // SIMD 최적화 모듈
 #[cfg(feature = "simd")]
@@ -410,6 +411,42 @@ impl ViterbiSearcher {
 // N-best 지원
 // ============================================
 
+/// N-best 경로 노드 (링크드 리스트)
+///
+/// 경로를 Rc로 연결하여 클론 비용을 줄입니다.
+/// 전체 경로를 복사하는 대신 참조 카운트만 증가시킵니다.
+#[derive(Debug, Clone)]
+struct PathNode {
+    /// 현재 노드 ID
+    node_id: NodeId,
+    /// 이전 경로 노드 (Rc로 공유)
+    prev: Option<Rc<PathNode>>,
+}
+
+impl PathNode {
+    /// 새 경로 노드 생성
+    ///
+    /// Note: Cannot be const due to `Rc<Self>` parameter
+    #[allow(clippy::missing_const_for_fn)]
+    fn new(node_id: NodeId, prev: Option<Rc<Self>>) -> Self {
+        Self { node_id, prev }
+    }
+
+    /// 경로를 Vec로 변환 (BOS에서 현재 노드까지)
+    fn to_vec(&self) -> Vec<NodeId> {
+        let mut path = Vec::new();
+        let mut current = Some(self);
+
+        while let Some(node) = current {
+            path.push(node.node_id);
+            current = node.prev.as_ref().map(std::convert::AsRef::as_ref);
+        }
+
+        path.reverse();
+        path
+    }
+}
+
 /// N-best 경로 후보
 #[derive(Debug, Clone)]
 struct NbestCandidate {
@@ -417,8 +454,8 @@ struct NbestCandidate {
     node_id: NodeId,
     /// 총 비용
     cost: i32,
-    /// 이전 노드로의 경로 인덱스
-    prev_path_index: usize,
+    /// 이전 경로 (Rc로 공유되는 링크드 리스트)
+    path: Option<Rc<PathNode>>,
 }
 
 impl Eq for NbestCandidate {}
@@ -505,6 +542,11 @@ impl NbestSearcher {
     }
 
     /// N-best 경로 탐색 (A* 기반)
+    ///
+    /// # 최적화
+    ///
+    /// 경로를 `Rc<PathNode>`로 표현하여 클론 비용을 최소화합니다.
+    /// 전체 Vec를 복사하는 대신 참조 카운트만 증가시켜 O(1) 클론을 달성합니다.
     fn search_nbest<C: ConnectionCost>(
         &self,
         lattice: &Lattice,
@@ -522,11 +564,8 @@ impl NbestSearcher {
         heap.push(NbestCandidate {
             node_id: eos.id,
             cost: eos.total_cost,
-            prev_path_index: 0,
+            path: None,
         });
-
-        // 경로 추적을 위한 저장소
-        let mut paths: Vec<Vec<NodeId>> = vec![vec![]];
 
         while let Some(candidate) = heap.pop() {
             if results.len() >= self.max_results {
@@ -537,30 +576,29 @@ impl NbestSearcher {
                 continue;
             };
 
-            // 현재까지의 경로
-            let mut current_path = paths[candidate.prev_path_index].clone();
-
-            // BOS, EOS가 아니면 경로에 추가
-            if node.node_type != NodeType::Bos && node.node_type != NodeType::Eos {
-                current_path.push(candidate.node_id);
-            }
+            // 현재까지의 경로 (Rc 클론은 O(1))
+            let current_path = if node.node_type != NodeType::Bos && node.node_type != NodeType::Eos
+            {
+                // BOS, EOS가 아니면 경로에 추가
+                Some(Rc::new(PathNode::new(candidate.node_id, candidate.path)))
+            } else {
+                candidate.path
+            };
 
             // BOS에 도달하면 결과에 추가
             if node.node_type == NodeType::Bos {
-                current_path.reverse();
-                results.push((current_path, candidate.cost));
+                // 경로를 Vec로 변환 (완료된 경로만)
+                let path_vec = current_path.map_or_else(Vec::new, |path_node| path_node.to_vec());
+                results.push((path_vec, candidate.cost));
                 continue;
             }
 
             // 이전 노드로 계속 탐색
             if node.prev_node_id != INVALID_NODE_ID {
-                let path_index = paths.len();
-                paths.push(current_path);
-
                 heap.push(NbestCandidate {
                     node_id: node.prev_node_id,
                     cost: candidate.cost,
-                    prev_path_index: path_index,
+                    path: current_path,
                 });
             }
         }

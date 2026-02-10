@@ -1,9 +1,21 @@
 //! Integration tests for mecab-ko-profiler.
+//!
+//! Some tests require a global allocator to track memory allocations.
+//! To run these tests, use:
+//!
+//! ```bash
+//! cargo test -p mecab-ko-profiler --features test-allocator
+//! ```
 
 use mecab_ko_profiler::prelude::*;
 
+// Set up global allocator for tests that require memory tracking
+#[cfg(feature = "test-allocator")]
+#[global_allocator]
+static GLOBAL: mecab_ko_profiler::TrackingAllocator = mecab_ko_profiler::TrackingAllocator::new(std::alloc::System);
+
 #[test]
-#[ignore] // Requires global allocator to be installed
+#[cfg_attr(not(feature = "test-allocator"), ignore = "Requires global allocator - run with --features test-allocator")]
 fn test_basic_memory_tracking() {
     reset_stats();
 
@@ -18,7 +30,7 @@ fn test_basic_memory_tracking() {
 }
 
 #[test]
-#[ignore] // Requires global allocator to be installed
+#[cfg_attr(not(feature = "test-allocator"), ignore = "Requires global allocator - run with --features test-allocator")]
 fn test_snapshot_diff() {
     reset_stats();
 
@@ -35,7 +47,7 @@ fn test_snapshot_diff() {
 }
 
 #[test]
-#[ignore] // Requires global allocator to be installed
+#[cfg_attr(not(feature = "test-allocator"), ignore = "Requires global allocator - run with --features test-allocator")]
 fn test_memory_guard_nesting() {
     reset_stats();
 
@@ -142,7 +154,7 @@ mod profiler_tests {
     use mecab_ko_profiler::trie_profiler::TrieProfiler;
 
     #[test]
-    #[ignore] // Requires global allocator to be installed
+    #[cfg_attr(not(feature = "test-allocator"), ignore = "Requires global allocator - run with --features test-allocator")]
     fn test_dict_profiler() {
         let mut profiler = DictProfiler::new();
 
@@ -156,7 +168,7 @@ mod profiler_tests {
     }
 
     #[test]
-    #[ignore] // Requires global allocator to be installed
+    #[cfg_attr(not(feature = "test-allocator"), ignore = "Requires global allocator - run with --features test-allocator")]
     fn test_tokenizer_profiler() {
         let mut profiler = TokenizerProfiler::new();
 
@@ -170,7 +182,7 @@ mod profiler_tests {
     }
 
     #[test]
-    #[ignore] // Requires global allocator to be installed
+    #[cfg_attr(not(feature = "test-allocator"), ignore = "Requires global allocator - run with --features test-allocator")]
     fn test_trie_profiler() {
         let mut profiler = TrieProfiler::new();
 
@@ -183,7 +195,7 @@ mod profiler_tests {
     }
 
     #[test]
-    #[ignore] // Requires global allocator to be installed
+    #[cfg_attr(not(feature = "test-allocator"), ignore = "Requires global allocator - run with --features test-allocator")]
     fn test_scaling_analysis() {
         let mut profiler = TokenizerProfiler::new();
 
@@ -200,7 +212,7 @@ mod profiler_tests {
     }
 
     #[test]
-    #[ignore] // Requires global allocator to be installed
+    #[cfg_attr(not(feature = "test-allocator"), ignore = "Requires global allocator - run with --features test-allocator")]
     fn test_dict_memory_distribution() {
         let mut profiler = DictProfiler::new();
 
@@ -300,7 +312,7 @@ fn test_report_format_parsing() {
 }
 
 #[test]
-#[ignore] // Requires global allocator to be installed
+#[cfg_attr(not(feature = "test-allocator"), ignore = "Requires global allocator - run with --features test-allocator")]
 fn test_memory_reset() {
     reset_stats();
 

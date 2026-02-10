@@ -44,7 +44,7 @@ impl MemoryStats {
         let size_u64 = size as u64;
         self.total_allocated.fetch_add(size_u64, Ordering::Relaxed);
 
-        let current = self.current_usage.fetch_add(size_u64, Ordering::Relaxed) + size_u64;
+        let current = self.current_usage.fetch_add(size_u64, Ordering::Relaxed).wrapping_add(size_u64);
 
         // Update peak usage if necessary
         let mut peak = self.peak_usage.load(Ordering::Relaxed);
@@ -280,7 +280,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Requires global allocator to be installed"]
+    #[cfg_attr(not(feature = "test-allocator"), ignore = "Requires global allocator - run with --features test-allocator")]
     fn test_memory_guard() {
         reset_stats();
 
