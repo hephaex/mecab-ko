@@ -332,6 +332,35 @@ impl StatsCollector {
     pub fn elapsed(&self) -> Duration {
         self.start_time.elapsed()
     }
+
+    /// Peek at the current overall snapshot without consuming the collector.
+    #[must_use]
+    pub fn peek_overall(&self) -> MemorySnapshot {
+        let mut allocations = 0usize;
+        let mut deallocations = 0usize;
+        let mut total_allocated = 0u64;
+        let mut total_deallocated = 0u64;
+        let mut current_usage = 0u64;
+        let mut peak_usage = 0u64;
+
+        for stats in self.stats.components.values() {
+            allocations += stats.allocations;
+            deallocations += stats.deallocations;
+            total_allocated += stats.total_allocated;
+            total_deallocated += stats.total_deallocated;
+            current_usage += stats.current_usage;
+            peak_usage = peak_usage.max(stats.peak_usage);
+        }
+
+        MemorySnapshot {
+            allocations,
+            deallocations,
+            total_allocated,
+            total_deallocated,
+            current_usage,
+            peak_usage,
+        }
+    }
 }
 
 impl Default for StatsCollector {

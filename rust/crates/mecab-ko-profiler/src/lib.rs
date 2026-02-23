@@ -138,7 +138,10 @@ mod tests {
     use super::*;
 
     #[test]
-    #[cfg_attr(not(feature = "test-allocator"), ignore = "Requires global allocator - run with --features test-allocator")]
+    #[cfg_attr(
+        not(feature = "test-allocator"),
+        ignore = "Requires global allocator - run with --features test-allocator"
+    )]
     fn test_basic_tracking() {
         allocator::reset_stats();
 

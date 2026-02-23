@@ -44,7 +44,10 @@ impl MemoryStats {
         let size_u64 = size as u64;
         self.total_allocated.fetch_add(size_u64, Ordering::Relaxed);
 
-        let current = self.current_usage.fetch_add(size_u64, Ordering::Relaxed).wrapping_add(size_u64);
+        let current = self
+            .current_usage
+            .fetch_add(size_u64, Ordering::Relaxed)
+            .wrapping_add(size_u64);
 
         // Update peak usage if necessary
         let mut peak = self.peak_usage.load(Ordering::Relaxed);
@@ -130,6 +133,15 @@ impl MemorySnapshot {
 
 /// Global memory statistics instance.
 static MEMORY_STATS: MemoryStats = MemoryStats::new();
+
+/// Global tracking allocator for unit tests only.
+///
+/// When running `cargo test --features test-allocator`, this replaces the
+/// system allocator so that all allocations are tracked in `MEMORY_STATS`.
+/// Only active in the lib test binary (not integration tests).
+#[cfg(all(test, feature = "test-allocator"))]
+#[global_allocator]
+static GLOBAL_ALLOCATOR: TrackingAllocator = TrackingAllocator::new(System);
 
 /// Custom tracking allocator.
 pub struct TrackingAllocator<A: GlobalAlloc = System> {
@@ -280,7 +292,10 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(feature = "test-allocator"), ignore = "Requires global allocator - run with --features test-allocator")]
+    #[cfg_attr(
+        not(feature = "test-allocator"),
+        ignore = "Requires global allocator - run with --features test-allocator"
+    )]
     fn test_memory_guard() {
         reset_stats();
 

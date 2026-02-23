@@ -5,10 +5,12 @@
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use colored::Colorize;
+use mecab_ko_dict::Matrix;
 use mecab_ko_profiler::prelude::*;
 use std::fs::File;
 use std::io::{self, Write};
 use std::path::PathBuf;
+use std::time::Instant;
 
 #[derive(Parser)]
 #[command(name = "mecab-profile")]
@@ -36,11 +38,15 @@ struct Cli {
 enum Commands {
     /// Profile dictionary operations
     Dict {
-        /// Dictionary path
+        /// Dictionary path (uses default dict discovery if not specified)
         #[arg(short, long)]
         dict_path: Option<PathBuf>,
 
-        /// Simulated entry count for testing
+        /// Use simulated data instead of real dictionary
+        #[arg(long)]
+        simulate: bool,
+
+        /// Simulated entry count (only with --simulate)
         #[arg(short, long)]
         entries: Option<usize>,
     },
@@ -54,6 +60,10 @@ enum Commands {
         /// Text file to read
         #[arg(short, long)]
         file: Option<PathBuf>,
+
+        /// Dictionary path (uses default dict discovery if not specified)
+        #[arg(short, long)]
+        dict_path: Option<PathBuf>,
 
         /// Analyze scaling with multiple sizes
         #[arg(short, long)]
@@ -80,13 +90,21 @@ enum Commands {
 
     /// Run benchmark and generate profile
     Benchmark {
-        /// Benchmark to run
+        /// Benchmark to run (dict, tokenize, trie, all)
         #[arg(short, long)]
         name: String,
 
         /// Number of iterations
         #[arg(short, long, default_value = "100")]
         iterations: usize,
+
+        /// Dictionary path for real-data benchmarks
+        #[arg(short, long)]
+        dict_path: Option<PathBuf>,
+
+        /// Baseline JSON file to compare against
+        #[arg(long)]
+        baseline: Option<PathBuf>,
     },
 }
 
@@ -100,19 +118,33 @@ fn main() -> Result<()> {
     }
 
     let stats = match cli.command {
-        Commands::Dict { dict_path, entries } => profile_dict(dict_path, entries, cli.verbose)?,
+        Commands::Dict {
+            dict_path,
+            simulate,
+            entries,
+        } => {
+            if simulate {
+                profile_dict_simulated(entries, cli.verbose)?
+            } else {
+                profile_dict_real(dict_path, cli.verbose)?
+            }
+        }
         Commands::Tokenize {
             text,
             file,
+            dict_path,
             scaling,
-        } => profile_tokenize(text, file, scaling, cli.verbose)?,
+        } => profile_tokenize(text, file, dict_path, scaling, cli.verbose)?,
         Commands::Trie { entries, trie_type } => profile_trie(entries, &trie_type, cli.verbose)?,
         Commands::Report { input } => {
             return generate_report_from_file(input, &cli.format, cli.output);
         }
-        Commands::Benchmark { name, iterations } => {
-            profile_benchmark(&name, iterations, cli.verbose)?
-        }
+        Commands::Benchmark {
+            name,
+            iterations,
+            dict_path,
+            baseline,
+        } => profile_benchmark(&name, iterations, dict_path, baseline, cli.verbose)?,
     };
 
     // Generate and output report
@@ -127,46 +159,104 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn profile_dict(
-    _dict_path: Option<PathBuf>,
-    entries: Option<usize>,
-    verbose: bool,
-) -> Result<DetailedStats> {
+/// Profile real dictionary loading
+fn profile_dict_real(dict_path: Option<PathBuf>, verbose: bool) -> Result<DetailedStats> {
     if verbose {
-        eprintln!("{}", "Profiling dictionary operations...".cyan());
+        eprintln!("{}", "Profiling real dictionary operations...".cyan());
     }
 
     let mut profiler = DictProfiler::new();
 
-    // Simulate dictionary loading
+    // Load the dictionary
+    let start = Instant::now();
+
+    let dict = if let Some(path) = &dict_path {
+        if verbose {
+            eprintln!("  Loading dictionary from: {}", path.display());
+        }
+        profiler.profile_load("system_dictionary", || {
+            mecab_ko_dict::SystemDictionary::load(path)
+        })
+    } else {
+        if verbose {
+            eprintln!("  Loading default dictionary...");
+        }
+        profiler.profile_load("system_dictionary", || {
+            mecab_ko_dict::SystemDictionary::load_default()
+        })
+    };
+
+    let load_time = start.elapsed();
+
+    match dict {
+        Ok(dict) => {
+            if verbose {
+                eprintln!("  Dictionary loaded in {:?}", load_time);
+                eprintln!("  Entries: {}", dict.entries().len());
+                eprintln!(
+                    "  Matrix: {}x{} ({})",
+                    dict.matrix().left_size(),
+                    dict.matrix().right_size(),
+                    humansize::format_size(
+                        dict.matrix().left_size() * dict.matrix().right_size() * 2,
+                        humansize::BINARY
+                    ),
+                );
+                eprintln!("  Dictionary dir: {}", dict.dicdir().display());
+            }
+
+            // Profile a trie lookup
+            profiler.profile_lookup("한국어", || {
+                let _result = dict.common_prefix_search("한국어");
+            });
+        }
+        Err(e) => {
+            if verbose {
+                eprintln!("  {} Dictionary load failed: {}", "WARNING:".yellow(), e);
+                eprintln!("  Falling back to simulated data...");
+            }
+            return profile_dict_simulated(None, verbose);
+        }
+    }
+
+    Ok(profiler.finish())
+}
+
+/// Profile with simulated dictionary data
+fn profile_dict_simulated(entries: Option<usize>, verbose: bool) -> Result<DetailedStats> {
+    if verbose {
+        eprintln!(
+            "{}",
+            "Profiling dictionary operations (simulated)...".cyan()
+        );
+    }
+
+    let mut profiler = DictProfiler::new();
     let entry_count = entries.unwrap_or(10000);
 
     if verbose {
-        eprintln!("  Loading lexicon with {} entries...", entry_count);
+        eprintln!("  Simulating lexicon with {} entries...", entry_count);
     }
 
     profiler.profile_lexicon(entry_count, || {
-        // Simulate lexicon data
         let _data: Vec<Vec<u8>> = (0..entry_count)
             .map(|i| format!("word_{i}").into_bytes())
             .collect();
     });
 
     if verbose {
-        eprintln!("  Loading connection costs...");
+        eprintln!("  Simulating connection costs...");
     }
 
     profiler.profile_connection_costs(1000, || {
-        // Simulate connection cost matrix
         let _matrix: Vec<i16> = vec![0; 1000 * 1000];
     });
 
     if verbose {
-        eprintln!("  Loading features...");
+        eprintln!("  Simulating features...");
     }
 
     profiler.profile_features(entry_count, || {
-        // Simulate feature data
         let _features: Vec<String> = (0..entry_count)
             .map(|i| format!("NNG,*,*,*,*,*,word_{i}"))
             .collect();
@@ -178,6 +268,7 @@ fn profile_dict(
 fn profile_tokenize(
     text: Option<String>,
     file: Option<PathBuf>,
+    dict_path: Option<PathBuf>,
     scaling: bool,
     verbose: bool,
 ) -> Result<DetailedStats> {
@@ -193,31 +284,53 @@ fn profile_tokenize(
         text.unwrap_or_else(|| "한국어 형태소 분석 테스트".to_string())
     };
 
+    // Try to create a real tokenizer
+    let mut tokenizer = create_tokenizer(dict_path.as_deref(), verbose);
+
     if scaling {
         if verbose {
             eprintln!("  Analyzing scaling behavior...");
         }
 
-        // Test with different text sizes
         let sizes = vec![10, 50, 100, 500, 1000];
         for size in &sizes {
             let test_text: String = input_text.chars().cycle().take(*size).collect();
 
             if verbose {
-                eprintln!("    Testing with {} characters...", size);
+                eprintln!(
+                    "    Testing with {} characters ({} bytes)...",
+                    size,
+                    test_text.len()
+                );
             }
 
+            let text_for_closure = test_text.clone();
             profiler.profile_tokenize(&test_text, || {
-                // Simulate tokenization
-                let _tokens: Vec<String> = test_text
-                    .split_whitespace()
-                    .map(|s| s.to_string())
-                    .collect();
+                if let Some(ref mut tok) = tokenizer {
+                    let _tokens = tok.tokenize(&text_for_closure);
+                } else {
+                    // Simulated tokenization
+                    let _tokens: Vec<String> = text_for_closure
+                        .split_whitespace()
+                        .map(|s| s.to_string())
+                        .collect();
+                }
             });
         }
 
         if verbose {
-            let scaling_analysis = profiler.analyze_scaling(&sizes);
+            let byte_sizes: Vec<usize> = sizes
+                .iter()
+                .map(|s| {
+                    input_text
+                        .chars()
+                        .cycle()
+                        .take(*s)
+                        .collect::<String>()
+                        .len()
+                })
+                .collect();
+            let scaling_analysis = profiler.analyze_scaling(&byte_sizes);
             let complexity = scaling_analysis.estimate_complexity();
             eprintln!("    Estimated complexity: O(n^{:.2})", complexity);
         }
@@ -226,16 +339,55 @@ fn profile_tokenize(
             eprintln!("  Tokenizing {} characters...", input_text.len());
         }
 
+        let text_for_closure = input_text.clone();
         profiler.profile_tokenize(&input_text, || {
-            // Simulate tokenization
-            let _tokens: Vec<String> = input_text
-                .split_whitespace()
-                .map(|s| s.to_string())
-                .collect();
+            if let Some(ref mut tok) = tokenizer {
+                let tokens = tok.tokenize(&text_for_closure);
+                if verbose {
+                    eprintln!("    Produced {} tokens", tokens.len());
+                }
+            } else {
+                let _tokens: Vec<String> = text_for_closure
+                    .split_whitespace()
+                    .map(|s| s.to_string())
+                    .collect();
+            }
         });
     }
 
     Ok(profiler.finish())
+}
+
+/// Try to create a real tokenizer, falling back to None
+fn create_tokenizer(
+    dict_path: Option<&std::path::Path>,
+    verbose: bool,
+) -> Option<mecab_ko_core::Tokenizer> {
+    let result = if let Some(path) = dict_path {
+        mecab_ko_core::Tokenizer::with_dict(path)
+    } else {
+        mecab_ko_core::Tokenizer::new()
+    };
+
+    match result {
+        Ok(tok) => {
+            if verbose {
+                eprintln!("  Using real tokenizer with dictionary");
+            }
+            Some(tok)
+        }
+        Err(e) => {
+            if verbose {
+                eprintln!(
+                    "  {} Could not initialize tokenizer: {}",
+                    "WARNING:".yellow(),
+                    e
+                );
+                eprintln!("  Using simulated tokenization");
+            }
+            None
+        }
+    }
 }
 
 fn profile_trie(entries: usize, trie_type: &str, verbose: bool) -> Result<DetailedStats> {
@@ -254,7 +406,6 @@ fn profile_trie(entries: usize, trie_type: &str, verbose: bool) -> Result<Detail
             }
 
             profiler.profile_build(entries, || {
-                // Simulate FST construction
                 let _data: Vec<(String, u64)> = (0..entries)
                     .map(|i| (format!("key_{i:08}"), i as u64))
                     .collect();
@@ -270,7 +421,6 @@ fn profile_trie(entries: usize, trie_type: &str, verbose: bool) -> Result<Detail
             }
 
             profiler.profile_build(entries, || {
-                // Simulate double-array construction
                 let _data: Vec<String> = (0..entries).map(|i| format!("key_{i:08}")).collect();
             });
 
@@ -282,7 +432,13 @@ fn profile_trie(entries: usize, trie_type: &str, verbose: bool) -> Result<Detail
     Ok(stats)
 }
 
-fn profile_benchmark(name: &str, iterations: usize, verbose: bool) -> Result<DetailedStats> {
+fn profile_benchmark(
+    name: &str,
+    iterations: usize,
+    dict_path: Option<PathBuf>,
+    baseline: Option<PathBuf>,
+    verbose: bool,
+) -> Result<DetailedStats> {
     if verbose {
         eprintln!("{}", "Running benchmark...".cyan());
         eprintln!("  Name: {}", name);
@@ -290,24 +446,130 @@ fn profile_benchmark(name: &str, iterations: usize, verbose: bool) -> Result<Det
     }
 
     let mut collector = StatsCollector::new();
+    let start = Instant::now();
 
-    for i in 0..iterations {
-        if verbose && i % 10 == 0 {
-            eprintln!("  Iteration {}/{}", i, iterations);
+    match name {
+        "tokenize" | "all" => {
+            let mut tokenizer = create_tokenizer(dict_path.as_deref(), verbose);
+            let test_text = "한국어 형태소 분석기를 사용하여 자연어 처리를 수행합니다.";
+
+            for i in 0..iterations {
+                if verbose && i % 10 == 0 {
+                    eprintln!("  Iteration {}/{}", i, iterations);
+                }
+
+                let snapshot_before = snapshot();
+
+                if let Some(ref mut tok) = tokenizer {
+                    let _tokens = tok.tokenize(test_text);
+                } else {
+                    let _data: Vec<u8> = vec![0; 1024];
+                }
+
+                let snapshot_after = snapshot();
+                let diff = snapshot_after.diff(&snapshot_before);
+                collector.add_component(format!("iteration_{i}"), diff);
+            }
         }
+        "dict" => {
+            for i in 0..iterations.min(5) {
+                if verbose {
+                    eprintln!("  Dict load iteration {}", i);
+                }
 
-        let snapshot_before = snapshot();
+                let snapshot_before = snapshot();
 
-        // Simulate some work
-        let _data: Vec<u8> = vec![0; 1024];
+                if let Some(path) = &dict_path {
+                    let _dict = mecab_ko_dict::SystemDictionary::load(path);
+                } else {
+                    let _dict = mecab_ko_dict::SystemDictionary::load_default();
+                }
 
-        let snapshot_after = snapshot();
-        let diff = snapshot_after.diff(&snapshot_before);
+                let snapshot_after = snapshot();
+                let diff = snapshot_after.diff(&snapshot_before);
+                collector.add_component(format!("dict_load_{i}"), diff);
+            }
+        }
+        _ => {
+            // Generic benchmark with simulated work
+            for i in 0..iterations {
+                if verbose && i % 10 == 0 {
+                    eprintln!("  Iteration {}/{}", i, iterations);
+                }
 
-        collector.add_component(format!("iteration_{i}"), diff);
+                let snapshot_before = snapshot();
+                let _data: Vec<u8> = vec![0; 1024];
+                let snapshot_after = snapshot();
+                let diff = snapshot_after.diff(&snapshot_before);
+                collector.add_component(format!("iteration_{i}"), diff);
+            }
+        }
+    }
+
+    let elapsed = start.elapsed();
+    if verbose {
+        eprintln!("  Completed {} iterations in {:?}", iterations, elapsed);
+        eprintln!("  Average: {:?} per iteration", elapsed / iterations as u32);
+    }
+
+    // Baseline comparison
+    if let Some(baseline_path) = baseline {
+        compare_baseline(&baseline_path, &collector, verbose)?;
     }
 
     Ok(collector.finish())
+}
+
+fn compare_baseline(
+    baseline_path: &std::path::Path,
+    current: &StatsCollector,
+    verbose: bool,
+) -> Result<()> {
+    let file = File::open(baseline_path)
+        .with_context(|| format!("Failed to open baseline: {}", baseline_path.display()))?;
+
+    let baseline: DetailedStats =
+        serde_json::from_reader(file).context("Failed to parse baseline JSON")?;
+
+    let current_stats = current.peek_overall();
+
+    if verbose {
+        eprintln!();
+        eprintln!("{}", "  Baseline Comparison:".bold());
+        eprintln!(
+            "    Memory allocated: {} (baseline: {})",
+            humansize::format_size(current_stats.total_allocated, humansize::BINARY),
+            humansize::format_size(baseline.overall.total_allocated, humansize::BINARY),
+        );
+        eprintln!(
+            "    Current usage: {} (baseline: {})",
+            humansize::format_size(current_stats.current_usage, humansize::BINARY),
+            humansize::format_size(baseline.overall.current_usage, humansize::BINARY),
+        );
+
+        // Regression detection
+        let usage_ratio = if baseline.overall.current_usage > 0 {
+            current_stats.current_usage as f64 / baseline.overall.current_usage as f64
+        } else {
+            1.0
+        };
+
+        if usage_ratio > 1.1 {
+            eprintln!(
+                "    {} Memory regression: {:.1}% increase",
+                "WARNING:".yellow(),
+                (usage_ratio - 1.0) * 100.0
+            );
+        } else if usage_ratio < 0.9 {
+            eprintln!(
+                "    {} Memory improvement: {:.1}% decrease",
+                "GOOD:".green(),
+                (1.0 - usage_ratio) * 100.0
+            );
+        }
+    }
+
+    Ok(())
 }
 
 fn generate_report_from_file(input: PathBuf, format: &str, output: Option<PathBuf>) -> Result<()> {

@@ -66,6 +66,7 @@ impl DictProfiler {
         let end = crate::allocator::snapshot();
 
         let diff = end.diff(&start);
+        self.measurements.insert("lexicon".to_string(), diff);
         self.collector.add_component("lexicon", diff);
 
         result
@@ -83,6 +84,8 @@ impl DictProfiler {
         let end = crate::allocator::snapshot();
 
         let diff = end.diff(&start);
+        self.measurements
+            .insert("connection_costs".to_string(), diff);
         self.collector.add_component("connection_costs", diff);
 
         result
@@ -100,6 +103,7 @@ impl DictProfiler {
         let end = crate::allocator::snapshot();
 
         let diff = end.diff(&start);
+        self.measurements.insert("features".to_string(), diff);
         self.collector.add_component("features", diff);
 
         result

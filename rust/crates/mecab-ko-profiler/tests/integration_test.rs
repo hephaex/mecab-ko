@@ -12,10 +12,14 @@ use mecab_ko_profiler::prelude::*;
 // Set up global allocator for tests that require memory tracking
 #[cfg(feature = "test-allocator")]
 #[global_allocator]
-static GLOBAL: mecab_ko_profiler::TrackingAllocator = mecab_ko_profiler::TrackingAllocator::new(std::alloc::System);
+static GLOBAL: mecab_ko_profiler::TrackingAllocator =
+    mecab_ko_profiler::TrackingAllocator::new(std::alloc::System);
 
 #[test]
-#[cfg_attr(not(feature = "test-allocator"), ignore = "Requires global allocator - run with --features test-allocator")]
+#[cfg_attr(
+    not(feature = "test-allocator"),
+    ignore = "Requires global allocator - run with --features test-allocator"
+)]
 fn test_basic_memory_tracking() {
     reset_stats();
 
@@ -30,7 +34,10 @@ fn test_basic_memory_tracking() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "test-allocator"), ignore = "Requires global allocator - run with --features test-allocator")]
+#[cfg_attr(
+    not(feature = "test-allocator"),
+    ignore = "Requires global allocator - run with --features test-allocator"
+)]
 fn test_snapshot_diff() {
     reset_stats();
 
@@ -47,7 +54,10 @@ fn test_snapshot_diff() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "test-allocator"), ignore = "Requires global allocator - run with --features test-allocator")]
+#[cfg_attr(
+    not(feature = "test-allocator"),
+    ignore = "Requires global allocator - run with --features test-allocator"
+)]
 fn test_memory_guard_nesting() {
     reset_stats();
 
@@ -154,7 +164,10 @@ mod profiler_tests {
     use mecab_ko_profiler::trie_profiler::TrieProfiler;
 
     #[test]
-    #[cfg_attr(not(feature = "test-allocator"), ignore = "Requires global allocator - run with --features test-allocator")]
+    #[cfg_attr(
+        not(feature = "test-allocator"),
+        ignore = "Requires global allocator - run with --features test-allocator"
+    )]
     fn test_dict_profiler() {
         let mut profiler = DictProfiler::new();
 
@@ -168,7 +181,10 @@ mod profiler_tests {
     }
 
     #[test]
-    #[cfg_attr(not(feature = "test-allocator"), ignore = "Requires global allocator - run with --features test-allocator")]
+    #[cfg_attr(
+        not(feature = "test-allocator"),
+        ignore = "Requires global allocator - run with --features test-allocator"
+    )]
     fn test_tokenizer_profiler() {
         let mut profiler = TokenizerProfiler::new();
 
@@ -182,7 +198,10 @@ mod profiler_tests {
     }
 
     #[test]
-    #[cfg_attr(not(feature = "test-allocator"), ignore = "Requires global allocator - run with --features test-allocator")]
+    #[cfg_attr(
+        not(feature = "test-allocator"),
+        ignore = "Requires global allocator - run with --features test-allocator"
+    )]
     fn test_trie_profiler() {
         let mut profiler = TrieProfiler::new();
 
@@ -195,13 +214,17 @@ mod profiler_tests {
     }
 
     #[test]
-    #[cfg_attr(not(feature = "test-allocator"), ignore = "Requires global allocator - run with --features test-allocator")]
+    #[cfg_attr(
+        not(feature = "test-allocator"),
+        ignore = "Requires global allocator - run with --features test-allocator"
+    )]
     fn test_scaling_analysis() {
         let mut profiler = TokenizerProfiler::new();
 
+        // Use ASCII to ensure char count == byte length
         let sizes = vec![10, 20, 30, 40];
         for size in &sizes {
-            let text: String = "한".chars().cycle().take(*size).collect();
+            let text: String = "a".repeat(*size);
             profiler.profile_tokenize(&text, || {
                 let _tokens: Vec<String> = text.split_whitespace().map(|s| s.to_string()).collect();
             });
@@ -212,7 +235,10 @@ mod profiler_tests {
     }
 
     #[test]
-    #[cfg_attr(not(feature = "test-allocator"), ignore = "Requires global allocator - run with --features test-allocator")]
+    #[cfg_attr(
+        not(feature = "test-allocator"),
+        ignore = "Requires global allocator - run with --features test-allocator"
+    )]
     fn test_dict_memory_distribution() {
         let mut profiler = DictProfiler::new();
 
@@ -312,7 +338,10 @@ fn test_report_format_parsing() {
 }
 
 #[test]
-#[cfg_attr(not(feature = "test-allocator"), ignore = "Requires global allocator - run with --features test-allocator")]
+#[cfg_attr(
+    not(feature = "test-allocator"),
+    ignore = "Requires global allocator - run with --features test-allocator"
+)]
 fn test_memory_reset() {
     reset_stats();
 
