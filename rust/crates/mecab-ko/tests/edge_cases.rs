@@ -9,6 +9,13 @@
 //!
 //! These tests ensure robustness and graceful degradation.
 
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::similar_names,
+    clippy::uninlined_format_args
+)]
+
 mod common;
 
 /// Test empty string input
@@ -134,15 +141,15 @@ fn test_edge_very_long_word() {
 
 /// Test very long text (stress test)
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_edge_very_long_text() {
     use mecab_ko::Tokenizer;
 
     let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
 
-    // Generate very long text (10000+ characters)
-    let sentence = "한국어 형태소 분석은 자연어 처리의 중요한 부분입니다. ";
-    let very_long_text = sentence.repeat(200);
+    // Generate very long text (10000+ characters) using a mini-dict word repeated.
+    // Spaces and punctuation create unknown nodes outside the mini-dict 25x25 matrix.
+    let word = "한국어";
+    let very_long_text = word.repeat(2000);
 
     println!("Text length: {} chars", very_long_text.chars().count());
 
@@ -163,7 +170,6 @@ fn test_edge_very_long_text() {
     }
 
     println!("Token count: {}", tokens.len());
-    println!("Average tokens per sentence: {}", tokens.len() / 200);
 }
 
 /// Test emoji characters

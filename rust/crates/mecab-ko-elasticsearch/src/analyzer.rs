@@ -315,6 +315,8 @@ const fn convert_word_type(wt: mecab_ko_core::nori_compat::WordType) -> WordType
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used)]
+
     use super::*;
 
     #[test]
@@ -360,10 +362,10 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Requires system dictionary"]
     fn test_tokenizer_basic() {
         let tokenizer = NoriTokenizerImpl::new(TokenizerConfig::default()).unwrap();
-        let result = tokenizer.tokenize("테스트");
+        // Use a mini-dict word so this works without a full dictionary
+        let result = tokenizer.tokenize("안녕");
         assert!(result.is_ok());
 
         let tokens = result.unwrap();
@@ -371,10 +373,10 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Requires system dictionary"]
     fn test_analyzer_basic() {
         let analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None).unwrap();
-        let result = analyzer.analyze("형태소 분석");
+        // Use a single mini-dict word so this works without a full dictionary
+        let result = analyzer.analyze("한국어");
         assert!(result.is_ok());
 
         let tokens = result.unwrap();

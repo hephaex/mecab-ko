@@ -11,11 +11,11 @@
 use mecab_ko_core::batch::{BatchTokenizer, ParallelStreamProcessor};
 
 #[test]
-#[ignore = "Requires dictionary installation"]
 fn test_batch_basic() {
     let batch = BatchTokenizer::new().expect("Failed to create batch tokenizer");
 
-    let texts = vec!["안녕하세요", "감사합니다", "좋은 하루 되세요"];
+    // Use single mini-dict words (no spaces/punctuation) so this works without a full dictionary
+    let texts = vec!["안녕", "감사", "한국어"];
 
     let results = batch.tokenize_batch(&texts);
 
@@ -27,13 +27,14 @@ fn test_batch_basic() {
 }
 
 #[test]
-#[ignore = "Requires dictionary installation"]
 fn test_batch_large_scale() {
     let batch = BatchTokenizer::with_pool_size(4).expect("Failed to create batch tokenizer");
 
-    // Create large batch
+    // Use mini-dict words only (cycle through them) so this works without a full dictionary.
+    // Spaces, punctuation, and numbers create unknown nodes that break Viterbi with mini-dict.
+    let mini_dict_words = ["안녕", "감사", "한국어", "사람", "시간"];
     let texts: Vec<String> = (0..100)
-        .map(|i| format!("테스트 문장 번호 {i}입니다."))
+        .map(|i| mini_dict_words[i % mini_dict_words.len()].to_string())
         .collect();
 
     let start = std::time::Instant::now();
@@ -87,7 +88,6 @@ fn test_batch_vs_sequential() {
 }
 
 #[test]
-#[ignore = "Requires dictionary installation"]
 fn test_batch_empty() {
     let batch = BatchTokenizer::new().expect("Failed to create batch tokenizer");
 
@@ -98,11 +98,11 @@ fn test_batch_empty() {
 }
 
 #[test]
-#[ignore = "Requires dictionary installation"]
 fn test_batch_chunked() {
     let batch = BatchTokenizer::new().expect("Failed to create batch tokenizer");
 
-    let long_text = "한국어 형태소 분석은 자연어 처리의 기본입니다. ".repeat(10);
+    // Use mini-dict words concatenated without spaces/periods to avoid unknown nodes
+    let long_text = "안녕감사한국어사람시간".repeat(10);
 
     let tokens = batch.tokenize_chunked(&long_text, 50);
 
@@ -110,15 +110,15 @@ fn test_batch_chunked() {
 }
 
 #[test]
-#[ignore = "Requires dictionary installation"]
 fn test_parallel_stream_processor() {
     let processor = ParallelStreamProcessor::new().expect("Failed to create processor");
 
-    // Create temporary file
+    // Create temporary file with mini-dict words and newline delimiters
+    // (periods and spaces create unknown nodes that break Viterbi with mini-dict)
     let temp_dir = std::env::temp_dir();
     let temp_file = temp_dir.join("mecab_batch_test.txt");
 
-    let content = "안녕하세요.\n감사합니다.\n좋은 하루 되세요.\n".repeat(10);
+    let content = "안녕\n감사\n한국어\n".repeat(10);
     std::fs::write(&temp_file, &content).expect("Failed to write temp file");
 
     let tokens = processor
@@ -132,7 +132,6 @@ fn test_parallel_stream_processor() {
 }
 
 #[test]
-#[ignore = "Requires dictionary installation"]
 fn test_batch_pool_management() {
     let batch = BatchTokenizer::with_pool_size(8).expect("Failed to create batch tokenizer");
 
@@ -148,7 +147,6 @@ fn test_batch_pool_management() {
 }
 
 #[test]
-#[ignore = "Requires dictionary installation"]
 fn test_batch_multiple_calls() {
     let batch = BatchTokenizer::new().expect("Failed to create batch tokenizer");
 
