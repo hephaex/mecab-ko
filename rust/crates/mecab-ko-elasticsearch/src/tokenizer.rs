@@ -231,6 +231,8 @@ impl TokenStream for VecTokenStream {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used)]
+
     use super::*;
 
     #[test]
@@ -276,7 +278,7 @@ mod tests {
             Token::new("분석".to_string(), "NNG".to_string(), 3, 5),
         ];
 
-        let mut stream = VecTokenStream::new(tokens.clone());
+        let mut stream = VecTokenStream::new(tokens);
 
         assert_eq!(stream.next().unwrap().surface, "형태소");
         assert_eq!(stream.next().unwrap().surface, "분석");

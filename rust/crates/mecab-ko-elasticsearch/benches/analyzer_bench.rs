@@ -1,6 +1,6 @@
 //! Analyzer 벤치마크
 
-#![allow(missing_docs)]
+#![allow(missing_docs, clippy::unwrap_used)]
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use mecab_ko_elasticsearch::analyzer::NoriAnalyzer;

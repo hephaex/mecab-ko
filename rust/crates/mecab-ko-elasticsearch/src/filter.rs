@@ -303,6 +303,8 @@ impl TokenFilter for LengthFilter {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used)]
+
     use super::*;
 
     fn create_test_token(surface: &str, pos_tag: &str) -> Token {

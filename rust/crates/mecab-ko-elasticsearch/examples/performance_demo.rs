@@ -2,7 +2,11 @@
 //!
 //! This example demonstrates the performance improvements from caching and batch processing.
 
-#![allow(clippy::cast_precision_loss)]
+#![allow(
+    clippy::cast_precision_loss,
+    clippy::items_after_statements,
+    clippy::unwrap_used
+)]
 
 use mecab_ko_elasticsearch::analyzer::NoriAnalyzer;
 use mecab_ko_elasticsearch::config::{AnalyzerConfig, DecompoundMode};
