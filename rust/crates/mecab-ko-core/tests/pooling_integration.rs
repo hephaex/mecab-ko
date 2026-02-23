@@ -133,7 +133,6 @@ fn test_pool_manager_clear() {
 }
 
 #[test]
-#[ignore = "Requires dictionary"]
 fn test_tokenizer_pool_integration() {
     let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
 
@@ -156,7 +155,6 @@ fn test_tokenizer_pool_integration() {
 }
 
 #[test]
-#[ignore = "Requires dictionary"]
 fn test_tokenizer_pool_reuse() {
     let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
 

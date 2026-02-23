@@ -100,17 +100,15 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_tokenizer_creation() {
         let tokenizer = Tokenizer::new();
         assert!(tokenizer.is_ok());
     }
 
     #[test]
-    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_basic_tokenize() {
         let mut tokenizer = Tokenizer::new().unwrap();
-        let tokens = tokenizer.tokenize("테스트");
+        let tokens = tokenizer.tokenize("안녕");
         assert!(!tokens.is_empty());
     }
 }

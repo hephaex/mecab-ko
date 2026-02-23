@@ -36,7 +36,6 @@ fn test_nori_tokenizer_basic() {
 }
 
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_nori_analyzer_with_stoptags() {
     let config = AnalyzerConfig::new()
         .with_decompound_mode(DecompoundMode::None)
@@ -59,7 +58,6 @@ fn test_nori_analyzer_with_stoptags() {
 }
 
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_nori_analyzer_default() {
     let analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None);
     assert!(analyzer.is_ok());
@@ -169,7 +167,6 @@ fn test_analyzer_config_validation() {
 }
 
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_analyzer_stoptag_management() {
     let mut analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None).unwrap();
 
@@ -248,7 +245,6 @@ fn test_token_serialization() {
 }
 
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_empty_text_handling() {
     let analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None).unwrap();
 
@@ -260,7 +256,6 @@ fn test_empty_text_handling() {
 }
 
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_whitespace_only_text() {
     let analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None).unwrap();
 

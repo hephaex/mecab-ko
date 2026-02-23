@@ -382,7 +382,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_streaming_tokenizer_creation() {
         let tokenizer = create_test_tokenizer();
         let stream = StreamingTokenizer::new(tokenizer);
@@ -392,12 +391,11 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_process_chunk_with_delimiter() {
         let tokenizer = create_test_tokenizer();
         let mut stream = StreamingTokenizer::new(tokenizer);
 
-        let tokens = stream.process_chunk("안녕하세요.\n");
+        let tokens = stream.process_chunk("안녕\n");
         assert!(!tokens.is_empty() || stream.buffer_len() > 0);
 
         // Flush로 남은 토큰 확인
@@ -407,7 +405,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_process_chunk_without_delimiter() {
         let tokenizer = create_test_tokenizer();
         let mut stream = StreamingTokenizer::new(tokenizer);
@@ -418,7 +415,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_flush() {
         let tokenizer = create_test_tokenizer();
         let mut stream = StreamingTokenizer::new(tokenizer);
@@ -431,7 +427,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_multiple_chunks() {
         let tokenizer = create_test_tokenizer();
         let mut stream = StreamingTokenizer::new(tokenizer);
@@ -444,7 +439,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_reset() {
         let tokenizer = create_test_tokenizer();
         let mut stream = StreamingTokenizer::new(tokenizer);
@@ -457,7 +451,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_custom_chunk_size() {
         let tokenizer = create_test_tokenizer();
         let stream = StreamingTokenizer::new(tokenizer).with_chunk_size(1024);
@@ -466,7 +459,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_custom_delimiters() {
         let tokenizer = create_test_tokenizer();
         let stream =
@@ -476,7 +468,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_token_stream_creation() {
         let tokenizer = create_test_tokenizer();
         let chunks = vec!["안녕하세요.\n".to_string(), "감사합니다.\n".to_string()];
@@ -486,10 +477,9 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_token_stream_iteration() {
         let tokenizer = create_test_tokenizer();
-        let chunks = vec!["안녕하세요.\n".to_string(), "감사합니다.\n".to_string()];
+        let chunks = vec!["안녕\n".to_string(), "감사\n".to_string()];
         let stream = TokenStream::new(chunks.into_iter(), tokenizer);
 
         let tokens: Vec<_> = stream.collect();

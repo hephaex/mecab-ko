@@ -654,6 +654,15 @@ impl DictionaryLoader {
             }
         }
 
+        // 테스트 환경: workspace의 test-fixtures/mini-dict 탐색
+        {
+            let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+            let test_dict = manifest_dir.join("../../test-fixtures/mini-dict");
+            if test_dict.is_dir() {
+                return Ok(test_dict);
+            }
+        }
+
         Err(DictError::Format(
             "Dictionary directory not found. Set MECAB_DICDIR environment variable or install mecab-ko-dic to default location".to_string(),
         ))

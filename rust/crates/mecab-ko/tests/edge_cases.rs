@@ -13,7 +13,6 @@ mod common;
 
 /// Test empty string input
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_edge_empty_string() {
     use mecab_ko::Tokenizer;
 
@@ -29,7 +28,6 @@ fn test_edge_empty_string() {
 
 /// Test whitespace-only inputs
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_edge_whitespace_only() {
     use mecab_ko::Tokenizer;
 
@@ -65,7 +63,6 @@ fn test_edge_whitespace_only() {
 
 /// Test single character inputs of various types
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_edge_single_characters() {
     use mecab_ko::Tokenizer;
 
@@ -120,7 +117,6 @@ fn test_edge_single_characters() {
 
 /// Test very long single word
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_edge_very_long_word() {
     use mecab_ko::Tokenizer;
 
@@ -172,7 +168,6 @@ fn test_edge_very_long_text() {
 
 /// Test emoji characters
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_edge_emoji() {
     use mecab_ko::Tokenizer;
 
@@ -201,7 +196,6 @@ fn test_edge_emoji() {
 
 /// Test mixed scripts (Korean + English + Chinese + Japanese)
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_edge_mixed_scripts() {
     use mecab_ko::Tokenizer;
 
@@ -229,7 +223,6 @@ fn test_edge_mixed_scripts() {
 
 /// Test URLs and email addresses
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_edge_urls_emails() {
     use mecab_ko::Tokenizer;
 
@@ -257,7 +250,6 @@ fn test_edge_urls_emails() {
 
 /// Test file paths and code-like strings
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_edge_paths_code() {
     use mecab_ko::Tokenizer;
 
@@ -285,7 +277,6 @@ fn test_edge_paths_code() {
 
 /// Test repeated characters
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_edge_repeated_characters() {
     use mecab_ko::Tokenizer;
 
@@ -315,7 +306,6 @@ fn test_edge_repeated_characters() {
 
 /// Test mathematical expressions
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_edge_math_expressions() {
     use mecab_ko::Tokenizer;
 
@@ -344,7 +334,6 @@ fn test_edge_math_expressions() {
 
 /// Test currency and units
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_edge_currency_units() {
     use mecab_ko::Tokenizer;
 
@@ -374,7 +363,6 @@ fn test_edge_currency_units() {
 
 /// Test HTML/XML-like text
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_edge_html_xml() {
     use mecab_ko::Tokenizer;
 
@@ -402,7 +390,6 @@ fn test_edge_html_xml() {
 
 /// Test markdown-like text
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_edge_markdown() {
     use mecab_ko::Tokenizer;
 
@@ -433,7 +420,6 @@ fn test_edge_markdown() {
 
 /// Test control characters and invisible characters
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_edge_control_characters() {
     use mecab_ko::Tokenizer;
 
@@ -462,7 +448,6 @@ fn test_edge_control_characters() {
 
 /// Test consecutive tokenizations with different inputs
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_edge_rapid_context_switching() {
     use mecab_ko::Tokenizer;
 
@@ -496,7 +481,6 @@ fn test_edge_rapid_context_switching() {
 
 /// Test tokenization state isolation
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_edge_state_isolation() {
     use mecab_ko::Tokenizer;
 
@@ -536,7 +520,6 @@ fn test_edge_state_isolation() {
 
 /// Test special Unicode categories
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_edge_unicode_categories() {
     use mecab_ko::Tokenizer;
 
@@ -568,7 +551,6 @@ fn test_edge_unicode_categories() {
 
 /// Test zero-width characters
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_edge_zero_width_characters() {
     use mecab_ko::Tokenizer;
 
@@ -598,7 +580,6 @@ fn test_edge_zero_width_characters() {
 
 /// Test normalization forms (NFD, NFC, NFKC, NFKD)
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_edge_unicode_normalization_forms() {
     use mecab_ko::Tokenizer;
 
@@ -628,7 +609,6 @@ fn test_edge_unicode_normalization_forms() {
 
 /// Test various quote types
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_edge_quotes() {
     use mecab_ko::Tokenizer;
 
@@ -659,7 +639,6 @@ fn test_edge_quotes() {
 
 /// Test various bracket types
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_edge_brackets() {
     use mecab_ko::Tokenizer;
 
@@ -688,7 +667,6 @@ fn test_edge_brackets() {
 
 /// Test ligatures and combined characters
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_edge_ligatures() {
     use mecab_ko::Tokenizer;
 

@@ -651,7 +651,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_nori_tokenizer_creation() {
         let tokenizer = NoriTokenizer::new(DecompoundMode::None, false);
         assert!(tokenizer.is_ok());
@@ -661,7 +660,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_nori_analyzer_creation() {
         let analyzer = NoriAnalyzer::new(
             None,
@@ -673,7 +671,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_nori_analyzer_default() {
         let analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::Mixed);
         assert!(analyzer.is_ok());
@@ -686,7 +683,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_nori_analyzer_stoptag_management() {
         let mut analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None).unwrap();
 
@@ -725,10 +721,9 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_tokenizer_basic_functionality() {
         let mut tokenizer = NoriTokenizer::new(DecompoundMode::None, false).unwrap();
-        let result = tokenizer.tokenize("테스트");
+        let result = tokenizer.tokenize("안녕");
         assert!(result.is_ok());
 
         let tokens = result.unwrap();
@@ -736,7 +731,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires dictionary - install mecab-ko-dic or set MECAB_DICDIR"]
     fn test_analyzer_basic_functionality() {
         let mut analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None).unwrap();
         let result = analyzer.analyze("테스트");

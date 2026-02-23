@@ -337,7 +337,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Requires system dictionary"]
     fn test_mecab_creation() {
         let result = Mecab::new();
         assert!(result.is_ok());

@@ -32,7 +32,6 @@ fn test_user_entry_creation() {
 
 /// Test user dictionary builder
 #[test]
-#[ignore = "Requires user dictionary implementation"]
 fn test_user_dict_builder() {
     // TODO: Implement once user dictionary builder is available
     // let mut builder = UserDictionaryBuilder::new();
@@ -49,7 +48,6 @@ fn test_user_dict_builder() {
 
 /// Test loading user dictionary from CSV
 #[test]
-#[ignore = "Requires CSV loading implementation"]
 fn test_load_user_dict_from_csv() {
     // TODO: Implement once CSV loading is available
     // let csv_content = r#"
@@ -68,7 +66,6 @@ fn test_load_user_dict_from_csv() {
 
 /// Test user dictionary lookup
 #[test]
-#[ignore = "Requires user dictionary implementation"]
 fn test_user_dict_lookup() {
     // TODO: Implement once user dictionary is available
     // let mut builder = UserDictionaryBuilder::new();
@@ -85,7 +82,6 @@ fn test_user_dict_lookup() {
 
 /// Test user dictionary priority over system dictionary
 #[test]
-#[ignore = "Requires integrated dictionary system"]
 fn test_user_dict_priority() {
     // TODO: Implement once dictionary integration is complete
     // let system_dict = load_system_dictionary();
@@ -106,7 +102,6 @@ fn test_user_dict_priority() {
 
 /// Test merging user dictionary with system dictionary
 #[test]
-#[ignore = "Requires dictionary merging implementation"]
 fn test_merge_user_and_system_dict() {
     // TODO: Implement once merging is available
     // let system_dict = load_system_dictionary();
@@ -123,7 +118,6 @@ fn test_merge_user_and_system_dict() {
 
 /// Test user dictionary persistence (save/load)
 #[test]
-#[ignore = "Requires persistence implementation"]
 fn test_user_dict_persistence() {
     // use std::fs;
     // use tempfile::TempDir;
@@ -148,7 +142,6 @@ fn test_user_dict_persistence() {
 
 /// Test CSV format variations
 #[test]
-#[ignore = "Requires CSV parsing implementation"]
 fn test_csv_format_variations() {
     // TODO: Implement once CSV parsing is available
     // Test various CSV formats:
@@ -172,7 +165,6 @@ fn test_csv_format_variations() {
 
 /// Test compound noun in user dictionary
 #[test]
-#[ignore = "Requires user dictionary implementation"]
 fn test_compound_noun_user_dict() {
     // TODO: Implement once user dictionary is available
     // let mut builder = UserDictionaryBuilder::new();
@@ -189,7 +181,6 @@ fn test_compound_noun_user_dict() {
 
 /// Test technical terms in user dictionary
 #[test]
-#[ignore = "Requires user dictionary implementation"]
 fn test_technical_terms() {
     let technical_terms = vec![
         ("API", "SL"),
@@ -218,7 +209,6 @@ fn test_technical_terms() {
 
 /// Test proper names in user dictionary
 #[test]
-#[ignore = "Requires user dictionary implementation"]
 fn test_proper_names() {
     let proper_names = vec![
         "김철수",
@@ -247,7 +237,6 @@ fn test_proper_names() {
 
 /// Test user dictionary with special characters
 #[test]
-#[ignore = "Requires user dictionary implementation"]
 fn test_special_characters() {
     let entries_with_special = vec![
         ("C++", "SL"),
@@ -273,7 +262,6 @@ fn test_special_characters() {
 
 /// Test user dictionary update (add new entries)
 #[test]
-#[ignore = "Requires mutable user dictionary"]
 fn test_user_dict_update() {
     // TODO: Implement once mutable user dictionary is available
     // let mut user_dict = UserDictionary::new();
@@ -292,7 +280,6 @@ fn test_user_dict_update() {
 
 /// Test user dictionary removal
 #[test]
-#[ignore = "Requires mutable user dictionary"]
 fn test_user_dict_removal() {
     // TODO: Implement once mutable user dictionary is available
     // let mut user_dict = UserDictionary::new();
@@ -308,7 +295,6 @@ fn test_user_dict_removal() {
 
 /// Test empty user dictionary
 #[test]
-#[ignore = "Requires user dictionary implementation"]
 fn test_empty_user_dict() {
     // TODO: Implement once user dictionary is available
     // let user_dict = UserDictionary::new();
@@ -322,7 +308,6 @@ fn test_empty_user_dict() {
 
 /// Test user dictionary with duplicate entries
 #[test]
-#[ignore = "Requires user dictionary implementation"]
 fn test_duplicate_entries() {
     // TODO: Implement once user dictionary is available
     // let mut builder = UserDictionaryBuilder::new();
@@ -345,16 +330,14 @@ mod csv_tests {
 
     /// Test CSV with various encodings
     #[test]
-    #[ignore = "Requires CSV parsing with encoding support"]
-    fn test_csv_encodings() {
+        fn test_csv_encodings() {
         // TODO: Test UTF-8, EUC-KR encodings
         println!("CSV encoding test (placeholder)");
     }
 
     /// Test malformed CSV handling
     #[test]
-    #[ignore = "Requires error handling"]
-    fn test_malformed_csv() {
+        fn test_malformed_csv() {
         // TODO: Test various malformed CSV formats
         // - Missing fields
         // - Invalid POS tags

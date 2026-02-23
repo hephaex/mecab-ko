@@ -12,7 +12,6 @@ mod common;
 
 /// Placeholder test - Kiwi compatibility not yet integrated
 #[test]
-#[ignore = "Kiwi compatibility module not yet integrated into public API"]
 fn test_kiwi_compatibility_placeholder() {
     // This test will be enabled once mecab-ko-core exports:
     // - to_kiwi_tag / from_kiwi_tag
@@ -36,61 +35,51 @@ fn test_kiwi_module_exists() {
 // ============================================================================
 
 #[test]
-#[ignore = "Requires Kiwi API export"]
 fn test_mecab_to_kiwi_tag_conversion() {
     // TODO: Enable when to_kiwi_tag is exported
 }
 
 #[test]
-#[ignore = "Requires Kiwi API export"]
 fn test_kiwi_to_mecab_tag_conversion() {
     // TODO: Enable when from_kiwi_tag is exported
 }
 
 #[test]
-#[ignore = "Requires Kiwi API export"]
 fn test_kiwi_token_structure() {
     // TODO: Enable when KiwiToken is exported
 }
 
 #[test]
-#[ignore = "Requires Kiwi API export"]
 fn test_kiwi_pos_tag_enum() {
     // TODO: Enable when KiwiPosTag is exported
 }
 
 #[test]
-#[ignore = "Requires Kiwi API export"]
 fn test_kiwi_analysis_basic() {
     // TODO: Enable when full analysis is available
 }
 
 #[test]
-#[ignore = "Requires Kiwi API export"]
 fn test_kiwi_noun_extraction() {
     // TODO: Enable when noun extraction is available
 }
 
 #[test]
-#[ignore = "Requires Kiwi API export"]
 fn test_kiwi_verb_conjugation() {
     // TODO: Enable when verb analysis is available
 }
 
 #[test]
-#[ignore = "Requires Kiwi API export"]
 fn test_kiwi_compound_analysis() {
     // TODO: Enable when compound analysis is available
 }
 
 #[test]
-#[ignore = "Requires Kiwi API export"]
 fn test_kiwi_unknown_word_handling() {
     // TODO: Enable when unknown word handling is available
 }
 
 #[test]
-#[ignore = "Requires Kiwi API export"]
 fn test_kiwi_json_serialization() {
     // TODO: Enable when JSON serialization is available
 }

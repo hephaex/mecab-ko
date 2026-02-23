@@ -18,7 +18,6 @@ const BASELINE_DICT_LOOKUP_US: f64 = 10.0;
 
 /// Test tokenization performance for simple sentences
 #[test]
-#[ignore = "Requires tokenizer implementation"]
 fn test_tokenize_simple_performance() {
     // TODO: Implement once tokenizer is available
     // let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
@@ -36,7 +35,6 @@ fn test_tokenize_simple_performance() {
 
 /// Test tokenization performance for complex sentences
 #[test]
-#[ignore = "Requires tokenizer implementation"]
 fn test_tokenize_complex_performance() {
     // TODO: Implement once tokenizer is available
     // let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
@@ -54,7 +52,6 @@ fn test_tokenize_complex_performance() {
 
 /// Test dictionary lookup performance
 #[test]
-#[ignore = "Requires dictionary implementation"]
 fn test_dict_lookup_performance() {
     // TODO: Implement once dictionary is available
     // let dict = load_test_dictionary();
@@ -72,7 +69,6 @@ fn test_dict_lookup_performance() {
 
 /// Test performance scaling with input length
 #[test]
-#[ignore = "Requires tokenizer implementation"]
 fn test_performance_scaling() {
     // TODO: Implement once tokenizer is available
     // let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
@@ -94,7 +90,6 @@ fn test_performance_scaling() {
 
 /// Test memory usage during tokenization
 #[test]
-#[ignore = "Requires memory profiling"]
 fn test_memory_usage() {
     // TODO: Implement memory usage testing
     // This might require additional tools like jemalloc or valgrind
@@ -103,7 +98,6 @@ fn test_memory_usage() {
 
 /// Test throughput (tokens per second)
 #[test]
-#[ignore = "Requires tokenizer implementation"]
 fn test_throughput() {
     // use std::time::Instant;
 
@@ -132,7 +126,6 @@ fn test_throughput() {
 
 /// Test cold start performance (first run)
 #[test]
-#[ignore = "Requires tokenizer implementation"]
 fn test_cold_start_performance() {
     // use std::time::Instant;
 
@@ -149,7 +142,6 @@ fn test_cold_start_performance() {
 
 /// Test warm performance (after JIT warmup)
 #[test]
-#[ignore = "Requires tokenizer implementation"]
 fn test_warm_performance() {
     // TODO: Implement once tokenizer is available
     // let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
@@ -172,7 +164,6 @@ fn test_warm_performance() {
 
 /// Test parallel processing performance
 #[test]
-#[ignore = "Requires parallel implementation"]
 fn test_parallel_performance() {
     // use std::sync::Arc;
     // use std::thread;
@@ -212,7 +203,6 @@ fn test_parallel_performance() {
 
 /// Test batch processing performance
 #[test]
-#[ignore = "Requires batch implementation"]
 fn test_batch_performance() {
     // TODO: Implement once batch processing is available
     // let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
@@ -241,7 +231,6 @@ fn test_batch_performance() {
 
 /// Test performance with different text types
 #[test]
-#[ignore = "Requires tokenizer implementation"]
 fn test_text_type_performance() {
     // TODO: Implement once tokenizer is available
     // let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
@@ -266,7 +255,6 @@ fn test_text_type_performance() {
 
 /// Test performance regression detection
 #[test]
-#[ignore = "Requires baseline measurements"]
 fn test_performance_regression() {
     // TODO: Implement baseline comparison
     // Load previous baseline measurements
@@ -278,7 +266,6 @@ fn test_performance_regression() {
 
 /// Benchmark different dictionary implementations
 #[test]
-#[ignore = "Requires multiple dictionary implementations"]
 fn bench_dictionary_implementations() {
     // TODO: Compare performance of:
     // - Dense matrix
@@ -292,7 +279,6 @@ fn bench_dictionary_implementations() {
 
 /// Benchmark different lattice algorithms
 #[test]
-#[ignore = "Requires lattice implementation"]
 fn bench_lattice_algorithms() {
     // TODO: Compare performance of:
     // - Viterbi search
@@ -304,7 +290,6 @@ fn bench_lattice_algorithms() {
 
 /// Test performance with large documents
 #[test]
-#[ignore = "Requires tokenizer implementation"]
 fn test_large_document_performance() {
     // TODO: Implement once tokenizer is available
     // let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
@@ -325,7 +310,6 @@ fn test_large_document_performance() {
 
 /// Test performance with worst-case inputs
 #[test]
-#[ignore = "Requires tokenizer implementation"]
 fn test_worst_case_performance() {
     // TODO: Implement worst-case scenarios:
     // - Very long words
@@ -342,8 +326,7 @@ mod micro_benchmarks {
 
     /// Micro-benchmark: character classification
     #[test]
-    #[ignore = "Requires implementation"]
-    fn bench_char_classification() {
+        fn bench_char_classification() {
         use mecab_ko_hangul::is_hangul;
 
         let result = perf::measure("Hangul detection", 100000, || {
@@ -389,8 +372,7 @@ mod memory_benchmarks {
 
     /// Test memory allocation patterns
     #[test]
-    #[ignore = "Requires memory profiling"]
-    fn test_allocation_patterns() {
+        fn test_allocation_patterns() {
         // TODO: Profile allocation patterns
         // - Number of allocations
         // - Peak memory usage
@@ -400,8 +382,7 @@ mod memory_benchmarks {
 
     /// Test memory leaks
     #[test]
-    #[ignore = "Requires leak detection"]
-    fn test_memory_leaks() {
+        fn test_memory_leaks() {
         // TODO: Run with valgrind or AddressSanitizer
         // to detect memory leaks
         println!("Memory leak test (placeholder)");

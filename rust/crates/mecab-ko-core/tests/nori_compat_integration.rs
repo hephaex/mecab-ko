@@ -7,7 +7,6 @@ use mecab_ko_core::nori_compat::{
 };
 
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_nori_tokenizer_none_mode() {
     let tokenizer = NoriTokenizer::new(DecompoundMode::None, false);
     assert!(tokenizer.is_ok());
@@ -21,7 +20,6 @@ fn test_nori_tokenizer_none_mode() {
 }
 
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_nori_tokenizer_mixed_mode() {
     let tokenizer = NoriTokenizer::new(DecompoundMode::Mixed, false);
     assert!(tokenizer.is_ok());
@@ -32,7 +30,6 @@ fn test_nori_tokenizer_mixed_mode() {
 }
 
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_nori_tokenizer_discard_mode() {
     let tokenizer = NoriTokenizer::new(DecompoundMode::Discard, false);
     assert!(tokenizer.is_ok());
@@ -43,7 +40,6 @@ fn test_nori_tokenizer_discard_mode() {
 }
 
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_nori_tokenizer_with_unknown_unigrams() {
     let tokenizer = NoriTokenizer::new(DecompoundMode::None, true);
     assert!(tokenizer.is_ok());
@@ -54,7 +50,6 @@ fn test_nori_tokenizer_with_unknown_unigrams() {
 }
 
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_nori_analyzer_default() {
     let analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None);
     assert!(analyzer.is_ok());
@@ -70,7 +65,6 @@ fn test_nori_analyzer_default() {
 }
 
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_nori_analyzer_with_custom_stoptags() {
     let stoptags = vec!["J".to_string(), "E".to_string(), "SF".to_string()];
     let analyzer = NoriAnalyzer::new(None, DecompoundMode::None, stoptags, false);
@@ -83,7 +77,6 @@ fn test_nori_analyzer_with_custom_stoptags() {
 }
 
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_nori_analyzer_stoptag_modification() {
     let mut analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None).unwrap();
 
@@ -100,7 +93,6 @@ fn test_nori_analyzer_stoptag_modification() {
 }
 
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_pos_tag_mapping_particles() {
     // All particle tags should map to "J"
     assert_eq!(mecab_to_nori_tag("JKS"), "J"); // 주격
@@ -115,7 +107,6 @@ fn test_pos_tag_mapping_particles() {
 }
 
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_pos_tag_mapping_endings() {
     // All ending tags should map to "E"
     assert_eq!(mecab_to_nori_tag("EP"), "E"); // 선어말
@@ -126,7 +117,6 @@ fn test_pos_tag_mapping_endings() {
 }
 
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_pos_tag_mapping_nouns() {
     // Noun tags should remain unchanged
     assert_eq!(mecab_to_nori_tag("NNG"), "NNG"); // 일반명사
@@ -136,7 +126,6 @@ fn test_pos_tag_mapping_nouns() {
 }
 
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_pos_tag_mapping_verbs() {
     // Verb tags should remain unchanged
     assert_eq!(mecab_to_nori_tag("VV"), "VV"); // 동사
@@ -145,7 +134,6 @@ fn test_pos_tag_mapping_verbs() {
 }
 
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_reverse_mapping() {
     // Nori to MeCab mapping
     assert_eq!(nori_to_mecab_tag("J"), "JX"); // J → JX (대표)
@@ -155,7 +143,6 @@ fn test_reverse_mapping() {
 }
 
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_decompound_mode_string_conversion() {
     // Parse from string
     assert_eq!(DecompoundMode::from_str("none"), Some(DecompoundMode::None));
@@ -180,7 +167,6 @@ fn test_decompound_mode_string_conversion() {
 }
 
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_all_decompound_modes() {
     // Test creation with all modes
     let modes = [
@@ -207,7 +193,6 @@ fn test_all_decompound_modes() {
 }
 
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_empty_string() {
     let mut tokenizer = NoriTokenizer::new(DecompoundMode::None, false).unwrap();
     let result = tokenizer.tokenize("");
@@ -215,7 +200,6 @@ fn test_empty_string() {
 }
 
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_analyzer_preserves_content_words() {
     let mut analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None).unwrap();
     let result = analyzer.analyze("테스트");
@@ -229,7 +213,6 @@ fn test_analyzer_preserves_content_words() {
 }
 
 #[test]
-#[ignore = "Requires system dictionary"]
 fn test_unknown_tag_handling() {
     // Unknown tags should pass through
     assert_eq!(mecab_to_nori_tag("UNKNOWN_TAG"), "UNKNOWN_TAG");
