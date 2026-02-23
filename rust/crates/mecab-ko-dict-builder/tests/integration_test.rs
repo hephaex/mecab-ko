@@ -257,6 +257,10 @@ fn test_output_file_structure() {
     assert!(output_path.join("char.bin").exists());
     assert!(output_path.join("unk.bin").exists());
 
+    // 엔트리 파일
+    assert!(output_path.join("entries.bin").exists());
+    assert!(output_path.join("entries.csv").exists());
+
     // 파일 크기 확인
     let trie_size = fs::metadata(output_path.join("sys.dic"))
         .expect("stat trie")
@@ -267,4 +271,9 @@ fn test_output_file_structure() {
         .expect("stat matrix")
         .len();
     assert!(matrix_size > 0);
+
+    let entries_bin_size = fs::metadata(output_path.join("entries.bin"))
+        .expect("stat entries.bin")
+        .len();
+    assert!(entries_bin_size > 0);
 }

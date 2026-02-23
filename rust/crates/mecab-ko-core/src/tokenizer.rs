@@ -658,7 +658,7 @@ mod tests {
     /// 테스트용 토크나이저 생성
     fn create_test_tokenizer() -> Tokenizer {
         // 테스트용 Trie 생성
-        let trie_entries = vec![
+        let mut trie_entries = vec![
             ("아버지", 0u32),
             ("가", 1),
             ("방", 2),
@@ -666,7 +666,8 @@ mod tests {
             ("들어가", 4),
             ("신다", 5),
         ];
-        let trie_bytes = TrieBuilder::build(&trie_entries).expect("should build trie");
+        let trie_bytes =
+            TrieBuilder::build_unsorted(&mut trie_entries).expect("should build trie");
         let trie = mecab_ko_dict::Trie::from_vec(trie_bytes);
 
         // 테스트용 Matrix 생성
@@ -682,9 +683,9 @@ mod tests {
             1000,
             "NNG,*,T,아버지,*,*,*,*",
         ));
-        entries.push(DictEntry::new("가", 100, 100, 500, "JKS,*,F,가,*,*,*,*"));
+        entries.push(DictEntry::new("가", 5, 5, 500, "JKS,*,F,가,*,*,*,*"));
         entries.push(DictEntry::new("방", 2, 2, 2000, "NNG,*,T,방,*,*,*,*"));
-        entries.push(DictEntry::new("에", 101, 101, 400, "JKB,*,F,에,*,*,*,*"));
+        entries.push(DictEntry::new("에", 6, 6, 400, "JKB,*,F,에,*,*,*,*"));
         entries.push(DictEntry::new(
             "들어가",
             3,
@@ -749,7 +750,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Requires SystemDictionary::new_test implementation"]
     fn test_tokenize_simple() {
         let mut tokenizer = create_test_tokenizer();
         let tokens = tokenizer.tokenize("아버지");
@@ -760,7 +760,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Requires SystemDictionary::new_test implementation"]
     fn test_tokenize_with_particle() {
         let mut tokenizer = create_test_tokenizer();
         let tokens = tokenizer.tokenize("아버지가");
@@ -773,7 +772,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Requires SystemDictionary::new_test implementation"]
     fn test_tokenize_complex() {
         let mut tokenizer = create_test_tokenizer();
         let tokens = tokenizer.tokenize("아버지가방에들어가신다");
@@ -786,7 +784,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Requires SystemDictionary::new_test implementation"]
     fn test_tokenize_empty() {
         let mut tokenizer = create_test_tokenizer();
         let tokens = tokenizer.tokenize("");
@@ -795,7 +792,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Requires SystemDictionary::new_test implementation"]
     fn test_tokenize_with_spaces() {
         let mut tokenizer = create_test_tokenizer();
         let tokens = tokenizer.tokenize("아버지 가방");
@@ -805,7 +801,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Requires SystemDictionary::new_test implementation"]
     fn test_wakati() {
         let mut tokenizer = create_test_tokenizer();
         let surfaces = tokenizer.wakati("아버지가");
@@ -816,7 +811,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Requires SystemDictionary::new_test implementation"]
     fn test_nouns() {
         let mut tokenizer = create_test_tokenizer();
         let nouns = tokenizer.nouns("아버지가방에");
@@ -828,7 +822,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Requires SystemDictionary::new_test implementation"]
     fn test_pos() {
         let mut tokenizer = create_test_tokenizer();
         let pos_tags = tokenizer.pos("아버지가");
@@ -839,7 +832,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Requires SystemDictionary::new_test implementation"]
     fn test_tokenize_to_lattice() {
         let mut tokenizer = create_test_tokenizer();
         let lattice = tokenizer.tokenize_to_lattice("아버지가");
@@ -853,7 +845,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Requires SystemDictionary::new_test implementation"]
     fn test_lattice_stats() {
         let mut tokenizer = create_test_tokenizer();
         tokenizer.tokenize("아버지가");
@@ -864,7 +855,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Requires SystemDictionary::new_test implementation"]
     fn test_token_positions() {
         let mut tokenizer = create_test_tokenizer();
         let tokens = tokenizer.tokenize("아버지가");
@@ -879,7 +869,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Requires SystemDictionary::new_test implementation"]
     fn test_multiple_tokenize_calls() {
         let mut tokenizer = create_test_tokenizer();
 
@@ -928,7 +917,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Requires SystemDictionary::new_test implementation"]
     fn test_with_user_dict() {
         let mut tokenizer = create_test_tokenizer();
 

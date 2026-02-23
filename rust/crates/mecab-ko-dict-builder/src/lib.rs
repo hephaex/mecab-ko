@@ -609,7 +609,7 @@ pub mod builder {
             &self,
             trie_bytes: &[u8],
             matrix: &DenseMatrix,
-            _dict_entries: &[DictEntry],
+            dict_entries: &[DictEntry],
             char_def: Option<&CharDef>,
             unk_def: Option<&UnkDef>,
         ) -> Result<()> {
@@ -685,6 +685,29 @@ pub mod builder {
                 let unk_def_bytes = unk_def.to_bytes();
                 let unk_def_path = output_dir.join("unk.bin");
                 std::fs::write(&unk_def_path, unk_def_bytes).map_err(BuildError::Io)?;
+            }
+
+            // Entries 저장 (바이너리 + CSV)
+            if !dict_entries.is_empty() {
+                if self.config.verbose {
+                    tracing::info!("  Saving entries ({} entries)...", dict_entries.len());
+                }
+
+                // entries.bin (바이너리 포맷)
+                let entries_bin_path = output_dir.join("entries.bin");
+                mecab_ko_dict::dictionary::SystemDictionary::save_entries_bin(
+                    dict_entries,
+                    &entries_bin_path,
+                )
+                .map_err(BuildError::Dict)?;
+
+                // entries.csv (텍스트 포맷, 디버깅/검증용)
+                let entries_csv_path = output_dir.join("entries.csv");
+                mecab_ko_dict::dictionary::SystemDictionary::save_entries_csv(
+                    dict_entries,
+                    &entries_csv_path,
+                )
+                .map_err(BuildError::Dict)?;
             }
 
             if self.config.verbose {

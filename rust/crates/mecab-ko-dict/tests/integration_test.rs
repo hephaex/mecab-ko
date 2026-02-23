@@ -24,6 +24,21 @@ fn test_system_dictionary_integration() {
         let dict =
             SystemDictionary::load(&mini_dict_path).expect("Failed to load mini test dictionary");
         assert!(dict.dicdir().exists());
+
+        // entries.csv가 있으면 엔트리가 로드되어야 함
+        if mini_dict_path.join("entries.csv").exists() {
+            assert!(
+                !dict.entries().is_empty(),
+                "entries.csv exists but no entries loaded"
+            );
+            println!("Loaded {} entries from mini dictionary", dict.entries().len());
+
+            // 엔트리 내용 검증
+            let entries = dict.entries();
+            assert_eq!(entries[0].surface, "안녕");
+            assert_eq!(entries[0].cost, 100);
+        }
+
         println!("Mini dictionary loaded successfully");
         return;
     }

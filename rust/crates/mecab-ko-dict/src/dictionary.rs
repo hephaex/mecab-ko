@@ -27,8 +27,11 @@
 //! }
 //! ```
 
+use std::io::{BufRead, BufReader, Read as _, Write as _};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+
+use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
 use crate::error::{DictError, Result};
 use crate::matrix::{ConnectionMatrix, Matrix};
@@ -47,10 +50,13 @@ const DEFAULT_DICDIR_PATHS: &[&str] = &[
 /// 사전 파일 이름
 const TRIE_FILE: &str = "sys.dic";
 const MATRIX_FILE: &str = "matrix.bin";
+const ENTRIES_BIN_FILE: &str = "entries.bin";
+const ENTRIES_CSV_FILE: &str = "entries.csv";
 
-/// Feature 파일 (추후 구현 예정)
-#[allow(dead_code)]
-const FEATURE_FILE: &str = "feature.txt";
+/// entries.bin 매직 넘버
+const ENTRIES_MAGIC: &[u8; 4] = b"MKED";
+/// entries.bin 버전
+const ENTRIES_VERSION: u32 = 1;
 
 /// 시스템 사전
 ///
@@ -192,8 +198,8 @@ impl SystemDictionary {
             }
         };
 
-        // 엔트리는 스텁으로 빈 벡터 (추후 feature 파일 파싱 구현)
-        let entries = Vec::new();
+        // 엔트리 로드 (entries.bin → entries.csv 순서로 시도)
+        let entries = Self::load_entries(&dicdir)?;
 
         Ok(Self {
             dicdir,
@@ -202,6 +208,250 @@ impl SystemDictionary {
             entries,
             user_dict: None,
         })
+    }
+
+    /// 엔트리 로드 (entries.bin → entries.csv 순서로 시도)
+    ///
+    /// # Arguments
+    ///
+    /// * `dicdir` - 사전 디렉토리 경로
+    fn load_entries(dicdir: &Path) -> Result<Vec<DictEntry>> {
+        // 1. entries.bin 바이너리 파일 시도
+        let bin_path = dicdir.join(ENTRIES_BIN_FILE);
+        if bin_path.exists() {
+            return Self::load_entries_bin(&bin_path);
+        }
+
+        // 2. entries.csv 텍스트 파일 시도
+        let csv_path = dicdir.join(ENTRIES_CSV_FILE);
+        if csv_path.exists() {
+            return Self::load_entries_csv(&csv_path);
+        }
+
+        // 3. 엔트리 파일이 없으면 빈 벡터 (Trie + Matrix만으로 동작)
+        Ok(Vec::new())
+    }
+
+    /// CSV 엔트리 파일 로드
+    ///
+    /// 형식: `surface,left_id,right_id,cost,feature_fields...`
+    fn load_entries_csv(path: &Path) -> Result<Vec<DictEntry>> {
+        let file = std::fs::File::open(path).map_err(DictError::Io)?;
+        let reader = BufReader::new(file);
+        let mut entries = Vec::new();
+
+        for (line_num, line_result) in reader.lines().enumerate() {
+            let line = line_result.map_err(DictError::Io)?;
+            let line = line.trim();
+            if line.is_empty() || line.starts_with('#') {
+                continue;
+            }
+
+            // 최소 5필드: surface, left_id, right_id, cost, feature...
+            let mut fields = line.splitn(5, ',');
+            let surface = fields
+                .next()
+                .ok_or_else(|| {
+                    DictError::Format(format!("line {}: missing surface", line_num + 1))
+                })?
+                .to_string();
+            let left_id: u16 = fields
+                .next()
+                .ok_or_else(|| {
+                    DictError::Format(format!("line {}: missing left_id", line_num + 1))
+                })?
+                .parse()
+                .map_err(|_| {
+                    DictError::Format(format!("line {}: invalid left_id", line_num + 1))
+                })?;
+            let right_id: u16 = fields
+                .next()
+                .ok_or_else(|| {
+                    DictError::Format(format!("line {}: missing right_id", line_num + 1))
+                })?
+                .parse()
+                .map_err(|_| {
+                    DictError::Format(format!("line {}: invalid right_id", line_num + 1))
+                })?;
+            let cost: i16 = fields
+                .next()
+                .ok_or_else(|| {
+                    DictError::Format(format!("line {}: missing cost", line_num + 1))
+                })?
+                .parse()
+                .map_err(|_| {
+                    DictError::Format(format!("line {}: invalid cost", line_num + 1))
+                })?;
+            let feature = fields.next().unwrap_or("").to_string();
+
+            entries.push(DictEntry {
+                surface,
+                left_id,
+                right_id,
+                cost,
+                feature,
+            });
+        }
+
+        Ok(entries)
+    }
+
+    /// 바이너리 엔트리 파일 로드
+    ///
+    /// 형식: `[magic:4][version:u32][count:u32][entries...]`
+    fn load_entries_bin(path: &Path) -> Result<Vec<DictEntry>> {
+        let data = std::fs::read(path).map_err(DictError::Io)?;
+        let mut cursor = std::io::Cursor::new(&data);
+
+        // 매직 넘버 검증
+        let mut magic = [0u8; 4];
+        cursor
+            .read_exact(&mut magic)
+            .map_err(|e| DictError::Format(format!("entries.bin magic: {e}")))?;
+        if &magic != ENTRIES_MAGIC {
+            return Err(DictError::Format("entries.bin: invalid magic number".into()));
+        }
+
+        // 버전 검증
+        let version = cursor
+            .read_u32::<LittleEndian>()
+            .map_err(|e| DictError::Format(format!("entries.bin version: {e}")))?;
+        if version != ENTRIES_VERSION {
+            return Err(DictError::Format(format!(
+                "entries.bin: unsupported version {version}"
+            )));
+        }
+
+        // 엔트리 수
+        let count = cursor
+            .read_u32::<LittleEndian>()
+            .map_err(|e| DictError::Format(format!("entries.bin count: {e}")))?;
+
+        let mut entries = Vec::with_capacity(count as usize);
+        for i in 0..count {
+            let left_id = cursor.read_u16::<LittleEndian>().map_err(|e| {
+                DictError::Format(format!("entries.bin entry {i} left_id: {e}"))
+            })?;
+            let right_id = cursor.read_u16::<LittleEndian>().map_err(|e| {
+                DictError::Format(format!("entries.bin entry {i} right_id: {e}"))
+            })?;
+            let cost = cursor.read_i16::<LittleEndian>().map_err(|e| {
+                DictError::Format(format!("entries.bin entry {i} cost: {e}"))
+            })?;
+            let surface_len = cursor.read_u16::<LittleEndian>().map_err(|e| {
+                DictError::Format(format!("entries.bin entry {i} surface_len: {e}"))
+            })? as usize;
+            let feature_len = cursor.read_u16::<LittleEndian>().map_err(|e| {
+                DictError::Format(format!("entries.bin entry {i} feature_len: {e}"))
+            })? as usize;
+
+            let mut surface_bytes = vec![0u8; surface_len];
+            cursor.read_exact(&mut surface_bytes).map_err(|e| {
+                DictError::Format(format!("entries.bin entry {i} surface: {e}"))
+            })?;
+            let surface = String::from_utf8(surface_bytes).map_err(|e| {
+                DictError::Format(format!("entries.bin entry {i} surface utf8: {e}"))
+            })?;
+
+            let mut feature_bytes = vec![0u8; feature_len];
+            cursor.read_exact(&mut feature_bytes).map_err(|e| {
+                DictError::Format(format!("entries.bin entry {i} feature: {e}"))
+            })?;
+            let feature = String::from_utf8(feature_bytes).map_err(|e| {
+                DictError::Format(format!("entries.bin entry {i} feature utf8: {e}"))
+            })?;
+
+            entries.push(DictEntry {
+                surface,
+                left_id,
+                right_id,
+                cost,
+                feature,
+            });
+        }
+
+        Ok(entries)
+    }
+
+    /// 엔트리를 바이너리 파일로 저장
+    ///
+    /// # Errors
+    ///
+    /// 파일 쓰기 실패 시 에러 반환
+    pub fn save_entries_bin(entries: &[DictEntry], path: &Path) -> Result<()> {
+        let mut file = std::fs::File::create(path).map_err(DictError::Io)?;
+
+        file.write_all(ENTRIES_MAGIC).map_err(DictError::Io)?;
+        file.write_u32::<LittleEndian>(ENTRIES_VERSION)
+            .map_err(DictError::Io)?;
+
+        let count = u32::try_from(entries.len())
+            .map_err(|_| DictError::Format("too many entries".into()))?;
+        file.write_u32::<LittleEndian>(count)
+            .map_err(DictError::Io)?;
+
+        for entry in entries {
+            file.write_u16::<LittleEndian>(entry.left_id)
+                .map_err(DictError::Io)?;
+            file.write_u16::<LittleEndian>(entry.right_id)
+                .map_err(DictError::Io)?;
+            file.write_i16::<LittleEndian>(entry.cost)
+                .map_err(DictError::Io)?;
+
+            let surface_bytes = entry.surface.as_bytes();
+            let surface_len = u16::try_from(surface_bytes.len())
+                .map_err(|_| DictError::Format("surface too long".into()))?;
+            file.write_u16::<LittleEndian>(surface_len)
+                .map_err(DictError::Io)?;
+
+            let feature_bytes = entry.feature.as_bytes();
+            let feature_len = u16::try_from(feature_bytes.len())
+                .map_err(|_| DictError::Format("feature too long".into()))?;
+            file.write_u16::<LittleEndian>(feature_len)
+                .map_err(DictError::Io)?;
+
+            file.write_all(surface_bytes).map_err(DictError::Io)?;
+            file.write_all(feature_bytes).map_err(DictError::Io)?;
+        }
+
+        Ok(())
+    }
+
+    /// 엔트리를 CSV 파일로 저장
+    ///
+    /// # Errors
+    ///
+    /// 파일 쓰기 실패 시 에러 반환
+    pub fn save_entries_csv(entries: &[DictEntry], path: &Path) -> Result<()> {
+        let mut file = std::fs::File::create(path).map_err(DictError::Io)?;
+
+        for entry in entries {
+            writeln!(
+                file,
+                "{},{},{},{},{}",
+                entry.surface, entry.left_id, entry.right_id, entry.cost, entry.feature
+            )
+            .map_err(DictError::Io)?;
+        }
+
+        Ok(())
+    }
+
+    /// 인덱스에서 시작하여 같은 surface를 가진 연속된 모든 엔트리 반환
+    ///
+    /// 사전 빌더가 같은 surface의 엔트리를 연속으로 배치하므로,
+    /// `first_index`부터 surface가 같은 동안 모든 엔트리를 수집합니다.
+    fn get_entries_at(&self, first_index: u32, surface: &str) -> Vec<&DictEntry> {
+        let start = first_index as usize;
+        let mut results = Vec::new();
+        for entry in self.entries.get(start..).unwrap_or(&[]) {
+            if entry.surface == surface {
+                results.push(entry);
+            } else {
+                break;
+            }
+        }
+        results
     }
 
     /// 사용자 사전 추가
@@ -263,6 +513,7 @@ impl SystemDictionary {
     /// 공통 접두사 검색
     ///
     /// 주어진 텍스트의 접두사와 일치하는 모든 엔트리를 찾습니다.
+    /// 같은 surface에 복수 엔트리가 있으면 모두 반환합니다.
     ///
     /// # Arguments
     ///
@@ -273,13 +524,15 @@ impl SystemDictionary {
     /// 일치하는 엔트리와 바이트 길이의 벡터
     #[must_use]
     pub fn common_prefix_search(&self, text: &str) -> Vec<(&DictEntry, usize)> {
-        self.trie
-            .common_prefix_search(text)
-            .filter_map(|(index, byte_len)| {
-                let entry = self.get_entry(index)?;
-                Some((entry, byte_len))
-            })
-            .collect()
+        let mut results = Vec::new();
+        for (index, byte_len) in self.trie.common_prefix_search(text) {
+            let surface = &text[..byte_len];
+            let entries = self.get_entries_at(index, surface);
+            for entry in entries {
+                results.push((entry, byte_len));
+            }
+        }
+        results
     }
 
     /// 특정 위치에서 공통 접두사 검색
@@ -294,15 +547,16 @@ impl SystemDictionary {
         text: &str,
         start_byte: usize,
     ) -> Vec<(&DictEntry, usize)> {
-        self.trie
-            .common_prefix_search_at(text, start_byte)
-            .into_iter()
-            .filter_map(|(index, end_byte)| {
-                let entry = self.get_entry(index)?;
-                let byte_len = end_byte - start_byte;
-                Some((entry, byte_len))
-            })
-            .collect()
+        let mut results = Vec::new();
+        for (index, end_byte) in self.trie.common_prefix_search_at(text, start_byte) {
+            let byte_len = end_byte - start_byte;
+            let surface = &text[start_byte..end_byte];
+            let entries = self.get_entries_at(index, surface);
+            for entry in entries {
+                results.push((entry, byte_len));
+            }
+        }
+        results
     }
 
     /// 시스템 사전과 사용자 사전을 통합하여 검색
@@ -352,10 +606,11 @@ impl SystemDictionary {
 
 impl Dictionary for SystemDictionary {
     fn lookup(&self, surface: &str) -> Vec<Entry> {
-        // Trie exact match로 검색
+        // Trie exact match로 검색 → 같은 surface의 모든 엔트리 반환
         if let Some(index) = self.trie.exact_match(surface) {
-            if let Some(entry) = self.get_entry(index) {
-                return vec![entry.to_entry()];
+            let entries = self.get_entries_at(index, surface);
+            if !entries.is_empty() {
+                return entries.iter().map(|e| e.to_entry()).collect();
             }
         }
 
@@ -679,5 +934,83 @@ mod tests {
         assert_eq!(dict_entry.left_id, 10);
         assert_eq!(dict_entry.right_id, 20);
         assert_eq!(dict_entry.cost, 300);
+    }
+
+    #[test]
+    fn test_entries_bin_roundtrip() {
+        let entries = vec![
+            DictEntry::new("안녕", 1, 1, 100, "NNG,*,T,안녕,*,*,*,*"),
+            DictEntry::new("하세요", 2, 2, 50, "VV,*,F,하세요,*,*,*,*"),
+            DictEntry::new("감사", 3, 3, 80, "NNG,*,F,감사,*,*,*,*"),
+        ];
+
+        let temp = tempfile::NamedTempFile::new().expect("create temp file");
+        let path = temp.path();
+
+        SystemDictionary::save_entries_bin(&entries, path).expect("save should work");
+        let loaded = SystemDictionary::load_entries_bin(path).expect("load should work");
+
+        assert_eq!(loaded.len(), 3);
+        assert_eq!(loaded[0].surface, "안녕");
+        assert_eq!(loaded[0].left_id, 1);
+        assert_eq!(loaded[0].cost, 100);
+        assert_eq!(loaded[0].feature, "NNG,*,T,안녕,*,*,*,*");
+        assert_eq!(loaded[1].surface, "하세요");
+        assert_eq!(loaded[2].surface, "감사");
+    }
+
+    #[test]
+    fn test_entries_csv_roundtrip() {
+        let entries = vec![
+            DictEntry::new("형태소", 10, 20, 150, "NNG,*,F,형태소,*,*,*,*"),
+            DictEntry::new("분석", 11, 21, 200, "NNG,*,T,분석,*,*,*,*"),
+        ];
+
+        let temp = tempfile::NamedTempFile::new().expect("create temp file");
+        let path = temp.path();
+
+        SystemDictionary::save_entries_csv(&entries, path).expect("save should work");
+        let loaded = SystemDictionary::load_entries_csv(path).expect("load should work");
+
+        assert_eq!(loaded.len(), 2);
+        assert_eq!(loaded[0].surface, "형태소");
+        assert_eq!(loaded[0].left_id, 10);
+        assert_eq!(loaded[0].right_id, 20);
+        assert_eq!(loaded[0].cost, 150);
+        assert_eq!(loaded[1].surface, "분석");
+    }
+
+    #[test]
+    fn test_get_entries_at_multi() {
+        // 같은 surface에 복수 엔트리가 있는 경우
+        let trie_input = vec![("가", 0u32), ("나", 2u32)];
+        let trie_bytes = TrieBuilder::build(&trie_input).expect("build trie");
+        let trie = Trie::from_vec(trie_bytes);
+        let matrix = ConnectionMatrix::Dense(DenseMatrix::new(5, 5, 100));
+
+        let dict_entries = vec![
+            DictEntry::new("가", 1, 1, 100, "VV,*,F,가,*,*,*,*"),
+            DictEntry::new("가", 2, 2, 50, "JKS,*,F,가,*,*,*,*"),
+            DictEntry::new("나", 3, 3, 200, "NP,*,F,나,*,*,*,*"),
+        ];
+
+        let dict = SystemDictionary {
+            dicdir: PathBuf::from("./test"),
+            trie,
+            matrix,
+            entries: dict_entries,
+            user_dict: None,
+        };
+
+        // "가" 검색 → 2개 엔트리 반환
+        let results = dict.get_entries_at(0, "가");
+        assert_eq!(results.len(), 2);
+        assert_eq!(results[0].feature, "VV,*,F,가,*,*,*,*");
+        assert_eq!(results[1].feature, "JKS,*,F,가,*,*,*,*");
+
+        // lookup도 복수 반환
+        use crate::Dictionary;
+        let entries = dict.lookup("가");
+        assert_eq!(entries.len(), 2);
     }
 }
