@@ -21,14 +21,11 @@
 //!
 //! ## Example
 //!
-//! ```rust,ignore
-//! use mecab_ko_core::Tokenizer;
+//! ```rust,no_run
+//! use mecab_ko_core::tokenizer::Tokenizer;
 //!
 //! // 기본 사전으로 초기화
-//! let tokenizer = Tokenizer::new()?;
-//!
-//! // 사용자 사전 추가
-//! let tokenizer = tokenizer.with_user_dict("user.csv")?;
+//! let mut tokenizer = Tokenizer::new().unwrap();
 //!
 //! // 형태소 분석
 //! let tokens = tokenizer.tokenize("아버지가방에들어가신다");
@@ -169,21 +166,17 @@ impl Token {
 ///
 /// (품사, 읽기, 원형)
 fn parse_features(features: &str) -> (Cow<'_, str>, Option<String>, Option<String>) {
-    let parts: Vec<&str> = features.split(',').collect();
+    // Avoid allocating a Vec – iterate the splits directly.
+    let mut split = features.splitn(5, ',');
 
-    if parts.is_empty() {
-        return (Cow::Borrowed("*"), None, None);
-    }
+    let pos = split.next().unwrap_or("*");
 
-    let pos = parts[0];
-
-    // 읽기 (인덱스 3)
-    let reading = parts
-        .get(3)
-        .filter(|s| !s.is_empty() && **s != "*")
+    // indices: 0=pos, 1=semantic, 2=jongseong, 3=reading
+    let reading = split
+        .nth(2) // skip indices 1 and 2, land on index 3
+        .filter(|s| !s.is_empty() && *s != "*")
         .map(std::string::ToString::to_string);
 
-    // 원형 (일반적으로 읽기와 동일하거나 표면형)
     let lemma = reading.clone();
 
     (Cow::Borrowed(pos), reading, lemma)
@@ -234,10 +227,10 @@ impl Tokenizer {
     ///
     /// # Example
     ///
-    /// ```rust,ignore
-    /// use mecab_ko_core::Tokenizer;
+    /// ```rust,no_run
+    /// use mecab_ko_core::tokenizer::Tokenizer;
     ///
-    /// let tokenizer = Tokenizer::new()?;
+    /// let mut tokenizer = Tokenizer::new().unwrap();
     /// let tokens = tokenizer.tokenize("안녕하세요");
     /// ```
     pub fn new() -> Result<Self> {
@@ -297,14 +290,14 @@ impl Tokenizer {
     ///
     /// # Example
     ///
-    /// ```rust,ignore
-    /// use mecab_ko_core::Tokenizer;
+    /// ```rust,no_run
+    /// use mecab_ko_core::tokenizer::Tokenizer;
     /// use mecab_ko_dict::UserDictionary;
     ///
     /// let mut user_dict = UserDictionary::new();
     /// user_dict.add_entry("딥러닝", "NNG", Some(-1000), None);
     ///
-    /// let tokenizer = Tokenizer::new()?
+    /// let tokenizer = Tokenizer::new().unwrap()
     ///     .with_user_dict(user_dict);
     /// ```
     #[must_use]
@@ -343,7 +336,9 @@ impl Tokenizer {
     ///
     /// # Example
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
+    /// # use mecab_ko_core::tokenizer::Tokenizer;
+    /// # let mut tokenizer = Tokenizer::new().unwrap();
     /// let tokens = tokenizer.tokenize("아버지가방에들어가신다");
     /// for token in tokens {
     ///     println!("{}: {}", token.surface, token.pos);
@@ -402,28 +397,44 @@ impl Tokenizer {
     ///
     /// 사전 엔트리가 하나라도 있으면 true
     fn add_dict_nodes(&mut self, start_pos: usize) -> bool {
-        // substring 메서드를 사용하여 부분 문자열 추출 (소유권 확보를 위해 클론)
-        let search_text = self
-            .lattice
-            .substring(start_pos, self.lattice.char_len())
-            .to_string();
+        // Get the byte range for the suffix starting at `start_pos` without
+        // allocating a new String.  We collect only the trie-match indices
+        // (small integers) before any lattice mutation, so the immutable borrow
+        // of `self.lattice` is released before we call `add_node`.
+        let char_len = self.lattice.char_len();
+        let search_text: &str = self.lattice.substring(start_pos, char_len);
 
         if search_text.is_empty() {
             return false;
         }
 
+        // Collect match indices first (tiny integers – no O(N) string copy).
+        // This releases the immutable borrow on self.lattice before we call
+        // add_node which needs a mutable borrow.
+        let match_indices: Vec<(u32, usize)> =
+            self.dictionary.trie().common_prefix_search(search_text).collect();
+
+        // Collect user-dict entries as owned data before mutating lattice.
+        // user_dict.common_prefix_search returns owned UserEntry values so
+        // this is already allocation-minimal; we just need to separate the
+        // immutable borrow from the mutable one.
+        let user_entries: Vec<_> = self
+            .dictionary
+            .user_dictionary()
+            .map(|ud| ud.common_prefix_search(search_text))
+            .unwrap_or_default();
+
+        // Immutable borrows on self.lattice are now finished; we can mutate.
         let mut found = false;
 
-        // 공통 접두사 검색
-        let matches = self.dictionary.trie().common_prefix_search(&search_text);
-
-        for (index, _byte_len) in matches {
-            // 엔트리 조회
+        for (index, byte_len) in match_indices {
             if let Some(entry) = self.dictionary.get_entry(index) {
-                let surface_char_len = entry.surface.chars().count();
-                let end_pos = start_pos + surface_char_len;
+                // Use the trie-provided byte_len to compute end_pos via
+                // binary search on char_positions, avoiding chars().count().
+                let end_pos = self
+                    .lattice
+                    .char_pos_from_start_and_byte_len(start_pos, byte_len);
 
-                // 노드 추가
                 self.lattice.add_node(
                     NodeBuilder::new(&entry.surface, start_pos, end_pos)
                         .left_id(entry.left_id)
@@ -437,26 +448,20 @@ impl Tokenizer {
             }
         }
 
-        // 사용자 사전 검색
-        if let Some(user_dict) = self.dictionary.user_dictionary() {
-            let user_matches = user_dict.common_prefix_search(&search_text);
+        for user_entry in user_entries {
+            let surface_char_len = user_entry.surface.chars().count();
+            let end_pos = start_pos + surface_char_len;
 
-            for user_entry in user_matches {
-                let surface_char_len = user_entry.surface.chars().count();
-                let end_pos = start_pos + surface_char_len;
+            self.lattice.add_node(
+                NodeBuilder::new(&user_entry.surface, start_pos, end_pos)
+                    .left_id(user_entry.left_id)
+                    .right_id(user_entry.right_id)
+                    .word_cost(i32::from(user_entry.cost))
+                    .node_type(NodeType::User)
+                    .feature(&user_entry.feature),
+            );
 
-                // 사용자 사전 엔트리를 노드로 추가
-                self.lattice.add_node(
-                    NodeBuilder::new(&user_entry.surface, start_pos, end_pos)
-                        .left_id(user_entry.left_id)
-                        .right_id(user_entry.right_id)
-                        .word_cost(i32::from(user_entry.cost))
-                        .node_type(NodeType::User)
-                        .feature(&user_entry.feature),
-                );
-
-                found = true;
-            }
+            found = true;
         }
 
         found

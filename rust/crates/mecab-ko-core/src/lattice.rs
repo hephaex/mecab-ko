@@ -351,6 +351,18 @@ impl CharPositions {
         }
     }
 
+    /// 바이트 위치 → 문자 위치 변환 (binary search)
+    ///
+    /// Returns the char index whose byte start equals `byte_pos`, or
+    /// `char_count()` if not found (e.g. `byte_pos` == `total_bytes`).
+    #[inline]
+    #[must_use]
+    pub fn byte_to_char(&self, byte_pos: usize) -> usize {
+        self.char_to_byte
+            .binary_search(&byte_pos)
+            .unwrap_or_else(|_| self.char_count())
+    }
+
     /// 총 바이트 수
     #[inline]
     #[must_use]
@@ -360,23 +372,27 @@ impl CharPositions {
 }
 
 /// 띄어쓰기 위치 정보
+///
+/// Stores positions as a sorted `Vec` rather than a `HashSet`.  For typical
+/// sentences the number of spaces is small, so binary search in a sorted `Vec`
+/// is cheaper than hashing and avoids `HashMap` overhead.
 #[derive(Debug, Clone, Default)]
 pub struct SpacePositions {
-    /// 띄어쓰기 직후 문자 위치 집합
-    positions: std::collections::HashSet<usize>,
+    /// 띄어쓰기 직후 문자 위치 목록 (정렬된 상태)
+    positions: Vec<usize>,
 }
 
 impl SpacePositions {
     /// 문자열에서 띄어쓰기 위치 추출
     #[must_use]
     pub fn new(text: &str) -> Self {
-        let mut positions = std::collections::HashSet::new();
+        let mut positions = Vec::new();
         let mut char_pos = 0;
         let mut prev_is_space = false;
 
         for c in text.chars() {
             if prev_is_space && !c.is_whitespace() {
-                positions.insert(char_pos);
+                positions.push(char_pos);
             }
             prev_is_space = c.is_whitespace();
             if !c.is_whitespace() {
@@ -384,6 +400,7 @@ impl SpacePositions {
             }
         }
 
+        // positions are already in ascending order since we iterate left→right
         Self { positions }
     }
 
@@ -391,7 +408,7 @@ impl SpacePositions {
     #[inline]
     #[must_use]
     pub fn has_space_before(&self, char_pos: usize) -> bool {
-        self.positions.contains(&char_pos)
+        self.positions.binary_search(&char_pos).is_ok()
     }
 }
 
@@ -515,6 +532,19 @@ impl Lattice {
     #[must_use]
     pub fn char_len(&self) -> usize {
         self.char_positions.char_count()
+    }
+
+    /// 특정 위치에서 시작하는 바이트 오프셋을 주어진 바이트 길이만큼 더한 뒤
+    /// 해당 위치의 문자 인덱스를 반환합니다.
+    ///
+    /// `start_pos`의 바이트 시작 위치에 `byte_len`을 더한 결과에 대응하는
+    /// 문자 인덱스를 binary search로 빠르게 구합니다.
+    /// 이를 통해 `entry.surface.chars().count()` 비용을 줄일 수 있습니다.
+    #[inline]
+    #[must_use]
+    pub fn char_pos_from_start_and_byte_len(&self, start_pos: usize, byte_len: usize) -> usize {
+        let start_byte = self.char_positions.char_to_byte(start_pos);
+        self.char_positions.byte_to_char(start_byte + byte_len)
     }
 
     /// 바이트 길이
@@ -689,19 +719,46 @@ impl Lattice {
 
     /// 새 텍스트로 Lattice 재설정
     pub fn reset(&mut self, text: &str) {
-        self.original_text = text.to_string();
-        self.text = text.chars().filter(|c| !c.is_whitespace()).collect();
+        // Reuse the String allocation for original_text/text instead of
+        // dropping and recreating.
+        self.original_text.clear();
+        self.original_text.push_str(text);
+
+        self.text.clear();
+        for c in text.chars().filter(|c| !c.is_whitespace()) {
+            self.text.push(c);
+        }
+
         self.char_positions = CharPositions::new(&self.text);
         self.space_positions = SpacePositions::new(text);
 
         let char_len = self.char_positions.char_count();
         let byte_len = self.char_positions.byte_count();
 
-        // 벡터 크기 조정
-        self.ends_at.clear();
-        self.ends_at.resize(char_len + 1, Vec::new());
-        self.starts_at.clear();
-        self.starts_at.resize(char_len + 1, Vec::new());
+        // Resize the position index vectors without dropping inner Vec capacity.
+        // If new size <= old size, clear existing slots and truncate.
+        // If new size > old size, clear existing slots and push new empty vecs.
+        let new_len = char_len + 1;
+        let old_ends_len = self.ends_at.len();
+        let old_starts_len = self.starts_at.len();
+
+        // Clear the slots we will reuse (preserving their heap capacity).
+        for v in self.ends_at.iter_mut().take(new_len.min(old_ends_len)) {
+            v.clear();
+        }
+        for v in self.starts_at.iter_mut().take(new_len.min(old_starts_len)) {
+            v.clear();
+        }
+
+        // Resize (truncate or extend).
+        self.ends_at.truncate(new_len);
+        self.starts_at.truncate(new_len);
+        while self.ends_at.len() < new_len {
+            self.ends_at.push(Vec::new());
+        }
+        while self.starts_at.len() < new_len {
+            self.starts_at.push(Vec::new());
+        }
 
         // 노드 리셋
         self.nodes.truncate(2);

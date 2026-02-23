@@ -17,22 +17,27 @@
 //!
 //! ## Example
 //!
-//! ```rust,ignore
-//! use mecab_ko_core::pool::{TokenPool, StringInterner};
+//! ```rust
+//! use mecab_ko_core::pool::{TokenPool, SharedStringInterner};
 //!
-//! let mut pool = TokenPool::new();
-//! let mut interner = StringInterner::new();
+//! let pool = TokenPool::new();
+//! let interner = SharedStringInterner::new();
 //!
-//! // Token 빌림
+//! // Symbol intern
+//! let sym = interner.intern("안녕");
+//! assert_eq!(interner.resolve(sym).as_deref(), Some("안녕"));
+//!
+//! // Token 획득
 //! let mut token = pool.acquire();
-//! token.surface = interner.intern("안녕").to_string();
-//! token.pos = interner.intern("NNG").to_string();
+//! token.surface = "안녕".to_string();
+//! token.pos = "NNG".to_string();
 //!
-//! // 사용 후 자동 반환 (Drop)
-//! drop(token);
+//! // 사용 후 반환
+//! pool.release(token);
 //!
 //! // 재사용
 //! let token2 = pool.acquire();
+//! assert_eq!(token2.surface, ""); // 초기화됨
 //! ```
 
 use parking_lot::Mutex;

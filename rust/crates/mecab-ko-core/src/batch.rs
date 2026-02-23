@@ -10,10 +10,10 @@
 //!
 //! ## Example
 //!
-//! ```rust,ignore
+//! ```rust,no_run
 //! use mecab_ko_core::batch::BatchTokenizer;
 //!
-//! let batch = BatchTokenizer::new()?;
+//! let mut batch = BatchTokenizer::new().unwrap();
 //! let texts = vec!["안녕하세요", "감사합니다", "좋은 하루 되세요"];
 //! let results = batch.tokenize_batch(&texts);
 //!
@@ -119,8 +119,10 @@ impl BatchTokenizer {
     ///
     /// # Example
     ///
-    /// ```rust,ignore
-    /// let batch = BatchTokenizer::new()?;
+    /// ```rust,no_run
+    /// use mecab_ko_core::batch::BatchTokenizer;
+    ///
+    /// let batch = BatchTokenizer::new().unwrap();
     /// let texts = vec!["안녕하세요", "감사합니다"];
     /// let results = batch.tokenize_batch(&texts);
     /// ```

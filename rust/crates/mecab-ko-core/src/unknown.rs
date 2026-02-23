@@ -20,11 +20,10 @@
 //!
 //! ## 예제
 //!
-//! ```rust,ignore
-//! use mecab_ko_core::unknown::{UnknownHandler, CharCategory};
+//! ```rust,no_run
+//! use mecab_ko_core::unknown::UnknownHandler;
 //!
-//! let handler = UnknownHandler::default();
-//! let candidates = handler.generate_candidates("ABC123", 0);
+//! let handler = UnknownHandler::korean_default();
 //! ```
 
 use std::collections::HashMap;
@@ -510,12 +509,23 @@ impl UnknownHandler {
         start_pos: usize,
         has_dict_entry: bool,
     ) -> Vec<UnknownCandidate> {
-        let chars: Vec<char> = text.chars().collect();
-        if start_pos >= chars.len() {
-            return Vec::new();
-        }
+        // Avoid allocating a Vec<char> by working directly with char indices
+        // in the UTF-8 string.  We compute byte offsets alongside char counts.
+        //
+        // Build a lightweight mapping: char_index -> byte_offset for the
+        // suffix starting at `start_pos`, stopping early once we know we
+        // won't need more characters.
 
-        let first_char = chars[start_pos];
+        // First, find the byte offset of `start_pos`.
+        let start_byte = text
+            .char_indices()
+            .nth(start_pos)
+            .map_or(text.len(), |(b, _)| b);
+
+        let suffix = &text[start_byte..];
+        let Some(first_char) = suffix.chars().next() else {
+            return Vec::new();
+        };
         let category_id = self.category_map.get_category(first_char);
         let Some(category_def) = self.category_map.get_category_def(category_id) else {
             return Vec::new();
@@ -526,30 +536,49 @@ impl UnknownHandler {
             return Vec::new();
         }
 
-        let mut candidates = Vec::new();
         let unknown_defs = self.unknown_dict.get_entries(category_id);
-
         if unknown_defs.is_empty() {
             return Vec::new();
         }
 
-        // GROUP이 true이면 동일 카테고리 문자 그룹핑
+        let mut candidates = Vec::new();
+
         if category_def.group {
-            let group_end = self.find_group_end(&chars, start_pos, category_id);
+            // Find how many consecutive chars share the same category,
+            // collecting their byte boundaries as we go (no Vec<char>).
+            let mut char_count = 0usize;
+            let mut byte_end = 0usize;
+
+            for c in suffix.chars() {
+                if self.category_map.get_category(c) != category_id {
+                    break;
+                }
+                byte_end += c.len_utf8();
+                char_count += 1;
+            }
+
+            let group_char_count = char_count; // relative to start_pos
             let max_len = if category_def.length > 0 {
-                category_def.length.min(group_end - start_pos)
+                category_def.length.min(group_char_count)
             } else {
-                group_end - start_pos
+                group_char_count
             };
 
-            // 1부터 max_len까지 길이의 후보 생성
+            // Recompute char-boundary byte offsets for lengths 1..=max_len.
+            let mut byte_offset = 0usize;
+            let mut char_iter = suffix.chars();
             for len in 1..=max_len {
+                if let Some(c) = char_iter.next() {
+                    byte_offset += c.len_utf8();
+                } else {
+                    break;
+                }
                 let end_pos = start_pos + len;
-                let surface: String = chars[start_pos..end_pos].iter().collect();
+                let surface = &suffix[..byte_offset];
 
                 for def in unknown_defs {
                     candidates.push(UnknownCandidate {
-                        surface: surface.clone(),
+                        surface: surface.to_string(),
                         start_pos,
                         end_pos,
                         left_id: def.left_id,
@@ -560,21 +589,30 @@ impl UnknownHandler {
                     });
                 }
             }
+            let _ = byte_end; // suppress unused warning
         } else {
             // GROUP이 false이면 각 문자를 개별 처리
+            let char_total = suffix.chars().count();
             let max_len = if category_def.length > 0 {
-                category_def.length.min(chars.len() - start_pos)
+                category_def.length.min(char_total)
             } else {
                 1
             };
 
+            let mut byte_offset = 0usize;
+            let mut char_iter = suffix.chars();
             for len in 1..=max_len {
+                if let Some(c) = char_iter.next() {
+                    byte_offset += c.len_utf8();
+                } else {
+                    break;
+                }
                 let end_pos = start_pos + len;
-                let surface: String = chars[start_pos..end_pos].iter().collect();
+                let surface = &suffix[..byte_offset];
 
                 for def in unknown_defs {
                     candidates.push(UnknownCandidate {
-                        surface: surface.clone(),
+                        surface: surface.to_string(),
                         start_pos,
                         end_pos,
                         left_id: def.left_id,
@@ -591,6 +629,10 @@ impl UnknownHandler {
     }
 
     /// 동일 카테고리 문자 그룹의 끝 위치 찾기
+    ///
+    /// Note: kept for tests; internally we now use the iterator-based approach
+    /// in `generate_candidates` to avoid allocating a Vec<char>.
+    #[cfg(test)]
     fn find_group_end(&self, chars: &[char], start_pos: usize, category_id: CategoryId) -> usize {
         let mut pos = start_pos;
         while pos < chars.len() {

@@ -22,17 +22,15 @@
 //!
 //! # Example
 //!
-//! ```rust,ignore
+//! ```rust,no_run
 //! use mecab_ko_core::viterbi::{ViterbiSearcher, SpacePenalty};
 //! use mecab_ko_core::lattice::Lattice;
 //!
 //! let mut lattice = Lattice::new("아버지가방에");
-//! // ... 노드 추가 ...
+//! // ... 노드 추가 후 검색 ...
 //!
 //! let searcher = ViterbiSearcher::new()
 //!     .with_space_penalty(SpacePenalty::korean_default());
-//!
-//! let path = searcher.search(&mut lattice, &conn_cost);
 //! ```
 
 use crate::lattice::{Lattice, Node, NodeId, NodeType, INVALID_NODE_ID};
@@ -145,20 +143,17 @@ impl SpacePenalty {
     pub fn korean_default() -> Self {
         // mecab-ko-dic의 left-id 기준 (실제 값은 사전에 따라 다름)
         // 여기서는 대표적인 조사/어미 ID 범위를 사용
-        let mut penalties = Vec::new();
+        // Build ranges in sorted order so binary_search in get() works correctly.
 
-        // 조사 계열 (JKS, JKC, JKG, JKO, JKB, JKV, JKQ, JX, JC)
-        // 일반적으로 1780~1800 범위
-        for id in 1780..1810 {
-            penalties.push((id, 6000));
-        }
+        // 어미 계열 (EP, EF, EC, ETN, ETM): 1700~1759
+        // 조사 계열 (JKS, JKC, JKG, JKO, JKB, JKV, JKQ, JX, JC): 1780~1809
+        let mut penalties: Vec<(u16, i32)> = (1700u16..1760)
+            .chain(1780..1810)
+            .map(|id| (id, 6000))
+            .collect();
 
-        // 어미 계열 (EP, EF, EC, ETN, ETM)
-        // 일반적으로 1700~1750 범위
-        for id in 1700..1760 {
-            penalties.push((id, 6000));
-        }
-
+        // Ensure sorted for binary_search
+        penalties.sort_unstable_by_key(|&(id, _)| id);
         Self { penalties }
     }
 
@@ -194,12 +189,18 @@ impl SpacePenalty {
             }
         }
 
+        // Keep sorted for binary search in get()
+        penalties.sort_unstable_by_key(|&(id, _)| id);
         Self { penalties }
     }
 
     /// 페널티 추가
     pub fn add(&mut self, left_id: u16, penalty: i32) {
-        self.penalties.push((left_id, penalty));
+        // Insert in sorted position for binary search correctness
+        let pos = self
+            .penalties
+            .partition_point(|&(id, _)| id < left_id);
+        self.penalties.insert(pos, (left_id, penalty));
     }
 
     /// 특정 품사 ID에 대한 페널티 조회
@@ -210,12 +211,10 @@ impl SpacePenalty {
     #[must_use]
     #[inline]
     pub fn get(&self, left_id: u16) -> i32 {
-        for &(id, penalty) in &self.penalties {
-            if id == left_id {
-                return penalty;
-            }
-        }
-        0
+        // Binary search on sorted penalties for O(log n) instead of O(n)
+        self.penalties
+            .binary_search_by_key(&left_id, |&(id, _)| id)
+            .map_or(0, |idx| self.penalties[idx].1)
     }
 
     /// 페널티가 설정되어 있는지 확인
@@ -277,7 +276,12 @@ impl ViterbiSearcher {
     ///
     /// # Example
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
+    /// # use mecab_ko_core::viterbi::{ViterbiSearcher, SpacePenalty};
+    /// # use mecab_ko_core::lattice::Lattice;
+    /// # let searcher = ViterbiSearcher::new();
+    /// # let conn_cost = mecab_ko_dict::matrix::DenseMatrix::new(1, 1, 0);
+    /// # let mut lattice = Lattice::new("test");
     /// let path = searcher.search(&mut lattice, &conn_cost);
     /// for node_id in path {
     ///     let node = lattice.node(node_id).unwrap();
@@ -298,18 +302,94 @@ impl ViterbiSearcher {
     fn forward_pass<C: ConnectionCost>(&self, lattice: &mut Lattice, conn_cost: &C) {
         let char_len = lattice.char_len();
 
+        // Reusable scratch buffers to avoid per-position Vec allocations.
+        // We collect (node_id) for the starting nodes and (id, total_cost, right_id)
+        // for ending nodes into these, clearing between positions.
+        let mut starting_ids: Vec<NodeId> = Vec::new();
+        let mut ending_nodes: Vec<(NodeId, i32, u16)> = Vec::new();
+
         // 위치 0부터 끝까지 순회
         for pos in 0..=char_len {
-            // 이 위치에서 시작하는 모든 노드에 대해 최소 비용 계산
-            let starting_ids: Vec<NodeId> = lattice.nodes_starting_at(pos).map(|n| n.id).collect();
+            // Collect starting node IDs (need ownership before mutating lattice)
+            starting_ids.clear();
+            starting_ids.extend(lattice.nodes_starting_at(pos).map(|n| n.id));
 
-            for node_id in starting_ids {
-                self.update_node_cost(lattice, conn_cost, node_id, pos);
+            // Collect ending node data once per position, reused for every
+            // starting node at this position.
+            ending_nodes.clear();
+            ending_nodes.extend(
+                lattice
+                    .nodes_ending_at(pos)
+                    .map(|n| (n.id, n.total_cost, n.right_id)),
+            );
+
+            for &node_id in &starting_ids {
+                self.update_node_cost_with_endings(
+                    lattice,
+                    conn_cost,
+                    node_id,
+                    &ending_nodes,
+                );
             }
         }
     }
 
-    /// 단일 노드의 최소 비용 계산 및 업데이트
+    /// 단일 노드의 최소 비용 계산 및 업데이트 (사전 수집된 `ending_nodes` 사용)
+    fn update_node_cost_with_endings<C: ConnectionCost>(
+        &self,
+        lattice: &mut Lattice,
+        conn_cost: &C,
+        node_id: NodeId,
+        ending_nodes: &[(NodeId, i32, u16)],
+    ) {
+        // 현재 노드 정보 추출
+        let (left_id, word_cost, has_space) = {
+            let Some(node) = lattice.node(node_id) else {
+                return;
+            };
+            (node.left_id, node.word_cost, node.has_space_before)
+        };
+
+        // 띄어쓰기 패널티는 left_id에 대해 한 번만 조회
+        let space_penalty = if has_space {
+            self.space_penalty.get(left_id)
+        } else {
+            0
+        };
+
+        let mut best_cost = i32::MAX;
+        let mut best_prev = INVALID_NODE_ID;
+
+        for &(prev_id, prev_cost, prev_right_id) in ending_nodes {
+            // 이전 노드까지의 비용이 무한대면 스킵
+            if prev_cost == i32::MAX {
+                continue;
+            }
+
+            // 연접 비용 계산
+            let connection = conn_cost.cost(prev_right_id, left_id);
+
+            // 총 비용 = 이전 비용 + 연접 비용 + 단어 비용 + 띄어쓰기 패널티
+            let total = prev_cost
+                .saturating_add(connection)
+                .saturating_add(word_cost)
+                .saturating_add(space_penalty);
+
+            if total < best_cost {
+                best_cost = total;
+                best_prev = prev_id;
+            }
+        }
+
+        // 노드 업데이트
+        if let Some(node) = lattice.node_mut(node_id) {
+            node.total_cost = best_cost;
+            node.prev_node_id = best_prev;
+        }
+    }
+
+    /// 단일 노드의 최소 비용 계산 및 업데이트 (레거시, 테스트용으로 유지)
+    #[cfg(test)]
     fn update_node_cost<C: ConnectionCost>(
         &self,
         lattice: &mut Lattice,
@@ -335,22 +415,18 @@ impl ViterbiSearcher {
         let mut best_prev = INVALID_NODE_ID;
 
         for (prev_id, prev_cost, prev_right_id) in ending_nodes {
-            // 이전 노드까지의 비용이 무한대면 스킵
             if prev_cost == i32::MAX {
                 continue;
             }
 
-            // 연접 비용 계산
             let connection = conn_cost.cost(prev_right_id, left_id);
 
-            // 띄어쓰기 패널티 (공백 뒤에서 시작하는 경우)
             let space_penalty = if has_space {
                 self.space_penalty.get(left_id)
             } else {
                 0
             };
 
-            // 총 비용 = 이전 비용 + 연접 비용 + 단어 비용 + 띄어쓰기 패널티
             let total = prev_cost
                 .saturating_add(connection)
                 .saturating_add(word_cost)
