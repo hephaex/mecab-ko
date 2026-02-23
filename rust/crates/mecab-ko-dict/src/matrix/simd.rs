@@ -43,9 +43,12 @@ pub trait SimdMatrix: Matrix {
     ///
     /// # Example
     ///
-    /// ```rust,ignore
-    /// let right_ids = [1, 2, 3, 4, 5, 6, 7, 8];
-    /// let left_ids = [10, 11, 12, 13, 14, 15, 16, 17];
+    /// ```rust,no_run
+    /// # use mecab_ko_dict::matrix::DenseMatrix;
+    /// # use mecab_ko_dict::matrix::simd::SimdMatrix;
+    /// # let matrix = DenseMatrix::new(20, 20, 0);
+    /// let right_ids = [1u16, 2, 3, 4, 5, 6, 7, 8];
+    /// let left_ids = [10u16, 11, 12, 13, 14, 15, 16, 17];
     /// let costs = matrix.batch_get_8(&right_ids, &left_ids);
     /// ```
     fn batch_get_8(&self, right_ids: &[u16; 8], left_ids: &[u16; 8]) -> [i32; 8];

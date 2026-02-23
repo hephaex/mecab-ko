@@ -10,12 +10,15 @@
 //!
 //! ## Example
 //!
-//! ```rust,ignore
+//! ```rust,no_run
 //! use mecab_ko_core::streaming::StreamingTokenizer;
+//! use mecab_ko_core::tokenizer::Tokenizer;
 //!
+//! let tokenizer = Tokenizer::new().unwrap();
 //! let mut stream = StreamingTokenizer::new(tokenizer);
 //!
 //! // 청크 단위로 처리
+//! let text_chunks = vec!["안녕하세요. ", "오늘 날씨가 좋네요."];
 //! for chunk in text_chunks {
 //!     let tokens = stream.process_chunk(chunk);
 //!     for token in tokens {
@@ -65,8 +68,11 @@ impl StreamingTokenizer {
     ///
     /// # Example
     ///
-    /// ```rust,ignore
-    /// let tokenizer = Tokenizer::new()?;
+    /// ```rust,no_run
+    /// use mecab_ko_core::tokenizer::Tokenizer;
+    /// use mecab_ko_core::streaming::StreamingTokenizer;
+    ///
+    /// let tokenizer = Tokenizer::new().unwrap();
     /// let stream = StreamingTokenizer::new(tokenizer);
     /// ```
     #[must_use]

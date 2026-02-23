@@ -26,21 +26,21 @@
 //!
 //! ## 사용 예제
 //!
-//! ```rust,ignore
+//! ```rust,no_run
 //! use mecab_ko_dict::file_watcher::{FileWatcher, WatchConfig};
 //! use mecab_ko_dict::hot_reload::HotReloadDictionary;
 //! use std::sync::Arc;
 //!
-//! let dict = Arc::new(HotReloadDictionary::new("/path/to/dict")?);
-//! let config = WatchConfig::default().debounce_ms(500);
+//! let dict = Arc::new(HotReloadDictionary::new("/path/to/dict").unwrap());
+//! let config = WatchConfig::default();
 //!
-//! let mut watcher = FileWatcher::new(dict.clone(), config)?;
-//! watcher.start()?;
+//! let mut watcher = FileWatcher::new(dict.clone(), config).unwrap();
+//! watcher.start().unwrap();
 //!
 //! // 파일 변경 감지 및 자동 리로드
 //! // ...
 //!
-//! watcher.stop()?;
+//! watcher.stop().unwrap();
 //! ```
 
 use std::path::{Path, PathBuf};

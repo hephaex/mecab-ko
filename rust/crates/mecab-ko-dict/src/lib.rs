@@ -12,9 +12,9 @@
 //! ## 예제
 //!
 //! ```rust,ignore
-//! use mecab_ko_dict::Dictionary;
+//! use mecab_ko_dict::dictionary::SystemDictionary;
 //!
-//! let dict = Dictionary::load("path/to/dict")?;
+//! let dict = SystemDictionary::load("path/to/dict").unwrap();
 //! let entries = dict.lookup("안녕");
 //! ```
 

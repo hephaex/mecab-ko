@@ -29,27 +29,24 @@
 //! ## 사용 예제
 //!
 //! ```rust,ignore
-//! use mecab_ko_dict::hot_reload::{HotReloadDictionary, DeltaUpdate};
+//! use mecab_ko_dict::hot_reload::{HotReloadDictionary, DeltaUpdate, DeltaUpdateBuilder};
 //!
 //! // 핫 리로드 사전 생성
-//! let dict = HotReloadDictionary::new("/path/to/dict")?;
-//!
-//! // 파일 변경 감지 시작
-//! dict.watch_files()?;
+//! let dict = HotReloadDictionary::new("/path/to/dict").unwrap();
 //!
 //! // 실시간 엔트리 추가
-//! dict.add_entry("딥러닝", "NNG", -1000, None)?;
+//! dict.add_entry("딥러닝", "NNG", -1000i16, None).unwrap();
 //!
 //! // 델타 업데이트 적용
-//! let delta = DeltaUpdate::builder()
+//! let delta = DeltaUpdateBuilder::new()
 //!     .add("머신러닝", "NNG", -1000)
 //!     .add("자연어처리", "NNG", -1000)
 //!     .build();
-//! dict.apply_delta(delta)?;
+//! dict.apply_delta(delta).unwrap();
 //!
 //! // 버전 관리
 //! let version = dict.current_version();
-//! dict.rollback(version - 1)?;
+//! dict.rollback(version - 1).unwrap();
 //! ```
 //!
 //! ## 성능 특성

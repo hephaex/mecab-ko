@@ -15,12 +15,12 @@
 //!
 //! ## 예제
 //!
-//! ```rust,ignore
+//! ```rust,no_run
 //! use mecab_ko_dict::user_dict::UserDictionary;
 //!
 //! let mut user_dict = UserDictionary::new();
-//! user_dict.add_entry("딥러닝", "NNG", -500, None)?;
-//! user_dict.load_from_csv("user.csv")?;
+//! user_dict.add_entry("딥러닝", "NNG", Some(-500), None);
+//! user_dict.load_from_csv("user.csv").unwrap();
 //! ```
 
 use std::collections::HashMap;

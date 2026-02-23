@@ -11,10 +11,10 @@
 //!
 //! ## 예제
 //!
-//! ```rust,ignore
-//! use mecab_ko_core::Tokenizer;
+//! ```rust,no_run
+//! use mecab_ko_core::tokenizer::Tokenizer;
 //!
-//! let tokenizer = Tokenizer::new()?;
+//! let mut tokenizer = Tokenizer::new().unwrap();
 //! let tokens = tokenizer.tokenize("안녕하세요");
 //!
 //! for token in tokens {

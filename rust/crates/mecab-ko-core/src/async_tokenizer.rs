@@ -10,12 +10,12 @@
 //!
 //! ## Example
 //!
-//! ```rust,ignore
+//! ```rust,no_run
 //! use mecab_ko_core::async_tokenizer::AsyncTokenizer;
 //!
 //! #[tokio::main]
 //! async fn main() {
-//!     let tokenizer = AsyncTokenizer::new().await?;
+//!     let tokenizer = AsyncTokenizer::new().await.unwrap();
 //!     let tokens = tokenizer.tokenize_async("안녕하세요").await;
 //!
 //!     for token in tokens {
@@ -257,9 +257,13 @@ impl AsyncTokenizer {
     ///
     /// # Example
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
+    /// # use mecab_ko_core::async_tokenizer::AsyncTokenizer;
+    /// # async fn example() {
+    /// #     let async_tokenizer = AsyncTokenizer::new().await.unwrap();
     /// let tokenizer = async_tokenizer.get_tokenizer().await;
     /// // ... 동기 작업 수행
+    /// # }
     /// ```
     pub async fn get_tokenizer(&self) -> tokio::sync::MutexGuard<'_, Tokenizer> {
         self.tokenizer.lock().await

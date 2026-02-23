@@ -14,10 +14,10 @@
 //! use mecab_ko_dict::matrix::ConnectionMatrix;
 //!
 //! // 텍스트 파일에서 로드
-//! let matrix = ConnectionMatrix::from_def_file("matrix.def")?;
+//! let matrix = ConnectionMatrix::from_def_file("matrix.def").unwrap();
 //!
-//! // 연접 비용 조회
-//! let cost = matrix.get(left_id, right_id);
+//! // 연접 비용 조회 (left_id=0, right_id=0)
+//! let cost = matrix.get(0, 0);
 //! ```
 //!
 //! ## 행렬 구조

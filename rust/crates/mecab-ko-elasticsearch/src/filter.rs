@@ -22,11 +22,18 @@ pub trait TokenFilter: Send + Sync {
 ///
 /// # Example
 ///
-/// ```rust,ignore
+/// ```rust
 /// use mecab_ko_elasticsearch::filter::{NoriPartOfSpeechStopFilter, TokenFilter};
+/// use mecab_ko_elasticsearch::tokenizer::Token;
 ///
 /// let filter = NoriPartOfSpeechStopFilter::new(vec!["J".to_string(), "E".to_string()]);
-/// let filtered = filter.filter(tokens)?;
+/// let tokens = vec![
+///     Token::new("형태소".to_string(), "NNG".to_string(), 0, 3),
+///     Token::new("을".to_string(), "J".to_string(), 3, 4),
+/// ];
+/// let filtered = filter.filter(tokens).unwrap();
+/// assert_eq!(filtered.len(), 1);
+/// assert_eq!(filtered[0].surface, "형태소");
 /// ```
 pub struct NoriPartOfSpeechStopFilter {
     /// 제거할 품사 태그 집합

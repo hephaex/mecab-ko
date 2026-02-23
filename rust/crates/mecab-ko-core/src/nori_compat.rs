@@ -10,11 +10,11 @@
 //!
 //! # 예제
 //!
-//! ```rust,ignore
+//! ```rust,no_run
 //! use mecab_ko_core::nori_compat::{NoriTokenizer, DecompoundMode};
 //!
-//! let tokenizer = NoriTokenizer::new(DecompoundMode::Mixed, true)?;
-//! let tokens = tokenizer.tokenize("형태소분석기")?;
+//! let mut tokenizer = NoriTokenizer::new(DecompoundMode::Mixed, true).unwrap();
+//! let tokens = tokenizer.tokenize("형태소분석기").unwrap();
 //!
 //! for token in tokens {
 //!     println!("{}: {}", token.surface, token.pos_tag);
@@ -148,10 +148,10 @@ impl NoriTokenizer {
     ///
     /// # Example
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
     /// use mecab_ko_core::nori_compat::{NoriTokenizer, DecompoundMode};
     ///
-    /// let tokenizer = NoriTokenizer::new(DecompoundMode::Mixed, true)?;
+    /// let tokenizer = NoriTokenizer::new(DecompoundMode::Mixed, true).unwrap();
     /// ```
     ///
     /// # Errors
@@ -186,8 +186,10 @@ impl NoriTokenizer {
     ///
     /// # Example
     ///
-    /// ```rust,ignore
-    /// let tokens = tokenizer.tokenize("형태소분석")?;
+    /// ```rust,no_run
+    /// # use mecab_ko_core::nori_compat::{NoriTokenizer, DecompoundMode};
+    /// # let mut tokenizer = NoriTokenizer::new(DecompoundMode::Mixed, true).unwrap();
+    /// let tokens = tokenizer.tokenize("형태소분석").unwrap();
     /// for token in tokens {
     ///     println!("{}: {}", token.surface, token.pos_tag);
     /// }
@@ -441,7 +443,7 @@ impl NoriAnalyzer {
     ///
     /// # Example
     ///
-    /// ```rust,ignore
+    /// ```rust,no_run
     /// use mecab_ko_core::nori_compat::{NoriAnalyzer, DecompoundMode};
     ///
     /// let stoptags = vec!["J".to_string(), "E".to_string()];
@@ -450,7 +452,7 @@ impl NoriAnalyzer {
     ///     DecompoundMode::Mixed,
     ///     stoptags,
     ///     false
-    /// )?;
+    /// ).unwrap();
     /// ```
     ///
     /// # Errors
@@ -473,8 +475,10 @@ impl NoriAnalyzer {
     ///
     /// # Example
     ///
-    /// ```rust,ignore
-    /// let analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::Mixed)?;
+    /// ```rust,no_run
+    /// use mecab_ko_core::nori_compat::{NoriAnalyzer, DecompoundMode};
+    ///
+    /// let analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::Mixed).unwrap();
     /// ```
     ///
     /// # Errors
@@ -493,8 +497,10 @@ impl NoriAnalyzer {
     ///
     /// # Example
     ///
-    /// ```rust,ignore
-    /// let tokens = analyzer.analyze("형태소 분석기")?;
+    /// ```rust,no_run
+    /// # use mecab_ko_core::nori_compat::{NoriAnalyzer, DecompoundMode};
+    /// # let mut analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::Mixed).unwrap();
+    /// let tokens = analyzer.analyze("형태소 분석기").unwrap();
     /// // 조사/어미가 제거된 결과만 반환
     /// ```
     ///

@@ -27,7 +27,7 @@ const DEFAULT_CACHE_SIZE: usize = 1024;
 ///
 /// # Example
 ///
-/// ```rust,ignore
+/// ```rust,no_run
 /// use mecab_ko_elasticsearch::analyzer::NoriAnalyzer;
 /// use mecab_ko_elasticsearch::config::{AnalyzerConfig, DecompoundMode};
 ///
@@ -35,8 +35,8 @@ const DEFAULT_CACHE_SIZE: usize = 1024;
 ///     .with_decompound_mode(DecompoundMode::Mixed)
 ///     .with_stoptags(vec!["J".to_string(), "E".to_string()]);
 ///
-/// let analyzer = NoriAnalyzer::new(config)?;
-/// let tokens = analyzer.analyze("한국어 형태소 분석기")?;
+/// let mut analyzer = NoriAnalyzer::new(config).unwrap();
+/// let tokens = analyzer.analyze("한국어 형태소 분석기").unwrap();
 ///
 /// for token in tokens {
 ///     println!("{}: {}", token.surface, token.pos_tag);

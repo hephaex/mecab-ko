@@ -16,10 +16,10 @@
 //!
 //! ## 빠른 시작
 //!
-//! ```rust,ignore
+//! ```rust,no_run
 //! use mecab_ko::Tokenizer;
 //!
-//! let tokenizer = Tokenizer::new()?;
+//! let mut tokenizer = Tokenizer::new().unwrap();
 //!
 //! // 기본 형태소 분석
 //! let tokens = tokenizer.tokenize("아버지가방에들어가신다");

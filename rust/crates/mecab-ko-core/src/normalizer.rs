@@ -12,10 +12,10 @@
 //!
 //! ## Example
 //!
-//! ```rust,ignore
+//! ```rust
 //! use mecab_ko_core::normalizer::{Normalizer, NormalizationConfig};
 //!
-//! let normalizer = Normalizer::new(NormalizationConfig::default())?;
+//! let normalizer = Normalizer::new(NormalizationConfig::default()).unwrap();
 //!
 //! // 표준형으로 정규화
 //! let normalized = normalizer.normalize("코피");
@@ -233,8 +233,10 @@ impl Normalizer {
     ///
     /// # Example
     ///
-    /// ```rust,ignore
-    /// let normalizer = Normalizer::default()?;
+    /// ```rust
+    /// use mecab_ko_core::normalizer::{Normalizer, NormalizationConfig};
+    ///
+    /// let normalizer = Normalizer::new(NormalizationConfig::default()).unwrap();
     /// assert_eq!(normalizer.normalize("코피"), "커피");
     /// assert_eq!(normalizer.normalize("소프트웨아"), "소프트웨어");
     /// ```
@@ -261,8 +263,10 @@ impl Normalizer {
     ///
     /// # Example
     ///
-    /// ```rust,ignore
-    /// let normalizer = Normalizer::default()?;
+    /// ```rust
+    /// use mecab_ko_core::normalizer::{Normalizer, NormalizationConfig};
+    ///
+    /// let normalizer = Normalizer::new(NormalizationConfig::default()).unwrap();
     /// let variants = normalizer.get_variants("커피");
     /// assert!(variants.contains(&"코피".to_string()));
     /// ```
@@ -297,8 +301,10 @@ impl Normalizer {
     ///
     /// # Example
     ///
-    /// ```rust,ignore
-    /// let normalizer = Normalizer::default()?;
+    /// ```rust
+    /// use mecab_ko_core::normalizer::{Normalizer, NormalizationConfig};
+    ///
+    /// let normalizer = Normalizer::new(NormalizationConfig::default()).unwrap();
     /// assert!(normalizer.is_variant("커피", "코피"));
     /// assert!(!normalizer.is_variant("커피", "라면"));
     /// ```

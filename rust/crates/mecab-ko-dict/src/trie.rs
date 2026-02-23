@@ -11,7 +11,7 @@
 //!
 //! ## 예제
 //!
-//! ```rust,ignore
+//! ```rust
 //! use mecab_ko_dict::trie::{Trie, TrieBuilder};
 //!
 //! // Trie 빌드
@@ -100,7 +100,11 @@ impl<'a> Trie<'a> {
     ///
     /// # Example
     ///
-    /// ```rust,ignore
+    /// ```rust
+    /// use mecab_ko_dict::trie::{Trie, TrieBuilder};
+    ///
+    /// let bytes = TrieBuilder::build(&[("가다", 1u32)]).unwrap();
+    /// let trie = Trie::new(&bytes);
     /// let value = trie.exact_match("가다");
     /// assert_eq!(value, Some(1));
     /// ```
@@ -132,10 +136,17 @@ impl<'a> Trie<'a> {
     ///
     /// # Example
     ///
-    /// ```rust,ignore
+    /// ```rust
+    /// use mecab_ko_dict::trie::{Trie, TrieBuilder};
+    ///
+    /// let mut entries = vec![("가", 0u32), ("가방", 2)];
+    /// entries.sort_by(|a, b| a.0.as_bytes().cmp(b.0.as_bytes()));
+    /// let bytes = TrieBuilder::build(&entries).unwrap();
+    /// let trie = Trie::new(&bytes);
+    ///
     /// // "가방에" 텍스트에서 접두사 검색
     /// let results: Vec<_> = trie.common_prefix_search("가방에").collect();
-    /// // [("가", 0, 3), ("가방", 2, 6)] - 3, 6은 바이트 길이
+    /// assert_eq!(results.len(), 2); // "가", "가방" 매칭
     /// ```
     pub fn common_prefix_search<'b>(
         &'b self,
@@ -205,15 +216,18 @@ impl TrieBuilder {
     ///
     /// # Example
     ///
-    /// ```rust,ignore
+    /// ```rust
+    /// use mecab_ko_dict::trie::TrieBuilder;
+    ///
     /// let mut entries = vec![
     ///     ("가방", 2u32),
     ///     ("가", 0),
     ///     ("가다", 1),
     /// ];
-    /// entries.sort_by(|a, b| a.0.cmp(b.0));
+    /// entries.sort_by(|a, b| a.0.as_bytes().cmp(b.0.as_bytes()));
     ///
-    /// let bytes = TrieBuilder::build(&entries)?;
+    /// let bytes = TrieBuilder::build(&entries).unwrap();
+    /// assert!(!bytes.is_empty());
     /// ```
     pub fn build(entries: &[(&str, u32)]) -> Result<Vec<u8>> {
         if entries.is_empty() {

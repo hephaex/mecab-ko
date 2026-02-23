@@ -55,10 +55,10 @@ impl MmapDictionary {
     /// 사전 파일을 찾을 수 없거나 로드에 실패한 경우 에러를 반환합니다.
     ///
     /// # Examples
-    /// ```rust,ignore
+    /// ```rust,no_run
     /// use mecab_ko_dict::loader::MmapDictionary;
     ///
-    /// let dict = MmapDictionary::load("./dict")?;
+    /// let dict = MmapDictionary::load("./dict").unwrap();
     /// ```
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self> {
         Self::load_with_config(path, LoaderConfig::default())

@@ -12,7 +12,7 @@
 //!
 //! # Examples
 //!
-//! ```rust,ignore
+//! ```rust,no_run
 //! #[test]
 //! fn test_with_full_dict() {
 //!     mecab_ko_core::full_dict_test!();
@@ -36,7 +36,7 @@
 ///
 /// # Examples
 ///
-/// ```rust,ignore
+/// ```rust,no_run
 /// #[test]
 /// fn test_tokenize_sentence() {
 ///     mecab_ko_core::full_dict_test!();
@@ -61,10 +61,10 @@ macro_rules! full_dict_test {
 ///
 /// # Examples
 ///
-/// ```rust,ignore
-/// if let Some(path) = mecab_ko_core::test_utils::full_dict_path() {
-///     println!("Using dictionary at {}", path.display());
-/// }
+/// ```rust
+/// // When MECAB_KO_FULL_DICT is not set, this returns None.
+/// let path = mecab_ko_core::test_utils::full_dict_path();
+/// // path is None in a test environment without the env var
 /// ```
 #[must_use]
 pub fn full_dict_path() -> Option<std::path::PathBuf> {

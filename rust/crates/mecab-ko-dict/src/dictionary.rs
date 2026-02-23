@@ -15,10 +15,10 @@
 //! use mecab_ko_dict::dictionary::SystemDictionary;
 //!
 //! // 기본 경로에서 로드
-//! let dict = SystemDictionary::load_default()?;
+//! let dict = SystemDictionary::load_default().unwrap();
 //!
 //! // 특정 경로에서 로드
-//! let dict = SystemDictionary::load("/usr/local/lib/mecab/dic/mecab-ko-dic")?;
+//! let dict = SystemDictionary::load("/usr/local/lib/mecab/dic/mecab-ko-dic").unwrap();
 //!
 //! // 형태소 검색
 //! let entries = dict.lookup("안녕");
