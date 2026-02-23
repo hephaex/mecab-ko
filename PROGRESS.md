@@ -30,6 +30,7 @@
 - [x] find_dicdir()에 test-fixtures/mini-dict 폴백 추가
 - [x] 159개 ignored 테스트 활성화 (502→661 pass, 259→95 ignored)
 - [x] mecab-ko-dict-validator 확인 (이미 완전 구현됨, 19 tests + 1 doc test 통과)
+- [x] 코드 품질 점검 (라이브러리 0 경고, 벤치마크 컴파일 에러 수정)
 
 ## 크레이트 실제 상태
 
@@ -63,6 +64,5 @@
 - #1-5, #7-8: 의존성 자동 업데이트 알림 (7건, semver-compatible 완료)
 
 ## 다음 세션에서 할 일
-1. mecab-ko-dict-validator 구현
-2. 전체 코드베이스 품질 점검
-3. GitHub Issue #6 응답
+1. GitHub Issue #6 응답 (Q4, Q5는 프로젝트 오너 작성 필요)
+2. Sprint 6 계획: 성능 최적화, 프로파일러 완성, 릴리스 준비

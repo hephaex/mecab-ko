@@ -28,7 +28,7 @@
 - [x] implement: mecab-ko-dict-validator 사전 검증기 확인 (이미 완료 상태, 19 tests + 1 doc test)
 
 ### 검증 (Verification)
-- [ ] review: 전체 코드베이스 품질 점검 (담당: code-reviewer-kr, P1)
+- [x] review: 전체 코드베이스 품질 점검 (라이브러리 0 경고, 벤치마크 컴파일 에러 수정)
 
 ### 문서/커뮤니티 (Documentation/Community)
 - [ ] docs: GitHub Issue #6 커뮤니티 질문 응답 (담당: tech-writer, P2)
@@ -53,7 +53,7 @@
 | mecab-ko-profiler | ⚠️ 부분 | 성능 프로파일러 기초 |
 | mecab-ko-dict-validator | ✅ 완료 | CSV 검증, 규칙 엔진, CLI, 리포트 (19 tests) |
 | mecab-ko (facade) | ✅ 완료 | 통합 API |
-| benchmarks | ⚠️ 부분 | 벤치마크 기초 |
+| benchmarks | ✅ 완료 | 벤치마크 (컴파일 에러 수정 완료) |
 
 ## 다음 스프린트 예고
 Sprint 6: 성능 최적화, 프로파일러 완성, 사전 커버리지 확대, 릴리스 준비
