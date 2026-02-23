@@ -1,7 +1,5 @@
 //! Command-line interface for MeCab-Ko memory profiling.
 
-#![allow(clippy::uninlined_format_args)]
-
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use colored::Colorize;
@@ -105,6 +103,62 @@ enum Commands {
         /// Baseline JSON file to compare against
         #[arg(long)]
         baseline: Option<PathBuf>,
+
+        /// Save current results as a JSON baseline to this file
+        #[arg(long)]
+        save_baseline: Option<PathBuf>,
+    },
+
+    /// Manage profiling baselines
+    Baseline {
+        #[command(subcommand)]
+        action: BaselineAction,
+    },
+}
+
+/// Sub-commands for the `baseline` command.
+#[derive(Subcommand)]
+enum BaselineAction {
+    /// Run profiling and save results as a baseline file
+    Save {
+        /// Output path for the baseline JSON file
+        #[arg(short, long, default_value = "baseline.json")]
+        output: PathBuf,
+
+        /// Benchmark to run (dict, tokenize, trie, all)
+        #[arg(short, long, default_value = "all")]
+        name: String,
+
+        /// Number of iterations
+        #[arg(short, long, default_value = "100")]
+        iterations: usize,
+
+        /// Dictionary path for real-data benchmarks
+        #[arg(short, long)]
+        dict_path: Option<PathBuf>,
+    },
+
+    /// Compare current profiling results against a saved baseline
+    Compare {
+        /// Path to the saved baseline JSON file
+        #[arg(short, long, default_value = "baseline.json")]
+        baseline: PathBuf,
+
+        /// Benchmark to run for comparison (dict, tokenize, trie, all)
+        #[arg(short, long, default_value = "all")]
+        name: String,
+
+        /// Number of iterations
+        #[arg(short, long, default_value = "100")]
+        iterations: usize,
+
+        /// Dictionary path for real-data benchmarks
+        #[arg(short, long)]
+        dict_path: Option<PathBuf>,
+
+        /// Regression threshold in percent (default: 10)
+        #[arg(long, default_value = "10")]
+        threshold: f64,
     },
 }
 
@@ -117,25 +171,35 @@ fn main() -> Result<()> {
         eprintln!();
     }
 
-    let stats = match cli.command {
+    match cli.command {
         Commands::Dict {
             dict_path,
             simulate,
             entries,
         } => {
-            if simulate {
+            let stats = if simulate {
                 profile_dict_simulated(entries, cli.verbose)?
             } else {
                 profile_dict_real(dict_path, cli.verbose)?
-            }
+            };
+            let report = ProfilingReport::new(stats);
+            write_report(&report, &cli.format, cli.output)?;
         }
         Commands::Tokenize {
             text,
             file,
             dict_path,
             scaling,
-        } => profile_tokenize(text, file, dict_path, scaling, cli.verbose)?,
-        Commands::Trie { entries, trie_type } => profile_trie(entries, &trie_type, cli.verbose)?,
+        } => {
+            let stats = profile_tokenize(text, file, dict_path, scaling, cli.verbose)?;
+            let report = ProfilingReport::new(stats);
+            write_report(&report, &cli.format, cli.output)?;
+        }
+        Commands::Trie { entries, trie_type } => {
+            let stats = profile_trie(entries, &trie_type, cli.verbose)?;
+            let report = ProfilingReport::new(stats);
+            write_report(&report, &cli.format, cli.output)?;
+        }
         Commands::Report { input } => {
             return generate_report_from_file(input, &cli.format, cli.output);
         }
@@ -144,12 +208,26 @@ fn main() -> Result<()> {
             iterations,
             dict_path,
             baseline,
-        } => profile_benchmark(&name, iterations, dict_path, baseline, cli.verbose)?,
-    };
+            save_baseline,
+        } => {
+            let (stats, had_regression) =
+                profile_benchmark(&name, iterations, dict_path, baseline, cli.verbose)?;
 
-    // Generate and output report
-    let report = ProfilingReport::new(stats);
-    write_report(&report, &cli.format, cli.output)?;
+            if let Some(path) = save_baseline {
+                save_baseline_file(&stats, &path, cli.verbose)?;
+            }
+
+            let report = ProfilingReport::new(stats);
+            write_report(&report, &cli.format, cli.output)?;
+
+            if had_regression {
+                std::process::exit(1);
+            }
+        }
+        Commands::Baseline { action } => {
+            run_baseline_action(action, &cli.format, cli.output, cli.verbose)?;
+        }
+    }
 
     if cli.verbose {
         eprintln!();
@@ -191,7 +269,7 @@ fn profile_dict_real(dict_path: Option<PathBuf>, verbose: bool) -> Result<Detail
     match dict {
         Ok(dict) => {
             if verbose {
-                eprintln!("  Dictionary loaded in {:?}", load_time);
+                eprintln!("  Dictionary loaded in {load_time:?}");
                 eprintln!("  Entries: {}", dict.entries().len());
                 eprintln!(
                     "  Matrix: {}x{} ({})",
@@ -212,7 +290,7 @@ fn profile_dict_real(dict_path: Option<PathBuf>, verbose: bool) -> Result<Detail
         }
         Err(e) => {
             if verbose {
-                eprintln!("  {} Dictionary load failed: {}", "WARNING:".yellow(), e);
+                eprintln!("  {} Dictionary load failed: {e}", "WARNING:".yellow());
                 eprintln!("  Falling back to simulated data...");
             }
             return profile_dict_simulated(None, verbose);
@@ -235,7 +313,7 @@ fn profile_dict_simulated(entries: Option<usize>, verbose: bool) -> Result<Detai
     let entry_count = entries.unwrap_or(10000);
 
     if verbose {
-        eprintln!("  Simulating lexicon with {} entries...", entry_count);
+        eprintln!("  Simulating lexicon with {entry_count} entries...");
     }
 
     profiler.profile_lexicon(entry_count, || {
@@ -332,7 +410,7 @@ fn profile_tokenize(
                 .collect();
             let scaling_analysis = profiler.analyze_scaling(&byte_sizes);
             let complexity = scaling_analysis.estimate_complexity();
-            eprintln!("    Estimated complexity: O(n^{:.2})", complexity);
+            eprintln!("    Estimated complexity: O(n^{complexity:.2})");
         }
     } else {
         if verbose {
@@ -379,9 +457,8 @@ fn create_tokenizer(
         Err(e) => {
             if verbose {
                 eprintln!(
-                    "  {} Could not initialize tokenizer: {}",
-                    "WARNING:".yellow(),
-                    e
+                    "  {} Could not initialize tokenizer: {e}",
+                    "WARNING:".yellow()
                 );
                 eprintln!("  Using simulated tokenization");
             }
@@ -393,8 +470,8 @@ fn create_tokenizer(
 fn profile_trie(entries: usize, trie_type: &str, verbose: bool) -> Result<DetailedStats> {
     if verbose {
         eprintln!("{}", "Profiling Trie operations...".cyan());
-        eprintln!("  Type: {}", trie_type);
-        eprintln!("  Entries: {}", entries);
+        eprintln!("  Type: {trie_type}");
+        eprintln!("  Entries: {entries}");
     }
 
     let stats = match trie_type {
@@ -426,23 +503,28 @@ fn profile_trie(entries: usize, trie_type: &str, verbose: bool) -> Result<Detail
 
             profiler.finish()
         }
-        _ => anyhow::bail!("Unknown trie type: {}", trie_type),
+        _ => anyhow::bail!("Unknown trie type: {trie_type}"),
     };
 
     Ok(stats)
 }
 
+/// Run a benchmark and return the stats along with a flag indicating whether
+/// a regression was detected during baseline comparison.
+///
+/// Returns `(stats, had_regression)` where `had_regression` is `true` if any
+/// metric exceeded the 10% regression threshold.
 fn profile_benchmark(
     name: &str,
     iterations: usize,
     dict_path: Option<PathBuf>,
     baseline: Option<PathBuf>,
     verbose: bool,
-) -> Result<DetailedStats> {
+) -> Result<(DetailedStats, bool)> {
     if verbose {
         eprintln!("{}", "Running benchmark...".cyan());
-        eprintln!("  Name: {}", name);
-        eprintln!("  Iterations: {}", iterations);
+        eprintln!("  Name: {name}");
+        eprintln!("  Iterations: {iterations}");
     }
 
     let mut collector = StatsCollector::new();
@@ -455,7 +537,7 @@ fn profile_benchmark(
 
             for i in 0..iterations {
                 if verbose && i % 10 == 0 {
-                    eprintln!("  Iteration {}/{}", i, iterations);
+                    eprintln!("  Iteration {i}/{iterations}");
                 }
 
                 let snapshot_before = snapshot();
@@ -474,7 +556,7 @@ fn profile_benchmark(
         "dict" => {
             for i in 0..iterations.min(5) {
                 if verbose {
-                    eprintln!("  Dict load iteration {}", i);
+                    eprintln!("  Dict load iteration {i}");
                 }
 
                 let snapshot_before = snapshot();
@@ -494,7 +576,7 @@ fn profile_benchmark(
             // Generic benchmark with simulated work
             for i in 0..iterations {
                 if verbose && i % 10 == 0 {
-                    eprintln!("  Iteration {}/{}", i, iterations);
+                    eprintln!("  Iteration {i}/{iterations}");
                 }
 
                 let snapshot_before = snapshot();
@@ -508,64 +590,278 @@ fn profile_benchmark(
 
     let elapsed = start.elapsed();
     if verbose {
-        eprintln!("  Completed {} iterations in {:?}", iterations, elapsed);
+        eprintln!("  Completed {iterations} iterations in {elapsed:?}");
         eprintln!("  Average: {:?} per iteration", elapsed / iterations as u32);
     }
 
-    // Baseline comparison
-    if let Some(baseline_path) = baseline {
-        compare_baseline(&baseline_path, &collector, verbose)?;
-    }
+    let stats = collector.finish();
 
-    Ok(collector.finish())
+    // Baseline comparison
+    let had_regression = if let Some(baseline_path) = baseline {
+        compare_baseline(&baseline_path, &stats, 10.0, verbose)?
+    } else {
+        false
+    };
+
+    Ok((stats, had_regression))
 }
 
+/// A single metric comparison result.
+#[derive(Debug)]
+struct MetricResult {
+    label: String,
+    baseline_value: u64,
+    current_value: u64,
+    /// Positive means regression (current > baseline), negative means improvement.
+    change_pct: f64,
+}
+
+impl MetricResult {
+    fn new(label: impl Into<String>, baseline_value: u64, current_value: u64) -> Self {
+        let change_pct = if baseline_value > 0 {
+            (current_value as f64 / baseline_value as f64 - 1.0) * 100.0
+        } else {
+            0.0
+        };
+        Self {
+            label: label.into(),
+            baseline_value,
+            current_value,
+            change_pct,
+        }
+    }
+
+    fn is_regression(&self, threshold_pct: f64) -> bool {
+        self.change_pct > threshold_pct
+    }
+
+    fn is_improvement(&self, threshold_pct: f64) -> bool {
+        self.change_pct < -threshold_pct
+    }
+}
+
+/// Compare current `DetailedStats` against a saved baseline file.
+///
+/// Compares overall statistics and each component present in both snapshots.
+/// Prints a formatted regression report to stderr.
+///
+/// Returns `true` if any metric regressed by more than `threshold_pct` percent.
 fn compare_baseline(
     baseline_path: &std::path::Path,
-    current: &StatsCollector,
+    current: &DetailedStats,
+    threshold_pct: f64,
     verbose: bool,
-) -> Result<()> {
+) -> Result<bool> {
     let file = File::open(baseline_path)
         .with_context(|| format!("Failed to open baseline: {}", baseline_path.display()))?;
 
     let baseline: DetailedStats =
         serde_json::from_reader(file).context("Failed to parse baseline JSON")?;
 
-    let current_stats = current.peek_overall();
+    let mut metrics: Vec<MetricResult> = Vec::new();
 
-    if verbose {
+    // --- Overall metrics ---
+    metrics.push(MetricResult::new(
+        "overall.total_allocated",
+        baseline.overall.total_allocated,
+        current.overall.total_allocated,
+    ));
+    metrics.push(MetricResult::new(
+        "overall.current_usage",
+        baseline.overall.current_usage,
+        current.overall.current_usage,
+    ));
+    metrics.push(MetricResult::new(
+        "overall.peak_usage",
+        baseline.overall.peak_usage,
+        current.overall.peak_usage,
+    ));
+
+    // --- Per-component metrics ---
+    // Only compare components that exist in both snapshots.
+    let mut component_names: Vec<&str> = baseline
+        .components
+        .keys()
+        .filter(|k| current.components.contains_key(k.as_str()))
+        .map(String::as_str)
+        .collect();
+    component_names.sort_unstable();
+
+    for name in &component_names {
+        let bl = &baseline.components[*name];
+        let cur = &current.components[*name];
+
+        metrics.push(MetricResult::new(
+            format!("{name}.total_allocated"),
+            bl.total_allocated,
+            cur.total_allocated,
+        ));
+        metrics.push(MetricResult::new(
+            format!("{name}.current_usage"),
+            bl.current_usage,
+            cur.current_usage,
+        ));
+        metrics.push(MetricResult::new(
+            format!("{name}.peak_usage"),
+            bl.peak_usage,
+            cur.peak_usage,
+        ));
+    }
+
+    // --- Print report ---
+    let had_regression = metrics
+        .iter()
+        .any(|m| m.is_regression(threshold_pct));
+
+    if verbose || had_regression {
         eprintln!();
-        eprintln!("{}", "  Baseline Comparison:".bold());
+        eprintln!("{}", "  Baseline Regression Report:".bold());
         eprintln!(
-            "    Memory allocated: {} (baseline: {})",
-            humansize::format_size(current_stats.total_allocated, humansize::BINARY),
-            humansize::format_size(baseline.overall.total_allocated, humansize::BINARY),
+            "  {}",
+            "─────────────────────────────────────────────────────".dimmed()
         );
         eprintln!(
-            "    Current usage: {} (baseline: {})",
-            humansize::format_size(current_stats.current_usage, humansize::BINARY),
-            humansize::format_size(baseline.overall.current_usage, humansize::BINARY),
+            "  {:<40} {:>12} {:>12} {:>10}",
+            "Metric", "Baseline", "Current", "Change"
+        );
+        eprintln!(
+            "  {}",
+            "─────────────────────────────────────────────────────".dimmed()
         );
 
-        // Regression detection
-        let usage_ratio = if baseline.overall.current_usage > 0 {
-            current_stats.current_usage as f64 / baseline.overall.current_usage as f64
+        for m in &metrics {
+            let baseline_str = humansize::format_size(m.baseline_value, humansize::BINARY);
+            let current_str = humansize::format_size(m.current_value, humansize::BINARY);
+            let change_str = format!("{:+.1}%", m.change_pct);
+
+            if m.is_regression(threshold_pct) {
+                eprintln!(
+                    "  {:<40} {:>12} {:>12} {}",
+                    m.label,
+                    baseline_str,
+                    current_str,
+                    change_str.red().bold()
+                );
+            } else if m.is_improvement(threshold_pct) {
+                eprintln!(
+                    "  {:<40} {:>12} {:>12} {}",
+                    m.label,
+                    baseline_str,
+                    current_str,
+                    change_str.green()
+                );
+            } else {
+                eprintln!(
+                    "  {:<40} {:>12} {:>12} {change_str}",
+                    m.label, baseline_str, current_str,
+                );
+            }
+        }
+
+        eprintln!(
+            "  {}",
+            "─────────────────────────────────────────────────────".dimmed()
+        );
+
+        let regression_count = metrics
+            .iter()
+            .filter(|m| m.is_regression(threshold_pct))
+            .count();
+        let improvement_count = metrics
+            .iter()
+            .filter(|m| m.is_improvement(threshold_pct))
+            .count();
+
+        if had_regression {
+            eprintln!(
+                "  {} {regression_count} regression(s) detected (threshold: {threshold_pct:.0}%)",
+                "REGRESSION:".red().bold()
+            );
         } else {
-            1.0
-        };
+            eprintln!(
+                "  {} No regressions detected (threshold: {threshold_pct:.0}%)",
+                "OK:".green().bold()
+            );
+        }
 
-        if usage_ratio > 1.1 {
+        if improvement_count > 0 {
             eprintln!(
-                "    {} Memory regression: {:.1}% increase",
-                "WARNING:".yellow(),
-                (usage_ratio - 1.0) * 100.0
+                "  {} {improvement_count} improvement(s) detected",
+                "IMPROVED:".green()
             );
-        } else if usage_ratio < 0.9 {
-            eprintln!(
-                "    {} Memory improvement: {:.1}% decrease",
-                "GOOD:".green(),
-                (1.0 - usage_ratio) * 100.0
-            );
+        }
+
+        eprintln!();
+    }
+
+    Ok(had_regression)
+}
+
+/// Save `DetailedStats` to a JSON baseline file.
+fn save_baseline_file(stats: &DetailedStats, path: &std::path::Path, verbose: bool) -> Result<()> {
+    let json = serde_json::to_string_pretty(stats).context("Failed to serialize baseline")?;
+    std::fs::write(path, json)
+        .with_context(|| format!("Failed to write baseline to {}", path.display()))?;
+    if verbose {
+        eprintln!(
+            "  {} Baseline saved to {}",
+            "SAVED:".green().bold(),
+            path.display()
+        );
+    }
+    Ok(())
+}
+
+/// Execute a `Baseline` subcommand action.
+fn run_baseline_action(
+    action: BaselineAction,
+    format: &str,
+    output: Option<PathBuf>,
+    verbose: bool,
+) -> Result<()> {
+    match action {
+        BaselineAction::Save {
+            output: baseline_path,
+            name,
+            iterations,
+            dict_path,
+        } => {
+            if verbose {
+                eprintln!("{}", "Running profiling for baseline...".cyan());
+            }
+
+            let (stats, _) =
+                profile_benchmark(&name, iterations, dict_path, None, verbose)?;
+
+            save_baseline_file(&stats, &baseline_path, verbose)?;
+
+            // Also write the full report so the user can inspect it.
+            let report = ProfilingReport::new(stats);
+            write_report(&report, format, output)?;
+        }
+
+        BaselineAction::Compare {
+            baseline: baseline_path,
+            name,
+            iterations,
+            dict_path,
+            threshold,
+        } => {
+            if verbose {
+                eprintln!("{}", "Running profiling for comparison...".cyan());
+            }
+
+            let (stats, _) =
+                profile_benchmark(&name, iterations, dict_path, None, verbose)?;
+
+            let had_regression = compare_baseline(&baseline_path, &stats, threshold, true)?;
+
+            let report = ProfilingReport::new(stats);
+            write_report(&report, format, output)?;
+
+            if had_regression {
+                std::process::exit(1);
+            }
         }
     }
 
