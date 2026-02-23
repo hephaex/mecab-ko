@@ -11,7 +11,7 @@ use mecab_ko_core::tokenizer::Tokenizer;
 
 /// wakati vs pos vs full tokenization 비교
 fn bench_output_mode_comparison(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("comparison_output_modes");
 
     let text = "한국어 형태소 분석기는 자연어 처리의 핵심 기술입니다";
@@ -54,7 +54,7 @@ fn bench_output_mode_comparison(c: &mut Criterion) {
 
 /// 다양한 텍스트 길이에서의 출력 모드 비교
 fn bench_output_modes_by_length(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("comparison_modes_by_length");
 
     let short = "짧은 텍스트";
@@ -93,7 +93,7 @@ fn bench_with_without_user_dict(c: &mut Criterion) {
 
     // 기본 사전만
     group.bench_function("without_user_dict", |b| {
-        let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+        let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
 
         b.iter(|| {
             let tokens = tokenizer.tokenize(black_box(text));
@@ -109,7 +109,7 @@ fn bench_with_without_user_dict(c: &mut Criterion) {
 
 /// 명사 추출 효율성
 fn bench_noun_extraction_efficiency(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("comparison_noun_extraction");
 
     let text = "한국어 형태소 분석기는 자연어 처리의 핵심 기술입니다";
@@ -138,7 +138,7 @@ fn bench_noun_extraction_efficiency(c: &mut Criterion) {
 
 /// 다양한 특수화된 처리 비교
 fn bench_specialized_processing(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("comparison_specialized");
 
     let text = "한국어 형태소 분석기는 자연어 처리의 핵심 기술입니다";
@@ -172,7 +172,7 @@ fn bench_specialized_processing(c: &mut Criterion) {
 
 /// 배치 크기별 최적 모드
 fn bench_optimal_mode_by_batch(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("comparison_batch_modes");
 
     let texts = vec![
@@ -212,7 +212,7 @@ fn bench_optimal_mode_by_batch(c: &mut Criterion) {
 
 /// 메모리 사용량 비교
 fn bench_memory_by_mode(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("comparison_memory_by_mode");
 
     let text = "한국어 형태소 분석기는 자연어 처리의 핵심 기술입니다";
@@ -238,7 +238,7 @@ fn bench_memory_by_mode(c: &mut Criterion) {
 
 /// 실제 사용 사례별 최적 모드
 fn bench_use_case_optimal_mode(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("comparison_use_cases");
 
     let text = "한국어 형태소 분석기는 자연어 처리의 핵심 기술입니다";
@@ -279,7 +279,7 @@ fn bench_accuracy_speed_tradeoff(c: &mut Criterion) {
 
     // 빠른 모드 (정확도 낮음, 속도 높음) - 플레이스홀더
     group.bench_function("fast_mode", |b| {
-        let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+        let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
 
         b.iter(|| {
             let tokens = tokenizer.tokenize(black_box(text));
@@ -289,7 +289,7 @@ fn bench_accuracy_speed_tradeoff(c: &mut Criterion) {
 
     // 정확 모드 (정확도 높음, 속도 낮음) - 플레이스홀더
     group.bench_function("accurate_mode", |b| {
-        let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+        let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
 
         b.iter(|| {
             let tokens = tokenizer.tokenize(black_box(text));
@@ -302,7 +302,7 @@ fn bench_accuracy_speed_tradeoff(c: &mut Criterion) {
 
 /// 다양한 필터 조건 비교
 fn bench_filtering_comparison(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("comparison_filtering");
 
     let text = "한국어 형태소 분석기는 자연어 처리의 핵심 기술입니다";

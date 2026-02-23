@@ -11,7 +11,7 @@ use mecab_ko_core::tokenizer::Tokenizer;
 
 /// 단일 토큰화 메모리 할당
 fn bench_per_tokenization_memory(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("memory_per_tokenization");
 
     let texts = [
@@ -44,7 +44,7 @@ fn bench_per_tokenization_memory(c: &mut Criterion) {
 
 /// 연속 토큰화 메모리 재사용
 fn bench_memory_reuse(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("memory_reuse");
 
     let text = "한국어 형태소 분석";
@@ -82,7 +82,7 @@ fn bench_memory_reuse(c: &mut Criterion) {
 
 /// 메모리 누적 테스트 (메모리 누수 검사)
 fn bench_memory_accumulation(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("memory_accumulation");
 
     let text = "한국어 형태소 분석기";
@@ -114,7 +114,7 @@ fn bench_memory_accumulation(c: &mut Criterion) {
 
 /// 다양한 크기 텍스트 메모리 확장성
 fn bench_memory_scalability(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("memory_scalability");
 
     // 텍스트 크기를 점진적으로 증가
@@ -141,7 +141,7 @@ fn bench_tokenizer_instance_memory(c: &mut Criterion) {
     // 단일 인스턴스
     group.bench_function("single_instance", |b| {
         b.iter(|| {
-            let tokenizer = Tokenizer::new().expect("Failed");
+            let mut tokenizer = Tokenizer::new().expect("Failed");
             black_box(tokenizer);
         });
     });
@@ -161,7 +161,7 @@ fn bench_tokenizer_instance_memory(c: &mut Criterion) {
 
 /// 결과 데이터 크기
 fn bench_result_size_overhead(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("memory_result_size");
 
     let texts = [
@@ -186,7 +186,7 @@ fn bench_result_size_overhead(c: &mut Criterion) {
 
 /// 긴 텍스트 스트림 처리
 fn bench_long_text_streaming(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("memory_long_text_stream");
 
     // 매우 긴 텍스트 생성
@@ -223,7 +223,7 @@ fn bench_long_text_streaming(c: &mut Criterion) {
 
 /// 메모리 압력 하에서의 성능
 fn bench_under_memory_pressure(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("memory_pressure");
 
     let text = "한국어 형태소 분석기는 자연어 처리 기술입니다";

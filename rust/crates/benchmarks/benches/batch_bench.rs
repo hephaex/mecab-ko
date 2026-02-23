@@ -29,7 +29,7 @@ fn generate_texts(count: usize) -> Vec<String> {
 
 /// 작은 배치 크기 성능
 fn bench_small_batches(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("batch_small");
 
     for size in [1, 5, 10, 20, 50].iter() {
@@ -54,7 +54,7 @@ fn bench_small_batches(c: &mut Criterion) {
 
 /// 중간 배치 크기 성능
 fn bench_medium_batches(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("batch_medium");
 
     for size in [100, 200, 500].iter() {
@@ -79,7 +79,7 @@ fn bench_medium_batches(c: &mut Criterion) {
 
 /// 대용량 배치 처리
 fn bench_large_batches(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("batch_large");
     group.sample_size(10); // 대용량은 샘플 크기 축소
 
@@ -105,7 +105,7 @@ fn bench_large_batches(c: &mut Criterion) {
 
 /// 배치 처리 - 다양한 텍스트 길이 혼합
 fn bench_mixed_length_batch(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("batch_mixed_length");
 
     // 짧은 텍스트와 긴 텍스트 혼합
@@ -144,7 +144,7 @@ fn bench_mixed_length_batch(c: &mut Criterion) {
 
 /// 처리량 측정 (texts/sec)
 fn bench_throughput_metrics(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("batch_throughput");
 
     let batch_size = 1000;
@@ -167,7 +167,7 @@ fn bench_throughput_metrics(c: &mut Criterion) {
 
 /// 메모리 효율성 - 배치 크기에 따른 메모리 사용
 fn bench_batch_memory_efficiency(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("batch_memory");
 
     for size in [10, 100, 1000].iter() {
@@ -189,7 +189,7 @@ fn bench_batch_memory_efficiency(c: &mut Criterion) {
 
 /// 실제 사용 시나리오: 소셜 미디어 분석
 fn bench_social_media_scenario(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("batch_social_media");
 
     // 소셜 미디어 스타일 짧은 텍스트 대량
@@ -228,7 +228,7 @@ fn bench_social_media_scenario(c: &mut Criterion) {
 
 /// 실제 사용 시나리오: 뉴스 기사 분석
 fn bench_news_article_scenario(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("batch_news_articles");
 
     // 뉴스 기사 스타일 긴 문장
@@ -263,7 +263,7 @@ fn bench_news_article_scenario(c: &mut Criterion) {
 
 /// 스트리밍 vs 배치 비교
 fn bench_streaming_vs_batch(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("batch_streaming_comparison");
 
     let texts = generate_texts(100);

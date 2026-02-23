@@ -56,7 +56,7 @@ const MIXED_TEXTS: &[&str] = &[
 /// 기본 토크나이저 처리 성능
 fn bench_tokenizer_basic(c: &mut Criterion) {
     // Note: 현재 Tokenizer는 스텁 구현이므로 실제 성능 측정은 구현 완료 후 가능
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
 
     let mut group = c.benchmark_group("tokenizer_basic");
 
@@ -95,7 +95,7 @@ fn bench_tokenizer_basic(c: &mut Criterion) {
 
 /// 배치 처리 성능
 fn bench_tokenizer_batch(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
 
     let mut group = c.benchmark_group("tokenizer_batch");
 
@@ -128,7 +128,7 @@ fn bench_tokenizer_batch(c: &mut Criterion) {
 
 /// 텍스트 길이별 확장성
 fn bench_tokenizer_scalability(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
 
     let mut group = c.benchmark_group("tokenizer_scalability");
 
@@ -150,7 +150,7 @@ fn bench_tokenizer_scalability(c: &mut Criterion) {
 
 /// wakati (분리만) 성능
 fn bench_tokenizer_wakati(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
 
     let mut group = c.benchmark_group("tokenizer_wakati");
 
@@ -169,7 +169,7 @@ fn bench_tokenizer_wakati(c: &mut Criterion) {
 
 /// pos (품사 태깅) 성능
 fn bench_tokenizer_pos(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
 
     let mut group = c.benchmark_group("tokenizer_pos");
 
@@ -188,7 +188,7 @@ fn bench_tokenizer_pos(c: &mut Criterion) {
 
 /// nouns (명사 추출) 성능
 fn bench_tokenizer_nouns(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
 
     let mut group = c.benchmark_group("tokenizer_nouns");
 
@@ -207,7 +207,7 @@ fn bench_tokenizer_nouns(c: &mut Criterion) {
 
 /// 다양한 텍스트 타입 성능
 fn bench_tokenizer_text_types(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
 
     let mut group = c.benchmark_group("tokenizer_text_types");
 
@@ -249,7 +249,7 @@ fn bench_tokenizer_text_types(c: &mut Criterion) {
 
 /// 실제 사용 시나리오 시뮬레이션
 fn bench_tokenizer_realistic_workload(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
 
     let mut group = c.benchmark_group("tokenizer_realistic");
 
@@ -305,14 +305,14 @@ fn bench_tokenizer_memory(c: &mut Criterion) {
     // 토크나이저 생성 오버헤드
     group.bench_function("creation", |b| {
         b.iter(|| {
-            let tokenizer = Tokenizer::new().expect("Failed to create");
+            let mut tokenizer = Tokenizer::new().expect("Failed to create");
             black_box(tokenizer);
         });
     });
 
     // 토크나이저 재사용
     group.bench_function("reuse", |b| {
-        let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+        let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
         let text = MEDIUM_SENTENCES[0];
 
         b.iter(|| {
@@ -326,7 +326,7 @@ fn bench_tokenizer_memory(c: &mut Criterion) {
 
 /// 처리량 측정 (문자/초, 토큰/초)
 fn bench_tokenizer_throughput(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
 
     let mut group = c.benchmark_group("tokenizer_throughput");
 
@@ -406,16 +406,15 @@ fn bench_tokenizer_edge_cases(c: &mut Criterion) {
 
 /// 비교 벤치마크용 - 미래 구현 대비
 fn bench_tokenizer_comparison_baseline(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
 
     let mut group = c.benchmark_group("tokenizer_baseline");
     group.sample_size(100);
 
     // 표준 테스트 문장들로 베이스라인 설정
     for (idx, &text) in MEDIUM_SENTENCES.iter().enumerate() {
-        group.bench_with_input(BenchmarkId::new("sentence", idx), text, |b, &text| {
-            group.throughput(Throughput::Bytes(text.len() as u64));
-
+        group.throughput(Throughput::Bytes(text.len() as u64));
+        group.bench_with_input(BenchmarkId::new("sentence", idx), &text, |b, &text| {
             b.iter(|| {
                 let tokens = tokenizer.tokenize(black_box(text));
                 black_box(tokens);

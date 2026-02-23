@@ -17,7 +17,7 @@ fn bench_tokenizer_initialization(c: &mut Criterion) {
     // 완전 초기화 (사전 로딩 포함)
     group.bench_function("full_initialization", |b| {
         b.iter(|| {
-            let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+            let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
             black_box(tokenizer);
         });
     });
@@ -27,7 +27,7 @@ fn bench_tokenizer_initialization(c: &mut Criterion) {
         let text = "한국어 형태소 분석기";
 
         b.iter(|| {
-            let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+            let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
             let tokens = tokenizer.tokenize(black_box(text));
             black_box(tokens);
         });
@@ -55,7 +55,7 @@ fn bench_cache_warming(c: &mut Criterion) {
 
     // 이후 토큰화 (워밍된 캐시)
     group.bench_function("warmed_tokenization", |b| {
-        let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+        let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
         // 워밍
         let _ = tokenizer.tokenize(text);
 
@@ -67,7 +67,7 @@ fn bench_cache_warming(c: &mut Criterion) {
 
     // 10회 워밍 후 토큰화
     group.bench_function("heavily_warmed", |b| {
-        let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+        let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
         // 여러 번 워밍
         for _ in 0..10 {
             let _ = tokenizer.tokenize(text);
@@ -139,7 +139,7 @@ fn bench_server_startup_scenario(c: &mut Criterion) {
 
     // 워밍 후 5개 요청 처리 (비교용)
     group.bench_function("warmed_five_requests", |b| {
-        let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+        let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
         // 워밍
         for request in &requests {
             let _ = tokenizer.tokenize(request);
@@ -166,7 +166,7 @@ fn bench_reuse_vs_recreate(c: &mut Criterion) {
     // 매번 새로 생성
     group.bench_function("recreate_each_time", |b| {
         b.iter(|| {
-            let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+            let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
             let tokens = tokenizer.tokenize(black_box(text));
             black_box(tokens);
         });
@@ -213,7 +213,7 @@ fn bench_initialization_memory_pattern(c: &mut Criterion) {
     // 기본 초기화
     group.bench_function("basic_init", |b| {
         b.iter(|| {
-            let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+            let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
             black_box(tokenizer);
         });
     });
@@ -221,7 +221,7 @@ fn bench_initialization_memory_pattern(c: &mut Criterion) {
     // 초기화 후 즉시 드롭
     group.bench_function("init_and_drop", |b| {
         b.iter(|| {
-            let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+            let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
             drop(black_box(tokenizer));
         });
     });

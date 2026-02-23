@@ -18,7 +18,7 @@ fn bench_normalization_toggle(c: &mut Criterion) {
 
     // 정규화 비활성화 (기본)
     group.bench_function("disabled", |b| {
-        let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+        let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
 
         b.iter(|| {
             let tokens = tokenizer.tokenize(black_box(text));
@@ -34,7 +34,7 @@ fn bench_normalization_toggle(c: &mut Criterion) {
 
 /// 다양한 텍스트 타입에서의 정규화 비용
 fn bench_normalization_by_text_type(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("normalization_by_text_type");
 
     // 순수 한글 (정규화 불필요)
@@ -92,7 +92,7 @@ fn bench_normalization_by_text_type(c: &mut Criterion) {
 
 /// 유니코드 정규화 (NFC, NFD, NFKC, NFKD)
 fn bench_unicode_normalization(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("normalization_unicode");
 
     // Precomposed vs Decomposed 한글
@@ -127,7 +127,7 @@ fn bench_unicode_normalization(c: &mut Criterion) {
 
 /// 대소문자 정규화
 fn bench_case_normalization(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("normalization_case");
 
     let lowercase = "this is lowercase text";
@@ -160,7 +160,7 @@ fn bench_case_normalization(c: &mut Criterion) {
 
 /// 공백 정규화
 fn bench_whitespace_normalization(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("normalization_whitespace");
 
     let single_space = "단어 사이 공백";
@@ -193,7 +193,7 @@ fn bench_whitespace_normalization(c: &mut Criterion) {
 
 /// 숫자 정규화
 fn bench_number_normalization(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("normalization_numbers");
 
     let arabic = "2024년 1월 15일";
@@ -226,7 +226,7 @@ fn bench_number_normalization(c: &mut Criterion) {
 
 /// 구두점 정규화
 fn bench_punctuation_normalization(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("normalization_punctuation");
 
     let standard = "안녕하세요. 반갑습니다!";
@@ -259,7 +259,7 @@ fn bench_punctuation_normalization(c: &mut Criterion) {
 
 /// 실제 웹 텍스트 정규화
 fn bench_web_text_normalization(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("normalization_web_text");
 
     // HTML 엔티티
@@ -297,7 +297,7 @@ fn bench_web_text_normalization(c: &mut Criterion) {
 
 /// 정규화 체인 (여러 정규화 단계)
 fn bench_normalization_chain(c: &mut Criterion) {
-    let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     let mut group = c.benchmark_group("normalization_chain");
 
     // 모든 정규화가 필요한 복잡한 텍스트

@@ -20,13 +20,12 @@
 ## 작업 목록
 
 ### 안정화 (Stabilization)
-- [ ] update: 의존성 업데이트 (wasm-bindgen, tempfile, thiserror 등) (담당: issue-developer, P0)
-- [ ] test: CI용 소형 테스트 사전 fixture 생성 (담당: issue-developer, P0)
-- [ ] test: ignored 테스트 활성화 (테스트 사전으로 전환) (담당: issue-developer, P1)
+- [x] update: 의존성 업데이트 (wasm-bindgen 0.2.111, tempfile 3.25, rkyv 0.8.15 등)
+- [x] test: CI용 소형 테스트 사전 fixture 연동 (find_dicdir 폴백 추가)
+- [x] test: ignored 테스트 159개 활성화 (661 pass / 0 fail / 95 ignored)
 
 ### 구현 (Implementation)
-- [ ] implement: mecab-ko-dict-validator 사전 검증기 구현 (담당: issue-developer, P1)
-- [ ] implement: mecab-ko-elasticsearch ignored 테스트 활성화 (담당: issue-developer, P1)
+- [x] implement: mecab-ko-dict-validator 사전 검증기 확인 (이미 완료 상태, 19 tests + 1 doc test)
 
 ### 검증 (Verification)
 - [ ] review: 전체 코드베이스 품질 점검 (담당: code-reviewer-kr, P1)
@@ -35,10 +34,8 @@
 - [ ] docs: GitHub Issue #6 커뮤니티 질문 응답 (담당: tech-writer, P2)
 
 ## 의존성
-- 테스트 사전 fixture → 의존성 업데이트 후
-- ignored 테스트 활성화 → 테스트 사전 fixture 완료 후
-- dict-validator → 의존성 업데이트 + 테스트 사전 후
-- 코드 리뷰 → 구현 완료 후
+- dict-validator → (선행 완료)
+- 코드 리뷰 → dict-validator 완료 후
 
 ## 크레이트 현황
 
@@ -52,9 +49,9 @@
 | mecab-ko-python | ✅ 완료 | PyO3 바인딩 (KoNLPy 호환) |
 | mecab-ko-wasm | ✅ 완료 | WASM 바인딩 (wasm-bindgen) |
 | mecab-ko-node | ✅ 완료 | Node.js 바인딩 (N-API) |
-| mecab-ko-elasticsearch | ⚠️ 부분 | Nori 호환 (21/36 테스트 ignored) |
+| mecab-ko-elasticsearch | ⚠️ 부분 | Nori 호환 (8 테스트 ignored) |
 | mecab-ko-profiler | ⚠️ 부분 | 성능 프로파일러 기초 |
-| mecab-ko-dict-validator | ❌ 스텁 | 사전 검증 - 미구현 |
+| mecab-ko-dict-validator | ✅ 완료 | CSV 검증, 규칙 엔진, CLI, 리포트 (19 tests) |
 | mecab-ko (facade) | ✅ 완료 | 통합 API |
 | benchmarks | ⚠️ 부분 | 벤치마크 기초 |
 
