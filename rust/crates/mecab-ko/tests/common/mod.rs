@@ -2,6 +2,14 @@
 //!
 //! This module provides shared functionality for integration tests.
 
+#![allow(
+    clippy::unnecessary_debug_formatting,
+    clippy::format_push_string,
+    clippy::cast_possible_truncation,
+    clippy::expect_used,
+    clippy::unwrap_used
+)]
+
 pub mod fixtures;
 pub mod mini_dict;
 

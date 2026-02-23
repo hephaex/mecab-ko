@@ -7,6 +7,13 @@
 //! - Trie-based search performance
 //! - Memory-mapped dictionary access
 
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::uninlined_format_args,
+    clippy::useless_vec
+)]
+
 mod common;
 
 use mecab_ko_dict::Entry;
@@ -370,7 +377,7 @@ mod matrix_tests {
 
     /// Test matrix bounds checking
     #[test]
-        fn test_matrix_bounds() {
+    fn test_matrix_bounds() {
         // TODO: Implement once matrix is available
         // let matrix = create_test_matrix();
         //
@@ -386,7 +393,7 @@ mod matrix_tests {
 
     /// Test matrix memory usage
     #[test]
-        fn test_matrix_memory_usage() {
+    fn test_matrix_memory_usage() {
         // TODO: Implement once matrix is available
         // let dense = DenseMatrix::new(1000, 1000);
         // let sparse = SparseMatrix::new();
@@ -403,7 +410,7 @@ mod trie_tests {
 
     /// Test trie with Korean text
     #[test]
-        fn test_trie_korean() {
+    fn test_trie_korean() {
         // TODO: Implement once trie is available
         // let mut builder = TrieBuilder::new();
         // builder.insert("가", 0);
@@ -420,7 +427,7 @@ mod trie_tests {
 
     /// Test trie common prefix search
     #[test]
-        fn test_trie_common_prefix() {
+    fn test_trie_common_prefix() {
         // TODO: Implement once trie is available
         // let trie = build_test_trie();
         //

@@ -5,6 +5,8 @@
 //! - Test result updating and verification
 //! - Regression detection
 
+#![allow(clippy::expect_used, clippy::unwrap_used, clippy::panic)]
+
 mod common;
 
 use common::load_golden_tests;
@@ -333,7 +335,7 @@ mod golden_utils {
 
     /// Utility to find failing golden tests
     #[test]
-        fn find_failing_tests() {
+    fn find_failing_tests() {
         // TODO: Identify which tests are failing
         println!("Find failing tests (placeholder)");
     }

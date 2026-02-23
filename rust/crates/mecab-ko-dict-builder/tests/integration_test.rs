@@ -1,5 +1,11 @@
 //! 통합 테스트 - 전체 사전 빌드 파이프라인
 
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::needless_raw_string_hashes
+)]
+
 use mecab_ko_dict_builder::builder::BuildConfig;
 use mecab_ko_dict_builder::csv_parser::Encoding;
 use mecab_ko_dict_builder::DictionaryBuilder;

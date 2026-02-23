@@ -35,6 +35,8 @@ default = []
 async = ["tokio"]
 simd = ["mecab-ko-dict/simd"]
 simd-dict = ["simd"]
+# Exposes test_utils module for external test crates that need full-dict helpers.
+test-utils = []
 
 [[bench]]
 name = "tokenizer_bench"

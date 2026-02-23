@@ -6,6 +6,17 @@
 //! - 누수 없이 메모리 해제 확인
 //! - 큰 텍스트 처리 시 메모리 확장성
 
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::unused_self,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    unused_mut,
+    missing_docs
+)]
+
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use mecab_ko_core::tokenizer::Tokenizer;
 

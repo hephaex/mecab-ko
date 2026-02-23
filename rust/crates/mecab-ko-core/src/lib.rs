@@ -26,6 +26,9 @@
 #![deny(unsafe_code)]
 #![cfg_attr(feature = "simd", feature(portable_simd))]
 
+#[cfg(any(test, feature = "test-utils"))]
+pub mod test_utils;
+
 pub mod batch;
 pub mod kiwi_compat;
 pub mod lattice;

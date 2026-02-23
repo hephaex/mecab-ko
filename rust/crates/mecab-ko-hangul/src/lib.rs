@@ -441,6 +441,7 @@ pub fn classify_char(c: char) -> CharType {
 }
 
 #[cfg(test)]
+#[allow(clippy::similar_names, clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
 

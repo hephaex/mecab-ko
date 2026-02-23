@@ -1,12 +1,18 @@
 //! Kiwi compatibility integration tests
 //!
 //! This module tests compatibility with the Kiwi Korean morphological analyzer:
-//! - POS tag mapping (MeCab <-> Kiwi)
+//! - POS tag mapping (MeCab &lt;-&gt; Kiwi)
 //! - Token structure compatibility
 //! - Analysis result comparison
 //!
-//! Note: These tests require the kiwi_compat feature to be fully integrated.
+//! Note: These tests require the `kiwi_compat` feature to be fully integrated.
 //! Currently placeholders until API is complete.
+
+#![allow(
+    clippy::expect_used,
+    clippy::assertions_on_constants,
+    clippy::doc_markdown
+)]
 
 mod common;
 
@@ -22,7 +28,7 @@ fn test_kiwi_compatibility_placeholder() {
     println!("Kiwi compatibility tests pending API integration");
 }
 
-/// Test that kiwi_compat module exists in mecab-ko-core
+/// Test that `kiwi_compat` module exists in mecab-ko-core
 #[test]
 fn test_kiwi_module_exists() {
     // This verifies the module is compiled, even if not exposed yet

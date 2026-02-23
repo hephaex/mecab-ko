@@ -275,13 +275,9 @@ impl SystemDictionary {
                 })?;
             let cost: i16 = fields
                 .next()
-                .ok_or_else(|| {
-                    DictError::Format(format!("line {}: missing cost", line_num + 1))
-                })?
+                .ok_or_else(|| DictError::Format(format!("line {}: missing cost", line_num + 1)))?
                 .parse()
-                .map_err(|_| {
-                    DictError::Format(format!("line {}: invalid cost", line_num + 1))
-                })?;
+                .map_err(|_| DictError::Format(format!("line {}: invalid cost", line_num + 1)))?;
             let feature = fields.next().unwrap_or("").to_string();
 
             entries.push(DictEntry {
@@ -309,7 +305,9 @@ impl SystemDictionary {
             .read_exact(&mut magic)
             .map_err(|e| DictError::Format(format!("entries.bin magic: {e}")))?;
         if &magic != ENTRIES_MAGIC {
-            return Err(DictError::Format("entries.bin: invalid magic number".into()));
+            return Err(DictError::Format(
+                "entries.bin: invalid magic number".into(),
+            ));
         }
 
         // 버전 검증
@@ -329,34 +327,36 @@ impl SystemDictionary {
 
         let mut entries = Vec::with_capacity(count as usize);
         for i in 0..count {
-            let left_id = cursor.read_u16::<LittleEndian>().map_err(|e| {
-                DictError::Format(format!("entries.bin entry {i} left_id: {e}"))
-            })?;
-            let right_id = cursor.read_u16::<LittleEndian>().map_err(|e| {
-                DictError::Format(format!("entries.bin entry {i} right_id: {e}"))
-            })?;
-            let cost = cursor.read_i16::<LittleEndian>().map_err(|e| {
-                DictError::Format(format!("entries.bin entry {i} cost: {e}"))
-            })?;
-            let surface_len = cursor.read_u16::<LittleEndian>().map_err(|e| {
-                DictError::Format(format!("entries.bin entry {i} surface_len: {e}"))
-            })? as usize;
-            let feature_len = cursor.read_u16::<LittleEndian>().map_err(|e| {
-                DictError::Format(format!("entries.bin entry {i} feature_len: {e}"))
-            })? as usize;
+            let left_id = cursor
+                .read_u16::<LittleEndian>()
+                .map_err(|e| DictError::Format(format!("entries.bin entry {i} left_id: {e}")))?;
+            let right_id = cursor
+                .read_u16::<LittleEndian>()
+                .map_err(|e| DictError::Format(format!("entries.bin entry {i} right_id: {e}")))?;
+            let cost = cursor
+                .read_i16::<LittleEndian>()
+                .map_err(|e| DictError::Format(format!("entries.bin entry {i} cost: {e}")))?;
+            let surface_len = cursor
+                .read_u16::<LittleEndian>()
+                .map_err(|e| DictError::Format(format!("entries.bin entry {i} surface_len: {e}")))?
+                as usize;
+            let feature_len = cursor
+                .read_u16::<LittleEndian>()
+                .map_err(|e| DictError::Format(format!("entries.bin entry {i} feature_len: {e}")))?
+                as usize;
 
             let mut surface_bytes = vec![0u8; surface_len];
-            cursor.read_exact(&mut surface_bytes).map_err(|e| {
-                DictError::Format(format!("entries.bin entry {i} surface: {e}"))
-            })?;
+            cursor
+                .read_exact(&mut surface_bytes)
+                .map_err(|e| DictError::Format(format!("entries.bin entry {i} surface: {e}")))?;
             let surface = String::from_utf8(surface_bytes).map_err(|e| {
                 DictError::Format(format!("entries.bin entry {i} surface utf8: {e}"))
             })?;
 
             let mut feature_bytes = vec![0u8; feature_len];
-            cursor.read_exact(&mut feature_bytes).map_err(|e| {
-                DictError::Format(format!("entries.bin entry {i} feature: {e}"))
-            })?;
+            cursor
+                .read_exact(&mut feature_bytes)
+                .map_err(|e| DictError::Format(format!("entries.bin entry {i} feature: {e}")))?;
             let feature = String::from_utf8(feature_bytes).map_err(|e| {
                 DictError::Format(format!("entries.bin entry {i} feature utf8: {e}"))
             })?;
@@ -730,7 +730,11 @@ impl DictionaryLoader {
 }
 
 #[cfg(test)]
-#[allow(clippy::expect_used, clippy::unwrap_used)]
+#[allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::items_after_statements
+)]
 mod tests {
     use super::*;
     use crate::matrix::DenseMatrix;

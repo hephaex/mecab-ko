@@ -6,6 +6,13 @@
 //! - POS tagging accuracy
 //! - Edge cases handling
 
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::similar_names,
+    clippy::useless_vec
+)]
+
 mod common;
 
 use common::fixtures::SampleTextGenerator;

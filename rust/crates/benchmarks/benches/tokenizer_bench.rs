@@ -7,6 +7,15 @@
 //! - Throughput (characters/sec, tokens/sec)
 //! - 실제 문장 패턴 성능
 
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::uninlined_format_args,
+    unused_variables,
+    unused_mut,
+    missing_docs
+)]
+
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use mecab_ko_core::tokenizer::Tokenizer;
 
@@ -135,9 +144,8 @@ fn bench_tokenizer_scalability(c: &mut Criterion) {
     for &length in &[10, 50, 100, 500, 1000] {
         let text = "한국어 ".repeat(length / 4); // ~4 bytes per "한국어 "
 
+        group.throughput(Throughput::Bytes(text.len() as u64));
         group.bench_with_input(BenchmarkId::new("chars", length), &text, |b, text| {
-            group.throughput(Throughput::Bytes(text.len() as u64));
-
             b.iter(|| {
                 let tokens = tokenizer.tokenize(black_box(text));
                 black_box(tokens);
@@ -154,15 +162,16 @@ fn bench_tokenizer_wakati(c: &mut Criterion) {
 
     let mut group = c.benchmark_group("tokenizer_wakati");
 
-    group.bench_function("medium", |b| {
+    {
         let text = MEDIUM_SENTENCES[0];
         group.throughput(Throughput::Bytes(text.len() as u64));
-
-        b.iter(|| {
-            let morphs = tokenizer.wakati(black_box(text));
-            black_box(morphs);
+        group.bench_function("medium", |b| {
+            b.iter(|| {
+                let morphs = tokenizer.wakati(black_box(text));
+                black_box(morphs);
+            });
         });
-    });
+    }
 
     group.finish();
 }
@@ -173,15 +182,16 @@ fn bench_tokenizer_pos(c: &mut Criterion) {
 
     let mut group = c.benchmark_group("tokenizer_pos");
 
-    group.bench_function("medium", |b| {
+    {
         let text = MEDIUM_SENTENCES[0];
         group.throughput(Throughput::Bytes(text.len() as u64));
-
-        b.iter(|| {
-            let pos_tags = tokenizer.pos(black_box(text));
-            black_box(pos_tags);
+        group.bench_function("medium", |b| {
+            b.iter(|| {
+                let pos_tags = tokenizer.pos(black_box(text));
+                black_box(pos_tags);
+            });
         });
-    });
+    }
 
     group.finish();
 }
@@ -192,15 +202,16 @@ fn bench_tokenizer_nouns(c: &mut Criterion) {
 
     let mut group = c.benchmark_group("tokenizer_nouns");
 
-    group.bench_function("medium", |b| {
+    {
         let text = MEDIUM_SENTENCES[0];
         group.throughput(Throughput::Bytes(text.len() as u64));
-
-        b.iter(|| {
-            let nouns = tokenizer.nouns(black_box(text));
-            black_box(nouns);
+        group.bench_function("medium", |b| {
+            b.iter(|| {
+                let nouns = tokenizer.nouns(black_box(text));
+                black_box(nouns);
+            });
         });
-    });
+    }
 
     group.finish();
 }
@@ -212,37 +223,40 @@ fn bench_tokenizer_text_types(c: &mut Criterion) {
     let mut group = c.benchmark_group("tokenizer_text_types");
 
     // 일반 문장
-    group.bench_function("general", |b| {
+    {
         let text = MEDIUM_SENTENCES[0];
         group.throughput(Throughput::Bytes(text.len() as u64));
-
-        b.iter(|| {
-            let tokens = tokenizer.tokenize(black_box(text));
-            black_box(tokens);
+        group.bench_function("general", |b| {
+            b.iter(|| {
+                let tokens = tokenizer.tokenize(black_box(text));
+                black_box(tokens);
+            });
         });
-    });
+    }
 
     // 기술 문서
-    group.bench_function("technical", |b| {
+    {
         let text = TECHNICAL_TEXTS[0];
         group.throughput(Throughput::Bytes(text.len() as u64));
-
-        b.iter(|| {
-            let tokens = tokenizer.tokenize(black_box(text));
-            black_box(tokens);
+        group.bench_function("technical", |b| {
+            b.iter(|| {
+                let tokens = tokenizer.tokenize(black_box(text));
+                black_box(tokens);
+            });
         });
-    });
+    }
 
     // 혼합 텍스트
-    group.bench_function("mixed", |b| {
+    {
         let text = MIXED_TEXTS[0];
         group.throughput(Throughput::Bytes(text.len() as u64));
-
-        b.iter(|| {
-            let tokens = tokenizer.tokenize(black_box(text));
-            black_box(tokens);
+        group.bench_function("mixed", |b| {
+            b.iter(|| {
+                let tokens = tokenizer.tokenize(black_box(text));
+                black_box(tokens);
+            });
         });
-    });
+    }
 
     group.finish();
 }
@@ -305,7 +319,7 @@ fn bench_tokenizer_memory(c: &mut Criterion) {
     // 토크나이저 생성 오버헤드
     group.bench_function("creation", |b| {
         b.iter(|| {
-            let mut tokenizer = Tokenizer::new().expect("Failed to create");
+            let tokenizer = Tokenizer::new().expect("Failed to create");
             black_box(tokenizer);
         });
     });

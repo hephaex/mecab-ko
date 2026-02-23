@@ -6,6 +6,14 @@
 //! - 특수 문자 처리 오버헤드
 //! - 유니코드 정규화 비용
 
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::similar_names,
+    clippy::unused_self,
+    missing_docs
+)]
+
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
 use mecab_ko_core::tokenizer::Tokenizer;
 

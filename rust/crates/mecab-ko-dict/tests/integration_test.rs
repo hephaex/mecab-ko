@@ -2,7 +2,11 @@
 //!
 //! 시스템 사전과 사용자 사전의 통합 테스트
 
-#![allow(clippy::expect_used, clippy::unwrap_used)]
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::uninlined_format_args
+)]
 
 use mecab_ko_dict::{
     DictEntry, DictionaryLoader, SystemDictionary, UserDictionary, UserDictionaryBuilder,
@@ -31,7 +35,10 @@ fn test_system_dictionary_integration() {
                 !dict.entries().is_empty(),
                 "entries.csv exists but no entries loaded"
             );
-            println!("Loaded {} entries from mini dictionary", dict.entries().len());
+            println!(
+                "Loaded {} entries from mini dictionary",
+                dict.entries().len()
+            );
 
             // 엔트리 내용 검증
             let entries = dict.entries();

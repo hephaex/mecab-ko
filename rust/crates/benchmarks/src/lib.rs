@@ -108,6 +108,7 @@ pub fn create_mixed_batch(count: usize) -> Vec<String> {
 }
 
 #[cfg(test)]
+#[allow(clippy::const_is_empty)]
 mod tests {
     use super::*;
 

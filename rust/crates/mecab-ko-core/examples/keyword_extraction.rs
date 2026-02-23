@@ -20,7 +20,11 @@
     clippy::if_not_else,
     clippy::cast_precision_loss,
     clippy::cast_possible_wrap,
-    clippy::option_if_let_else
+    clippy::option_if_let_else,
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::type_complexity,
+    missing_docs
 )]
 //! - 검색어 추천
 //! - 토픽 모델링 전처리

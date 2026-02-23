@@ -1,5 +1,12 @@
 //! Integration tests for dictionary validator.
 
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::needless_collect,
+    unused_variables
+)]
+
 use mecab_ko_dict_validator::{
     config::{load_config, save_config},
     DictValidator, IssueCategory, Severity, ValidationConfig,

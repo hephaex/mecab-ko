@@ -468,6 +468,7 @@ impl From<std::io::Error> for ValidationError {
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used, clippy::unwrap_used, clippy::needless_collect)]
 mod tests {
     use super::*;
 

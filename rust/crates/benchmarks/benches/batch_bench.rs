@@ -6,6 +6,16 @@
 //! - 메모리 효율성
 //! - 순차 vs 병렬 처리 비교
 
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::useless_vec,
+    clippy::redundant_closure,
+    clippy::redundant_closure_for_method_calls,
+    clippy::explicit_iter_loop,
+    missing_docs
+)]
+
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use mecab_ko_core::tokenizer::Tokenizer;
 

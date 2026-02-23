@@ -1,13 +1,19 @@
 //! Nori compatibility integration tests
 //!
 //! This module tests compatibility with Elasticsearch's Nori analyzer:
-//! - POS tag mapping (MeCab <-> Nori)
+//! - POS tag mapping (MeCab &lt;-&gt; Nori)
 //! - Decompound modes (none, discard, mixed)
 //! - Token type classification
 //! - Output format compatibility
 //!
-//! Note: These tests require the nori_compat feature to be fully integrated.
+//! Note: These tests require the `nori_compat` feature to be fully integrated.
 //! Currently placeholders until API is complete.
+
+#![allow(
+    clippy::expect_used,
+    clippy::assertions_on_constants,
+    clippy::doc_markdown
+)]
 
 mod common;
 
@@ -26,7 +32,7 @@ fn test_nori_compatibility_placeholder() {
     println!("Nori compatibility tests pending API integration");
 }
 
-/// Test that nori_compat module exists in mecab-ko-core
+/// Test that `nori_compat` module exists in mecab-ko-core
 #[test]
 fn test_nori_module_exists() {
     // This verifies the module is compiled, even if not exposed yet

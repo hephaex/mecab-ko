@@ -17,7 +17,17 @@
 //! - 문서 분류
 //! - 키워드 추출
 
-#![allow(clippy::uninlined_format_args)]
+#![allow(
+    clippy::uninlined_format_args,
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::missing_errors_doc,
+    clippy::unused_self,
+    clippy::single_char_pattern,
+    clippy::no_effect_replace,
+    clippy::unnecessary_wraps,
+    missing_docs
+)]
 
 use mecab_ko_core::{Normalizer, Token, Tokenizer};
 use std::collections::HashSet;

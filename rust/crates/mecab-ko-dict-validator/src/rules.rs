@@ -325,6 +325,11 @@ impl NormalizationForm {
 }
 
 #[cfg(test)]
+#[allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::field_reassign_with_default
+)]
 mod tests {
     use super::*;
 

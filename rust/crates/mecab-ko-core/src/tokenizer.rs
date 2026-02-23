@@ -666,8 +666,7 @@ mod tests {
             ("들어가", 4),
             ("신다", 5),
         ];
-        let trie_bytes =
-            TrieBuilder::build_unsorted(&mut trie_entries).expect("should build trie");
+        let trie_bytes = TrieBuilder::build_unsorted(&mut trie_entries).expect("should build trie");
         let trie = mecab_ko_dict::Trie::from_vec(trie_bytes);
 
         // 테스트용 Matrix 생성

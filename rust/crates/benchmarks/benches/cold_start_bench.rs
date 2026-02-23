@@ -7,6 +7,14 @@
 //! - Matrix 로딩 시간
 //! - 메모리 사용량 추적
 
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    unused_imports,
+    unused_mut,
+    missing_docs
+)]
+
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
 use mecab_ko_core::tokenizer::Tokenizer;
 
@@ -45,7 +53,7 @@ fn bench_cache_warming(c: &mut Criterion) {
     group.bench_function("first_tokenization", |b| {
         b.iter_batched(
             || Tokenizer::new().expect("Failed to create tokenizer"),
-            |tokenizer| {
+            |mut tokenizer| {
                 let tokens = tokenizer.tokenize(black_box(text));
                 black_box(tokens);
             },
@@ -97,7 +105,7 @@ fn bench_cold_start_different_texts(c: &mut Criterion) {
         group.bench_function(format!("text_{idx}"), |b| {
             b.iter_batched(
                 || Tokenizer::new().expect("Failed to create tokenizer"),
-                |tokenizer| {
+                |mut tokenizer| {
                     let tokens = tokenizer.tokenize(black_box(text));
                     black_box(tokens);
                 },
@@ -125,7 +133,7 @@ fn bench_server_startup_scenario(c: &mut Criterion) {
     group.bench_function("first_five_requests", |b| {
         b.iter_batched(
             || Tokenizer::new().expect("Failed to create tokenizer"),
-            |tokenizer| {
+            |mut tokenizer| {
                 let mut results = Vec::new();
                 for request in &requests {
                     let tokens = tokenizer.tokenize(black_box(request));
@@ -213,7 +221,7 @@ fn bench_initialization_memory_pattern(c: &mut Criterion) {
     // 기본 초기화
     group.bench_function("basic_init", |b| {
         b.iter(|| {
-            let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+            let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
             black_box(tokenizer);
         });
     });
@@ -221,7 +229,7 @@ fn bench_initialization_memory_pattern(c: &mut Criterion) {
     // 초기화 후 즉시 드롭
     group.bench_function("init_and_drop", |b| {
         b.iter(|| {
-            let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+            let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
             drop(black_box(tokenizer));
         });
     });

@@ -7,6 +7,8 @@
 //! - User dictionary persistence
 //! - CSV format parsing
 
+#![allow(clippy::expect_used, clippy::unwrap_used, clippy::useless_vec)]
+
 mod common;
 
 use mecab_ko_dict::UserEntry;
@@ -330,14 +332,14 @@ mod csv_tests {
 
     /// Test CSV with various encodings
     #[test]
-        fn test_csv_encodings() {
+    fn test_csv_encodings() {
         // TODO: Test UTF-8, EUC-KR encodings
         println!("CSV encoding test (placeholder)");
     }
 
     /// Test malformed CSV handling
     #[test]
-        fn test_malformed_csv() {
+    fn test_malformed_csv() {
         // TODO: Test various malformed CSV formats
         // - Missing fields
         // - Invalid POS tags

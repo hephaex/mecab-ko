@@ -23,8 +23,6 @@
 
 mod common;
 
-use common::fixtures::SampleTextGenerator;
-
 /// Test complete tokenization pipeline with basic Korean sentences
 ///
 /// This test verifies that the entire pipeline works end-to-end:

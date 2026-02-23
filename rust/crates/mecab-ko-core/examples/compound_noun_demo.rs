@@ -5,6 +5,12 @@
 //!
 //! Run with: `cargo run --example compound_noun_demo`
 
+#![allow(
+    clippy::uninlined_format_args,
+    clippy::expect_used,
+    clippy::unwrap_used
+)]
+
 use mecab_ko_core::nori_compat::{DecompoundMode, NoriTokenizer};
 
 fn main() {
@@ -17,11 +23,7 @@ fn main() {
         (DecompoundMode::Mixed, "Mixed (original + components)"),
     ];
 
-    let test_texts = vec![
-        "형태소분석",
-        "자연언어처리",
-        "한국어형태소분석기",
-    ];
+    let test_texts = vec!["형태소분석", "자연언어처리", "한국어형태소분석기"];
 
     for (mode, description) in modes {
         println!("Mode: {}", description);

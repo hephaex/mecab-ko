@@ -108,6 +108,7 @@ pub mod builder {
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg(test)]
+#[allow(clippy::similar_names, clippy::unwrap_used, clippy::const_is_empty)]
 mod tests {
     use super::*;
 

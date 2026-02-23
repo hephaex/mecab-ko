@@ -1,5 +1,11 @@
 //! Fixture loading and management utilities
 
+#![allow(
+    clippy::unnecessary_debug_formatting,
+    clippy::expect_used,
+    clippy::unwrap_used
+)]
+
 use super::{get_fixtures_path, get_golden_path, MorphTestCase};
 use std::collections::HashMap;
 use std::path::PathBuf;

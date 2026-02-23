@@ -6,6 +6,13 @@
 //! - 다양한 출력 형식 비교
 //! - 기능별 성능 트레이드오프
 
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::const_is_empty,
+    missing_docs
+)]
+
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
 use mecab_ko_core::tokenizer::Tokenizer;
 

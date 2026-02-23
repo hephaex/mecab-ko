@@ -150,6 +150,11 @@ impl UnkDef {
 }
 
 #[cfg(test)]
+#[allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::needless_raw_string_hashes
+)]
 mod tests {
     use super::*;
     use std::io::Write;
