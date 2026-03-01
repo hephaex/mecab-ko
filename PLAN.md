@@ -7,10 +7,10 @@ crates.io 발행, 사전 현대화, 추가 최적화
 
 ### P0 (Critical)
 - [ ] S9-01: crates.io 정식 발행 (6개 크레이트) - `cargo login` 필요
-- [ ] S9-02: mecab-ko-dic 최신 버전 지원
+- [x] S9-02: 의존성 업데이트 ✅
 
 ### P1 (High)
-- [ ] S9-03: CLI 개선 (옵션 추가)
+- [x] S9-03: CLI 개선 (옵션 추가) ✅
 - [ ] S9-04: Python 바인딩 PyPI 배포
 - [ ] S9-05: 사용자 사전 기능 개선
 
