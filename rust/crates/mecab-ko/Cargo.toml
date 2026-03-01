@@ -22,7 +22,7 @@ mecab-ko-hangul = { version = "0.1.1", path = "../mecab-ko-hangul" }
 criterion.workspace = true
 serde = { workspace = true }
 serde_json = { workspace = true }
-tempfile = "3.10"
+tempfile = { workspace = true }
 
 # TODO: 벤치마크 구현 후 활성화
 # [[bench]]

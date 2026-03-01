@@ -56,7 +56,7 @@ mecab-ko-hangul = { version = "0.1.1", path = "../mecab-ko-hangul" }
 
 [dev-dependencies]
 criterion.workspace = true
-tempfile = "3.10"
+tempfile = { workspace = true }
 
 [lints]
 workspace = true

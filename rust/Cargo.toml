@@ -79,6 +79,14 @@ rayon = "1.10"
 # Updated to 0.24.1+ to fix buffer overflow in PyString::from_object (RUSTSEC-2025-0020)
 pyo3 = { version = "0.24.1", features = ["extension-module"] }
 
+# WASM dependencies
+wasm-bindgen = "0.2.114"
+js-sys = "0.3.91"
+web-sys = "0.3.91"
+
+# Testing
+tempfile = "3.26"
+
 [workspace.lints.rust]
 unsafe_code = "deny"
 missing_docs = "warn"

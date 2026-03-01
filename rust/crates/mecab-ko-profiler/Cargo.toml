@@ -43,7 +43,7 @@ mecab-ko-dict = { version = "0.1.1", path = "../mecab-ko-dict", optional = true 
 
 [dev-dependencies]
 criterion.workspace = true
-tempfile = "3.8"
+tempfile = { workspace = true }
 
 [features]
 default = ["cli", "profilers"]

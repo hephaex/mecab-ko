@@ -34,7 +34,7 @@ zstd = ["dep:zstd"]
 
 [dev-dependencies]
 criterion.workspace = true
-tempfile = "3.24.0"
+tempfile = { workspace = true }
 
 [lints]
 workspace = true
