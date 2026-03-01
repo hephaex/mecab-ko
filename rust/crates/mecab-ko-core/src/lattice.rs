@@ -63,12 +63,14 @@ pub const EOS_CONTEXT_ID: u16 = 0;
 
 /// 노드 타입
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Default)]
 pub enum NodeType {
     /// 문장 시작 (Beginning of Sentence)
     Bos,
     /// 문장 끝 (End of Sentence)
     Eos,
     /// 사전에서 찾은 알려진 단어
+    #[default]
     Known,
     /// 미등록어 (Unknown word)
     Unknown,
@@ -76,11 +78,6 @@ pub enum NodeType {
     User,
 }
 
-impl Default for NodeType {
-    fn default() -> Self {
-        Self::Known
-    }
-}
 
 /// Lattice 노드
 ///

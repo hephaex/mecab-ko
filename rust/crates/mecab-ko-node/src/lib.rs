@@ -242,7 +242,7 @@ impl Mecab {
 
     /// Parses text and returns MeCab-compatible format string.
     ///
-    /// The output format follows the original MeCab format:
+    /// The output format follows the original `MeCab` format:
     /// ```text
     /// surface\tfeature1,feature2,...
     /// EOS
@@ -254,7 +254,7 @@ impl Mecab {
     ///
     /// # Returns
     ///
-    /// A formatted string in MeCab format.
+    /// A formatted string in `MeCab` format.
     ///
     /// # Examples
     ///

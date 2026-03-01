@@ -2,6 +2,7 @@
 name = "mecab-ko-node"
 version.workspace = true
 edition.workspace = true
+# napi-build requires cargo:: syntax which needs Rust 1.77+
 rust-version = "1.77"
 authors.workspace = true
 license.workspace = true

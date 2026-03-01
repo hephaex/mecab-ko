@@ -9,11 +9,13 @@ use std::path::PathBuf;
 /// Lucene Nori의 decompound 설정과 호환
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum DecompoundMode {
     /// 분해하지 않음 - 복합명사를 그대로 출력
     ///
     /// # Example
     /// `"형태소분석기" → ["형태소분석기/NNG"]`
+    #[default]
     None,
 
     /// 분해만 출력 - 원본은 버리고 분해된 형태소만 출력
@@ -56,11 +58,6 @@ impl DecompoundMode {
     }
 }
 
-impl Default for DecompoundMode {
-    fn default() -> Self {
-        Self::None
-    }
-}
 
 /// 분석기 설정
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

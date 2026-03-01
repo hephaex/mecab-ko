@@ -138,7 +138,7 @@ impl PyMecab {
     ///
     /// # Returns
     ///
-    /// List of tuples (surface, pos_tag)
+    /// List of tuples (surface, `pos_tag`)
     ///
     /// # Example
     ///
@@ -152,7 +152,7 @@ impl PyMecab {
         self.tokenizer.lock().pos(text)
     }
 
-    /// Parse text and return MeCab format output.
+    /// Parse text and return `MeCab` format output.
     ///
     /// # Arguments
     ///
@@ -160,7 +160,7 @@ impl PyMecab {
     ///
     /// # Returns
     ///
-    /// MeCab format string with tab-separated values
+    /// `MeCab` format string with tab-separated values
     ///
     /// # Example
     ///
@@ -191,7 +191,7 @@ impl PyMecab {
         result
     }
 
-    /// Alias for morphs() - extract morphemes.
+    /// Alias for `morphs()` - extract morphemes.
     ///
     /// This method is provided for compatibility with some interfaces.
     #[pyo3(text_signature = "($self, text)")]

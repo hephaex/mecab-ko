@@ -496,7 +496,7 @@ struct PathNode {
     /// 현재 노드 ID
     node_id: NodeId,
     /// 이전 경로 노드 (Rc로 공유)
-    prev: Option<Rc<PathNode>>,
+    prev: Option<Rc<Self>>,
 }
 
 impl PathNode {
