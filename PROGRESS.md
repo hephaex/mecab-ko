@@ -14,6 +14,24 @@
   - `--benchmark N` 옵션 추가 (성능 측정)
   - `--stats` 옵션 추가 (분석 통계)
   - 14개 테스트 통과
+- [x] S9-05: 사용자 사전 기능 개선 ✅
+  - `validate()` 메서드 추가 (품사 태그 검증)
+  - `ValidationResult`, `DictionaryStats` 구조체 추가
+  - `remove_duplicates()` 메서드 추가 (중복 항목 제거)
+  - `remove_surface()` 메서드 추가 (표면형으로 삭제)
+  - `stats()` 메서드 추가 (사전 통계)
+  - `is_valid_pos_tag()` 함수 추가 (세종 품사 태그 검증)
+
+### P2 진행
+- [x] S9-06: 문서화 개선 ✅
+  - rustdoc 링크 수정
+  - README에 사용자 사전 검증/통계 예제 추가
+  - 성능 지표 테이블 업데이트
+- [x] S9-07: 성능 벤치마크 자동화 ✅
+  - CI workflow에 benchmark job 추가
+  - main 브랜치 push 시 자동 실행
+  - 벤치마크 결과 artifact 저장 (30일)
+  - GitHub Step Summary에 결과 표시
 
 ---
 
