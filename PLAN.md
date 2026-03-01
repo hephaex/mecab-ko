@@ -1,6 +1,29 @@
-# 현재 스프린트: Phase 4 - Sprint 7 (crates.io 발행 준비) ✅
+# 현재 스프린트: Phase 4 - Sprint 8 (Memory 최적화 & 발행)
 
 ## 목표
+Memory 최적화 (215MB → 150MB), WASM zstd 해결, crates.io 발행
+
+## Sprint 8 작업 목록
+
+### P0 (Critical)
+- [ ] S8-01: Memory 최적화 - entries 지연 로딩
+- [ ] S8-02: Memory 최적화 - mmap 활용 강화
+- [ ] S8-03: WASM zstd-sys 이슈 해결
+
+### P1 (High)
+- [ ] S8-04: crates.io 정식 발행 (6개 크레이트)
+- [ ] S8-05: PyPI 배포 준비 (maturin)
+- [ ] S8-06: README.md 정리
+
+### P2 (Medium)
+- [ ] S8-07: npm 배포 준비 (Node.js 바인딩)
+- [ ] S8-08: GitHub Maintenance 이슈 정리
+
+---
+
+# 완료된 스프린트: Phase 4 - Sprint 7 (crates.io 발행 준비) ✅
+
+## Sprint 7 목표 (완료)
 crates.io 발행 준비, 바인딩 최적화, Memory KPI 측정
 
 ## 완료된 이전 스프린트

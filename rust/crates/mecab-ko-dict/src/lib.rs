@@ -25,6 +25,7 @@
 pub mod dictionary;
 pub mod file_watcher;
 pub mod hot_reload;
+pub mod lazy_entries;
 pub mod loader;
 pub mod matrix;
 pub mod trie;
@@ -36,6 +37,7 @@ pub use file_watcher::{FileEvent, FileWatcher, WatchConfig};
 pub use hot_reload::{
     DeltaUpdate, DeltaUpdateBuilder, EntryChange, HotReloadDictionary, Version, VersionInfo,
 };
+pub use lazy_entries::LazyEntries;
 pub use loader::{LazyDictionary, LoaderConfig, MmapDictionary};
 pub use matrix::{ConnectionMatrix, DenseMatrix, Matrix, MatrixLoader, MmapMatrix, SparseMatrix};
 pub use trie::{DictionarySearcher, EntryIndex, PrefixMatch, Trie, TrieBuilder};

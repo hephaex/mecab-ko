@@ -129,6 +129,46 @@
 | 500 chars | 3055µs | 2165µs | -29% |
 | 1000 chars | 9978µs | 8413µs | -16% |
 
+## PM Agent 자동화 시스템 ✅ (2026-03-01)
+
+### 완료된 스킬
+- [x] `/pm-auto` - PM 자동 모드 (Auto Loop + Error Recovery + Context Management)
+- [x] `/pm-orchestrate` - 이력 기반 멀티 에이전트 오케스트레이션
+- [x] `/issue-sync` - GitHub 이슈 동기화 (1시간마다, PM Agent 기술 분석 코멘트)
+- [x] `/issue-followup` - 이슈 처리 시작 (에이전트 위임)
+- [x] `/pr-create` - 이슈 해결 PR 생성
+- [x] `/lesson-learn` - PR 완료 후 LessonLearn 기술 보고서 생성
+- [x] `/tech-report` - 기술 조사/스프린트 보고서
+
+### 완료된 에이전트
+- [x] `github-automation-setup` - GitHub Labels, Templates, Workflows 설정
+- [x] `github-issue-manager` - 이슈 관리
+- [x] `github-pr-creator` - PR 생성
+- [x] `tech-writer` - 기술 보고서 작성
+- [x] `pm-orchestrator` - PM 오케스트레이터
+- [x] `pm-runner` - PM 자동 실행
+
+### Sub-Agent 출력 표준화
+```json
+{
+  "status": "success|failure|partial",
+  "summary": "작업 요약",
+  "files_changed": [],
+  "tests_passed": true,
+  "errors": [],
+  "next_steps": []
+}
+```
+
+### CLAUDE.md 자율 운영 규칙 추가
+- 세션 시작 프로토콜
+- PM Agent 자동 루프
+- Sub-Agent 출력 표준
+- 자동 커밋 규칙
+- GitHub 이슈 연동
+- 기술 보고서 (LessonLearn)
+- 에러 복구 체계
+
 ## 블로커/이슈
 - 없음
 
