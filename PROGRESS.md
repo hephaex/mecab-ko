@@ -1,6 +1,22 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-02-24
+## 마지막 업데이트: 2026-03-01
+
+## Sprint 7 진행 중
+
+### 완료
+- [x] S7-01: Path dependency에 version 추가 (7개 크레이트)
+- [x] S7-02: cargo publish --dry-run 검증
+  - ✅ mecab-ko-hangul (이미 crates.io에 존재)
+  - ✅ mecab-ko-dict
+  - ✅ mecab-ko-core
+  - ✅ mecab-ko-dict-validator
+  - ⚠️ mecab-ko-dict-builder (crates.io의 mecab-ko-dict 0.1.0에 save_entries 함수 없음)
+  - ✅ mecab-ko (facade)
+
+### 발행 순서 노트
+- crates.io에 이미 mecab-ko-hangul 0.1.0 존재
+- mecab-ko-dict-builder 발행 전에 mecab-ko-dict를 0.1.1로 업데이트 필요
 
 ## 완료된 작업
 
@@ -97,9 +113,8 @@
 - 없음
 
 ## GitHub 이슈
-- #6: 커뮤니티 질문 (프로젝트 목표, 성능, 사전 계획 등) - 미응답
+- #6: 커뮤니티 질문 (프로젝트 목표, 성능, 사전 계획 등) - ✅ 응답 완료
 
 ## 다음 세션에서 할 일
 1. Sprint 7 계획: crates.io 발행, Python/WASM 바인딩 최적화, 사전 현대화
-2. GitHub Issue #6 응답
-3. Full-dict 벤치마크로 Memory KPI 측정
+2. Full-dict 벤치마크로 Memory KPI 측정

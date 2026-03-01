@@ -19,7 +19,7 @@ crate-type = ["cdylib"]
 doc = false  # Skip docs for Node.js bindings (FFI crate, not meant for Rust docs)
 
 [dependencies]
-mecab-ko-core = { path = "../mecab-ko-core" }
+mecab-ko-core = { version = "0.1.0", path = "../mecab-ko-core" }
 # napi-rs for Node.js bindings
 napi = "2.16"
 napi-derive = "2.16"
