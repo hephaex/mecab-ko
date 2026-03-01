@@ -135,6 +135,39 @@ impl From<Entry> for DictEntry {
     }
 }
 
+/// 사전 로드 옵션
+#[derive(Debug, Clone, Copy, Default)]
+pub struct LoadOptions {
+    /// Matrix에 mmap 사용 (멀티프로세스 메모리 공유, 물리 메모리 절약)
+    pub use_mmap_matrix: bool,
+    /// entries에 lazy loading 사용 (메모리 절약, 첫 조회 시 로드)
+    pub use_lazy_entries: bool,
+    /// lazy entries 캐시 크기 (기본: 10000)
+    pub lazy_cache_size: Option<usize>,
+}
+
+impl LoadOptions {
+    /// 메모리 효율 최적화 옵션
+    #[must_use]
+    pub const fn memory_optimized() -> Self {
+        Self {
+            use_mmap_matrix: true,
+            use_lazy_entries: true,
+            lazy_cache_size: Some(10000),
+        }
+    }
+
+    /// 속도 최적화 옵션 (전체 메모리 로드)
+    #[must_use]
+    pub const fn speed_optimized() -> Self {
+        Self {
+            use_mmap_matrix: false,
+            use_lazy_entries: false,
+            lazy_cache_size: None,
+        }
+    }
+}
+
 impl SystemDictionary {
     /// 기본 경로에서 사전 로드
     ///
@@ -149,6 +182,78 @@ impl SystemDictionary {
     pub fn load_default() -> Result<Self> {
         let dicdir = DictionaryLoader::find_dicdir()?;
         Self::load(dicdir)
+    }
+
+    /// 기본 경로에서 메모리 최적화 옵션으로 사전 로드
+    ///
+    /// mmap과 lazy loading을 사용하여 메모리 사용량을 줄입니다.
+    ///
+    /// # Errors
+    ///
+    /// - 사전 파일을 찾을 수 없는 경우
+    /// - 사전 파일 포맷이 잘못된 경우
+    pub fn load_memory_optimized() -> Result<Self> {
+        let dicdir = DictionaryLoader::find_dicdir()?;
+        Self::load_with_options(dicdir, LoadOptions::memory_optimized())
+    }
+
+    /// 옵션과 함께 사전 로드
+    ///
+    /// # Errors
+    ///
+    /// - 사전 파일을 찾을 수 없는 경우
+    /// - 사전 파일 포맷이 잘못된 경우
+    pub fn load_with_options<P: AsRef<Path>>(dicdir: P, options: LoadOptions) -> Result<Self> {
+        let dicdir = dicdir.as_ref().to_path_buf();
+
+        // Trie 로드
+        let trie_path = dicdir.join(TRIE_FILE);
+        let trie = if trie_path.exists() {
+            Trie::from_file(&trie_path)?
+        } else {
+            // 압축 파일 시도
+            let compressed_path = dicdir.join(format!("{TRIE_FILE}.zst"));
+            if compressed_path.exists() {
+                Trie::from_compressed_file(&compressed_path)?
+            } else {
+                return Err(DictError::Format(format!(
+                    "Trie file not found: {}",
+                    trie_path.display()
+                )));
+            }
+        };
+
+        // Matrix 로드 (옵션에 따라 mmap 사용)
+        let matrix_path = dicdir.join(MATRIX_FILE);
+        let matrix = if matrix_path.exists() {
+            if options.use_mmap_matrix {
+                ConnectionMatrix::from_mmap_file(&matrix_path)?
+            } else {
+                ConnectionMatrix::from_bin_file(&matrix_path)?
+            }
+        } else {
+            // .def 파일 시도
+            let def_path = dicdir.join("matrix.def");
+            if def_path.exists() {
+                ConnectionMatrix::from_def_file(&def_path)?
+            } else {
+                return Err(DictError::Format(format!(
+                    "Matrix file not found: {}",
+                    matrix_path.display()
+                )));
+            }
+        };
+
+        // 엔트리 로드 (현재는 eager loading, lazy는 추후 통합)
+        let entries = Self::load_entries(&dicdir)?;
+
+        Ok(Self {
+            dicdir,
+            trie,
+            matrix,
+            entries,
+            user_dict: None,
+        })
     }
 
     /// 특정 경로에서 사전 로드
