@@ -28,6 +28,7 @@
 //! ```
 
 use std::borrow::Cow;
+#[cfg(feature = "zstd")]
 use std::io::{Read, Write as IoWrite};
 use std::path::Path;
 
@@ -80,12 +81,26 @@ impl<'a> Trie<'a> {
     /// # Errors
     ///
     /// 파일을 읽거나 압축 해제할 수 없는 경우 에러를 반환합니다.
+    #[cfg(feature = "zstd")]
     pub fn from_compressed_file<P: AsRef<Path>>(path: P) -> Result<Trie<'static>> {
         let file = std::fs::File::open(path.as_ref()).map_err(DictError::Io)?;
         let mut decoder = zstd::Decoder::new(file).map_err(DictError::Io)?;
         let mut bytes = Vec::new();
         decoder.read_to_end(&mut bytes).map_err(DictError::Io)?;
         Ok(Self::from_vec(bytes))
+    }
+
+    /// 압축된 파일에서 Trie 로드 (zstd feature 비활성화 시)
+    ///
+    /// # Errors
+    ///
+    /// zstd feature가 비활성화된 경우 항상 에러를 반환합니다.
+    #[cfg(not(feature = "zstd"))]
+    pub fn from_compressed_file<P: AsRef<Path>>(_path: P) -> Result<Trie<'static>> {
+        Err(DictError::Format(
+            "zstd feature is not enabled. Use uncompressed files or enable the 'zstd' feature."
+                .to_string(),
+        ))
     }
 
     /// 정확히 일치하는 키 검색
@@ -284,6 +299,7 @@ impl TrieBuilder {
     /// # Errors
     ///
     /// 파일을 쓰거나 압축할 수 없는 경우 에러를 반환합니다.
+    #[cfg(feature = "zstd")]
     pub fn save_to_compressed_file<P: AsRef<Path>>(
         bytes: &[u8],
         path: P,
@@ -294,6 +310,23 @@ impl TrieBuilder {
         encoder.write_all(bytes).map_err(DictError::Io)?;
         encoder.finish().map_err(DictError::Io)?;
         Ok(())
+    }
+
+    /// Trie를 압축하여 파일로 저장 (zstd feature 비활성화 시)
+    ///
+    /// # Errors
+    ///
+    /// zstd feature가 비활성화된 경우 항상 에러를 반환합니다.
+    #[cfg(not(feature = "zstd"))]
+    pub fn save_to_compressed_file<P: AsRef<Path>>(
+        _bytes: &[u8],
+        _path: P,
+        _level: i32,
+    ) -> Result<()> {
+        Err(DictError::Format(
+            "zstd feature is not enabled. Use uncompressed files or enable the 'zstd' feature."
+                .to_string(),
+        ))
     }
 }
 

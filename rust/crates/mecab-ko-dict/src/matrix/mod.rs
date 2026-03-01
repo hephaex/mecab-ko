@@ -27,7 +27,9 @@
 //! - `rsize`: 우문맥 ID 개수
 //! - 접근: `matrix[right_id + lsize * left_id]`
 
-use std::io::{self, BufRead, BufReader, Read, Write as IoWrite};
+use std::io::{self, BufRead, BufReader};
+#[cfg(feature = "zstd")]
+use std::io::{Read, Write as IoWrite};
 use std::path::Path;
 
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
@@ -294,6 +296,7 @@ impl DenseMatrix {
     /// # Errors
     ///
     /// 파일을 읽거나 압축 해제할 수 없는 경우 에러를 반환합니다.
+    #[cfg(feature = "zstd")]
     pub fn from_compressed_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = std::fs::File::open(path.as_ref()).map_err(DictError::Io)?;
         let decoder = zstd::Decoder::new(file).map_err(DictError::Io)?;
@@ -302,6 +305,19 @@ impl DenseMatrix {
             .read_to_end(&mut data)
             .map_err(DictError::Io)?;
         Self::from_bin_bytes(&data)
+    }
+
+    /// 압축된 바이너리 파일에서 로드 (zstd feature 비활성화 시)
+    ///
+    /// # Errors
+    ///
+    /// zstd feature가 비활성화된 경우 항상 에러를 반환합니다.
+    #[cfg(not(feature = "zstd"))]
+    pub fn from_compressed_file<P: AsRef<Path>>(_path: P) -> Result<Self> {
+        Err(DictError::Format(
+            "zstd feature is not enabled. Use uncompressed files or enable the 'zstd' feature."
+                .to_string(),
+        ))
     }
 
     /// 바이너리 형식으로 저장
@@ -338,6 +354,7 @@ impl DenseMatrix {
     /// # Errors
     ///
     /// 파일을 쓰거나 압축할 수 없는 경우 에러를 반환합니다.
+    #[cfg(feature = "zstd")]
     pub fn to_compressed_file<P: AsRef<Path>>(&self, path: P, level: i32) -> Result<()> {
         let data = self.to_bin_bytes();
         let file = std::fs::File::create(path.as_ref()).map_err(DictError::Io)?;
@@ -345,6 +362,19 @@ impl DenseMatrix {
         encoder.write_all(&data).map_err(DictError::Io)?;
         encoder.finish().map_err(DictError::Io)?;
         Ok(())
+    }
+
+    /// 압축된 바이너리 파일로 저장 (zstd feature 비활성화 시)
+    ///
+    /// # Errors
+    ///
+    /// zstd feature가 비활성화된 경우 항상 에러를 반환합니다.
+    #[cfg(not(feature = "zstd"))]
+    pub fn to_compressed_file<P: AsRef<Path>>(&self, _path: P, _level: i32) -> Result<()> {
+        Err(DictError::Format(
+            "zstd feature is not enabled. Use uncompressed files or enable the 'zstd' feature."
+                .to_string(),
+        ))
     }
 
     /// 원본 비용 배열 참조

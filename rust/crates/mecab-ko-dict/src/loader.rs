@@ -91,6 +91,7 @@ impl MmapDictionary {
     }
 
     /// Trie 데이터 로드
+    #[cfg(feature = "zstd")]
     fn load_trie(dict_dir: &Path, config: LoaderConfig) -> Result<Vec<u8>> {
         // 압축 파일 우선 시도
         let compressed_path = dict_dir.join("sys.dic.zst");
@@ -113,7 +114,23 @@ impl MmapDictionary {
         }
     }
 
+    /// Trie 데이터 로드 (zstd feature 비활성화 시)
+    #[cfg(not(feature = "zstd"))]
+    fn load_trie(dict_dir: &Path, _config: LoaderConfig) -> Result<Vec<u8>> {
+        let uncompressed_path = dict_dir.join("sys.dic");
+
+        if uncompressed_path.exists() {
+            Ok(std::fs::read(&uncompressed_path)?)
+        } else {
+            Err(DictError::Format(
+                "sys.dic not found (zstd feature disabled, compressed files not supported)"
+                    .to_string(),
+            ))
+        }
+    }
+
     /// Matrix 데이터 로드
+    #[cfg(feature = "zstd")]
     fn load_matrix(dict_dir: &Path, config: LoaderConfig) -> Result<DenseMatrix> {
         let compressed_path = dict_dir.join("matrix.bin.zst");
         let uncompressed_path = dict_dir.join("matrix.bin");
@@ -125,6 +142,21 @@ impl MmapDictionary {
         } else {
             Err(DictError::Format(
                 "matrix.bin or matrix.bin.zst not found".to_string(),
+            ))
+        }
+    }
+
+    /// Matrix 데이터 로드 (zstd feature 비활성화 시)
+    #[cfg(not(feature = "zstd"))]
+    fn load_matrix(dict_dir: &Path, _config: LoaderConfig) -> Result<DenseMatrix> {
+        let uncompressed_path = dict_dir.join("matrix.bin");
+
+        if uncompressed_path.exists() {
+            DenseMatrix::from_bin_file(&uncompressed_path)
+        } else {
+            Err(DictError::Format(
+                "matrix.bin not found (zstd feature disabled, compressed files not supported)"
+                    .to_string(),
             ))
         }
     }
@@ -158,6 +190,7 @@ impl MmapDictionary {
     /// # Errors
     ///
     /// 엔트리 파일을 찾을 수 없거나 파싱에 실패한 경우 에러를 반환합니다.
+    #[cfg(feature = "zstd")]
     fn load_entries(dict_dir: &Path, config: LoaderConfig) -> Result<Vec<Entry>> {
         // 바이너리 파일 우선 시도
         let bin_path = dict_dir.join("entries.bin");
@@ -185,6 +218,26 @@ impl MmapDictionary {
         Ok(Vec::new())
     }
 
+    #[cfg(not(feature = "zstd"))]
+    fn load_entries(dict_dir: &Path, _config: LoaderConfig) -> Result<Vec<Entry>> {
+        // 바이너리 파일 우선 시도
+        let bin_path = dict_dir.join("entries.bin");
+        let csv_path = dict_dir.join("entries.csv");
+
+        // 비압축 바이너리 파일
+        if bin_path.exists() {
+            return Self::load_entries_from_bin(&bin_path);
+        }
+
+        // CSV 파일 (fallback)
+        if csv_path.exists() {
+            return Self::load_entries_from_csv(&csv_path);
+        }
+
+        // 파일이 없으면 빈 벡터 반환
+        Ok(Vec::new())
+    }
+
     /// 바이너리 파일에서 엔트리 로드
     fn load_entries_from_bin(path: &Path) -> Result<Vec<Entry>> {
         use std::io::Read;
@@ -197,6 +250,7 @@ impl MmapDictionary {
     }
 
     /// 압축된 바이너리 파일에서 엔트리 로드
+    #[cfg(feature = "zstd")]
     fn load_entries_from_compressed_bin(path: &Path) -> Result<Vec<Entry>> {
         use std::io::Read;
 
@@ -206,6 +260,16 @@ impl MmapDictionary {
         decoder.read_to_end(&mut buffer)?;
 
         Self::parse_entries_binary(&buffer)
+    }
+
+    /// 압축된 바이너리 파일에서 엔트리 로드 (zstd feature 비활성화 시)
+    #[cfg(not(feature = "zstd"))]
+    #[allow(dead_code)]
+    fn load_entries_from_compressed_bin(_path: &Path) -> Result<Vec<Entry>> {
+        Err(DictError::Format(
+            "zstd feature is not enabled. Use uncompressed files or enable the 'zstd' feature."
+                .to_string(),
+        ))
     }
 
     /// 바이너리 데이터 파싱

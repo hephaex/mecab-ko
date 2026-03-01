@@ -22,13 +22,15 @@ fst.workspace = true
 yada.workspace = true
 byteorder.workspace = true
 memmap2.workspace = true
-zstd.workspace = true
+zstd = { workspace = true, optional = true }
 notify = "6.1"
 crossbeam-channel = "0.5"
 
 [features]
-default = []
+default = ["zstd"]
 simd = []
+# Enable zstd compression support (disabled for WASM)
+zstd = ["dep:zstd"]
 
 [dev-dependencies]
 criterion.workspace = true

@@ -15,7 +15,7 @@ categories = ["text-processing", "science"]
 
 [dependencies]
 mecab-ko-hangul = { version = "0.1.0", path = "../mecab-ko-hangul" }
-mecab-ko-dict = { version = "0.1.0", path = "../mecab-ko-dict" }
+mecab-ko-dict = { version = "0.1.0", path = "../mecab-ko-dict", default-features = false }
 thiserror.workspace = true
 serde.workspace = true
 # Memory pooling and optimization
@@ -31,10 +31,12 @@ criterion.workspace = true
 tokio = { version = "1.0", features = ["full", "test-util"] }
 
 [features]
-default = []
+default = ["zstd"]
 async = ["tokio"]
 simd = ["mecab-ko-dict/simd"]
 simd-dict = ["simd"]
+# Enable zstd compression support (disabled for WASM)
+zstd = ["mecab-ko-dict/zstd"]
 # Exposes test_utils module for external test crates that need full-dict helpers.
 test-utils = []
 
