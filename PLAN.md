@@ -15,9 +15,9 @@ Memory 최적화 (215MB → 150MB), WASM zstd 해결, crates.io 발행
 - [x] S8-05: PyPI 배포 준비 (maturin) ✅
 - [x] S8-06: README.md 정리 ✅
 
-### P2 (Medium)
-- [ ] S8-07: npm 배포 준비 (Node.js 바인딩)
-- [ ] S8-08: GitHub Maintenance 이슈 정리
+### P2 (Medium) ✅
+- [x] S8-07: npm 배포 준비 (Node.js 바인딩) ✅
+- [x] S8-08: GitHub Maintenance 이슈 정리 ✅
 
 ---
 

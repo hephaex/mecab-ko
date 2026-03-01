@@ -33,9 +33,16 @@
   - Python/WASM/Node.js 바인딩 예제
   - 크레이트 구조 문서화
 
-### P2 대기
-- [ ] S8-07: npm 배포 준비 (Node.js 바인딩)
-- [ ] S8-08: GitHub Maintenance 이슈 정리
+### P2 완료
+- [x] S8-07: npm 배포 준비 (Node.js 바인딩) ✅
+  - npm-publish.yml 워크플로우 생성
+  - Linux/macOS/Windows 네이티브 모듈 빌드
+  - Node.js 18, 20, 22 테스트
+  - 태그 푸시 시 자동 발행 (v*)
+- [x] S8-08: GitHub Maintenance 이슈 정리 ✅
+  - 오래된 유지보수 이슈 7개 닫음 (#1-5, #7-8)
+  - 이슈 #6에 라벨 추가 (question, answered)
+  - 남은 이슈: #9 (최신 유지보수), #6 (커뮤니티 질문)
 
 ---
 
