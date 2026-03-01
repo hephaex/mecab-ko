@@ -5,10 +5,10 @@ Memory 최적화 (215MB → 150MB), WASM zstd 해결, crates.io 발행
 
 ## Sprint 8 작업 목록
 
-### P0 (Critical)
-- [ ] S8-01: Memory 최적화 - entries 지연 로딩
-- [ ] S8-02: Memory 최적화 - mmap 활용 강화
-- [ ] S8-03: WASM zstd-sys 이슈 해결
+### P0 (Critical) ✅
+- [x] S8-01: Memory 최적화 - entries 지연 로딩
+- [x] S8-02: Memory 최적화 - mmap 활용 강화
+- [x] S8-03: WASM zstd-sys 이슈 해결
 
 ### P1 (High)
 - [ ] S8-04: crates.io 정식 발행 (6개 크레이트)

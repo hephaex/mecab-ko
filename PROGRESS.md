@@ -2,6 +2,34 @@
 
 ## 마지막 업데이트: 2026-03-01
 
+## Sprint 8 진행 중 (2026-03-01)
+
+### P0 완료
+- [x] S8-01: Memory 최적화 - entries 지연 로딩
+  - LazyEntries 구조체 구현 (mmap + LRU cache)
+  - entries.bin v2 포맷 (index table + O(1) 랜덤 접근)
+  - 예상 메모리 절감: 40-50%
+- [x] S8-02: Memory 최적화 - mmap 활용 강화
+  - LoadOptions 구조체 추가 (use_mmap_matrix, use_lazy_entries)
+  - SystemDictionary::load_with_options() 메서드 추가
+  - load_memory_optimized() 편의 메서드 제공
+- [x] S8-03: WASM zstd-sys 이슈 해결
+  - zstd를 optional feature로 분리 (default = ["zstd"])
+  - cfg(feature = "zstd")로 조건부 컴파일
+  - mecab-ko-wasm: default-features = false로 zstd 비활성화
+  - WASM 빌드 성공 확인
+
+### P1 대기
+- [ ] S8-04: crates.io 정식 발행 (6개 크레이트)
+- [ ] S8-05: PyPI 배포 준비 (maturin)
+- [ ] S8-06: README.md 정리
+
+### P2 대기
+- [ ] S8-07: npm 배포 준비 (Node.js 바인딩)
+- [ ] S8-08: GitHub Maintenance 이슈 정리
+
+---
+
 ## Sprint 7 완료 ✅ (2026-03-01)
 
 ### 완료
@@ -175,8 +203,8 @@
 ## GitHub 이슈
 - #6: 커뮤니티 질문 (프로젝트 목표, 성능, 사전 계획 등) - ✅ 응답 완료
 
-## 다음 세션에서 할 일 (Sprint 8)
-1. Memory 최적화 (215MB → 150MB 목표)
-2. WASM zstd-sys 이슈 해결
-3. crates.io 정식 발행
-4. PyPI/npm 배포 준비
+## 다음 세션에서 할 일
+1. S8-04: crates.io 정식 발행 (6개 크레이트)
+2. S8-05: PyPI 배포 준비 (maturin)
+3. S8-06: README.md 정리
+4. S8-07: npm 배포 준비
