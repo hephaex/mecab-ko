@@ -10,10 +10,58 @@
     clippy::unwrap_used
 )]
 
+use std::sync::OnceLock;
+
 pub mod fixtures;
 pub mod mini_dict;
 
 use serde::{Deserialize, Serialize};
+
+// Cache for system dictionary availability check
+static SYSTEM_DICT_AVAILABLE: OnceLock<bool> = OnceLock::new();
+
+/// Check if a full system dictionary (mecab-ko-dic) is available
+///
+/// This checks common installation paths for the system dictionary.
+/// Use this to conditionally skip tests that require the full dictionary.
+#[must_use]
+pub fn system_dict_available() -> bool {
+    *SYSTEM_DICT_AVAILABLE.get_or_init(|| {
+        let common_paths = [
+            "/usr/local/lib/mecab/dic/mecab-ko-dic",
+            "/usr/lib/mecab/dic/mecab-ko-dic",
+            "/opt/homebrew/lib/mecab/dic/mecab-ko-dic",
+        ];
+
+        for path in &common_paths {
+            let path = std::path::Path::new(path);
+            if path.join("sys.dic").exists() {
+                return true;
+            }
+        }
+
+        // Also check MECAB_DIC_DIR environment variable
+        if let Ok(dic_dir) = std::env::var("MECAB_DIC_DIR") {
+            let path = std::path::Path::new(&dic_dir);
+            if path.join("sys.dic").exists() {
+                return true;
+            }
+        }
+
+        false
+    })
+}
+
+/// Macro to skip test if system dictionary is not available
+#[macro_export]
+macro_rules! skip_without_system_dict {
+    () => {
+        if !$crate::common::system_dict_available() {
+            eprintln!("Skipping test: system dictionary not available");
+            return;
+        }
+    };
+}
 use std::path::PathBuf;
 
 /// Test fixture for morphological analysis
