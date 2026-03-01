@@ -28,30 +28,22 @@ crates.io 발행 준비, 바인딩 최적화, Memory KPI 측정
 ## Sprint 7 작업 목록
 
 ### crates.io 발행 준비
-- [ ] S7-01: Path dependency에 version 추가 (P0)
-  - [ ] mecab-ko-cli, elasticsearch, node, profiler, python, wasm, benchmarks
-  - [ ] 모든 path dep에 `version = "0.1.0"` 추가
-- [ ] S7-02: cargo publish --dry-run 검증 (P0)
-  - [ ] 6개 코어 크레이트 순서대로 검증
-  - [ ] hangul → dict → core → dict-validator → dict-builder → mecab-ko
+- [x] S7-01: Path dependency에 version 추가 (P0) ✅
+- [x] S7-02: cargo publish --dry-run 검증 (P0) ✅
 - [ ] S7-03: README.md 및 CHANGELOG.md 정리 (P1)
 
 ### Memory KPI 측정
-- [ ] S7-04: Full-dict 벤치마크 실행 (P1)
-  - [ ] Memory per instance 측정 (목표: < 150MB)
-  - [ ] 결과를 docs/research/benchmarks/에 기록
+- [x] S7-04: Full-dict 벤치마크 실행 (P1) ⚠️
+  - 측정값: 215 MB (목표 150MB 초과)
+  - Sprint 8에서 최적화 필요
 
 ### 바인딩 검증
-- [ ] S7-05: Python 바인딩 빌드 테스트 (P1)
-  - [ ] maturin develop 테스트
-  - [ ] 기본 API 동작 확인
-- [ ] S7-06: WASM 바인딩 빌드 테스트 (P2)
-  - [ ] wasm-pack build 테스트
-- [ ] S7-07: Node.js 바인딩 빌드 테스트 (P2)
+- [x] S7-05: Python 바인딩 빌드 테스트 (P1) ✅
+- [x] S7-06: WASM 바인딩 빌드 테스트 (P2) ⚠️ zstd-sys 이슈
+- [x] S7-07: Node.js 바인딩 빌드 테스트 (P2) ✅
 
 ### 문서화
 - [ ] S7-08: API 문서 최종 점검 (P2)
-  - [ ] cargo doc --workspace --no-deps 경고 확인
 
 ## 크레이트 발행 순서
 

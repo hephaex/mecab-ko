@@ -13,10 +13,30 @@
   - ✅ mecab-ko-dict-validator
   - ⚠️ mecab-ko-dict-builder (crates.io의 mecab-ko-dict 0.1.0에 save_entries 함수 없음)
   - ✅ mecab-ko (facade)
+- [x] S7-04: Full-dict Memory KPI 측정
+  - Peak Memory: **215 MB** (목표 150MB 초과)
+  - Cold Start: **0.13s** (목표 0.2s 달성)
+  - 상세: docs/research/benchmarks/sprint7-memory-kpi.md
+- [x] S7-05: Python 바인딩 테스트 ✅
+  - maturin build 성공
+  - wheel 설치 및 import 성공
+  - `Mecab().parse()` 동작 확인
+- [x] S7-06: WASM 바인딩 테스트 ⚠️
+  - wasm-pack build 실패
+  - 원인: zstd-sys가 wasm32 타겟 미지원
+  - 해결: Sprint 8에서 zstd 제거 또는 pure-Rust 대안
+- [x] S7-07: Node.js 바인딩 테스트 ✅
+  - cargo build 성공
+  - libmecab_ko_node.dylib 생성 (669KB)
 
 ### 발행 순서 노트
 - crates.io에 이미 mecab-ko-hangul 0.1.0 존재
 - mecab-ko-dict-builder 발행 전에 mecab-ko-dict를 0.1.1로 업데이트 필요
+
+### Memory 최적화 필요 (Sprint 8)
+- entries 지연 로딩
+- mmap 활용 강화
+- String interning
 
 ## 완료된 작업
 
