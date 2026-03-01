@@ -316,9 +316,11 @@ use mecab_ko_core::Tokenizer;
 use mecab_ko_dict::UserDictionary;
 use serde::Serialize;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader, BufWriter, Write};
 use std::path::PathBuf;
+use std::time::Instant;
 
 /// Command-line arguments for MeCab-Ko
 ///
@@ -389,6 +391,14 @@ struct Args {
     /// REPL (대화형) 모드 시작
     #[arg(long)]
     repl: bool,
+
+    /// 분석 통계 출력 (토큰 수, 품사 분포 등)
+    #[arg(long)]
+    stats: bool,
+
+    /// 성능 벤치마크 실행 (반복 횟수 지정)
+    #[arg(long, value_name = "ITERATIONS")]
+    benchmark: Option<usize>,
 
     /// 입력 파일 (여러 개 지정 가능, 배치 처리용)
     #[arg(short = 'i', long = "input-file")]
@@ -717,6 +727,18 @@ fn main() -> Result<()> {
     if args.repl {
         let ctx = AnalysisContext::new(args)?;
         return run_repl(&ctx);
+    }
+
+    // 벤치마크 모드
+    if let Some(iterations) = args.benchmark {
+        let ctx = AnalysisContext::new(args)?;
+        return run_benchmark(&ctx, iterations);
+    }
+
+    // 통계 모드
+    if args.stats {
+        let ctx = AnalysisContext::new(args)?;
+        return show_stats(&ctx);
     }
 
     // 배치 처리 모드
@@ -1191,6 +1213,128 @@ fn generate_completions(shell: Shell) {
     generate(shell, &mut cmd, bin_name, &mut io::stdout());
 }
 
+/// Runs a simple performance benchmark
+///
+/// Tokenizes the input text multiple times and reports timing statistics.
+///
+/// # Arguments
+///
+/// * `ctx` - The analysis context
+/// * `iterations` - Number of times to run the benchmark
+///
+/// # Errors
+///
+/// Returns an error if no input text is provided.
+fn run_benchmark(ctx: &AnalysisContext, iterations: usize) -> Result<()> {
+    let text = ctx
+        .args
+        .input
+        .as_ref()
+        .ok_or_else(|| anyhow::anyhow!("벤치마크 모드에서는 입력 텍스트가 필요합니다"))?;
+
+    println!("MeCab-Ko Benchmark");
+    println!("==================");
+    println!("Input: {} bytes, {} chars", text.len(), text.chars().count());
+    println!("Iterations: {iterations}");
+    println!();
+
+    // Warmup
+    for _ in 0..3 {
+        let _ = ctx.tokenizer.borrow_mut().tokenize(text);
+    }
+
+    // Benchmark
+    let start = Instant::now();
+    let mut total_tokens = 0;
+
+    for _ in 0..iterations {
+        let tokens = ctx.tokenizer.borrow_mut().tokenize(text);
+        total_tokens += tokens.len();
+    }
+
+    let elapsed = start.elapsed();
+    let avg_time = elapsed / iterations as u32;
+    let tokens_per_iteration = total_tokens / iterations;
+
+    println!("Results:");
+    println!("  Total time: {:?}", elapsed);
+    println!("  Avg time per iteration: {:?}", avg_time);
+    println!("  Tokens per iteration: {tokens_per_iteration}");
+    println!(
+        "  Throughput: {:.2} iterations/sec",
+        iterations as f64 / elapsed.as_secs_f64()
+    );
+
+    if avg_time.as_micros() > 0 {
+        let chars_per_iter = text.chars().count();
+        println!(
+            "  Processing speed: {:.2}K chars/sec",
+            (chars_per_iter as f64 * 1_000_000.0) / (avg_time.as_micros() as f64 * 1000.0)
+        );
+    }
+
+    Ok(())
+}
+
+/// Shows analysis statistics for the input text
+///
+/// Displays token counts, POS distribution, and other metrics.
+///
+/// # Arguments
+///
+/// * `ctx` - The analysis context
+///
+/// # Errors
+///
+/// Returns an error if no input text is provided.
+fn show_stats(ctx: &AnalysisContext) -> Result<()> {
+    let text = ctx
+        .args
+        .input
+        .as_ref()
+        .ok_or_else(|| anyhow::anyhow!("통계 모드에서는 입력 텍스트가 필요합니다"))?;
+
+    let tokens = ctx.tokenizer.borrow_mut().tokenize(text);
+
+    // POS distribution
+    let mut pos_counts: HashMap<String, usize> = HashMap::new();
+    for token in &tokens {
+        *pos_counts.entry(token.pos.clone()).or_insert(0) += 1;
+    }
+
+    // Sort by count (descending)
+    let mut pos_sorted: Vec<_> = pos_counts.iter().collect();
+    pos_sorted.sort_by(|a, b| b.1.cmp(a.1));
+
+    println!("MeCab-Ko Analysis Statistics");
+    println!("============================");
+    println!();
+    println!("Input:");
+    println!("  Bytes: {}", text.len());
+    println!("  Characters: {}", text.chars().count());
+    println!("  Lines: {}", text.lines().count());
+    println!();
+    println!("Tokens:");
+    println!("  Total: {}", tokens.len());
+    println!("  Unique POS tags: {}", pos_counts.len());
+    println!();
+    println!("POS Distribution:");
+    println!("  {:<10} {:>6} {:>8}", "POS", "Count", "Percent");
+    println!("  {}", "-".repeat(26));
+
+    let total = tokens.len() as f64;
+    for (pos, count) in pos_sorted.iter().take(15) {
+        let pct = (**count as f64 / total) * 100.0;
+        println!("  {:<10} {:>6} {:>7.1}%", pos, count, pct);
+    }
+
+    if pos_sorted.len() > 15 {
+        println!("  ... and {} more POS tags", pos_sorted.len() - 15);
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 #[allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 mod tests {
@@ -1323,5 +1467,17 @@ mod tests {
     fn test_separator_option() {
         let args = Args::try_parse_from(["mecab-ko", "--separator", "|", "테스트"]).unwrap();
         assert_eq!(args.separator, "|");
+    }
+
+    #[test]
+    fn test_benchmark_option() {
+        let args = Args::try_parse_from(["mecab-ko", "--benchmark", "100", "테스트"]).unwrap();
+        assert_eq!(args.benchmark, Some(100));
+    }
+
+    #[test]
+    fn test_stats_option() {
+        let args = Args::try_parse_from(["mecab-ko", "--stats", "테스트"]).unwrap();
+        assert!(args.stats);
     }
 }
