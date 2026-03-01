@@ -9,7 +9,7 @@
 
 | 작업 ID | 설명 | 상태 |
 |---------|------|------|
-| S10-01 | crates.io 정식 발행 | ⏸️ BLOCKED (`cargo login` 필요) |
+| S10-01 | crates.io 정식 발행 | ✅ 완료 (6개 크레이트 v0.1.1) |
 | S10-02 | ignored 테스트 활성화 | ✅ 완료 |
 | S10-03 | Elasticsearch 통합 테스트 개선 | ✅ 완료 |
 | S10-04 | 에러 처리 확인 | ✅ 완료 |
@@ -64,9 +64,23 @@ crates/benchmarks/benches/
 
 **결론**: 배치 처리 및 메모리 벤치마크 모두 이미 포괄적으로 구현됨
 
+## S10-01: crates.io 발행 완료
+
+### 발행된 크레이트 (v0.1.1)
+| 크레이트 | URL |
+|----------|-----|
+| mecab-ko-hangul | https://crates.io/crates/mecab-ko-hangul |
+| mecab-ko-dict | https://crates.io/crates/mecab-ko-dict |
+| mecab-ko-core | https://crates.io/crates/mecab-ko-core |
+| mecab-ko-dict-validator | https://crates.io/crates/mecab-ko-dict-validator |
+| mecab-ko-dict-builder | https://crates.io/crates/mecab-ko-dict-builder |
+| mecab-ko | https://crates.io/crates/mecab-ko |
+
 ## 커밋 내역
 
 ```
+336a4fb feat: Publish 6 crates to crates.io v0.1.1
+1050584 docs: Add Sprint 10 completion session log
 a4b3a6f docs: Complete Sprint 10 - verify existing benchmarks coverage
 ```
 
@@ -76,18 +90,13 @@ a4b3a6f docs: Complete Sprint 10 - verify existing benchmarks coverage
 - **Ignored**: 13 (의도적: profiler 9, dict doc 4)
 - **Clippy**: 0 warnings
 
-## 블로커
-- **S10-01**: crates.io 발행을 위해 `cargo login` 인증 필요
-
 ## 다음 스프린트 (Sprint 11) 제안
 
-### P0 (Critical)
-1. crates.io 정식 발행 (`cargo login` 인증 후)
-
 ### P1 (High)
-2. 사전 현대화 (mecab-ko-dic 최신 버전 지원)
-3. 성능 회귀 탐지 CI 통합
+1. 사전 현대화 (mecab-ko-dic 최신 버전 지원)
+2. 성능 회귀 탐지 CI 통합
 
 ### P2 (Medium)
-4. 문서 사이트 구축 (docs.rs 보완, mdBook)
-5. 사용 예제 확장 (실제 사용 시나리오)
+3. 문서 사이트 구축 (docs.rs 보완, mdBook)
+4. 사용 예제 확장 (실제 사용 시나리오)
+5. PyPI/npm 배포
