@@ -35,9 +35,9 @@
 //!
 //! ## Rust API
 //!
-//! ```rust,ignore
-//! use mecab_ko_elasticsearch::analyzer::{NoriAnalyzer, DecompoundMode};
-//! use mecab_ko_elasticsearch::config::AnalyzerConfig;
+//! ```rust,no_run
+//! use mecab_ko_elasticsearch::analyzer::NoriAnalyzer;
+//! use mecab_ko_elasticsearch::config::{AnalyzerConfig, DecompoundMode};
 //!
 //! // Analyzer 생성
 //! let config = AnalyzerConfig {
@@ -47,13 +47,13 @@
 //!     output_unknown_unigrams: false,
 //! };
 //!
-//! let analyzer = NoriAnalyzer::new(config)?;
+//! let analyzer = NoriAnalyzer::new(config).unwrap();
 //!
 //! // 텍스트 분석
-//! let tokens = analyzer.analyze("한국어 형태소 분석기")?;
+//! let tokens = analyzer.analyze("한국어 형태소 분석기").unwrap();
 //!
 //! for token in tokens {
-//!     println!("{}: {} [{}]", token.surface, token.pos_tag, token.reading.unwrap_or_default());
+//!     println!("{}: {} [{}]", token.surface, token.pos_tag, token.reading.clone().unwrap_or_default());
 //! }
 //! ```
 //!

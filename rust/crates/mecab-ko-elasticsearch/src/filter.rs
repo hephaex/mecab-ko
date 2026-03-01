@@ -122,11 +122,11 @@ impl TokenFilter for NoriPartOfSpeechStopFilter {
 ///
 /// # Example
 ///
-/// ```rust,ignore
-/// use mecab_ko_elasticsearch::filter::{NoriReadingFormFilter, TokenFilter};
+/// ```rust
+/// use mecab_ko_elasticsearch::filter::NoriReadingFormFilter;
 ///
 /// let filter = NoriReadingFormFilter::new();
-/// let filtered = filter.filter(tokens)?;
+/// // let filtered = filter.filter(tokens);
 /// ```
 pub struct NoriReadingFormFilter {
     /// 읽기가 없을 때 표면형 유지 여부
@@ -183,14 +183,13 @@ impl TokenFilter for NoriReadingFormFilter {
 ///
 /// # Example
 ///
-/// ```rust,ignore
+/// ```rust
 /// use mecab_ko_elasticsearch::filter::{CompositeFilter, NoriPartOfSpeechStopFilter, NoriReadingFormFilter};
 ///
 /// let mut composite = CompositeFilter::new();
 /// composite.add_filter(Box::new(NoriPartOfSpeechStopFilter::default_filter()));
 /// composite.add_filter(Box::new(NoriReadingFormFilter::new()));
-///
-/// let filtered = composite.filter(tokens)?;
+/// // Use composite.filter(tokens) to filter tokens
 /// ```
 pub struct CompositeFilter {
     /// 필터 체인
