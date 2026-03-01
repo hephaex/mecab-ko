@@ -1253,24 +1253,23 @@ fn run_benchmark(ctx: &AnalysisContext, iterations: usize) -> Result<()> {
     }
 
     let elapsed = start.elapsed();
-    let avg_time = elapsed / iterations as u32;
+    #[allow(clippy::cast_possible_truncation)]
+    let avg_time = elapsed / (iterations as u32);
     let tokens_per_iteration = total_tokens / iterations;
 
     println!("Results:");
-    println!("  Total time: {:?}", elapsed);
-    println!("  Avg time per iteration: {:?}", avg_time);
+    println!("  Total time: {elapsed:?}");
+    println!("  Avg time per iteration: {avg_time:?}");
     println!("  Tokens per iteration: {tokens_per_iteration}");
-    println!(
-        "  Throughput: {:.2} iterations/sec",
-        iterations as f64 / elapsed.as_secs_f64()
-    );
+    #[allow(clippy::cast_precision_loss)]
+    let throughput = iterations as f64 / elapsed.as_secs_f64();
+    println!("  Throughput: {throughput:.2} iterations/sec");
 
     if avg_time.as_micros() > 0 {
         let chars_per_iter = text.chars().count();
-        println!(
-            "  Processing speed: {:.2}K chars/sec",
-            (chars_per_iter as f64 * 1_000_000.0) / (avg_time.as_micros() as f64 * 1000.0)
-        );
+        #[allow(clippy::cast_precision_loss)]
+        let speed = (chars_per_iter as f64 * 1_000_000.0) / (avg_time.as_micros() as f64 * 1000.0);
+        println!("  Processing speed: {speed:.2}K chars/sec");
     }
 
     Ok(())
@@ -1322,14 +1321,17 @@ fn show_stats(ctx: &AnalysisContext) -> Result<()> {
     println!("  {:<10} {:>6} {:>8}", "POS", "Count", "Percent");
     println!("  {}", "-".repeat(26));
 
+    #[allow(clippy::cast_precision_loss)]
     let total = tokens.len() as f64;
     for (pos, count) in pos_sorted.iter().take(15) {
+        #[allow(clippy::cast_precision_loss)]
         let pct = (**count as f64 / total) * 100.0;
-        println!("  {:<10} {:>6} {:>7.1}%", pos, count, pct);
+        println!("  {pos:<10} {count:>6} {pct:>7.1}%");
     }
 
     if pos_sorted.len() > 15 {
-        println!("  ... and {} more POS tags", pos_sorted.len() - 15);
+        let remaining = pos_sorted.len() - 15;
+        println!("  ... and {remaining} more POS tags");
     }
 
     Ok(())

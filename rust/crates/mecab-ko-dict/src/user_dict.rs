@@ -31,6 +31,101 @@ use crate::error::{DictError, Result};
 use crate::trie::{Trie, TrieBuilder};
 use crate::Entry;
 
+/// 유효한 품사 태그 목록 (세종 품사 태그)
+const VALID_POS_TAGS: &[&str] = &[
+    // 체언
+    "NNG", "NNP", "NNB", "NR", "NP",
+    // 용언
+    "VV", "VA", "VX", "VCP", "VCN",
+    // 관형사/부사/감탄사
+    "MM", "MAG", "MAJ", "IC",
+    // 조사
+    "JKS", "JKC", "JKG", "JKO", "JKB", "JKV", "JKQ", "JX", "JC",
+    // 어미
+    "EP", "EF", "EC", "ETN", "ETM",
+    // 접두사/접미사
+    "XPN", "XSN", "XSV", "XSA", "XR",
+    // 기호
+    "SF", "SE", "SS", "SP", "SO", "SW",
+    // 외국어/한자/숫자
+    "SL", "SH", "SN",
+    // 분석불능
+    "NA",
+];
+
+/// 품사 태그 유효성 검사
+#[must_use]
+pub fn is_valid_pos_tag(pos: &str) -> bool {
+    // 기본 태그 검사
+    if VALID_POS_TAGS.contains(&pos) {
+        return true;
+    }
+
+    // 복합 태그 검사 (예: NNG+JX)
+    if pos.contains('+') {
+        return pos.split('+').all(|p| VALID_POS_TAGS.contains(&p));
+    }
+
+    false
+}
+
+/// 사전 검증 결과
+#[derive(Debug, Clone, Default)]
+pub struct ValidationResult {
+    /// 유효성 여부
+    pub is_valid: bool,
+    /// 경고 메시지 목록
+    pub warnings: Vec<String>,
+    /// 에러 메시지 목록
+    pub errors: Vec<String>,
+}
+
+impl ValidationResult {
+    /// 문제 없음 확인
+    #[must_use]
+    pub fn is_ok(&self) -> bool {
+        self.is_valid && self.warnings.is_empty()
+    }
+
+    /// 총 문제 수
+    #[must_use]
+    pub fn issue_count(&self) -> usize {
+        self.warnings.len() + self.errors.len()
+    }
+}
+
+/// 사전 통계
+#[derive(Debug, Clone)]
+pub struct DictionaryStats {
+    /// 전체 엔트리 수
+    pub entry_count: usize,
+    /// 고유 표면형 수
+    pub unique_surfaces: usize,
+    /// 품사별 분포
+    pub pos_distribution: HashMap<String, usize>,
+    /// 평균 비용
+    pub average_cost: f64,
+}
+
+impl std::fmt::Display for DictionaryStats {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "Dictionary Statistics:")?;
+        writeln!(f, "  Total entries: {}", self.entry_count)?;
+        writeln!(f, "  Unique surfaces: {}", self.unique_surfaces)?;
+        writeln!(f, "  Average cost: {:.2}", self.average_cost)?;
+        writeln!(f, "  POS distribution:")?;
+
+        let mut pos_sorted: Vec<_> = self.pos_distribution.iter().collect();
+        pos_sorted.sort_by(|a, b| b.1.cmp(a.1));
+
+        for (pos, count) in pos_sorted.iter().take(10) {
+            writeln!(f, "    {pos}: {count}")?;
+        }
+
+        Ok(())
+    }
+}
+
 /// 사용자 사전 엔트리
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UserEntry {
@@ -410,6 +505,151 @@ impl UserDictionary {
         self.trie_cache = None;
     }
 
+    /// 사전 검증
+    ///
+    /// 모든 엔트리의 유효성을 검사합니다.
+    ///
+    /// # Returns
+    ///
+    /// 검증 결과와 발견된 문제점 목록
+    #[must_use]
+    pub fn validate(&self) -> ValidationResult {
+        let mut warnings = Vec::new();
+        let mut errors = Vec::new();
+
+        for (idx, entry) in self.entries.iter().enumerate() {
+            // 빈 표면형 검사
+            if entry.surface.is_empty() {
+                errors.push(format!("Entry {idx}: empty surface"));
+            }
+
+            // 빈 품사 검사
+            if entry.pos.is_empty() {
+                errors.push(format!("Entry {idx}: empty POS tag"));
+            }
+
+            // 비용 범위 검사 (i16은 이미 -32768~32767이므로 극단값만 경고)
+            if entry.cost == i16::MIN || entry.cost == i16::MAX {
+                warnings.push(format!(
+                    "Entry {} ({}): cost {} is at extreme value",
+                    idx, entry.surface, entry.cost
+                ));
+            }
+
+            // 유효한 품사 태그 검사
+            if !is_valid_pos_tag(&entry.pos) {
+                warnings.push(format!(
+                    "Entry {} ({}): unknown POS tag '{}'",
+                    idx, entry.surface, entry.pos
+                ));
+            }
+        }
+
+        // 중복 검사
+        let mut seen: HashMap<(&str, &str), usize> = HashMap::new();
+        for (idx, entry) in self.entries.iter().enumerate() {
+            let key = (entry.surface.as_str(), entry.pos.as_str());
+            if let Some(&prev_idx) = seen.get(&key) {
+                warnings.push(format!(
+                    "Duplicate entry at {} and {}: {} ({})",
+                    prev_idx, idx, entry.surface, entry.pos
+                ));
+            } else {
+                seen.insert(key, idx);
+            }
+        }
+
+        ValidationResult {
+            is_valid: errors.is_empty(),
+            warnings,
+            errors,
+        }
+    }
+
+    /// 중복 엔트리 제거
+    ///
+    /// 같은 표면형과 품사를 가진 엔트리 중 첫 번째만 유지합니다.
+    pub fn remove_duplicates(&mut self) {
+        let mut seen: HashMap<(String, String), bool> = HashMap::new();
+        let mut new_entries = Vec::new();
+
+        for entry in self.entries.drain(..) {
+            let key = (entry.surface.clone(), entry.pos.clone());
+            if seen.contains_key(&key) {
+                continue;
+            }
+            seen.insert(key, true);
+            new_entries.push(entry);
+        }
+
+        self.entries = new_entries;
+        self.rebuild_surface_map();
+        self.trie_cache = None;
+    }
+
+    /// 표면형 맵 재구축
+    fn rebuild_surface_map(&mut self) {
+        self.surface_map.clear();
+        for (idx, entry) in self.entries.iter().enumerate() {
+            self.surface_map
+                .entry(entry.surface.clone())
+                .or_default()
+                .push(idx);
+        }
+    }
+
+    /// 특정 표면형의 엔트리 삭제
+    ///
+    /// # Returns
+    ///
+    /// 삭제된 엔트리 수
+    pub fn remove_surface(&mut self, surface: &str) -> usize {
+        if let Some(indices) = self.surface_map.remove(surface) {
+            let count = indices.len();
+
+            // 인덱스를 역순으로 정렬하여 삭제 (큰 인덱스부터)
+            let mut indices_sorted = indices;
+            indices_sorted.sort_by(|a, b| b.cmp(a));
+
+            for idx in indices_sorted {
+                if idx < self.entries.len() {
+                    self.entries.remove(idx);
+                }
+            }
+
+            self.rebuild_surface_map();
+            self.trie_cache = None;
+            count
+        } else {
+            0
+        }
+    }
+
+    /// 통계 정보 반환
+    #[must_use]
+    pub fn stats(&self) -> DictionaryStats {
+        let mut pos_counts: HashMap<String, usize> = HashMap::new();
+        let mut total_cost: i64 = 0;
+
+        for entry in &self.entries {
+            *pos_counts.entry(entry.pos.clone()).or_insert(0) += 1;
+            total_cost += i64::from(entry.cost);
+        }
+
+        DictionaryStats {
+            entry_count: self.entries.len(),
+            unique_surfaces: self.surface_map.len(),
+            pos_distribution: pos_counts,
+            #[allow(clippy::cast_precision_loss)]
+            average_cost: if self.entries.is_empty() {
+                0.0
+            } else {
+                // i64와 usize를 f64로 변환 시 정밀도 손실은 통계용으로 허용
+                (total_cost as f64) / (self.entries.len() as f64)
+            },
+        }
+    }
+
     /// 파일로 저장 (CSV 형식)
     ///
     /// # Errors
@@ -680,5 +920,73 @@ mod tests {
         let entries = dict.lookup("테스트");
         assert_eq!(entries[0].left_id, 1234);
         assert_eq!(entries[0].right_id, 5678);
+    }
+
+    #[test]
+    fn test_validate() {
+        let mut dict = UserDictionary::new();
+        dict.add_entry("테스트", "NNG", Some(-100), None);
+        dict.add_entry("유효", "VV", Some(-200), None);
+
+        let result = dict.validate();
+        assert!(result.is_valid);
+    }
+
+    #[test]
+    fn test_validate_with_invalid_pos() {
+        let mut dict = UserDictionary::new();
+        dict.add_entry("테스트", "INVALID_POS", Some(-100), None);
+
+        let result = dict.validate();
+        assert!(result.is_valid); // Still valid, just has warning
+        assert!(!result.warnings.is_empty());
+    }
+
+    #[test]
+    fn test_remove_duplicates() {
+        let mut dict = UserDictionary::new();
+        dict.add_entry("테스트", "NNG", Some(-100), None);
+        dict.add_entry("테스트", "NNG", Some(-200), None); // 중복
+        dict.add_entry("테스트", "VV", Some(-300), None); // 다른 품사
+
+        assert_eq!(dict.len(), 3);
+
+        dict.remove_duplicates();
+        assert_eq!(dict.len(), 2); // NNG 하나와 VV 하나
+    }
+
+    #[test]
+    fn test_remove_surface() {
+        let mut dict = UserDictionary::new();
+        dict.add_entry("삭제", "NNG", Some(-100), None);
+        dict.add_entry("삭제", "VV", Some(-200), None);
+        dict.add_entry("유지", "NNG", Some(-100), None);
+
+        let removed = dict.remove_surface("삭제");
+        assert_eq!(removed, 2);
+        assert_eq!(dict.len(), 1);
+        assert!(dict.lookup("삭제").is_empty());
+    }
+
+    #[test]
+    fn test_stats() {
+        let mut dict = UserDictionary::new();
+        dict.add_entry("명사1", "NNG", Some(-100), None);
+        dict.add_entry("명사2", "NNG", Some(-200), None);
+        dict.add_entry("동사", "VV", Some(-150), None);
+
+        let stats = dict.stats();
+        assert_eq!(stats.entry_count, 3);
+        assert_eq!(stats.unique_surfaces, 3);
+        assert_eq!(stats.pos_distribution.get("NNG"), Some(&2));
+        assert_eq!(stats.pos_distribution.get("VV"), Some(&1));
+    }
+
+    #[test]
+    fn test_is_valid_pos_tag() {
+        assert!(is_valid_pos_tag("NNG"));
+        assert!(is_valid_pos_tag("VV"));
+        assert!(is_valid_pos_tag("NNG+JX")); // 복합 태그
+        assert!(!is_valid_pos_tag("INVALID"));
     }
 }
