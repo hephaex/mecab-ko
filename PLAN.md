@@ -6,7 +6,7 @@
 ## Sprint 10 작업 목록
 
 ### P0 (Critical)
-- [ ] S10-01: crates.io 정식 발행 (이전 S9-01, `cargo login` 필요)
+- [x] S10-01: crates.io 정식 발행 ✅ (6개 크레이트 v0.1.1 발행 완료)
 
 ### P1 (High)
 - [x] S10-02: ignored 테스트 활성화 ✅ (e2e: 28 passed, 0 ignored)

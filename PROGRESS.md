@@ -4,8 +4,14 @@
 
 ## Sprint 10 완료 ✅ (2026-03-02)
 
-### P0 진행
-- [ ] S10-01: crates.io 정식 발행 - BLOCKED (`cargo login` 필요)
+### P0 완료
+- [x] S10-01: crates.io 정식 발행 ✅
+  - mecab-ko-hangul v0.1.1
+  - mecab-ko-dict v0.1.1
+  - mecab-ko-core v0.1.1
+  - mecab-ko-dict-validator v0.1.1
+  - mecab-ko-dict-builder v0.1.1
+  - mecab-ko v0.1.1 (facade)
 
 ### P1 완료
 - [x] S10-02: ignored 테스트 활성화 ✅
