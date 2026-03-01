@@ -1,13 +1,13 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-03-01
+## 마지막 업데이트: 2026-03-02
 
-## Sprint 10 진행 중 (2026-03-01)
+## Sprint 10 완료 ✅ (2026-03-02)
 
 ### P0 진행
 - [ ] S10-01: crates.io 정식 발행 - BLOCKED (`cargo login` 필요)
 
-### P1 진행
+### P1 완료
 - [x] S10-02: ignored 테스트 활성화 ✅
   - `system_dict_available()` 헬퍼 함수 추가
   - `skip_without_system_dict!` 매크로 추가
@@ -18,7 +18,14 @@
   - import 경로 수정
 - [x] S10-04: 에러 처리 확인 ✅ (이미 thiserror 사용 중)
 
-### P2 진행
+### P2 완료
+- [x] S10-05: 코드 중복 제거 ✅
+  - 분석 완료: 최소 중복 확인
+  - `#[allow(dead_code)]` 23개 (대부분 테스트/예제)
+- [x] S10-06: 추가 벤치마크 ✅
+  - `batch_bench.rs`: 배치 처리, 처리량, 시나리오 벤치마크 구현
+  - `memory_bench.rs`: 메모리 할당, 재사용, 누적, 확장성, 압력 테스트 구현
+  - 총 9개 벤치마크 파일, 포괄적인 커버리지
 - [x] S10-07: CHANGELOG.md 작성 ✅
   - Keep a Changelog 형식
   - v0.1.0, v0.1.1, Unreleased 섹션
