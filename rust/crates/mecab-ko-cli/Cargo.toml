@@ -19,8 +19,8 @@ name = "mecab"
 path = "src/main.rs"
 
 [dependencies]
-mecab-ko-core = { version = "0.1.0", path = "../mecab-ko-core" }
-mecab-ko-dict = { version = "0.1.0", path = "../mecab-ko-dict" }
+mecab-ko-core = { version = "0.1.1", path = "../mecab-ko-core" }
+mecab-ko-dict = { version = "0.1.1", path = "../mecab-ko-dict" }
 clap.workspace = true
 clap_complete = "4.4"
 anyhow.workspace = true
