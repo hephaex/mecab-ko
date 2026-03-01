@@ -19,10 +19,19 @@
   - mecab-ko-wasm: default-features = false로 zstd 비활성화
   - WASM 빌드 성공 확인
 
-### P1 대기
+### P1 진행
 - [ ] S8-04: crates.io 정식 발행 (6개 크레이트)
-- [ ] S8-05: PyPI 배포 준비 (maturin)
-- [ ] S8-06: README.md 정리
+  - BLOCKED: 수동 `cargo login` 인증 필요
+  - 버전 0.1.1 준비 완료
+- [x] S8-05: PyPI 배포 준비 (maturin) ✅
+  - pypi-publish.yml 워크플로우 구성 완료
+  - Linux/macOS/Windows 휠 빌드
+  - Python 3.8-3.12 테스트
+  - 태그 푸시 시 자동 발행 (v*)
+- [x] S8-06: README.md 정리 ✅
+  - 버전 0.1.1, 성능 지표 추가
+  - Python/WASM/Node.js 바인딩 예제
+  - 크레이트 구조 문서화
 
 ### P2 대기
 - [ ] S8-07: npm 배포 준비 (Node.js 바인딩)

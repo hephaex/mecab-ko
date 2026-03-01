@@ -1,0 +1,170 @@
+name: npm Publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (do not publish)'
+        required: false
+        default: 'false'
+
+env:
+  PACKAGE_NAME: "@mecab-ko/node"
+  NODE_VERSION: "20"
+
+jobs:
+  build:
+    name: Build on ${{ matrix.settings.os }} (${{ matrix.settings.target }})
+    runs-on: ${{ matrix.settings.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        settings:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            use-cross: true
+          - os: macos-13
+            target: x86_64-apple-darwin
+          - os: macos-14
+            target: aarch64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.settings.target }}
+
+      - name: Install cross (for aarch64 Linux)
+        if: matrix.settings.use-cross
+        run: cargo install cross --git https://github.com/cross-rs/cross
+
+      - name: Install dependencies
+        working-directory: rust/crates/mecab-ko-node
+        run: npm ci
+
+      - name: Build native module (cross)
+        if: matrix.settings.use-cross
+        working-directory: rust/crates/mecab-ko-node
+        run: |
+          cross build --release --target ${{ matrix.settings.target }}
+          npx napi artifacts --cwd . --target ${{ matrix.settings.target }}
+
+      - name: Build native module
+        if: "!matrix.settings.use-cross"
+        working-directory: rust/crates/mecab-ko-node
+        run: |
+          npm run build -- --target ${{ matrix.settings.target }}
+
+      - name: List built artifacts
+        working-directory: rust/crates/mecab-ko-node
+        run: ls -la *.node 2>/dev/null || echo "No .node files found"
+        shell: bash
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: bindings-${{ matrix.settings.target }}
+          path: rust/crates/mecab-ko-node/*.node
+          if-no-files-found: error
+          retention-days: 5
+
+  test:
+    name: Test on ${{ matrix.os }} (Node ${{ matrix.node-version }})
+    needs: [build]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-14, windows-latest]
+        node-version: ["18", "20", "22"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: rust/crates/mecab-ko-node
+          pattern: bindings-*
+          merge-multiple: true
+
+      - name: List artifacts
+        working-directory: rust/crates/mecab-ko-node
+        run: ls -la *.node 2>/dev/null || echo "No .node files"
+        shell: bash
+
+      - name: Install dependencies
+        working-directory: rust/crates/mecab-ko-node
+        run: npm ci
+
+      - name: Run tests
+        working-directory: rust/crates/mecab-ko-node
+        run: npm test
+
+  publish:
+    name: Publish to npm
+    needs: [build, test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: rust/crates/mecab-ko-node
+          pattern: bindings-*
+          merge-multiple: true
+
+      - name: List artifacts
+        working-directory: rust/crates/mecab-ko-node
+        run: ls -la *.node
+
+      - name: Install dependencies
+        working-directory: rust/crates/mecab-ko-node
+        run: npm ci
+
+      - name: Publish (dry run)
+        if: github.event.inputs.dry_run == 'true'
+        working-directory: rust/crates/mecab-ko-node
+        run: npm publish --dry-run --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish
+        if: github.event.inputs.dry_run != 'true' && startsWith(github.ref, 'refs/tags/')
+        working-directory: rust/crates/mecab-ko-node
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
