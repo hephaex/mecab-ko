@@ -306,8 +306,8 @@
 //!
 //! # See Also
 //!
-//! - [`mecab-ko-core`]: Core tokenization engine
-//! - [`mecab-ko-dict`]: Dictionary management
+//! - [`mecab_ko_core`]: Core tokenization engine
+//! - [`mecab_ko_dict`]: Dictionary management
 
 use anyhow::{Context, Result};
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};

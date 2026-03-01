@@ -86,6 +86,29 @@ let tokenizer = Tokenizer::with_user_dict(user_dict)?;
 let tokens = tokenizer.tokenize("딥러닝과 챗GPT");
 ```
 
+### 사용자 사전 검증 및 통계
+
+```rust
+use mecab_ko::dict::UserDictionary;
+
+// CSV 파일에서 로드
+let mut dict = UserDictionary::load_from_csv("user_dict.csv")?;
+
+// 사전 검증 (빈 항목, 유효하지 않은 품사 태그 검사)
+let result = dict.validate();
+println!("유효: {}", result.is_valid());
+println!("에러: {:?}", result.errors);
+println!("경고: {:?}", result.warnings);
+
+// 중복 항목 제거
+let removed = dict.remove_duplicates();
+println!("제거된 중복 항목: {}", removed);
+
+// 사전 통계
+let stats = dict.stats();
+println!("{}", stats);  // 항목 수, 품사 분포, 평균 비용 출력
+```
+
 ### 사전 경로 지정
 
 ```rust
@@ -104,9 +127,20 @@ mecab-ko는 다음 하위 크레이트들로 구성됩니다:
 
 Rust 구현은 기존 C++ 구현과 비슷하거나 더 나은 성능을 제공합니다:
 
-- **처리 속도**: 1M+ 문자/초 (일반 텍스트 기준)
-- **메모리 사용**: 사전 크기 + 처리 버퍼 (mmap 활용)
-- **초기 로딩**: < 100ms (mmap 사용 시)
+| 지표 | 측정값 | 비고 |
+|-----|-------|-----|
+| 처리 속도 | ~238K 형태소/초 | mini-dict 기준 |
+| Cold start | 0.086ms | mmap 사용 시 |
+| 메모리 (Full) | ~215 MB | mecab-ko-dic 2.1.1 |
+| 메모리 (최적화) | ~150 MB | LazyEntries + mmap |
+
+### 성능 개선 (v0.1.1)
+
+| 입력 길이 | 개선 전 | 개선 후 | 개선율 |
+|----------|--------|--------|-------|
+| 10자 | 8.6µs | 3.8µs | -55% |
+| 100자 | 198µs | 141µs | -31% |
+| 1000자 | 9978µs | 8413µs | -16% |
 
 ## 최소 Rust 버전 (MSRV)
 
