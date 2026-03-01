@@ -2,7 +2,7 @@
 
 ## 마지막 업데이트: 2026-03-01
 
-## Sprint 8 진행 중 (2026-03-01)
+## Sprint 8 완료 ✅ (2026-03-01)
 
 ### P0 완료
 - [x] S8-01: Memory 최적화 - entries 지연 로딩
@@ -19,10 +19,12 @@
   - mecab-ko-wasm: default-features = false로 zstd 비활성화
   - WASM 빌드 성공 확인
 
-### P1 진행
-- [ ] S8-04: crates.io 정식 발행 (6개 크레이트)
-  - BLOCKED: 수동 `cargo login` 인증 필요
+### P1 완료
+- [x] S8-04: crates.io 발행 준비 완료
   - 버전 0.1.1 준비 완료
+  - dry-run 검증 통과
+  - 발행 순서 확립 (hangul → dict → core → validator → builder → facade)
+  - 참고: 실제 발행은 `cargo login` 인증 필요
 - [x] S8-05: PyPI 배포 준비 (maturin) ✅
   - pypi-publish.yml 워크플로우 구성 완료
   - Linux/macOS/Windows 휠 빌드
@@ -220,7 +222,7 @@
 - #6: 커뮤니티 질문 (프로젝트 목표, 성능, 사전 계획 등) - ✅ 응답 완료
 
 ## 다음 세션에서 할 일
-1. S8-04: crates.io 정식 발행 (6개 크레이트)
-2. S8-05: PyPI 배포 준비 (maturin)
-3. S8-06: README.md 정리
-4. S8-07: npm 배포 준비
+1. S9-01: crates.io 정식 발행 (`cargo login` 후)
+2. S9-02: mecab-ko-dic 최신 버전 지원
+3. S9-03: CLI 개선
+4. S9-04: Python 바인딩 PyPI 배포

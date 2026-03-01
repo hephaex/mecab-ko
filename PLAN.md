@@ -1,7 +1,29 @@
-# 현재 스프린트: Phase 4 - Sprint 8 (Memory 최적화 & 발행)
+# 현재 스프린트: Phase 4 - Sprint 9 (사전 현대화 & 발행)
 
 ## 목표
-Memory 최적화 (215MB → 150MB), WASM zstd 해결, crates.io 발행
+crates.io 발행, 사전 현대화, 추가 최적화
+
+## Sprint 9 작업 목록
+
+### P0 (Critical)
+- [ ] S9-01: crates.io 정식 발행 (6개 크레이트) - `cargo login` 필요
+- [ ] S9-02: mecab-ko-dic 최신 버전 지원
+
+### P1 (High)
+- [ ] S9-03: CLI 개선 (옵션 추가)
+- [ ] S9-04: Python 바인딩 PyPI 배포
+- [ ] S9-05: 사용자 사전 기능 개선
+
+### P2 (Medium)
+- [ ] S9-06: 문서화 개선 (API 가이드)
+- [ ] S9-07: 성능 벤치마크 자동화
+
+---
+
+# 완료된 스프린트: Phase 4 - Sprint 8 (Memory 최적화 & 발행) ✅
+
+## Sprint 8 목표 (완료)
+Memory 최적화 (215MB → 150MB), WASM zstd 해결, crates.io 발행 준비
 
 ## Sprint 8 작업 목록
 
@@ -10,14 +32,14 @@ Memory 최적화 (215MB → 150MB), WASM zstd 해결, crates.io 발행
 - [x] S8-02: Memory 최적화 - mmap 활용 강화
 - [x] S8-03: WASM zstd-sys 이슈 해결
 
-### P1 (High)
-- [ ] S8-04: crates.io 정식 발행 (6개 크레이트) - 인증 필요
-- [x] S8-05: PyPI 배포 준비 (maturin) ✅
-- [x] S8-06: README.md 정리 ✅
+### P1 (High) ✅
+- [x] S8-04: crates.io 발행 준비 (인증 대기)
+- [x] S8-05: PyPI 배포 준비 (maturin)
+- [x] S8-06: README.md 정리
 
 ### P2 (Medium) ✅
-- [x] S8-07: npm 배포 준비 (Node.js 바인딩) ✅
-- [x] S8-08: GitHub Maintenance 이슈 정리 ✅
+- [x] S8-07: npm 배포 준비 (Node.js 바인딩)
+- [x] S8-08: GitHub Maintenance 이슈 정리
 
 ---
 
