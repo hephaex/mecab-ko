@@ -2,7 +2,7 @@
 
 ## 마지막 업데이트: 2026-03-01
 
-## Sprint 7 진행 중
+## Sprint 7 완료 ✅ (2026-03-01)
 
 ### 완료
 - [x] S7-01: Path dependency에 version 추가 (7개 크레이트)
@@ -135,6 +135,8 @@
 ## GitHub 이슈
 - #6: 커뮤니티 질문 (프로젝트 목표, 성능, 사전 계획 등) - ✅ 응답 완료
 
-## 다음 세션에서 할 일
-1. Sprint 7 계획: crates.io 발행, Python/WASM 바인딩 최적화, 사전 현대화
-2. Full-dict 벤치마크로 Memory KPI 측정
+## 다음 세션에서 할 일 (Sprint 8)
+1. Memory 최적화 (215MB → 150MB 목표)
+2. WASM zstd-sys 이슈 해결
+3. crates.io 정식 발행
+4. PyPI/npm 배포 준비
