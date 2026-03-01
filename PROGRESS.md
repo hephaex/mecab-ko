@@ -2,7 +2,30 @@
 
 ## 마지막 업데이트: 2026-03-01
 
-## Sprint 9 진행 중 (2026-03-01)
+## Sprint 10 진행 중 (2026-03-01)
+
+### P0 진행
+- [ ] S10-01: crates.io 정식 발행 - BLOCKED (`cargo login` 필요)
+
+### P1 진행
+- [x] S10-02: ignored 테스트 활성화 ✅
+  - `system_dict_available()` 헬퍼 함수 추가
+  - `skip_without_system_dict!` 매크로 추가
+  - e2e 테스트: 28 passed, 0 ignored
+  - 남은 ignored: profiler(9), dict doc(4) - 의도적 제외
+- [x] S10-03: Elasticsearch 통합 테스트 개선 ✅
+  - doc tests: 5 passed, 0 ignored
+  - import 경로 수정
+- [x] S10-04: 에러 처리 확인 ✅ (이미 thiserror 사용 중)
+
+### P2 진행
+- [x] S10-07: CHANGELOG.md 작성 ✅
+  - Keep a Changelog 형식
+  - v0.1.0, v0.1.1, Unreleased 섹션
+
+---
+
+## Sprint 9 완료 ✅ (2026-03-01)
 
 ### P0 진행
 - [ ] S9-01: crates.io 정식 발행 - BLOCKED (`cargo login` 필요)
