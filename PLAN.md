@@ -6,11 +6,10 @@ v0.3.0 정식 릴리스, 스트리밍 API 개선, 메모리 최적화, PyPI 배�
 ## Sprint 17 작업 목록
 
 ### P0 (Critical)
-- [ ] S17-01: v0.3.0 정식 릴리스
-  - GitHub Release 생성
+- [x] S17-01: v0.3.0 정식 릴리스 ✅
+  - GitHub Release v0.3.0 생성
   - 릴리스 노트 작성
-  - 바이너리 배포 (4개 플랫폼)
-  - crates.io 버전 업데이트 (v0.3.0)
+  - crates.io 6개 크레이트 v0.3.0 발행 완료
 
 ### P1 (High)
 - [ ] S17-02: PyPI 배포 (S16-03 계속)
@@ -251,12 +250,12 @@ PyPI/npm 배포 준비, 문서 사이트 구축, 사전 현대화 조사
 
 | 크레이트 | 버전 | 플랫폼 | 상태 |
 |---------|------|--------|------|
-| mecab-ko-hangul | v0.1.1 | crates.io | ✅ |
-| mecab-ko-dict | v0.1.1 | crates.io | ✅ |
-| mecab-ko-core | v0.1.1 | crates.io | ✅ |
-| mecab-ko-dict-validator | v0.1.1 | crates.io | ✅ |
-| mecab-ko-dict-builder | v0.1.1 | crates.io | ✅ |
-| mecab-ko | v0.1.1 | crates.io | ✅ |
+| mecab-ko-hangul | v0.3.0 | crates.io | ✅ |
+| mecab-ko-dict | v0.3.0 | crates.io | ✅ |
+| mecab-ko-core | v0.3.0 | crates.io | ✅ |
+| mecab-ko-dict-validator | v0.3.0 | crates.io | ✅ |
+| mecab-ko-dict-builder | v0.3.0 | crates.io | ✅ |
+| mecab-ko | v0.3.0 | crates.io | ✅ |
 | mecab-ko-python | - | PyPI | BLOCKED |
 | mecab-ko-wasm | v0.3.0 | npm | ✅ |
 | mecab-ko-cli | v0.1.1 | GitHub Releases | ✅ |

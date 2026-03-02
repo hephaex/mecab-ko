@@ -1,6 +1,36 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-03-03 (Sprint 16 완료 + npm 배포)
+## 마지막 업데이트: 2026-03-03 (Sprint 17 진행 중 - v0.3.0 릴리스)
+
+## Sprint 17 진행 중 (2026-03-03)
+
+### P0 (Critical)
+- [x] S17-01: v0.3.0 정식 릴리스 ✅
+  - GitHub Release v0.3.0 생성 및 릴리스 노트 작성
+  - crates.io 6개 크레이트 v0.3.0 발행 완료:
+    - mecab-ko-hangul v0.3.0
+    - mecab-ko-dict v0.3.0
+    - mecab-ko-core v0.3.0
+    - mecab-ko-dict-validator v0.3.0
+    - mecab-ko-dict-builder v0.3.0
+    - mecab-ko v0.3.0 (facade)
+  - 워크스페이스 버전 통일 (0.3.0)
+  - CHANGELOG.md v0.3.0 섹션 확정
+
+### P1 (High)
+- [ ] S17-02: PyPI 배포 - BLOCKED (토큰 필요)
+- [ ] S17-03: 스트리밍 API 개선 - 대기
+- [ ] S17-04: Migration Guide v0.2.0 → v0.3.0 - 대기
+
+### P2 (Medium)
+- [ ] S17-05: 메모리 최적화 2차 - 대기
+- [ ] S17-06: API 문서 개선 - 대기
+- [ ] S17-07: 벤치마크 결과 정리 - 대기
+
+### P3 (Low)
+- [ ] S17-08: 테스트 커버리지 향상 - 대기
+
+---
 
 ## Sprint 16 완료 ✅ (2026-03-03)
 
@@ -509,18 +539,18 @@
 
 | 크레이트 | 상태 | 플랫폼 | 비고 |
 |----------|------|--------|------|
-| mecab-ko-hangul | ✅ v0.1.1 | crates.io | 한글 자소 분리/결합 |
-| mecab-ko-dict | ✅ v0.1.1 | crates.io | Trie, Matrix, Loader, UserDict |
-| mecab-ko-dict-builder | ✅ v0.1.1 | crates.io | CSV→binary 사전 빌더 |
-| mecab-ko-core | ✅ v0.1.1 | crates.io | Viterbi, Lattice, Tokenizer |
-| mecab-ko-cli | ✅ v0.1.1 | GitHub Releases | CLI 인터페이스 |
+| mecab-ko-hangul | ✅ v0.3.0 | crates.io | 한글 자소 분리/결합 |
+| mecab-ko-dict | ✅ v0.3.0 | crates.io | Trie, Matrix, Loader, UserDict |
+| mecab-ko-dict-builder | ✅ v0.3.0 | crates.io | CSV→binary 사전 빌더 |
+| mecab-ko-core | ✅ v0.3.0 | crates.io | Viterbi, Lattice, Tokenizer |
+| mecab-ko-cli | ✅ v0.3.0 | GitHub Releases | CLI 인터페이스 |
 | mecab-ko-python | ⏸️ BLOCKED | PyPI | PyO3 바인딩 (토큰 필요) |
 | mecab-ko-wasm | ✅ v0.3.0 | **npm** | WASM 바인딩 🎉 |
 | mecab-ko-node | ✅ 완료 | - | Node.js 바인딩 |
 | mecab-ko-elasticsearch | ✅ 완료 | - | Nori 호환 |
 | mecab-ko-profiler | ✅ 완료 | - | 실제 사전 통합 |
-| mecab-ko-dict-validator | ✅ v0.1.1 | crates.io | CSV 검증 |
-| mecab-ko (facade) | ✅ v0.1.1 | crates.io | 통합 API |
+| mecab-ko-dict-validator | ✅ v0.3.0 | crates.io | CSV 검증 |
+| mecab-ko (facade) | ✅ v0.3.0 | crates.io | 통합 API |
 | mecab-ko (docker) | ✅ latest | GHCR | Docker 이미지 |
 
 ## 테스트 현황
