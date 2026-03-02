@@ -28,19 +28,21 @@ PyPI/npm 배포, 문서 사이트 구축, 사전 현대화 착수
   - mdBook 설정 완료
   - docs.yml 워크플로우 개선
   - GitHub Pages 자동 배포
-- [ ] S11-06: mecab-ko-dic 최신화 조사
+- [x] S11-06: mecab-ko-dic 최신화 조사 ✅
   - 2018년 이후 변경 조사
   - 신조어 추가 방안 검토
   - 커뮤니티 사전 통합 검토
+  - docs/research/dictionary/mecab-ko-dic-modernization.md 작성
 - [x] S11-07: Docker 이미지 배포 ✅
   - Dockerfile 작성 (multi-stage build)
   - docker.yml 워크플로우 추가
   - GHCR 자동 배포 (main/tags)
 
 ### P3 (Low)
-- [ ] S11-08: 성능 대시보드
+- [x] S11-08: 성능 대시보드 ✅
   - GitHub Pages에 벤치마크 결과 시각화
-  - 버전별 성능 추이 그래프
+  - 버전별 성능 추이 그래프 (Chart.js)
+  - CI 자동 업데이트 워크플로우
 
 ---
 

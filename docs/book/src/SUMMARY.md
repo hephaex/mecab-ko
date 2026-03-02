@@ -44,4 +44,4 @@
 - [FAQ](faq.md)
 - [변경 이력](changelog.md)
 - [마이그레이션 가이드](appendix/migration.md)
-- [비교 벤치마크](appendix/benchmarks.md)
+- [성능 대시보드](benchmarks/index.md)
