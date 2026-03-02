@@ -1,0 +1,1062 @@
+<!DOCTYPE HTML>
+<html lang="ko" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>사전 포맷 - MeCab-Ko Documentation</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-2459343d.css">
+        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-d6debc81.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-61dcf4b3.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">MeCab-Ko Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/hephaex/mecab-ko" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/hephaex/mecab-ko/edit/main/docs/book/src/reference/dictionary-format.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="mecab-ko-dic-사전-포맷-분석-v20"><a class="header" href="#mecab-ko-dic-사전-포맷-분석-v20">MeCab-Ko-Dic 사전 포맷 분석 v2.0</a></h1>
+<blockquote>
+<p><strong>문서 버전</strong>: 2.1
+<strong>작성일</strong>: 2026-01-05
+<strong>대상</strong>: mecab-ko-dic (https://bitbucket.org/eunjeon/mecab-ko-dic)
+<strong>구현체</strong>: mecab-ko-dict Rust crate</p>
+</blockquote>
+<p>이 문서는 DIC-001 이슈의 산출물로, mecab-ko-dic의 구조와 데이터 포맷을 완전히 분석하고 문서화합니다.
+Rust 구현체(<code>mecab-ko-dict</code> crate)의 데이터 구조와 API도 함께 설명합니다.</p>
+<hr>
+<h2 id="목차"><a class="header" href="#목차">목차</a></h2>
+<ol>
+<li><a href="#1-저장소-구조">저장소 구조</a></li>
+<li><a href="#2-csv-사전-파일-구조">CSV 사전 파일 구조</a></li>
+<li><a href="#3-품사-태그-체계">품사 태그 체계</a></li>
+<li><a href="#4-정의-파일-분석">정의 파일 분석</a></li>
+<li><a href="#5-바이너리-사전-포맷">바이너리 사전 포맷</a></li>
+<li><a href="#6-빌드-프로세스">빌드 프로세스</a></li>
+<li><a href="#7-rust-구현체-데이터-구조">Rust 구현체 데이터 구조</a></li>
+</ol>
+<hr>
+<h2 id="1-저장소-구조"><a class="header" href="#1-저장소-구조">1. 저장소 구조</a></h2>
+<pre><code>mecab-ko-dic/
+├── seed/                    # 원본 CSV 사전 및 정의 파일
+│   ├── *.csv               # 품사별 단어 사전 (33개 파일)
+│   ├── char.def            # 문자 카테고리 정의
+│   ├── unk.def             # 미등록어 처리 정의
+│   ├── feature.def         # CRF 피처 템플릿
+│   ├── rewrite.def         # 피처 재작성 규칙
+│   ├── pos-id.def          # 품사 ID 매핑
+│   ├── dicrc               # 사전 설정 파일
+│   ├── build.sh            # 빌드 스크립트
+│   └── corpus/             # 학습용 말뭉치
+│       └── eunjeon_corpus.txt
+├── final/                  # 최종 배포용 사전
+│   ├── Makefile.am         # Automake 설정
+│   ├── configure.ac        # Autoconf 설정
+│   ├── autogen.sh          # 자동 빌드 스크립트
+│   ├── tools/              # 유틸리티 스크립트
+│   │   └── add-userdic.sh  # 사용자 사전 추가
+│   └── user-dic/           # 사용자 사전 CSV
+└── utils/                  # Python 유틸리티
+</code></pre>
+<hr>
+<h2 id="2-csv-사전-파일-구조"><a class="header" href="#2-csv-사전-파일-구조">2. CSV 사전 파일 구조</a></h2>
+<h3 id="21-파일-목록-총-33개"><a class="header" href="#21-파일-목록-총-33개">2.1 파일 목록 (총 33개)</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>카테고리</th><th>파일</th><th>품사</th><th>크기</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>명사</strong></td><td>NNG.csv</td><td>일반 명사</td><td>12.4 MB</td></tr>
+<tr><td></td><td>NNP.csv</td><td>고유 명사</td><td>173 KB</td></tr>
+<tr><td></td><td>NNB.csv</td><td>의존 명사</td><td>4.4 KB</td></tr>
+<tr><td></td><td>NNBC.csv</td><td>단위 의존 명사</td><td>26 KB</td></tr>
+<tr><td></td><td>NP.csv</td><td>대명사</td><td>12 KB</td></tr>
+<tr><td></td><td>NR.csv</td><td>수사</td><td>18 KB</td></tr>
+<tr><td><strong>용언</strong></td><td>VV.csv</td><td>동사</td><td>290 KB</td></tr>
+<tr><td></td><td>VA.csv</td><td>형용사</td><td>94 KB</td></tr>
+<tr><td></td><td>VX.csv</td><td>보조 용언</td><td>4 KB</td></tr>
+<tr><td></td><td>VCP.csv</td><td>긍정 지정사 (이다)</td><td>288 B</td></tr>
+<tr><td></td><td>VCN.csv</td><td>부정 지정사 (아니다)</td><td>258 B</td></tr>
+<tr><td><strong>수식언</strong></td><td>MAG.csv</td><td>일반 부사</td><td>711 KB</td></tr>
+<tr><td></td><td>MAJ.csv</td><td>접속 부사</td><td>10 KB</td></tr>
+<tr><td></td><td>MM.csv</td><td>관형사</td><td>20 KB</td></tr>
+<tr><td><strong>조사</strong></td><td>J.csv</td><td>조사 (JKS, JKO 등)</td><td>14 KB</td></tr>
+<tr><td><strong>어미</strong></td><td>EC.csv</td><td>연결 어미</td><td>96 KB</td></tr>
+<tr><td></td><td>EF.csv</td><td>종결 어미</td><td>70 KB</td></tr>
+<tr><td></td><td>EP.csv</td><td>선어말 어미</td><td>1.6 KB</td></tr>
+<tr><td></td><td>ETM.csv</td><td>관형형 전성 어미</td><td>5 KB</td></tr>
+<tr><td></td><td>ETN.csv</td><td>명사형 전성 어미</td><td>456 B</td></tr>
+<tr><td><strong>접사/어근</strong></td><td>XPN.csv</td><td>접두사</td><td>2.4 KB</td></tr>
+<tr><td></td><td>XSN.csv</td><td>명사파생 접미사</td><td>3.8 KB</td></tr>
+<tr><td></td><td>XSA.csv</td><td>형용사파생 접미사</td><td>642 B</td></tr>
+<tr><td></td><td>XSV.csv</td><td>동사파생 접미사</td><td>738 B</td></tr>
+<tr><td></td><td>XR.csv</td><td>어근</td><td>129 KB</td></tr>
+<tr><td><strong>기타</strong></td><td>IC.csv</td><td>감탄사</td><td>50 KB</td></tr>
+<tr><td></td><td>Inflect.csv</td><td>활용형</td><td>3.6 MB</td></tr>
+<tr><td></td><td>Group.csv</td><td>복합어/그룹</td><td>228 KB</td></tr>
+<tr><td></td><td>Hanja.csv</td><td>한자어</td><td>4.6 MB</td></tr>
+<tr><td></td><td>Foreign.csv</td><td>외래어</td><td>530 KB</td></tr>
+<tr><td></td><td>Wikipedia.csv</td><td>위키피디아</td><td>1.8 MB</td></tr>
+<tr><td></td><td>CoinedWord.csv</td><td>신조어</td><td>5.7 KB</td></tr>
+<tr><td></td><td>NorthKorea.csv</td><td>북한어</td><td>108 B</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="22-csv-컬럼-구조-12-컬럼-tsv-형식"><a class="header" href="#22-csv-컬럼-구조-12-컬럼-tsv-형식">2.2 CSV 컬럼 구조 (12 컬럼, TSV 형식)</a></h3>
+<pre><code>표층형	좌문맥ID	우문맥ID	비용	품사	의미분류	종성	읽기	타입	첫품사	끝품사	분석결과
+</code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>#</th><th>필드명</th><th>설명</th><th>예시</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>surface</td><td>표층형 (실제 단어)</td><td><code>가건물</code></td></tr>
+<tr><td>2</td><td>left_id</td><td>좌측 문맥 ID</td><td><code>0</code></td></tr>
+<tr><td>3</td><td>right_id</td><td>우측 문맥 ID</td><td><code>0</code></td></tr>
+<tr><td>4</td><td>cost</td><td>단어 비용</td><td><code>0</code></td></tr>
+<tr><td>5</td><td>pos</td><td>품사 태그</td><td><code>NNG</code></td></tr>
+<tr><td>6</td><td>semantic_class</td><td>의미 분류</td><td><code>*</code></td></tr>
+<tr><td>7</td><td>jongseong</td><td>종성 유무 (T/F)</td><td><code>T</code></td></tr>
+<tr><td>8</td><td>reading</td><td>읽기/기본형</td><td><code>가건물</code></td></tr>
+<tr><td>9</td><td>type</td><td>타입</td><td><code>Compound</code>, <code>Inflect</code>, <code>*</code></td></tr>
+<tr><td>10</td><td>first_pos</td><td>첫 형태소 품사</td><td><code>*</code></td></tr>
+<tr><td>11</td><td>last_pos</td><td>끝 형태소 품사</td><td><code>*</code></td></tr>
+<tr><td>12</td><td>expression</td><td>형태소 분해</td><td><code>가/NNG/*+건물/NNG/*</code></td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="23-종성받침-플래그"><a class="header" href="#23-종성받침-플래그">2.3 종성(받침) 플래그</a></h3>
+<p>7번 컬럼의 T/F 값은 한국어 조사 연결에 중요:</p>
+<ul>
+<li><code>T</code>: 종성 있음 (예: 책, 강) → “은”, “을” 연결</li>
+<li><code>F</code>: 종성 없음 (예: 나, 사과) → “는”, “를” 연결</li>
+</ul>
+<h3 id="24-복합어활용형-표현"><a class="header" href="#24-복합어활용형-표현">2.4 복합어/활용형 표현</a></h3>
+<p>12번 컬럼의 형태소 분해 형식:</p>
+<pre><code>형태소/품사/속성+형태소/품사/속성+...
+</code></pre>
+<p><strong>예시</strong>:</p>
+<pre><code class="language-csv"># 복합어 (Compound)
+세종시,0,0,0,NNP,지명,F,세종시,Compound,*,*,세종/NNP/지명+시/NNG/*
+
+# 활용형 (Inflect)
+위한,0,0,0,VV+ETM,*,T,위한,Inflect,VV,ETM,위하/VV/*+ᆫ/ETM/*
+입니다,0,0,0,VCP+EF,*,F,입니다,Inflect,VCP,EF,이/VCP/*+ᄇ니다/EF/*
+</code></pre>
+<hr>
+<h2 id="3-품사-태그-체계"><a class="header" href="#3-품사-태그-체계">3. 품사 태그 체계</a></h2>
+<h3 id="31-체언-명사류"><a class="header" href="#31-체언-명사류">3.1 체언 (명사류)</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>태그</th><th>명칭</th><th>설명</th><th>예시</th></tr>
+</thead>
+<tbody>
+<tr><td>NNG</td><td>일반 명사</td><td>General Noun</td><td>사과, 컴퓨터</td></tr>
+<tr><td>NNP</td><td>고유 명사</td><td>Proper Noun</td><td>서울, 삼성</td></tr>
+<tr><td>NNB</td><td>의존 명사</td><td>Dependent Noun</td><td>것, 수, 바</td></tr>
+<tr><td>NNBC</td><td>단위 의존 명사</td><td>Counter Noun</td><td>개, 명, 원</td></tr>
+<tr><td>NP</td><td>대명사</td><td>Pronoun</td><td>나, 너, 그것</td></tr>
+<tr><td>NR</td><td>수사</td><td>Numeral</td><td>하나, 둘, 첫째</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="32-용언-동사형용사류"><a class="header" href="#32-용언-동사형용사류">3.2 용언 (동사/형용사류)</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>태그</th><th>명칭</th><th>설명</th><th>예시</th></tr>
+</thead>
+<tbody>
+<tr><td>VV</td><td>동사</td><td>Verb</td><td>가다, 먹다</td></tr>
+<tr><td>VA</td><td>형용사</td><td>Adjective</td><td>예쁘다, 크다</td></tr>
+<tr><td>VX</td><td>보조 용언</td><td>Auxiliary Verb</td><td>있다, 하다</td></tr>
+<tr><td>VCP</td><td>긍정 지정사</td><td>Positive Copula</td><td>이다</td></tr>
+<tr><td>VCN</td><td>부정 지정사</td><td>Negative Copula</td><td>아니다</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="33-수식언"><a class="header" href="#33-수식언">3.3 수식언</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>태그</th><th>명칭</th><th>설명</th><th>예시</th></tr>
+</thead>
+<tbody>
+<tr><td>MM</td><td>관형사</td><td>Determiner</td><td>이, 그, 새</td></tr>
+<tr><td>MAG</td><td>일반 부사</td><td>Adverb</td><td>매우, 아주</td></tr>
+<tr><td>MAJ</td><td>접속 부사</td><td>Conjunctive Adverb</td><td>그러나, 그리고</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="34-관계언-조사"><a class="header" href="#34-관계언-조사">3.4 관계언 (조사)</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>태그</th><th>명칭</th><th>설명</th><th>예시</th></tr>
+</thead>
+<tbody>
+<tr><td>JKS</td><td>주격 조사</td><td>Nominative</td><td>이/가</td></tr>
+<tr><td>JKC</td><td>보격 조사</td><td>Complementizer</td><td>이/가</td></tr>
+<tr><td>JKG</td><td>관형격 조사</td><td>Genitive</td><td>의</td></tr>
+<tr><td>JKO</td><td>목적격 조사</td><td>Accusative</td><td>을/를</td></tr>
+<tr><td>JKB</td><td>부사격 조사</td><td>Adverbial</td><td>에, 에서, 로</td></tr>
+<tr><td>JKV</td><td>호격 조사</td><td>Vocative</td><td>아/야</td></tr>
+<tr><td>JKQ</td><td>인용격 조사</td><td>Quotative</td><td>라고, 고</td></tr>
+<tr><td>JX</td><td>보조사</td><td>Auxiliary</td><td>은/는, 도, 만</td></tr>
+<tr><td>JC</td><td>접속 조사</td><td>Conjunctive</td><td>와/과, 하고</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="35-어미"><a class="header" href="#35-어미">3.5 어미</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>태그</th><th>명칭</th><th>설명</th><th>예시</th></tr>
+</thead>
+<tbody>
+<tr><td>EP</td><td>선어말 어미</td><td>Pre-Final Ending</td><td>시, 았/었</td></tr>
+<tr><td>EF</td><td>종결 어미</td><td>Final Ending</td><td>다, 요, 니까</td></tr>
+<tr><td>EC</td><td>연결 어미</td><td>Connective Ending</td><td>고, 면, 어서</td></tr>
+<tr><td>ETN</td><td>명사형 전성 어미</td><td>Nominal Ending</td><td>기, 음</td></tr>
+<tr><td>ETM</td><td>관형형 전성 어미</td><td>Adnominal Ending</td><td>ㄴ, 는, ㄹ</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="36-접사어근"><a class="header" href="#36-접사어근">3.6 접사/어근</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>태그</th><th>명칭</th><th>설명</th><th>예시</th></tr>
+</thead>
+<tbody>
+<tr><td>XPN</td><td>체언 접두사</td><td>Noun Prefix</td><td>풋-, 헛-</td></tr>
+<tr><td>XSN</td><td>명사파생 접미사</td><td>Noun Suffix</td><td>-님, -질</td></tr>
+<tr><td>XSV</td><td>동사파생 접미사</td><td>Verb Suffix</td><td>-하다, -되다</td></tr>
+<tr><td>XSA</td><td>형용사파생 접미사</td><td>Adj Suffix</td><td>-스럽다, -롭다</td></tr>
+<tr><td>XR</td><td>어근</td><td>Root</td><td>깨끗, 착하</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="37-기호특수"><a class="header" href="#37-기호특수">3.7 기호/특수</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>태그</th><th>명칭</th><th>설명</th></tr>
+</thead>
+<tbody>
+<tr><td>SF</td><td>마침표/물음표/느낌표</td><td>. ? !</td></tr>
+<tr><td>SE</td><td>줄임표</td><td>…</td></tr>
+<tr><td>SSO</td><td>여는 괄호</td><td>( [ {</td></tr>
+<tr><td>SSC</td><td>닫는 괄호</td><td>) ] }</td></tr>
+<tr><td>SC</td><td>쉼표/콜론/빗금</td><td>, : /</td></tr>
+<tr><td>SY</td><td>기타 기호</td><td>@ # $</td></tr>
+<tr><td>SL</td><td>외국어</td><td>English, 日本語</td></tr>
+<tr><td>SH</td><td>한자</td><td>韓國</td></tr>
+<tr><td>SN</td><td>숫자</td><td>123, 45.6</td></tr>
+<tr><td>SP</td><td>공백</td><td>(space)</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="4-정의-파일-분석"><a class="header" href="#4-정의-파일-분석">4. 정의 파일 분석</a></h2>
+<h3 id="41-chardef-문자-카테고리-정의"><a class="header" href="#41-chardef-문자-카테고리-정의">4.1 char.def (문자 카테고리 정의)</a></h3>
+<h4 id="형식"><a class="header" href="#형식">형식</a></h4>
+<pre><code>CATEGORY_NAME  INVOKE  GROUP  LENGTH
+0xHHHH..0xJJJJ CATEGORY [CATEGORY2...]
+</code></pre>
+<h4 id="mecab-ko-dic-카테고리"><a class="header" href="#mecab-ko-dic-카테고리">mecab-ko-dic 카테고리</a></h4>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>카테고리</th><th>INVOKE</th><th>GROUP</th><th>LENGTH</th><th>설명</th></tr>
+</thead>
+<tbody>
+<tr><td>DEFAULT</td><td>0</td><td>1</td><td>0</td><td>기본</td></tr>
+<tr><td>SPACE</td><td>0</td><td>1</td><td>0</td><td>공백</td></tr>
+<tr><td><strong>HANGUL</strong></td><td>0</td><td>1</td><td>2</td><td>한글</td></tr>
+<tr><td>HANJA</td><td>0</td><td>0</td><td>1</td><td>한자</td></tr>
+<tr><td>ALPHA</td><td>1</td><td>1</td><td>0</td><td>알파벳</td></tr>
+<tr><td>NUMERIC</td><td>1</td><td>1</td><td>0</td><td>숫자</td></tr>
+<tr><td>SYMBOL</td><td>1</td><td>1</td><td>0</td><td>기호</td></tr>
+<tr><td>HANJANUMERIC</td><td>1</td><td>1</td><td>0</td><td>한자 숫자</td></tr>
+</tbody>
+</table>
+</div>
+<h4 id="속성-설명"><a class="header" href="#속성-설명">속성 설명</a></h4>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>속성</th><th>값</th><th>의미</th></tr>
+</thead>
+<tbody>
+<tr><td>INVOKE</td><td>0</td><td>사전에 있으면 미등록어 처리 생략</td></tr>
+<tr><td>INVOKE</td><td>1</td><td>항상 미등록어 후보도 생성</td></tr>
+<tr><td>GROUP</td><td>0</td><td>그룹핑 비활성화</td></tr>
+<tr><td>GROUP</td><td>1</td><td>동일 카테고리 문자 그룹핑</td></tr>
+<tr><td>LENGTH</td><td>n</td><td>1~n 길이의 미등록어 후보 생성</td></tr>
+</tbody>
+</table>
+</div>
+<h4 id="한글-유니코드-범위"><a class="header" href="#한글-유니코드-범위">한글 유니코드 범위</a></h4>
+<pre><code>0xAC00..0xD7A3  HANGUL     # 한글 음절 (가~힣, 11,172자)
+0x1100..0x11FF  HANGUL     # 한글 자모
+0x3130..0x318F  HANGUL     # 한글 호환 자모 (ㄱ~ㅎ, ㅏ~ㅣ)
+</code></pre>
+<h3 id="42-unkdef-미등록어-정의"><a class="header" href="#42-unkdef-미등록어-정의">4.2 unk.def (미등록어 정의)</a></h3>
+<h4 id="형식-1"><a class="header" href="#형식-1">형식</a></h4>
+<pre><code>CATEGORY,left_id,right_id,cost,POS,semantic,jongseong,reading,type,first,last,expr
+</code></pre>
+<h4 id="mecab-ko-dic-미등록어-매핑"><a class="header" href="#mecab-ko-dic-미등록어-매핑">mecab-ko-dic 미등록어 매핑</a></h4>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>카테고리</th><th>품사</th><th>설명</th></tr>
+</thead>
+<tbody>
+<tr><td>DEFAULT</td><td>SY</td><td>기본 → 기호</td></tr>
+<tr><td>SPACE</td><td>SP</td><td>공백</td></tr>
+<tr><td>HANGUL</td><td>UNKNOWN</td><td>한글 미등록어</td></tr>
+<tr><td>HANJA</td><td>SH</td><td>한자</td></tr>
+<tr><td>ALPHA</td><td>SL</td><td>외국어</td></tr>
+<tr><td>NUMERIC</td><td>SN</td><td>숫자</td></tr>
+<tr><td>SYMBOL</td><td>SY</td><td>기호</td></tr>
+<tr><td>HIRAGANA</td><td>SL</td><td>외국어</td></tr>
+<tr><td>KATAKANA</td><td>SL</td><td>외국어</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="43-matrixdef-연접-비용-행렬"><a class="header" href="#43-matrixdef-연접-비용-행렬">4.3 matrix.def (연접 비용 행렬)</a></h3>
+<h4 id="형식-2"><a class="header" href="#형식-2">형식</a></h4>
+<pre><code>&lt;left_size&gt; &lt;right_size&gt;
+&lt;right_id&gt; &lt;left_id&gt; &lt;cost&gt;
+...
+</code></pre>
+<h4 id="비용-의미"><a class="header" href="#비용-의미">비용 의미</a></h4>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>비용 범위</th><th>의미</th></tr>
+</thead>
+<tbody>
+<tr><td>음수 (예: -16,124)</td><td>자연스러운 연결 (선호)</td></tr>
+<tr><td>0</td><td>중립</td></tr>
+<tr><td>양수 (예: 5,824)</td><td>부자연스러운 연결 (비선호)</td></tr>
+</tbody>
+</table>
+</div>
+<h4 id="viterbi-비용-계산"><a class="header" href="#viterbi-비용-계산">Viterbi 비용 계산</a></h4>
+<pre><code>총 비용 = matrix[lNode.rcAttr + lsize * rNode.lcAttr] + rNode.wcost + space_penalty
+</code></pre>
+<h3 id="44-dicrc-사전-설정"><a class="header" href="#44-dicrc-사전-설정">4.4 dicrc (사전 설정)</a></h3>
+<pre><code class="language-ini">cost-factor = 800                          # 비용 스케일 팩터
+bos-feature = BOS/EOS,*,*,*,*,*,*,*        # 문장 시작/끝 피처
+eval-size = 4                              # 평가할 피처 수
+config-charset = UTF-8                     # 문자셋
+
+# 한국어 특화: 공백 페널티
+left-space-penalty-factor = 100,3000,120,6000,172,3000,183,3000,...
+</code></pre>
+<hr>
+<h2 id="5-바이너리-사전-포맷"><a class="header" href="#5-바이너리-사전-포맷">5. 바이너리 사전 포맷</a></h2>
+<h3 id="51-생성-파일-목록"><a class="header" href="#51-생성-파일-목록">5.1 생성 파일 목록</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>파일</th><th>설명</th><th>생성 도구</th></tr>
+</thead>
+<tbody>
+<tr><td>sys.dic</td><td>시스템 사전 (DA Trie + 토큰)</td><td>mecab-dict-index</td></tr>
+<tr><td>unk.dic</td><td>미등록어 사전</td><td>mecab-dict-index</td></tr>
+<tr><td>matrix.bin</td><td>연접 비용 행렬</td><td>mecab-dict-index</td></tr>
+<tr><td>char.bin</td><td>문자 카테고리 맵</td><td>mecab-dict-index</td></tr>
+<tr><td>model.bin</td><td>CRF 모델 (선택)</td><td>mecab-dict-index</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="52-sysdic-바이너리-구조"><a class="header" href="#52-sysdic-바이너리-구조">5.2 sys.dic 바이너리 구조</a></h3>
+<pre><code>[헤더 - 40바이트]
+├── magic (4B)           # 매직 넘버
+├── version (4B)         # 사전 버전
+├── type (4B)            # SYS=0, UNK=1, USR=2
+├── lexsize (4B)         # 어휘 항목 수
+├── lsize (4B)           # 좌문맥 크기
+├── rsize (4B)           # 우문맥 크기
+├── dsize (4B)           # Double-Array 크기
+├── tsize (4B)           # 토큰 배열 크기
+├── fsize (4B)           # 피처 문자열 크기
+├── dummy (4B)           # 예약
+└── charset[32]          # 문자셋
+
+[Double-Array Trie]
+└── Darts 라이브러리 형식
+
+[토큰 배열]
+└── Token[] {
+    lcAttr: u16      # 좌문맥 ID
+    rcAttr: u16      # 우문맥 ID
+    posid: u16       # 품사 ID
+    wcost: i16       # 단어 비용
+    feature: u32     # 피처 오프셋
+    compound: u32    # 복합어 정보
+}
+
+[피처 문자열]
+└── NULL 종료 문자열들
+</code></pre>
+<h3 id="53-matrixbin-바이너리-구조"><a class="header" href="#53-matrixbin-바이너리-구조">5.3 matrix.bin 바이너리 구조</a></h3>
+<pre><code>[헤더]
+├── lsize (2B)           # 좌측 크기
+└── rsize (2B)           # 우측 크기
+
+[연접 비용 행렬]
+└── short[lsize * rsize] # 비용 값 배열
+</code></pre>
+<h3 id="54-charbin-바이너리-구조"><a class="header" href="#54-charbin-바이너리-구조">5.4 char.bin 바이너리 구조</a></h3>
+<pre><code>[헤더]
+└── category_count (4B)  # 카테고리 개수
+
+[카테고리 이름]
+└── char[32] * N         # 각 카테고리 이름
+
+[CharInfo 테이블]
+└── CharInfo[0xFFFF] {   # 모든 UCS-2 코드포인트
+    type: 18 bits        # 카테고리 비트마스크
+    default_type: 8 bits # 기본 카테고리 ID
+    length: 4 bits       # LENGTH 값
+    group: 1 bit         # GROUP 플래그
+    invoke: 1 bit        # INVOKE 플래그
+}
+</code></pre>
+<hr>
+<h2 id="6-빌드-프로세스"><a class="header" href="#6-빌드-프로세스">6. 빌드 프로세스</a></h2>
+<h3 id="61-빌드-파이프라인"><a class="header" href="#61-빌드-파이프라인">6.1 빌드 파이프라인</a></h3>
+<pre><code>[seed/*.csv] ──────────────────────────────────────────────┐
+      │                                                     │
+      ├── mecab-dict-index -p  ───→ [left-id.def, right-id.def]
+      │                                                     │
+[corpus.txt] ── mecab-cost-train ──→ [model.bin]           │
+      │                                                     │
+      └── mecab-dict-gen ─────────→ [*.csv with costs]     │
+                                          │                 │
+                                          ▼                 │
+                               [비용 조정 스크립트]          │
+                                          │                 │
+                                          ▼                 ▼
+                               mecab-dict-index ───→ [sys.dic, unk.dic,
+                                                      matrix.bin, char.bin]
+</code></pre>
+<h3 id="62-빌드-스크립트-seedbuildsh"><a class="header" href="#62-빌드-스크립트-seedbuildsh">6.2 빌드 스크립트 (seed/build.sh)</a></h3>
+<pre><code class="language-bash"># 1단계: 품사 ID 할당
+$DICT_INDEX -p -d . -c UTF-8 -t UTF-8 -f UTF-8
+
+# 2단계: CRF 모델 학습
+$COST_TRAIN -p ${cpu_count} -c 1.0 ${corpus_file} ${model_file}
+
+# 3단계: 사전 생성 (비용 자동 할당)
+$DICT_GEN -o ../final -m $model_file
+
+# 4단계: 수동 비용 조정
+./change_word_cost.sh
+./change_connection_cost.sh
+
+# 5단계: 바이너리 컴파일
+cd ../final &amp;&amp; ./configure &amp;&amp; make
+</code></pre>
+<h3 id="63-도구-목록"><a class="header" href="#63-도구-목록">6.3 도구 목록</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>도구</th><th>용도</th></tr>
+</thead>
+<tbody>
+<tr><td><code>mecab-dict-index</code></td><td>사전 컴파일</td></tr>
+<tr><td><code>mecab-dict-gen</code></td><td>비용 자동 생성</td></tr>
+<tr><td><code>mecab-cost-train</code></td><td>CRF 모델 학습</td></tr>
+<tr><td><code>autoconf/automake</code></td><td>빌드 시스템</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="64-사용자-사전-추가"><a class="header" href="#64-사용자-사전-추가">6.4 사용자 사전 추가</a></h3>
+<pre><code class="language-bash"># final/tools/add-userdic.sh
+$DICT_INDEX \
+    -m ${DIC_PATH}/model.def \
+    -d ${DIC_PATH} \
+    -u ${DIC_PATH}/user-custom.dic \
+    -f utf-8 -t utf-8 \
+    -a user-dic/custom.csv
+</code></pre>
+<hr>
+<h2 id="부록-한국어-특화-기능"><a class="header" href="#부록-한국어-특화-기능">부록: 한국어 특화 기능</a></h2>
+<h3 id="a-mecab-ko의-left-space-penalty"><a class="header" href="#a-mecab-ko의-left-space-penalty">A. mecab-ko의 left-space-penalty</a></h3>
+<p>띄어쓰기 앞의 형태소에 페널티를 부여하여 한국어 띄어쓰기 특성 반영:</p>
+<pre><code>품사ID 120 (조사) → 좌측 공백 시 6000 비용 추가
+품사ID 172 (어미) → 좌측 공백 시 3000 비용 추가
+</code></pre>
+<h3 id="b-종성-기반-조사-연결"><a class="header" href="#b-종성-기반-조사-연결">B. 종성 기반 조사 연결</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>선행 종성</th><th>조사 형태</th></tr>
+</thead>
+<tbody>
+<tr><td>T (받침 있음)</td><td>은, 을, 이, 과</td></tr>
+<tr><td>F (받침 없음)</td><td>는, 를, 가, 와</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="c-수동-연접-비용-조정-예시"><a class="header" href="#c-수동-연접-비용-조정-예시">C. 수동 연접 비용 조정 예시</a></h3>
+<pre><code># change_connection_cost.txt
+JX,*,T,는|JKO,*,을 10000     # "는을" 방지
+JX,*,T,은|JX,*,은 10000      # "은은" 방지
+JKG,*,F,의|BOS/EOS,*,* 10000 # "의"로 시작 방지
+</code></pre>
+<hr>
+<h2 id="7-rust-구현체-데이터-구조"><a class="header" href="#7-rust-구현체-데이터-구조">7. Rust 구현체 데이터 구조</a></h2>
+<h3 id="71-entry-구조체"><a class="header" href="#71-entry-구조체">7.1 Entry 구조체</a></h3>
+<p><code>mecab-ko-dict</code> crate에서 정의한 사전 엔트리 구조:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// 사전 엔트리
+/// 파일 위치: rust/crates/mecab-ko-dict/src/lib.rs
+#[derive(Debug, Clone, PartialEq)]
+pub struct Entry {
+    /// 표면형 - 사전에 등록된 단어
+    pub surface: String,
+
+    /// 좌문맥 ID (left context ID)
+    /// 연접 비용 계산 시 현재 노드의 좌측 ID로 사용
+    pub left_id: u16,
+
+    /// 우문맥 ID (right context ID)
+    /// 연접 비용 계산 시 이전 노드의 우측 ID로 사용
+    pub right_id: u16,
+
+    /// 비용 (word cost)
+    /// 단어 생성 비용, 낮을수록 우선 선택
+    pub cost: i16,
+
+    /// 품사 정보 (feature string)
+    /// CSV의 5~12번째 필드를 콤마로 연결한 문자열
+    /// 형식: "품사태그,의미부류,종성유무,읽기,타입,첫품사,끝품사,분석결과"
+    pub feature: String,
+}
+<span class="boring">}</span></code></pre>
+<h4 id="feature-필드-상세"><a class="header" href="#feature-필드-상세">feature 필드 상세</a></h4>
+<p><code>feature</code> 필드는 8개의 서브필드로 구성됩니다:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>인덱스</th><th>필드명</th><th>설명</th><th>예시</th></tr>
+</thead>
+<tbody>
+<tr><td>0</td><td>품사태그</td><td>품사 정보</td><td><code>NNG</code>, <code>VV+EC</code></td></tr>
+<tr><td>1</td><td>의미부류</td><td>의미 분류</td><td><code>*</code>, <code>지명</code></td></tr>
+<tr><td>2</td><td>종성유무</td><td>받침 여부</td><td><code>T</code>, <code>F</code></td></tr>
+<tr><td>3</td><td>읽기</td><td>발음/원형</td><td><code>가방</code></td></tr>
+<tr><td>4</td><td>타입</td><td>엔트리 타입</td><td><code>*</code>, <code>Compound</code>, <code>Inflect</code>, <code>Preanalysis</code></td></tr>
+<tr><td>5</td><td>첫품사</td><td>복합 형태소 시작 품사</td><td><code>*</code>, <code>VV</code></td></tr>
+<tr><td>6</td><td>끝품사</td><td>복합 형태소 종료 품사</td><td><code>*</code>, <code>EC</code></td></tr>
+<tr><td>7</td><td>분석결과</td><td>형태소 분해</td><td><code>가깝/VA/*+아/EC/*</code></td></tr>
+</tbody>
+</table>
+</div>
+<h4 id="feature-예시"><a class="header" href="#feature-예시">feature 예시</a></h4>
+<pre><code># 일반명사
+NNG,*,T,가방,*,*,*,*
+
+# 복합어 (Compound)
+NNG,*,F,가가대소,Compound,*,*,가가/NNG/*+대소/NNG/*
+
+# 활용형 (Inflect)
+VA+EC,*,F,가까와,Inflect,VA,EC,가깝/VA/*+아/EC/*
+
+# 고유명사 (지명)
+NNP,지명,F,세종시,Compound,*,*,세종/NNP/지명+시/NNG/*
+</code></pre>
+<h3 id="72-userentry-구조체"><a class="header" href="#72-userentry-구조체">7.2 UserEntry 구조체</a></h3>
+<p>사용자 정의 사전용 엔트리:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// 사용자 사전 엔트리
+/// 파일 위치: rust/crates/mecab-ko-dict/src/user_dict.rs
+#[derive(Debug, Clone, PartialEq)]
+pub struct UserEntry {
+    /// 표면형
+    pub surface: String,
+    /// 좌문맥 ID
+    pub left_id: u16,
+    /// 우문맥 ID
+    pub right_id: u16,
+    /// 비용 (낮을수록 우선)
+    pub cost: i16,
+    /// 품사 태그
+    pub pos: String,
+    /// 읽기 (발음)
+    pub reading: Option&lt;String&gt;,
+    /// 원형 (기본형)
+    pub lemma: Option&lt;String&gt;,
+}
+<span class="boring">}</span></code></pre>
+<h3 id="73-matrix-구조체"><a class="header" href="#73-matrix-구조체">7.3 Matrix 구조체</a></h3>
+<p>연접 비용 행렬 구현:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// 밀집 연접 비용 행렬 (Dense Matrix)
+/// 파일 위치: rust/crates/mecab-ko-dict/src/matrix.rs
+#[derive(Debug, Clone)]
+pub struct DenseMatrix {
+    /// 좌문맥 크기
+    lsize: usize,
+    /// 우문맥 크기
+    rsize: usize,
+    /// 비용 배열 (row-major: costs[right_id + lsize * left_id])
+    costs: Vec&lt;i16&gt;,
+}
+<span class="boring">}</span></code></pre>
+<h4 id="matrix-인터페이스"><a class="header" href="#matrix-인터페이스">Matrix 인터페이스</a></h4>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// 연접 비용 행렬 인터페이스
+pub trait Matrix {
+    /// 연접 비용 조회
+    /// right_id: 이전 노드의 우문맥 ID
+    /// left_id: 현재 노드의 좌문맥 ID
+    fn get(&amp;self, right_id: u16, left_id: u16) -&gt; i32;
+
+    /// 좌문맥 크기
+    fn left_size(&amp;self) -&gt; usize;
+
+    /// 우문맥 크기
+    fn right_size(&amp;self) -&gt; usize;
+}
+<span class="boring">}</span></code></pre>
+<h4 id="사용-예시"><a class="header" href="#사용-예시">사용 예시</a></h4>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use mecab_ko_dict::matrix::{DenseMatrix, Matrix, MatrixLoader};
+
+// 텍스트 파일에서 로드
+let matrix = DenseMatrix::from_def_file("matrix.def")?;
+
+// 바이너리 파일에서 로드
+let matrix = DenseMatrix::from_bin_file("matrix.bin")?;
+
+// 자동 포맷 감지 로드
+let matrix = MatrixLoader::load("matrix.def")?;
+
+// 연접 비용 조회
+let cost = matrix.get(right_id, left_id);
+println!("Connection cost: {}", cost);
+<span class="boring">}</span></code></pre>
+<h3 id="74-charcategorydef-구조체"><a class="header" href="#74-charcategorydef-구조체">7.4 CharCategoryDef 구조체</a></h3>
+<p>문자 카테고리 정의:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// 문자 카테고리 정의
+/// 파일 위치: rust/crates/mecab-ko-core/src/unknown.rs
+#[derive(Debug, Clone)]
+pub struct CharCategoryDef {
+    /// 카테고리 이름 (예: "HANGUL", "ALPHA")
+    pub name: String,
+    /// 카테고리 ID (0-255)
+    pub id: CategoryId,
+    /// INVOKE 플래그: 항상 미등록어 후보 생성 여부
+    pub invoke: bool,
+    /// GROUP 플래그: 동일 카테고리 문자 그룹핑 여부
+    pub group: bool,
+    /// LENGTH: 미등록어 후보 최대 길이 (0이면 제한 없음)
+    pub length: usize,
+}
+<span class="boring">}</span></code></pre>
+<h3 id="75-unknowndef-구조체"><a class="header" href="#75-unknowndef-구조체">7.5 UnknownDef 구조체</a></h3>
+<p>미등록어 정의:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// 미등록어 정의
+/// 파일 위치: rust/crates/mecab-ko-core/src/unknown.rs
+#[derive(Debug, Clone)]
+pub struct UnknownDef {
+    /// 적용 카테고리 ID
+    pub category_id: CategoryId,
+    /// 좌문맥 ID
+    pub left_id: u16,
+    /// 우문맥 ID
+    pub right_id: u16,
+    /// 단어 비용
+    pub cost: i16,
+    /// 품사 태그
+    pub pos: String,
+    /// 피처 문자열 (품사 정보 전체)
+    pub feature: String,
+}
+<span class="boring">}</span></code></pre>
+<h3 id="76-trie-구조체"><a class="header" href="#76-trie-구조체">7.6 Trie 구조체</a></h3>
+<p>사전 검색용 Double-Array Trie:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// Double-Array Trie
+/// 파일 위치: rust/crates/mecab-ko-dict/src/trie.rs
+pub struct Trie&lt;'a&gt; {
+    /// 내부 Double-Array (yada 라이브러리)
+    da: DoubleArray&lt;Cow&lt;'a, [u8]&gt;&gt;,
+}
+
+impl&lt;'a&gt; Trie&lt;'a&gt; {
+    /// 정확히 일치하는 키 검색
+    pub fn exact_match(&amp;self, key: &amp;str) -&gt; Option&lt;u32&gt;;
+
+    /// 공통 접두사 검색 (형태소 후보 탐색)
+    pub fn common_prefix_search&lt;'b&gt;(
+        &amp;'b self,
+        text: &amp;'b str,
+    ) -&gt; impl Iterator&lt;Item = (u32, usize)&gt; + 'b;
+}
+<span class="boring">}</span></code></pre>
+<h3 id="77-matrix-타입-비교"><a class="header" href="#77-matrix-타입-비교">7.7 Matrix 타입 비교</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>타입</th><th>설명</th><th>메모리</th><th>사용 시나리오</th></tr>
+</thead>
+<tbody>
+<tr><td><code>DenseMatrix</code></td><td>전체 행렬을 메모리에 저장</td><td>O(lsize * rsize * 2)</td><td>일반적 사용</td></tr>
+<tr><td><code>SparseMatrix</code></td><td>HashMap으로 희소 엔트리만 저장</td><td>O(n * 10) (n=엔트리 수)</td><td>대부분이 기본값인 경우</td></tr>
+<tr><td><code>MmapMatrix</code></td><td>메모리 맵 방식</td><td>디스크에서 직접 접근</td><td>대용량 사전, 멀티프로세스</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="78-바이너리-포맷-상세"><a class="header" href="#78-바이너리-포맷-상세">7.8 바이너리 포맷 상세</a></h3>
+<h4 id="matrixbin-바이너리-포맷-rust-구현체"><a class="header" href="#matrixbin-바이너리-포맷-rust-구현체">matrix.bin 바이너리 포맷 (Rust 구현체)</a></h4>
+<pre><code>[헤더 - 4바이트]
+├── lsize (u16, little-endian)   # 좌문맥 크기
+└── rsize (u16, little-endian)   # 우문맥 크기
+
+[데이터]
+└── costs[lsize * rsize] (i16, little-endian)  # 비용 배열
+</code></pre>
+<p><strong>접근 공식</strong>:</p>
+<pre><code>index = right_id + lsize * left_id
+cost = costs[index]
+</code></pre>
+<h4 id="trie-바이너리-포맷"><a class="header" href="#trie-바이너리-포맷">Trie 바이너리 포맷</a></h4>
+<p>yada 라이브러리의 Double-Array Trie 직렬화 형식을 사용합니다.
+zstd 압축 지원 (<code>*.zst</code> 확장자).</p>
+<hr>
+<h2 id="8-api-사용-예제"><a class="header" href="#8-api-사용-예제">8. API 사용 예제</a></h2>
+<h3 id="81-사전-엔트리-생성"><a class="header" href="#81-사전-엔트리-생성">8.1 사전 엔트리 생성</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use mecab_ko_dict::Entry;
+
+let entry = Entry {
+    surface: "안녕".to_string(),
+    left_id: 1,
+    right_id: 1,
+    cost: 100,
+    feature: "NNG,*,T,안녕,*,*,*,*".to_string(),
+};
+<span class="boring">}</span></code></pre>
+<h3 id="82-사용자-사전-사용"><a class="header" href="#82-사용자-사전-사용">8.2 사용자 사전 사용</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use mecab_ko_dict::user_dict::{UserDictionary, UserDictionaryBuilder};
+
+// 빌더 패턴
+let dict = UserDictionaryBuilder::new()
+    .default_cost(-1000)
+    .add("딥러닝", "NNG")
+    .add_with_cost("머신러닝", "NNG", -500)
+    .add_full("챗GPT", "NNP", -1000, Some("챗지피티"))
+    .build();
+
+// 직접 추가
+let mut dict = UserDictionary::new();
+dict.add_entry("클로드", "NNP", Some(-1000), None);
+
+// CSV 파일에서 로드
+dict.load_from_csv("user-dict.csv")?;
+
+// 검색
+let entries = dict.lookup("딥러닝");
+<span class="boring">}</span></code></pre>
+<h3 id="83-연접-비용-행렬-사용"><a class="header" href="#83-연접-비용-행렬-사용">8.3 연접 비용 행렬 사용</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use mecab_ko_dict::matrix::{DenseMatrix, Matrix};
+
+// 로드
+let matrix = DenseMatrix::from_def_file("matrix.def")?;
+
+// "나는" = "나/NP" + "는/JX" 연접 비용 계산
+// NP의 right_id가 154, JX의 left_id가 120이라고 가정
+let connection_cost = matrix.get(154, 120);
+
+// 총 비용 계산
+let total_cost = prev_node_cost + connection_cost + current_word_cost;
+<span class="boring">}</span></code></pre>
+<h3 id="84-미등록어-처리"><a class="header" href="#84-미등록어-처리">8.4 미등록어 처리</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use mecab_ko_core::unknown::UnknownHandler;
+
+let handler = UnknownHandler::korean_default();
+
+// 미등록어 후보 생성
+let candidates = handler.generate_candidates("테스트ABC", 0, false);
+
+for candidate in candidates {
+    println!("{}: {} (cost: {})",
+        candidate.surface,
+        candidate.pos,
+        candidate.cost
+    );
+}
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="참고-자료"><a class="header" href="#참고-자료">참고 자료</a></h2>
+<ul>
+<li><a href="https://bitbucket.org/eunjeon/mecab-ko-dic">mecab-ko-dic Bitbucket</a></li>
+<li><a href="https://bitbucket.org/eunjeon/mecab-ko">mecab-ko GitHub</a></li>
+<li><a href="https://docs.google.com/spreadsheets/d/1-9blXKjtjeKZqsf4NzHeYJCrr49-nXeRF6D80udfcwY">세종 품사 태그 스프레드시트</a></li>
+<li><a href="https://taku910.github.io/mecab/">MeCab 공식 문서</a></li>
+</ul>
+<hr>
+<h2 id="변경-이력"><a class="header" href="#변경-이력">변경 이력</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>버전</th><th>날짜</th><th>변경 내용</th></tr>
+</thead>
+<tbody>
+<tr><td>v2.1</td><td>2026-01-05</td><td>Rust 구현체 Entry/Matrix/Trie 구조체 문서 추가</td></tr>
+<tr><td>v2.0</td><td>2026-01-04</td><td>사전 포맷 완전 분석 및 문서화</td></tr>
+<tr><td>v1.0</td><td>-</td><td>초기 mecab-ko-dic 포맷</td></tr>
+</tbody>
+</table>
+</div>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../reference/pos-tags.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../reference/binary-format.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../reference/pos-tags.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../reference/binary-format.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-c2a407aa.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

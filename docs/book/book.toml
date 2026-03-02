@@ -1,55 +1,23 @@
 [book]
-authors = ["hephaex <hephaex@gmail.com>"]
-language = "ko"
-multilingual = false
-src = "src"
 title = "MeCab-Ko Documentation"
-description = "한국어 형태소 분석기 MeCab-Ko의 Rust 구현 - 완벽 가이드"
+authors = ["Mario Cho <hephaex@gmail.com>"]
+language = "ko"
+src = "src"
 
 [build]
 build-dir = "book"
 create-missing = true
 
-[preprocessor.links]
-
 [output.html]
 default-theme = "light"
 preferred-dark-theme = "navy"
 git-repository-url = "https://github.com/hephaex/mecab-ko"
-git-repository-icon = "fa-github"
-edit-url-template = "https://github.com/hephaex/mecab-ko/edit/main/docs/book/src/{path}"
-site-url = "/mecab-ko/"
-additional-css = ["custom.css"]
-additional-js = ["custom.js"]
-no-section-label = false
-cname = "mecab-ko.org"
+edit-url-template = "https://github.com/hephaex/mecab-ko/edit/main/docs/book/{path}"
 
 [output.html.fold]
 enable = true
 level = 1
 
-[output.html.playground]
-editable = true
-copyable = true
-copy-js = true
-line-numbers = true
-runnable = false
-
 [output.html.search]
 enable = true
 limit-results = 30
-teaser-word-count = 30
-use-hierarchical-links = true
-boost-title = 2
-boost-hierarchy = 1
-boost-paragraph = 1
-expand = true
-heading-split-level = 3
-copy-js = true
-
-[output.html.print]
-enable = true
-
-[output.html.redirect]
-"/api.html" = "api-reference/rust.html"
-"/install.html" = "installation.html"

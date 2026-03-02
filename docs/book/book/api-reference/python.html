@@ -1,0 +1,642 @@
+<!DOCTYPE HTML>
+<html lang="ko" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Python 바인딩 - MeCab-Ko Documentation</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-2459343d.css">
+        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-d6debc81.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-61dcf4b3.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">MeCab-Ko Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/hephaex/mecab-ko" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/hephaex/mecab-ko/edit/main/docs/book/src/api-reference/python.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="python-바인딩"><a class="header" href="#python-바인딩">Python 바인딩</a></h1>
+<p>MeCab-Ko는 PyO3를 사용하여 Python 바인딩을 제공합니다.</p>
+<h2 id="설치"><a class="header" href="#설치">설치</a></h2>
+<pre><code class="language-bash">pip install mecab-ko
+</code></pre>
+<p>소스에서 설치:</p>
+<pre><code class="language-bash">cd python
+pip install maturin
+maturin develop --release
+</code></pre>
+<h2 id="빠른-시작"><a class="header" href="#빠른-시작">빠른 시작</a></h2>
+<pre><code class="language-python">from mecab_ko import Tagger
+
+# Tagger 생성
+tagger = Tagger()
+
+# 문장 분석
+result = tagger.parse("안녕하세요")
+print(result)
+
+# 노드 단위 처리
+for node in tagger.parse_nodes("형태소 분석"):
+    print(f"{node.surface}\t{node.pos}\t{node.feature}")
+</code></pre>
+<h2 id="api-레퍼런스"><a class="header" href="#api-레퍼런스">API 레퍼런스</a></h2>
+<h3 id="tagger-클래스"><a class="header" href="#tagger-클래스"><code>Tagger</code> 클래스</a></h3>
+<p>형태소 분석기의 메인 클래스입니다.</p>
+<pre><code class="language-python">class Tagger:
+    """MeCab-Ko 형태소 분석기"""
+
+    def __init__(
+        self,
+        dict_dir: str | None = None,
+        user_dict: str | None = None,
+        output_format: str = "mecab",
+        space_penalty: int = -1000,
+    ):
+        """
+        새로운 Tagger를 생성합니다.
+
+        Args:
+            dict_dir: 사전 디렉토리 경로
+            user_dict: 사용자 사전 파일 경로
+            output_format: 출력 포맷 ("mecab", "wakati", "json", "csv")
+            space_penalty: 띄어쓰기 패널티 (기본값: -1000)
+
+        Raises:
+            RuntimeError: 사전을 찾을 수 없거나 초기화 실패 시
+        """
+        ...
+
+    def parse(self, text: str) -&gt; str:
+        """
+        텍스트를 분석하고 문자열로 반환합니다.
+
+        Args:
+            text: 분석할 텍스트
+
+        Returns:
+            분석 결과 문자열
+
+        Raises:
+            RuntimeError: 파싱 실패 시
+        """
+        ...
+
+    def parse_nodes(self, text: str) -&gt; list[Node]:
+        """
+        텍스트를 분석하고 Node 리스트로 반환합니다.
+
+        Args:
+            text: 분석할 텍스트
+
+        Returns:
+            Node 객체 리스트
+
+        Raises:
+            RuntimeError: 파싱 실패 시
+        """
+        ...
+
+    def parse_to_dict(self, text: str) -&gt; dict:
+        """
+        텍스트를 분석하고 딕셔너리로 반환합니다.
+
+        Args:
+            text: 분석할 텍스트
+
+        Returns:
+            {"text": str, "nodes": [{"surface": str, "feature": str, ...}]}
+
+        Raises:
+            RuntimeError: 파싱 실패 시
+        """
+        ...
+
+    def parse_nbest(self, text: str, n: int = 3) -&gt; list[str]:
+        """
+        N-best 결과를 반환합니다.
+
+        Args:
+            text: 분석할 텍스트
+            n: 반환할 후보 개수
+
+        Returns:
+            N개의 분석 결과 문자열 리스트
+
+        Raises:
+            RuntimeError: 파싱 실패 시
+        """
+        ...
+</code></pre>
+<h3 id="node-클래스"><a class="header" href="#node-클래스"><code>Node</code> 클래스</a></h3>
+<p>분석된 형태소 노드를 나타내는 클래스입니다.</p>
+<pre><code class="language-python">class Node:
+    """형태소 분석 노드"""
+
+    @property
+    def surface(self) -&gt; str:
+        """표면형 (실제 텍스트)"""
+        ...
+
+    @property
+    def feature(self) -&gt; str:
+        """품사 및 의미 정보"""
+        ...
+
+    @property
+    def pos(self) -&gt; str:
+        """품사 태그"""
+        ...
+
+    @property
+    def start(self) -&gt; int:
+        """시작 위치 (바이트 단위)"""
+        ...
+
+    @property
+    def length(self) -&gt; int:
+        """길이 (바이트 단위)"""
+        ...
+
+    @property
+    def cost(self) -&gt; int:
+        """비용"""
+        ...
+
+    @property
+    def base_form(self) -&gt; str | None:
+        """기본형 (원형)"""
+        ...
+
+    @property
+    def reading(self) -&gt; str | None:
+        """읽기 정보"""
+        ...
+
+    def to_dict(self) -&gt; dict:
+        """딕셔너리로 변환"""
+        ...
+</code></pre>
+<h2 id="사용-예제"><a class="header" href="#사용-예제">사용 예제</a></h2>
+<h3 id="기본-사용"><a class="header" href="#기본-사용">기본 사용</a></h3>
+<pre><code class="language-python">from mecab_ko import Tagger
+
+tagger = Tagger()
+
+# 텍스트 분석
+text = "아버지가방에들어가신다"
+result = tagger.parse(text)
+print(result)
+</code></pre>
+<p>출력:</p>
+<pre><code>아버지    NNG,*,F,아버지,*,*,*,*
+가        JKS,*,F,가,*,*,*,*
+방        NNG,*,T,방,*,*,*,*
+에        JKB,*,F,에,*,*,*,*
+들어가    VV,*,F,들어가,*,*,*,*
+시        EP,*,F,시,*,*,*,*
+ㄴ다      EF,*,F,ㄴ다,*,*,*,*
+EOS
+</code></pre>
+<h3 id="node-단위-처리"><a class="header" href="#node-단위-처리">Node 단위 처리</a></h3>
+<pre><code class="language-python">from mecab_ko import Tagger
+
+tagger = Tagger()
+nodes = tagger.parse_nodes("형태소 분석을 시작합니다")
+
+for node in nodes:
+    print(f"표면형: {node.surface}")
+    print(f"품사: {node.pos}")
+    if node.base_form:
+        print(f"기본형: {node.base_form}")
+    print("---")
+</code></pre>
+<h3 id="사전-형식-출력"><a class="header" href="#사전-형식-출력">사전 형식 출력</a></h3>
+<pre><code class="language-python">from mecab_ko import Tagger
+
+tagger = Tagger()
+result_dict = tagger.parse_to_dict("안녕하세요")
+
+print(result_dict["text"])  # 원본 텍스트
+for node in result_dict["nodes"]:
+    print(node["surface"], node["pos"])
+</code></pre>
+<h3 id="사용자-사전-사용"><a class="header" href="#사용자-사전-사용">사용자 사전 사용</a></h3>
+<pre><code class="language-python">from mecab_ko import Tagger
+
+tagger = Tagger(user_dict="user.csv")
+result = tagger.parse("딥러닝과 머신러닝")
+print(result)
+</code></pre>
+<p>user.csv 파일:</p>
+<pre><code class="language-csv">딥러닝,NNG,-1000,딥러닝
+머신러닝,NNG,-1000,머신러닝
+</code></pre>
+<h3 id="wakati-출력-형태소만"><a class="header" href="#wakati-출력-형태소만">Wakati 출력 (형태소만)</a></h3>
+<pre><code class="language-python">from mecab_ko import Tagger
+
+tagger = Tagger(output_format="wakati")
+result = tagger.parse("형태소만 추출합니다")
+print(result)  # "형태소 만 추출 하 ㅂ니다"
+</code></pre>
+<h3 id="json-출력"><a class="header" href="#json-출력">JSON 출력</a></h3>
+<pre><code class="language-python">from mecab_ko import Tagger
+import json
+
+tagger = Tagger(output_format="json")
+result = tagger.parse("JSON 형식으로 출력")
+data = json.loads(result)
+print(json.dumps(data, ensure_ascii=False, indent=2))
+</code></pre>
+<h3 id="n-best-분석"><a class="header" href="#n-best-분석">N-best 분석</a></h3>
+<pre><code class="language-python">from mecab_ko import Tagger
+
+tagger = Tagger()
+candidates = tagger.parse_nbest("아버지가방에들어가신다", n=3)
+
+for i, candidate in enumerate(candidates, 1):
+    print(f"=== 후보 {i} ===")
+    print(candidate)
+</code></pre>
+<h3 id="대용량-파일-처리"><a class="header" href="#대용량-파일-처리">대용량 파일 처리</a></h3>
+<pre><code class="language-python">from mecab_ko import Tagger
+
+tagger = Tagger()
+
+with open("large_file.txt", "r", encoding="utf-8") as f:
+    for line in f:
+        line = line.strip()
+        if line:
+            result = tagger.parse(line)
+            # 결과 처리
+            print(result)
+</code></pre>
+<h3 id="멀티프로세싱"><a class="header" href="#멀티프로세싱">멀티프로세싱</a></h3>
+<pre><code class="language-python">from mecab_ko import Tagger
+from multiprocessing import Pool
+import os
+
+def analyze_text(text):
+    # 각 프로세스마다 별도의 Tagger 생성
+    tagger = Tagger()
+    return tagger.parse(text)
+
+if __name__ == "__main__":
+    texts = [
+        "첫 번째 문장",
+        "두 번째 문장",
+        "세 번째 문장",
+    ]
+
+    with Pool(processes=os.cpu_count()) as pool:
+        results = pool.map(analyze_text, texts)
+
+    for text, result in zip(texts, results):
+        print(f"Input: {text}")
+        print(f"Result: {result}\n")
+</code></pre>
+<h3 id="데이터프레임과-통합"><a class="header" href="#데이터프레임과-통합">데이터프레임과 통합</a></h3>
+<pre><code class="language-python">import pandas as pd
+from mecab_ko import Tagger
+
+tagger = Tagger()
+
+df = pd.DataFrame({
+    "text": ["첫 번째 문장", "두 번째 문장", "세 번째 문장"]
+})
+
+# 형태소 분석 결과 추가
+df["morphs"] = df["text"].apply(
+    lambda x: [node.surface for node in tagger.parse_nodes(x)]
+)
+
+# 품사 태그 추가
+df["pos_tags"] = df["text"].apply(
+    lambda x: [node.pos for node in tagger.parse_nodes(x)]
+)
+
+print(df)
+</code></pre>
+<h3 id="flask-웹-서버"><a class="header" href="#flask-웹-서버">Flask 웹 서버</a></h3>
+<pre><code class="language-python">from flask import Flask, request, jsonify
+from mecab_ko import Tagger
+
+app = Flask(__name__)
+tagger = Tagger()  # 전역으로 한 번만 생성
+
+@app.route("/analyze", methods=["POST"])
+def analyze():
+    data = request.get_json()
+    text = data.get("text", "")
+
+    if not text:
+        return jsonify({"error": "No text provided"}), 400
+
+    result = tagger.parse_to_dict(text)
+    return jsonify(result)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
+</code></pre>
+<p>사용 예:</p>
+<pre><code class="language-bash">curl -X POST http://localhost:5000/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"text": "안녕하세요"}'
+</code></pre>
+<h3 id="동사형용사-추출"><a class="header" href="#동사형용사-추출">동사/형용사 추출</a></h3>
+<pre><code class="language-python">from mecab_ko import Tagger
+
+tagger = Tagger()
+text = "저는 오늘 학교에 가서 공부를 했습니다."
+nodes = tagger.parse_nodes(text)
+
+# 동사(VV, VA) 추출
+verbs = [node.surface for node in nodes if node.pos in ["VV", "VA"]]
+print("동사/형용사:", verbs)
+# 출력: ['가', '하']
+
+# 명사(NNG, NNP) 추출
+nouns = [node.surface for node in nodes if node.pos in ["NNG", "NNP"]]
+print("명사:", nouns)
+# 출력: ['오늘', '학교', '공부']
+</code></pre>
+<h2 id="타입-힌트"><a class="header" href="#타입-힌트">타입 힌트</a></h2>
+<p>Python 3.9+ 에서 타입 힌트를 사용할 수 있습니다:</p>
+<pre><code class="language-python">from mecab_ko import Tagger, Node
+from typing import List, Dict, Optional
+
+def analyze_sentences(sentences: List[str]) -&gt; List[List[Node]]:
+    tagger: Tagger = Tagger()
+    results: List[List[Node]] = []
+
+    for sentence in sentences:
+        nodes: List[Node] = tagger.parse_nodes(sentence)
+        results.append(nodes)
+
+    return results
+</code></pre>
+<h2 id="성능-최적화"><a class="header" href="#성능-최적화">성능 최적화</a></h2>
+<h3 id="tagger-재사용"><a class="header" href="#tagger-재사용">Tagger 재사용</a></h3>
+<pre><code class="language-python"># Bad - 매번 생성
+for text in texts:
+    tagger = Tagger()  # 비효율적
+    result = tagger.parse(text)
+
+# Good - 재사용
+tagger = Tagger()  # 한 번만 생성
+for text in texts:
+    result = tagger.parse(text)
+</code></pre>
+<h3 id="배치-처리"><a class="header" href="#배치-처리">배치 처리</a></h3>
+<p>대용량 데이터는 배치로 처리:</p>
+<pre><code class="language-python">def batch_analyze(texts, batch_size=1000):
+    tagger = Tagger()
+    results = []
+
+    for i in range(0, len(texts), batch_size):
+        batch = texts[i:i+batch_size]
+        batch_results = [tagger.parse(text) for text in batch]
+        results.extend(batch_results)
+
+    return results
+</code></pre>
+<h2 id="예외-처리"><a class="header" href="#예외-처리">예외 처리</a></h2>
+<pre><code class="language-python">from mecab_ko import Tagger
+
+tagger = Tagger()
+
+try:
+    result = tagger.parse("분석할 텍스트")
+    print(result)
+except RuntimeError as e:
+    print(f"분석 실패: {e}")
+</code></pre>
+<h2 id="관련-문서"><a class="header" href="#관련-문서">관련 문서</a></h2>
+<ul>
+<li><a href="./rust.html">Rust API</a></li>
+<li><a href="./nodejs.html">Node.js API</a></li>
+<li><a href="../cli-usage.html">CLI 사용법</a></li>
+<li><a href="../user-dictionary.html">사용자 사전</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../api-reference/rust.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../api-reference/nodejs.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../api-reference/rust.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../api-reference/nodejs.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-c2a407aa.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

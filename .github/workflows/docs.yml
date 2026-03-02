@@ -93,10 +93,7 @@ jobs:
 
       - name: Install mdBook
         run: |
-          mkdir -p mdbook
-          cd mdbook
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain=none
-          cargo install mdbook --version 0.4.40
+          cargo install mdbook --version 0.4.48
 
       - name: Build mdBook
         run: |
