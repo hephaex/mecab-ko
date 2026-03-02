@@ -83,8 +83,9 @@ impl DictValidator {
             report.add_issue(issue);
         }
 
-        // Calculate statistics
+        // Calculate statistics and store entries for analysis
         report.statistics = Self::calculate_statistics(&entries);
+        report.entries = Some(entries);
         report.valid_entries = report.total_entries.saturating_sub(report.error_entries);
 
         Ok(report)

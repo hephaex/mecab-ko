@@ -37,12 +37,17 @@
 #![warn(clippy::nursery)]
 #![allow(clippy::module_name_repetitions)]
 
+pub mod analyzer;
 pub mod config;
 pub mod report;
 pub mod rules;
 pub mod validator;
 
 // Re-export main types
+pub use analyzer::{
+    AnalysisReport, ConsistencyIssues, CostDistribution, DictAnalyzer, HistogramBin, OutlierInfo,
+    PosDistribution, PosTagStat, Recommendation, RecommendationSeverity,
+};
 pub use config::{load_config, save_config, ConfigError};
 pub use report::{
     IssueCategory, Location, Severity, ValidationIssue, ValidationReport, ValidationStatistics,

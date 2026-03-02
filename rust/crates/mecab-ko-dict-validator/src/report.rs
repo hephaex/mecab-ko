@@ -30,6 +30,9 @@ pub struct ValidationReport {
     pub statistics: ValidationStatistics,
     /// Timestamp of validation
     pub timestamp: String,
+    /// Original entries (for analysis, not serialized to keep JSON small)
+    #[serde(skip)]
+    pub entries: Option<Vec<crate::validator::DictEntry>>,
 }
 
 impl ValidationReport {
@@ -45,6 +48,7 @@ impl ValidationReport {
             issues: Vec::new(),
             statistics: ValidationStatistics::default(),
             timestamp: chrono::Utc::now().to_rfc3339(),
+            entries: None,
         }
     }
 

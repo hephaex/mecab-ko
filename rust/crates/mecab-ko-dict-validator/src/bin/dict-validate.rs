@@ -4,13 +4,15 @@
 #![allow(clippy::format_push_string)]
 #![allow(clippy::too_many_lines)]
 #![allow(clippy::expect_used)] // CLI tool can use expect for user-facing errors
+#![allow(clippy::struct_excessive_bools)] // CLI args structure
+#![allow(clippy::cast_possible_truncation)] // Intentional for display
 
 use anyhow::{Context, Result};
 use clap::{ArgAction, Parser};
 use indicatif::{ProgressBar, ProgressStyle};
 use mecab_ko_dict_validator::{
     config::{generate_default_config, load_config},
-    DictValidator, ValidationConfig,
+    DictAnalyzer, DictValidator, ValidationConfig,
 };
 use std::fs;
 use std::path::PathBuf;
@@ -59,6 +61,14 @@ struct Args {
     /// Show progress bar
     #[arg(long, action = ArgAction::SetTrue)]
     progress: bool,
+
+    /// Run analysis mode (statistical analysis)
+    #[arg(long, action = ArgAction::SetTrue)]
+    analyze: bool,
+
+    /// Generate automatic fix suggestions
+    #[arg(long, action = ArgAction::SetTrue)]
+    fix: bool,
 }
 
 #[derive(Debug, Clone, Copy, clap::ValueEnum)]
@@ -164,22 +174,28 @@ fn main() -> Result<()> {
     }
 
     // Generate output
-    let output_content = match args.format {
-        OutputFormat::Text => {
-            if all_reports.len() == 1 {
-                all_reports[0].to_text()
-            } else {
-                generate_combined_text_report(&all_reports)
+    let output_content = if args.analyze {
+        // Analysis mode
+        generate_analysis_output(&all_reports, &args)?
+    } else {
+        // Standard validation output
+        match args.format {
+            OutputFormat::Text => {
+                if all_reports.len() == 1 {
+                    all_reports[0].to_text()
+                } else {
+                    generate_combined_text_report(&all_reports)
+                }
             }
-        }
-        OutputFormat::Json => {
-            if all_reports.len() == 1 {
-                all_reports[0]
-                    .to_json()
-                    .context("Failed to serialize report to JSON")?
-            } else {
-                serde_json::to_string_pretty(&all_reports)
-                    .context("Failed to serialize reports to JSON")?
+            OutputFormat::Json => {
+                if all_reports.len() == 1 {
+                    all_reports[0]
+                        .to_json()
+                        .context("Failed to serialize report to JSON")?
+                } else {
+                    serde_json::to_string_pretty(&all_reports)
+                        .context("Failed to serialize reports to JSON")?
+                }
             }
         }
     };
@@ -264,4 +280,57 @@ fn generate_combined_text_report(reports: &[mecab_ko_dict_validator::ValidationR
     output.push_str("\nUse --output <file> with individual files for detailed reports.\n");
 
     output
+}
+
+fn generate_analysis_output(
+    reports: &[mecab_ko_dict_validator::ValidationReport],
+    args: &Args,
+) -> Result<String> {
+    let mut output = String::new();
+
+    for report in reports {
+        if let Some(entries) = &report.entries {
+            info!("Running analysis on {} entries", entries.len());
+            let analysis = DictAnalyzer::analyze(entries);
+
+            match args.format {
+                OutputFormat::Text => {
+                    output.push_str(&format!("\n파일: {}\n\n", report.file_path.display()));
+                    output.push_str(&analysis.to_text());
+
+                    if args.fix {
+                        output.push_str("\n자동 수정 제안:\n");
+                        output.push_str("───────────────────────────────────────────────────────────\n");
+
+                        if analysis.consistency_issues.duplicate_entries > 0 {
+                            output.push_str("  중복 제거: 중복된 엔트리를 제거하세요.\n");
+                            output.push_str("    사용: grep -v 명령 또는 수동 편집\n\n");
+                        }
+
+                        if analysis.consistency_issues.invalid_pos_tags > 0 {
+                            output.push_str("  품사 수정: 유효하지 않은 품사 태그를 세종 품사 태그로 변경하세요.\n");
+                            output.push_str("    예: NOUN → NNG, VERB → VV\n\n");
+                        }
+
+                        if !analysis.cost_distribution.outliers.is_empty() {
+                            output.push_str("  비용 조정: 이상치 비용 값을 검토하고 적절한 범위로 조정하세요.\n");
+                            output.push_str(&format!("    권장 범위: {} ~ {}\n\n",
+                                analysis.cost_distribution.mean as i32 - (analysis.cost_distribution.std_dev as i32 * 2),
+                                analysis.cost_distribution.mean as i32 + (analysis.cost_distribution.std_dev as i32 * 2)
+                            ));
+                        }
+                    }
+                }
+                OutputFormat::Json => {
+                    let json = serde_json::to_string_pretty(&analysis)
+                        .context("Failed to serialize analysis to JSON")?;
+                    output.push_str(&json);
+                }
+            }
+        } else {
+            warn!("No entries available for analysis in {}", report.file_path.display());
+        }
+    }
+
+    Ok(output)
 }
