@@ -6,6 +6,7 @@ members = [
     "crates/mecab-ko-dict",
     "crates/mecab-ko-dict-builder",
     "crates/mecab-ko-dict-validator",
+    "crates/mecab-ko-dict-sync",
     "crates/mecab-ko-hangul",
     "crates/mecab-ko-cli",
     "crates/mecab-ko-python",
