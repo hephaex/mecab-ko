@@ -82,6 +82,8 @@
 //! ## Dictionary Commands
 //!
 //! - `dict`: Show dictionary information
+//! - `sync`: Synchronize from external dictionary API (single query)
+//! - `collect`: Batch collection from keyword list
 //!
 //! ## Utility Commands
 //!
@@ -224,6 +226,35 @@
 //! mecab-ko completions fish > ~/.config/fish/completions/mecab-ko.fish
 //! ```
 //!
+//! ## Dictionary Collection
+//!
+//! ```bash
+//! # Create keywords.txt with one keyword per line:
+//! # 인공지능
+//! # 메타버스
+//! # 블록체인
+//!
+//! # Collect entries from OpenDict API
+//! export OPENDICT_API_KEY="your-api-key"
+//! mecab-ko collect -k keywords.txt -o collected.csv --report
+//!
+//! # With custom options
+//! mecab-ko collect -k keywords.txt -o output.csv \
+//!   --source opendict \
+//!   --max-per-keyword 20 \
+//!   --delay 200 \
+//!   --report
+//!
+//! # Output report example:
+//! # === 수집 리포트 ===
+//! # 총 키워드: 50
+//! # 성공: 48
+//! # 실패: 2
+//! # 수집된 항목: 423
+//! # 중복 제거 후: 412
+//! # 소요 시간: 2분 34초
+//! ```
+//!
 //! # Output Format Details
 //!
 //! ## Default Format
@@ -314,14 +345,14 @@ use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use clap_complete::{generate, Shell};
 use mecab_ko_core::Tokenizer;
 use mecab_ko_dict::UserDictionary;
-use mecab_ko_dict_sync::{ConverterEntry, DictConverter};
+use mecab_ko_dict_sync::{ConverterEntry, DictConverter, UserEntry};
 use serde::Serialize;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader, BufWriter, Write};
 use std::path::PathBuf;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 /// Command-line arguments for MeCab-Ko
 ///
@@ -454,6 +485,36 @@ enum Commands {
         /// 기존 파일에 추가 (덮어쓰기 대신)
         #[arg(long)]
         append: bool,
+    },
+    /// 키워드 목록으로부터 배치 수집
+    Collect {
+        /// 키워드 파일 경로 (한 줄에 하나씩, # 주석)
+        #[arg(short, long)]
+        keywords: PathBuf,
+
+        /// 동기화 소스
+        #[arg(long, value_enum, default_value = "opendict")]
+        source: DictSource,
+
+        /// API 키 (환경변수: `OPENDICT_API_KEY` 또는 `KRDICT_API_KEY`)
+        #[arg(long)]
+        api_key: Option<String>,
+
+        /// 출력 파일 (필수)
+        #[arg(short, long)]
+        output: PathBuf,
+
+        /// 키워드당 최대 결과 수
+        #[arg(long, default_value = "10")]
+        max_per_keyword: u32,
+
+        /// 요청 간 지연 시간 (밀리초)
+        #[arg(long, default_value = "100")]
+        delay: u64,
+
+        /// 수집 리포트 출력
+        #[arg(long)]
+        report: bool,
     },
     /// 버전 정보 표시
     Version,
@@ -759,6 +820,25 @@ fn main() -> Result<()> {
                 append,
             } => {
                 run_sync(*source, query, api_key.as_deref(), *max_results, output.as_ref(), *append)?;
+            }
+            Commands::Collect {
+                keywords,
+                source,
+                api_key,
+                output,
+                max_per_keyword,
+                delay,
+                report,
+            } => {
+                run_collect(
+                    keywords,
+                    *source,
+                    api_key.as_deref(),
+                    output,
+                    *max_per_keyword,
+                    *delay,
+                    *report,
+                )?;
             }
             Commands::Version => {
                 print_version();
@@ -1638,6 +1718,322 @@ fn show_stats(ctx: &AnalysisContext) -> Result<()> {
     Ok(())
 }
 
+/// Collects dictionary entries from multiple keywords in batch mode
+///
+/// Reads keywords from a file (one per line, # for comments) and
+/// queries the API for each keyword, showing progress and collecting results.
+///
+/// # Arguments
+///
+/// * `keywords_path` - Path to keywords file
+/// * `source` - Dictionary source
+/// * `api_key` - Optional API key
+/// * `output_path` - Output CSV file
+/// * `max_per_keyword` - Maximum results per keyword
+/// * `delay_ms` - Delay between requests in milliseconds
+/// * `show_report` - Whether to show collection report
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - Keywords file cannot be read
+/// - API key is not provided
+/// - API requests fail
+/// - File I/O fails
+///
+/// # Examples
+///
+/// ```bash
+/// # Create keywords.txt with:
+/// # 인공지능
+/// # 메타버스
+/// # 블록체인
+///
+/// mecab-ko collect -k keywords.txt -o output.csv --report
+/// ```
+#[allow(clippy::too_many_arguments)]
+fn run_collect(
+    keywords_path: &PathBuf,
+    source: DictSource,
+    api_key: Option<&str>,
+    output_path: &PathBuf,
+    max_per_keyword: u32,
+    delay_ms: u64,
+    show_report: bool,
+) -> Result<()> {
+    // Create async runtime
+    let runtime = tokio::runtime::Runtime::new().context("Tokio 런타임 생성 실패")?;
+
+    runtime.block_on(async {
+        run_collect_async(
+            keywords_path,
+            source,
+            api_key,
+            output_path,
+            max_per_keyword,
+            delay_ms,
+            show_report,
+        )
+        .await
+    })
+}
+
+/// Async implementation of collect command
+#[allow(clippy::too_many_lines)]
+async fn run_collect_async(
+    keywords_path: &PathBuf,
+    source: DictSource,
+    api_key: Option<&str>,
+    output_path: &PathBuf,
+    max_per_keyword: u32,
+    delay_ms: u64,
+    show_report: bool,
+) -> Result<()> {
+    use indicatif::{ProgressBar, ProgressStyle};
+
+    // Read keywords file
+    let keywords = read_keywords_file(keywords_path)?;
+
+    if keywords.is_empty() {
+        anyhow::bail!("키워드 파일이 비어있습니다: {}", keywords_path.display());
+    }
+
+    eprintln!("{}개의 키워드를 로드했습니다.", keywords.len());
+
+    // Get API key
+    let api_key = api_key
+        .map(String::from)
+        .or_else(|| {
+            match source {
+                DictSource::Opendict => std::env::var("OPENDICT_API_KEY").ok(),
+                DictSource::Krdict => std::env::var("KRDICT_API_KEY").ok(),
+            }
+        })
+        .ok_or_else(|| {
+            let env_var = match source {
+                DictSource::Opendict => "OPENDICT_API_KEY",
+                DictSource::Krdict => "KRDICT_API_KEY",
+            };
+            anyhow::anyhow!(
+                "API 키가 필요합니다. --api-key 옵션이나 {env_var} 환경변수를 설정하세요."
+            )
+        })?;
+
+    // Create output file
+    let output_file = File::create(output_path).with_context(|| {
+        format!("출력 파일 생성 실패: {}", output_path.display())
+    })?;
+    let mut writer = BufWriter::new(output_file);
+
+    // Statistics
+    let start_time = Instant::now();
+    let mut total_entries = 0;
+    let mut successful_keywords = 0;
+    let mut failed_keywords = 0;
+    let mut all_entries = Vec::new();
+
+    // Create progress bar
+    let pb = ProgressBar::new(keywords.len() as u64);
+    pb.set_style(
+        ProgressStyle::default_bar()
+            .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} {msg}")
+            .context("Failed to set progress bar template")?
+            .progress_chars("##-"),
+    );
+
+    // Create converter
+    let converter = DictConverter::new();
+
+    // Process each keyword
+    for (idx, keyword) in keywords.iter().enumerate() {
+        pb.set_message(format!("처리 중: {keyword}"));
+
+        // Search via API
+        let entries_result = match source {
+            DictSource::Opendict => {
+                search_opendict(&api_key, keyword, max_per_keyword).await
+            }
+            DictSource::Krdict => {
+                search_krdict(&api_key, keyword, max_per_keyword).await
+            }
+        };
+
+        match entries_result {
+            Ok(entries) => {
+                successful_keywords += 1;
+
+                // Convert entries
+                for entry in &entries {
+                    let converter_entry = ConverterEntry {
+                        surface: entry.word.clone(),
+                        pos: entry.pos.clone(),
+                        reading: entry.reading.clone(),
+                        frequency: None,
+                    };
+
+                    if let Ok(user_entry) = converter.convert_entry(&converter_entry) {
+                        all_entries.push(user_entry);
+                        total_entries += 1;
+                    }
+                }
+            }
+            Err(e) => {
+                failed_keywords += 1;
+                eprintln!("\n경고: '{keyword}' 검색 실패: {e}");
+            }
+        }
+
+        pb.inc(1);
+
+        // Add delay between requests (except for the last one)
+        if idx < keywords.len() - 1 {
+            tokio::time::sleep(Duration::from_millis(delay_ms)).await;
+        }
+    }
+
+    pb.finish_with_message("완료");
+
+    // Remove duplicates based on surface form
+    let unique_entries = deduplicate_entries(all_entries);
+    let deduplicated_count = unique_entries.len();
+
+    // Write to file
+    for entry in &unique_entries {
+        writeln!(writer, "{}", entry.to_csv_line())?;
+    }
+    writer.flush()?;
+
+    let elapsed = start_time.elapsed();
+
+    // Show report
+    if show_report {
+        println!("\n=== 수집 리포트 ===");
+        println!("총 키워드: {}", keywords.len());
+        println!("성공: {successful_keywords}");
+        println!("실패: {failed_keywords}");
+        println!("수집된 항목: {total_entries}");
+        println!("중복 제거 후: {deduplicated_count}");
+        println!("소요 시간: {}분 {}초", elapsed.as_secs() / 60, elapsed.as_secs() % 60);
+        println!("출력 파일: {}", output_path.display());
+    }
+
+    eprintln!(
+        "\n{}개 항목을 {} 에 저장했습니다.",
+        deduplicated_count,
+        output_path.display()
+    );
+
+    Ok(())
+}
+
+/// Reads keywords from a text file
+///
+/// # Arguments
+///
+/// * `path` - Path to keywords file
+///
+/// # Returns
+///
+/// A vector of non-empty keywords (comments and blank lines excluded)
+///
+/// # Format
+///
+/// - One keyword per line
+/// - Lines starting with `#` are comments
+/// - Empty lines are ignored
+/// - Leading and trailing whitespace is trimmed
+///
+/// # Errors
+///
+/// Returns an error if the file cannot be read
+fn read_keywords_file(path: &PathBuf) -> Result<Vec<String>> {
+    let file = File::open(path)
+        .with_context(|| format!("키워드 파일 열기 실패: {}", path.display()))?;
+    let reader = BufReader::new(file);
+
+    let keywords: Vec<String> = reader
+        .lines()
+        .filter_map(|line| {
+            let line = line.ok()?;
+            let trimmed = line.trim();
+
+            // Skip comments and empty lines
+            if trimmed.is_empty() || trimmed.starts_with('#') {
+                None
+            } else {
+                Some(trimmed.to_string())
+            }
+        })
+        .collect();
+
+    Ok(keywords)
+}
+
+/// Searches `OpenDict` API for a keyword
+async fn search_opendict(
+    api_key: &str,
+    keyword: &str,
+    max_results: u32,
+) -> Result<Vec<mecab_ko_dict_sync::models::DictEntry>> {
+    use mecab_ko_dict_sync::client::OpenDictClient;
+    use mecab_ko_dict_sync::config::OpenDictConfig;
+
+    let config = OpenDictConfig::new(api_key).with_max_results(max_results);
+    let client = OpenDictClient::new(config)
+        .map_err(|e| anyhow::anyhow!("API 클라이언트 생성 실패: {e}"))?;
+
+    client
+        .search(keyword)
+        .await
+        .map_err(|e| anyhow::anyhow!("API 검색 실패: {e}"))
+}
+
+/// Searches `KrDict` API for a keyword
+async fn search_krdict(
+    api_key: &str,
+    keyword: &str,
+    max_results: u32,
+) -> Result<Vec<mecab_ko_dict_sync::models::DictEntry>> {
+    use mecab_ko_dict_sync::config::KrDictConfig;
+    use mecab_ko_dict_sync::KrDictClient;
+
+    let config = KrDictConfig::new(api_key).with_max_results(max_results);
+    let client = KrDictClient::new(config)
+        .map_err(|e| anyhow::anyhow!("API 클라이언트 생성 실패: {e}"))?;
+
+    client
+        .search(keyword)
+        .await
+        .map_err(|e| anyhow::anyhow!("API 검색 실패: {e}"))
+}
+
+/// Deduplicates entries based on surface form and POS
+///
+/// Keeps the first occurrence of each unique (surface, pos) pair.
+///
+/// # Arguments
+///
+/// * `entries` - Vector of user entries
+///
+/// # Returns
+///
+/// Deduplicated vector of entries
+fn deduplicate_entries(entries: Vec<UserEntry>) -> Vec<UserEntry> {
+    use std::collections::HashSet;
+
+    let mut seen = HashSet::new();
+    let mut result = Vec::new();
+
+    for entry in entries {
+        let key = (entry.surface.clone(), entry.pos.clone());
+        if seen.insert(key) {
+            result.push(entry);
+        }
+    }
+
+    result
+}
+
 #[cfg(test)]
 #[allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 mod tests {
@@ -1868,5 +2264,141 @@ mod tests {
             }
             _ => panic!("Expected sync command"),
         }
+    }
+
+    #[test]
+    fn test_collect_command_basic() {
+        let args = Args::try_parse_from([
+            "mecab-ko",
+            "collect",
+            "-k",
+            "keywords.txt",
+            "-o",
+            "output.csv",
+        ])
+        .unwrap();
+        match args.command {
+            Some(Commands::Collect {
+                keywords,
+                output,
+                source,
+                max_per_keyword,
+                delay,
+                ..
+            }) => {
+                assert_eq!(keywords, PathBuf::from("keywords.txt"));
+                assert_eq!(output, PathBuf::from("output.csv"));
+                assert!(matches!(source, DictSource::Opendict));
+                assert_eq!(max_per_keyword, 10);
+                assert_eq!(delay, 100);
+            }
+            _ => panic!("Expected collect command"),
+        }
+    }
+
+    #[test]
+    fn test_collect_command_with_options() {
+        let args = Args::try_parse_from([
+            "mecab-ko",
+            "collect",
+            "-k",
+            "keywords.txt",
+            "-o",
+            "output.csv",
+            "--source",
+            "krdict",
+            "--max-per-keyword",
+            "20",
+            "--delay",
+            "200",
+            "--report",
+        ])
+        .unwrap();
+        match args.command {
+            Some(Commands::Collect {
+                keywords,
+                output,
+                source,
+                max_per_keyword,
+                delay,
+                report,
+                ..
+            }) => {
+                assert_eq!(keywords, PathBuf::from("keywords.txt"));
+                assert_eq!(output, PathBuf::from("output.csv"));
+                assert!(matches!(source, DictSource::Krdict));
+                assert_eq!(max_per_keyword, 20);
+                assert_eq!(delay, 200);
+                assert!(report);
+            }
+            _ => panic!("Expected collect command"),
+        }
+    }
+
+    #[test]
+    fn test_read_keywords_file() {
+        use tempfile::NamedTempFile;
+        use std::io::Write;
+
+        let mut file = NamedTempFile::new().unwrap();
+        writeln!(file, "# 주석").unwrap();
+        writeln!(file, "").unwrap();
+        writeln!(file, "키워드1").unwrap();
+        writeln!(file, "  키워드2  ").unwrap();
+        writeln!(file, "# 또 다른 주석").unwrap();
+        writeln!(file, "키워드3").unwrap();
+        file.flush().unwrap();
+
+        let keywords = read_keywords_file(&file.path().to_path_buf()).unwrap();
+        assert_eq!(keywords.len(), 3);
+        assert_eq!(keywords[0], "키워드1");
+        assert_eq!(keywords[1], "키워드2");
+        assert_eq!(keywords[2], "키워드3");
+    }
+
+    #[test]
+    fn test_deduplicate_entries() {
+        let entries = vec![
+            UserEntry {
+                surface: "테스트".to_string(),
+                left_id: 0,
+                right_id: 0,
+                pos: "NNG".to_string(),
+                cost: -1000,
+                reading: None,
+            },
+            UserEntry {
+                surface: "테스트".to_string(),
+                left_id: 0,
+                right_id: 0,
+                pos: "NNG".to_string(),
+                cost: -1000,
+                reading: None,
+            },
+            UserEntry {
+                surface: "테스트".to_string(),
+                left_id: 0,
+                right_id: 0,
+                pos: "NNP".to_string(),
+                cost: -1000,
+                reading: None,
+            },
+            UserEntry {
+                surface: "다른".to_string(),
+                left_id: 0,
+                right_id: 0,
+                pos: "NNG".to_string(),
+                cost: -1000,
+                reading: None,
+            },
+        ];
+
+        let unique = deduplicate_entries(entries);
+        assert_eq!(unique.len(), 3);
+        assert_eq!(unique[0].surface, "테스트");
+        assert_eq!(unique[0].pos, "NNG");
+        assert_eq!(unique[1].surface, "테스트");
+        assert_eq!(unique[1].pos, "NNP");
+        assert_eq!(unique[2].surface, "다른");
     }
 }

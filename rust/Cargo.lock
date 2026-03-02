@@ -1457,11 +1457,13 @@ dependencies = [
  "anyhow",
  "clap",
  "clap_complete",
+ "indicatif",
  "mecab-ko-core",
  "mecab-ko-dict",
  "mecab-ko-dict-sync",
  "serde",
  "serde_json",
+ "tempfile",
  "tokio",
 ]
 

@@ -1,0 +1,18 @@
+# Sample keywords file for testing collect command
+# Lines starting with # are comments
+
+# AI and technology terms
+인공지능
+메타버스
+블록체인
+
+# Empty lines are ignored
+
+# Modern terms
+챗GPT
+디지털노마드
+
+# More tech terms
+클라우드
+빅데이터
+사물인터넷

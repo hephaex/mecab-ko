@@ -17,8 +17,15 @@
 - [ ] S14-03: PyPI 배포 - BLOCKED (계정 복구 대기)
 - [ ] S14-04: npm 배포 - BLOCKED (토큰 필요)
 
-### P2 대기
-- [ ] S14-05: 한국어기초사전 API 클라이언트 추가
+### P2 진행
+- [x] S14-05: 한국어기초사전 API 클라이언트 추가 ✅
+  - KrDictClient 구현 (표준국어대사전/한국어기초사전 API)
+  - KrDictConfig 추가 (builder pattern)
+  - DictSource enum 확장 (Opendict, Krdict)
+  - CLI `--source krdict` 옵션 지원
+  - KRDICT_API_KEY 환경변수 지원
+  - 47 unit tests + 30 doc tests 통과
+  - Commit: 50972554
 - [ ] S14-06: CLI collect 서브커맨드
 - [ ] S14-07: 사전 빌드 자동화 개선
 
