@@ -28,7 +28,7 @@ v0.2.0 정식 릴리스, 신조어 수집 워크플로우 검증, 사전 빌드 
   - KrDictClient 구현 (표준국어대사전 기반)
   - 다중 소스 지원 (`--source krdict`)
   - 기존 OpenDictClient와 통합
-- [ ] S14-06: CLI collect 서브커맨드
+- [x] S14-06: CLI collect 서브커맨드 ✅
   - 배치 수집 기능 (`mecab-ko collect`)
   - 키워드 목록 파일 입력
   - 진행률 표시
