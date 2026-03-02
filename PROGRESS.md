@@ -42,8 +42,16 @@
   - docs/MIGRATION_GUIDE.md 작성
   - Breaking changes, 새 기능, 호환성 매트릭스 문서화
 
-### P3 대기
-- [ ] S13-08: 신조어 자동 수집 파이프라인 설계
+### P3 완료
+- [x] S13-08: 신조어 자동 수집 파이프라인 설계 ✅
+  - `.github/workflows/neologism-sync.yml` 워크플로우 생성
+  - 주간/월간 스케줄 (매주 월요일, 매월 1일 09:00 KST)
+  - `workflow_dispatch`로 수동 실행 지원
+  - 중복 검사 로직 (기존 CSV와 비교)
+  - `peter-evans/create-pull-request`로 자동 PR 생성
+  - Slack 알림, 실패 시 이슈 자동 생성
+  - `docs/research/neologism-pipeline-design.md` 설계 문서
+  - GitHub Issue #10 생성
 
 ---
 
