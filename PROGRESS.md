@@ -1,6 +1,6 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-03-03
+## 마지막 업데이트: 2026-03-03 (S15-07 완료)
 
 ## Sprint 15 진행 중 (2026-03-03)
 
@@ -71,7 +71,13 @@
   - Clippy 경고 없음
   - 예제 업데이트: `compound_noun_demo.rs` (8가지 패턴)
   - 문서화: `compound-noun-decomposition.md` 생성
-- [ ] S15-07: 성능 벤치마크 CI 통합
+- [x] S15-07: 성능 벤치마크 CI 통합 ✅
+  - benchmark.yml 개선 ([skip bench] 지원, 회귀 감지)
+  - 3단계 회귀 임계값: ✅(0-5%), ⚠️(5-10%), ❌(>10%)
+  - JSON 결과 저장 (benchmark-results.json, benchmark-comparison.json)
+  - PR 코멘트 개선 (시간 단위 자동 변환 ns/µs/ms)
+  - 문서 추가: BENCHMARK_CI_GUIDE.md, PERFORMANCE_BASELINES.md
+  - 로컬 도구: benchmark-parser.py (결과 파싱/비교)
 
 ### P3 대기
 - [ ] S15-08: 문서 사이트 개선
