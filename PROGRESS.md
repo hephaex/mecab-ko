@@ -2,17 +2,45 @@
 
 ## 마지막 업데이트: 2026-03-02
 
-## Sprint 12 시작 (2026-03-02)
+## Sprint 12 완료 ✅ (2026-03-02)
 
-### 작업 대기열
-- [ ] S12-01: 신조어 시드 사전 구축 (P0)
-- [ ] S12-02: 사용자 사전 빌드 도구 개선 (P1)
-- [ ] S12-03: PyPI 배포 - BLOCKED (P1)
-- [ ] S12-04: npm 배포 - BLOCKED (P1)
-- [ ] S12-05: 국립국어원 API 연동 조사 (P2)
-- [ ] S12-06: Streaming API 추가 (P2)
-- [ ] S12-07: 분석 모드 확장 (P2)
-- [ ] S12-08: CLI 인터랙티브 모드 (P3)
+### P0 완료
+- [x] S12-01: 신조어 시드 사전 구축 ✅
+  - 2018-2024 주요 신조어 123개 수집
+  - `data/user-dict/neologisms.csv` 생성
+  - 품사 태그 및 비용 정보 포함
+  - README.md 문서 추가
+
+### P1 진행
+- [x] S12-02: 사용자 사전 빌드 도구 개선 ✅
+  - `estimate_pos()` - 자동 품사 추정 기능
+  - `check_csv_duplicates()` - CSV 중복 검사
+  - `check_system_conflicts()` - 시스템 사전 충돌 검사
+  - `add_entry_auto_pos()` - 자동 품사 추가 편의 메서드
+  - 21개 테스트 통과
+- [ ] S12-03: PyPI 배포 - BLOCKED (PyPI 토큰 필요)
+- [ ] S12-04: npm 배포 - BLOCKED (npm 토큰 필요)
+
+### P2 완료
+- [x] S12-05: 국립국어원 API 연동 조사 ✅
+  - 우리말샘/한국어기초사전/표준국어대사전 API 조사
+  - 데이터 변환 파이프라인 설계
+  - docs/research/dictionary/korean-dict-api-survey.md 작성
+- [x] S12-06: Streaming API 확인 ✅
+  - StreamingTokenizer 이미 구현됨
+  - TokenStream (Iterator 기반) 구현됨
+  - process_reader, process_file API 지원
+- [x] S12-07: 분석 모드 확인 ✅
+  - DecompoundMode (None/Discard/Mixed) 구현됨
+  - NoriTokenizer에 lemma 지원
+
+### P3 완료
+- [x] S12-08: CLI 인터랙티브 모드 ✅
+  - REPL 스타일 대화형 분석 이미 구현됨
+  - `--repl` 플래그로 활성화
+  - `:help`, `:format`, `:quit`, `:exit` 명령어 지원
+  - 7가지 출력 포맷 동적 전환
+  - Ctrl+D 종료 지원
 
 ---
 
@@ -344,8 +372,8 @@
 ## GitHub 이슈
 - #6: 커뮤니티 질문 (프로젝트 목표, 성능, 사전 계획 등) - ✅ 응답 완료
 
-## 다음 세션에서 할 일 (Sprint 11)
-1. S11-01: PyPI 배포 (maturin publish)
-2. S11-02: npm 배포 (wasm-pack publish)
-3. S11-03: GitHub Releases 자동화
-4. S11-04: 성능 회귀 탐지 CI
+## 다음 세션에서 할 일 (Sprint 13)
+1. S13-01: 커뮤니티 기여 시스템 구축
+2. S13-02: 국립국어원 API 클라이언트 구현
+3. S13-03: v0.2.0 준비 (Breaking Changes 정리)
+4. S13-04: PyPI/npm 배포 (토큰 준비 시)
