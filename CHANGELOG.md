@@ -5,7 +5,88 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.2.0] - 2026-03-02
+
+### Added
+
+#### Dictionary Synchronization (mecab-ko-dict-sync)
+- `OpenDictClient` for National Institute of Korean Language (NIKL) API integration
+- `DictConverter` for NIKL to MeCab-Ko format conversion
+- 30+ POS tag mappings (명사→NNG, 고유명사→NNP, 동사→VV, etc.)
+- Frequency-based cost calculation (high=0, medium=500, low=1000)
+- `UserEntry::to_csv_line()` for MeCab-Ko compatible CSV output
+- Paginated search support (`search_paginated`)
+
+#### CLI Enhancements (mecab-ko-cli)
+- `sync` subcommand for dictionary synchronization
+  - `--source opendict` for NIKL OpenDict API
+  - `--query` search term
+  - `--api-key` or `OPENDICT_API_KEY` environment variable
+  - `--output` CSV file output
+  - `--append` mode for merging with existing files
+  - `--max-results` limit
+- `--benchmark N` option for performance measurement
+- `--stats` option for analysis statistics
+- REPL improvements with 7 output format switching
+
+#### User Dictionary Improvements (mecab-ko-dict)
+- `validate()` method for entry validation
+- `stats()` method for dictionary statistics
+- `remove_duplicates()` for duplicate entry cleanup
+- `remove_surface()` for entry removal by surface form
+- `estimate_pos()` for automatic POS tag estimation
+- `check_csv_duplicates()` for CSV validation
+- `check_system_conflicts()` for system dictionary conflict detection
+
+#### Community Contribution
+- CONTRIBUTING.md with neologism addition guide
+- 4 issue templates (word-request, bug-report, analysis-error, feature-request)
+- CODE_OF_CONDUCT.md (Contributor Covenant 2.0)
+- PR template with dictionary change section
+
+#### Neologism Dictionary
+- 123 neologisms (2018-2024) in `data/user-dict/neologisms.csv`
+- POS tags and cost information included
+
+### Changed
+
+- Minimum Rust version updated to 1.75
+- Node.js 22 support added
+- Python 3.13 support added (via maturin)
+- `mecab-ko-dict-sync` modules now public (client, config, error, models)
+
+### Fixed
+
+- WASM build with `wasm-opt = false` for bulk memory compatibility
+- Clippy warnings in dict-sync crate
+
+### Documentation
+
+- Migration Guide (docs/MIGRATION_GUIDE.md)
+- NIKL API survey (docs/research/dictionary/korean-dict-api-survey.md)
+- mecab-ko-dic modernization plan (docs/research/dictionary/mecab-ko-dic-modernization.md)
+
+---
+
+## [0.1.1] - 2026-03-01
+
+### Added
+
+- crates.io publication for all core crates
+- GitHub Releases automation (v0.1.1 tag)
+- Performance regression detection in CI
+- mdBook documentation site
+- Docker image (GHCR, linux/amd64, linux/arm64)
+- Performance dashboard with Chart.js
+
+### Fixed
+
+- Memory optimization with LazyEntries and mmap
+- WASM zstd-sys issue (optional feature)
+
+---
+
+## [0.1.0] - 2026-03-01
 
 ### Added
 
@@ -221,7 +302,10 @@ left-space-penalty-factor = 120,6000,184,6000,100,500
 
 ---
 
-[Unreleased]: https://github.com/hephaex/mecab-ko/compare/v0.9.2...HEAD
+[Unreleased]: https://github.com/hephaex/mecab-ko/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/hephaex/mecab-ko/compare/v0.1.1...v0.2.0
+[0.1.1]: https://github.com/hephaex/mecab-ko/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/hephaex/mecab-ko/compare/v0.9.2...v0.1.0
 [0.9.2]: https://github.com/hephaex/mecab-ko/compare/v0.9.1...v0.9.2
 [0.9.1]: https://github.com/hephaex/mecab-ko/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/hephaex/mecab-ko/releases/tag/v0.9.0

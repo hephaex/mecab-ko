@@ -37,7 +37,10 @@
   - `--max-results` 최대 결과 수 제한
   - 환경변수 `OPENDICT_API_KEY` 지원
   - 17개 테스트 통과
-- [ ] S13-07: v0.2.0 Breaking Changes 정리
+- [x] S13-07: v0.2.0 Breaking Changes 정리 ✅
+  - CHANGELOG.md에 v0.2.0 섹션 추가
+  - docs/MIGRATION_GUIDE.md 작성
+  - Breaking changes, 새 기능, 호환성 매트릭스 문서화
 
 ### P3 대기
 - [ ] S13-08: 신조어 자동 수집 파이프라인 설계

@@ -33,10 +33,10 @@
   - `mecab-ko sync` 서브커맨드
   - `--source opendict` 옵션
   - CSV 출력 및 병합 기능
-- [ ] S13-07: v0.2.0 Breaking Changes 정리
+- [x] S13-07: v0.2.0 Breaking Changes 정리 ✅
   - API 변경 사항 문서화
-  - Migration Guide 작성
-  - CHANGELOG 업데이트
+  - Migration Guide 작성 (docs/MIGRATION_GUIDE.md)
+  - CHANGELOG 업데이트 (v0.2.0 섹션 추가)
 
 ### P3 (Low)
 - [ ] S13-08: 신조어 자동 수집 파이프라인 설계
