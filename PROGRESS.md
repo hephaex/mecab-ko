@@ -2,6 +2,32 @@
 
 ## 마지막 업데이트: 2026-03-02
 
+## Sprint 13 시작 (2026-03-02)
+
+### P0 완료
+- [x] S13-01: 커뮤니티 기여 가이드라인 ✅
+  - CONTRIBUTING.md 업데이트 (신조어 추가 가이드)
+  - 이슈 템플릿 4개 추가 (word-request, bug-report, analysis-error, feature-request)
+  - PR 템플릿 개선 (사전 변경 섹션)
+  - CODE_OF_CONDUCT.md 작성
+
+### P1 진행
+- [ ] S13-02: 국립국어원 API 클라이언트
+- [ ] S13-03: PyPI 배포 - BLOCKED (계정 복구 대기: pypi/support#9540)
+- [ ] S13-04: npm 배포 - BLOCKED (토큰 필요)
+  - WASM 빌드 성공 (93KB)
+  - wasm-opt 비활성화로 bulk memory 오류 해결
+
+### P2 대기
+- [ ] S13-05: 사전 데이터 변환기
+- [ ] S13-06: CLI 사전 동기화 명령
+- [ ] S13-07: v0.2.0 Breaking Changes 정리
+
+### P3 대기
+- [ ] S13-08: 신조어 자동 수집 파이프라인 설계
+
+---
+
 ## Sprint 12 완료 ✅ (2026-03-02)
 
 ### P0 완료

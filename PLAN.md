@@ -1,6 +1,53 @@
-# 현재 스프린트: Phase 5 - Sprint 12 (사전 현대화 & 기능 확장)
+# 현재 스프린트: Phase 6 - Sprint 13 (커뮤니티 & API 통합)
 
 ## 목표
+커뮤니티 기여 시스템 구축, 국립국어원 API 클라이언트 구현, v0.2.0 준비
+
+## Sprint 13 작업 목록
+
+### P0 (Critical)
+- [x] S13-01: 커뮤니티 기여 가이드라인 ✅
+  - CONTRIBUTING.md 업데이트 (신조어 추가 가이드)
+  - PR 템플릿 개선 (사전 변경 섹션)
+  - 이슈 템플릿 추가 (word-request, bug-report, analysis-error, feature-request)
+  - CODE_OF_CONDUCT.md 작성 (Contributor Covenant 2.0)
+
+### P1 (High)
+- [ ] S13-02: 국립국어원 API 클라이언트 (Phase 1)
+  - `mecab-ko-dict-sync` 크레이트 생성
+  - OpenDictClient 구조체 구현
+  - 우리말샘 검색 API 연동
+  - API 키 환경변수 처리
+- [ ] S13-03: PyPI 배포 (S12-03 계속) - BLOCKED
+  - PyPI 토큰 설정 후 배포
+- [ ] S13-04: npm 배포 (S12-04 계속) - BLOCKED
+  - npm 토큰 설정 후 배포
+
+### P2 (Medium)
+- [ ] S13-05: 사전 데이터 변환기
+  - 국립국어원 → MeCab 포맷 변환
+  - 품사 태그 매핑 테이블 구현
+  - 비용 자동 계산 로직
+- [ ] S13-06: CLI 사전 동기화 명령
+  - `mecab-ko sync` 서브커맨드
+  - `--source opendict` 옵션
+  - CSV 출력 및 병합 기능
+- [ ] S13-07: v0.2.0 Breaking Changes 정리
+  - API 변경 사항 문서화
+  - Migration Guide 작성
+  - CHANGELOG 업데이트
+
+### P3 (Low)
+- [ ] S13-08: 신조어 자동 수집 파이프라인 설계
+  - GitHub Actions 스케줄 워크플로우
+  - 주간 신조어 PR 자동 생성
+  - 리뷰어 자동 할당
+
+---
+
+# 완료된 스프린트: Phase 5 - Sprint 12 (사전 현대화 & 기능 확장) ✅
+
+## 목표 (완료)
 신조어 사전 구축, 사용자 사전 도구 개선, API 확장
 
 ## Sprint 12 작업 목록
@@ -17,33 +64,16 @@
   - 신조어 자동 품사 추정 기능 (`estimate_pos()`)
   - CSV 중복 검사 기능 (`check_csv_duplicates()`)
   - 시스템 사전과 충돌 검사 (`check_system_conflicts()`)
-- [ ] S12-03: PyPI 배포 (S11-01 계속)
-  - PyPI 토큰 설정 후 배포
-  - pip install mecab-ko 테스트
-- [ ] S12-04: npm 배포 (S11-02 계속)
-  - npm 토큰 설정 후 배포
-  - npm install mecab-ko-wasm 테스트
+- [ ] S12-03: PyPI 배포 - BLOCKED → S13-03
+- [ ] S12-04: npm 배포 - BLOCKED → S13-04
 
 ### P2 (Medium)
 - [x] S12-05: 국립국어원 API 연동 조사 ✅
-  - 우리말샘/한국어기초사전/표준국어대사전 API 조사
-  - 데이터 변환 파이프라인 설계
-  - docs/research/dictionary/korean-dict-api-survey.md 작성
 - [x] S12-06: Streaming API 확인 ✅
-  - StreamingTokenizer 이미 구현됨
-  - TokenStream (Iterator 기반) 구현됨
-  - process_reader, process_file API 지원
 - [x] S12-07: 분석 모드 확인 ✅
-  - DecompoundMode (None/Discard/Mixed) 구현됨
-  - NoriTokenizer에 lemma 지원
-  - 추가 의미 태그는 차후 구현 예정
 
 ### P3 (Low)
 - [x] S12-08: CLI 인터랙티브 모드 ✅
-  - REPL 스타일 대화형 분석 (이미 구현됨)
-  - `--repl` 플래그로 활성화
-  - `:help`, `:format`, `:quit` 명령어 지원
-  - 7가지 출력 포맷 동적 전환
 
 ---
 
@@ -109,6 +139,7 @@ PyPI/npm 배포 준비, 문서 사이트 구축, 사전 현대화 조사
 | 10 | 4 | 안정화 & 품질 | ✅ |
 | 11 | 5 | 배포 & 생태계 확장 | ✅ |
 | 12 | 5 | 사전 현대화 & 기능 확장 | ✅ |
+| 13 | 6 | 커뮤니티 & API 통합 | 🚧 |
 
 ## 크레이트 발행 현황
 
@@ -126,4 +157,4 @@ PyPI/npm 배포 준비, 문서 사이트 구축, 사전 현대화 조사
 | mecab-ko (docker) | latest | GHCR | ✅ |
 
 ## 다음 스프린트 예고
-Sprint 13: 커뮤니티 기여 시스템, 국립국어원 API 통합, v0.2.0 준비
+Sprint 14: 국립국어원 API 동기화 도구 완성, 자동 사전 업데이트 CI/CD
