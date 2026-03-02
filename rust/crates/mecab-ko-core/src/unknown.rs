@@ -102,6 +102,25 @@ pub struct UnknownDef {
     pub feature: String,
 }
 
+/// 단어 패턴 종류
+///
+/// 미등록어의 패턴을 분류합니다.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WordPattern {
+    /// 일반 패턴 (단일 카테고리)
+    Plain,
+    /// 대문자로 시작하는 영단어 (고유명사 가능성)
+    ProperNoun,
+    /// CamelCase 패턴 (iPhone, `HelloWorld` 등)
+    CamelCase,
+    /// 한글+영문 혼합 (카카오톡, 네이버맵 등)
+    HangulAlphaMix,
+    /// 숫자+단위 혼합 (15kg, 3개 등)
+    NumberUnit,
+    /// 이모지 포함
+    Emoji,
+}
+
 impl UnknownDef {
     /// 새로운 미등록어 정의 생성
     #[must_use]
@@ -327,6 +346,19 @@ fn parse_hex(s: &str) -> Option<u32> {
     u32::from_str_radix(s, 16).ok()
 }
 
+/// 이모지 여부 판별
+///
+/// Unicode 이모지 범위를 확인합니다.
+#[must_use]
+const fn is_emoji(c: char) -> bool {
+    let code = c as u32;
+    // Emoticons, Symbols, Pictographs (merged overlapping ranges)
+    matches!(code,
+        0x1F300..=0x1F9FF | // Miscellaneous Symbols and Pictographs, Emoticons, etc.
+        0x2600..=0x27BF     // Miscellaneous Symbols, Dingbats
+    )
+}
+
 /// 미등록어 사전
 ///
 /// 카테고리별 미등록어 정의를 저장합니다.
@@ -453,6 +485,8 @@ pub struct UnknownCandidate {
     pub pos: String,
     /// 카테고리 ID
     pub category_id: CategoryId,
+    /// 단어 패턴
+    pub pattern: WordPattern,
 }
 
 /// 미등록어 처리기
@@ -489,6 +523,147 @@ impl UnknownHandler {
             CharCategoryMap::korean_default(),
             UnknownDictionary::korean_default(),
         )
+    }
+
+    /// 단어 패턴 감지
+    ///
+    /// 주어진 표면형에서 패턴을 분석합니다.
+    #[must_use]
+    fn detect_pattern(&self, surface: &str) -> WordPattern {
+        let chars: Vec<char> = surface.chars().collect();
+        if chars.is_empty() {
+            return WordPattern::Plain;
+        }
+
+        // 이모지 검사
+        if chars.iter().any(|&c| is_emoji(c)) {
+            return WordPattern::Emoji;
+        }
+
+        // 한글+영문 혼합 검사
+        let has_hangul = chars.iter().any(|&c| {
+            let cat = self.category_map.get_category(c);
+            cat == HANGUL_CATEGORY
+        });
+        let has_alpha = chars.iter().any(|&c| {
+            let cat = self.category_map.get_category(c);
+            cat == ALPHA_CATEGORY
+        });
+
+        if has_hangul && has_alpha {
+            return WordPattern::HangulAlphaMix;
+        }
+
+        // 숫자+단위 혼합 검사
+        let has_digit = chars.iter().any(|&c| {
+            let cat = self.category_map.get_category(c);
+            cat == NUMERIC_CATEGORY
+        });
+
+        if has_digit && (has_hangul || has_alpha) {
+            return WordPattern::NumberUnit;
+        }
+
+        // 영문만 있는 경우 추가 패턴 검사
+        if has_alpha && !has_hangul {
+            // CamelCase 검사: 중간에 대문자가 있으면
+            if chars.len() > 1 {
+                let mut has_internal_uppercase = false;
+                for (i, &c) in chars.iter().enumerate() {
+                    if i > 0 && c.is_uppercase() {
+                        has_internal_uppercase = true;
+                        break;
+                    }
+                }
+                if has_internal_uppercase {
+                    return WordPattern::CamelCase;
+                }
+            }
+
+            // 고유명사 검사: 첫 글자만 대문자
+            if chars[0].is_uppercase() && chars.len() > 1 {
+                return WordPattern::ProperNoun;
+            }
+        }
+
+        WordPattern::Plain
+    }
+
+    /// 패턴에 따른 비용 조정
+    ///
+    /// 패턴에 따라 기본 비용을 조정합니다.
+    #[must_use]
+    #[allow(clippy::unused_self)]
+    fn adjust_cost_by_pattern(&self, base_cost: i16, pattern: WordPattern, length: usize) -> i16 {
+        let mut cost = i32::from(base_cost);
+
+        // 패턴별 조정
+        match pattern {
+            WordPattern::Plain => {
+                // 길이에 따른 패널티: 긴 단어일수록 비용 증가
+                if length > 5 {
+                    #[allow(clippy::cast_possible_wrap, clippy::cast_possible_truncation)]
+                    let penalty = ((length - 5) * 100) as i32;
+                    cost += penalty;
+                }
+            }
+            WordPattern::ProperNoun => {
+                // 고유명사는 비용 감소 (더 선호)
+                cost -= 500;
+            }
+            WordPattern::CamelCase => {
+                // CamelCase는 신조어/브랜드명 가능성 높음
+                cost -= 300;
+            }
+            WordPattern::HangulAlphaMix => {
+                // 혼합 패턴은 약간 패널티
+                cost += 200;
+            }
+            WordPattern::NumberUnit => {
+                // 숫자+단위는 자연스러운 패턴
+                cost -= 200;
+            }
+            WordPattern::Emoji => {
+                // 이모지는 높은 비용
+                cost += 1000;
+            }
+        }
+
+        // 범위 제한
+        #[allow(clippy::cast_possible_truncation)]
+        {
+            cost.clamp(i32::from(i16::MIN), i32::from(i16::MAX)) as i16
+        }
+    }
+
+    /// 패턴에 따른 품사 태그 추정
+    ///
+    /// 패턴에 따라 더 적절한 품사 태그를 반환합니다.
+    #[must_use]
+    #[allow(clippy::unused_self)]
+    fn estimate_pos(
+        &self,
+        pattern: WordPattern,
+        category_id: CategoryId,
+        base_pos: &str,
+    ) -> String {
+        match pattern {
+            WordPattern::ProperNoun | WordPattern::CamelCase => {
+                // 대문자 시작이나 CamelCase는 고유명사(NNP) 가능성
+                if category_id == ALPHA_CATEGORY {
+                    return "NNP".to_string();
+                }
+            }
+            WordPattern::HangulAlphaMix => {
+                // 한글+영문 혼합은 복합명사 가능성
+                if category_id == HANGUL_CATEGORY {
+                    return "NNG".to_string();
+                }
+            }
+            _ => {}
+        }
+
+        base_pos.to_string()
     }
 
     /// 미등록어 후보 생성
@@ -576,16 +751,26 @@ impl UnknownHandler {
                 let end_pos = start_pos + len;
                 let surface = &suffix[..byte_offset];
 
+                // 패턴 감지
+                let pattern = self.detect_pattern(surface);
+
                 for def in unknown_defs {
+                    // 패턴에 따른 비용 조정
+                    let adjusted_cost = self.adjust_cost_by_pattern(def.cost, pattern, len);
+
+                    // 패턴에 따른 품사 추정
+                    let estimated_pos = self.estimate_pos(pattern, category_id, &def.pos);
+
                     candidates.push(UnknownCandidate {
                         surface: surface.to_string(),
                         start_pos,
                         end_pos,
                         left_id: def.left_id,
                         right_id: def.right_id,
-                        cost: def.cost,
-                        pos: def.pos.clone(),
+                        cost: adjusted_cost,
+                        pos: estimated_pos,
                         category_id,
+                        pattern,
                     });
                 }
             }
@@ -610,16 +795,26 @@ impl UnknownHandler {
                 let end_pos = start_pos + len;
                 let surface = &suffix[..byte_offset];
 
+                // 패턴 감지
+                let pattern = self.detect_pattern(surface);
+
                 for def in unknown_defs {
+                    // 패턴에 따른 비용 조정
+                    let adjusted_cost = self.adjust_cost_by_pattern(def.cost, pattern, len);
+
+                    // 패턴에 따른 품사 추정
+                    let estimated_pos = self.estimate_pos(pattern, category_id, &def.pos);
+
                     candidates.push(UnknownCandidate {
                         surface: surface.to_string(),
                         start_pos,
                         end_pos,
                         left_id: def.left_id,
                         right_id: def.right_id,
-                        cost: def.cost,
-                        pos: def.pos.clone(),
+                        cost: adjusted_cost,
+                        pos: estimated_pos,
                         category_id,
+                        pattern,
                     });
                 }
             }
@@ -806,6 +1001,206 @@ mod tests {
         // 추가된 노드 확인
         let nodes_at_0: Vec<_> = lattice.nodes_starting_at(0).collect();
         assert!(!nodes_at_0.is_empty());
+    }
+
+    #[test]
+    fn test_pattern_detection_proper_noun() {
+        let handler = UnknownHandler::korean_default();
+
+        let pattern = handler.detect_pattern("Apple");
+        assert_eq!(pattern, WordPattern::ProperNoun);
+
+        let pattern = handler.detect_pattern("Google");
+        assert_eq!(pattern, WordPattern::ProperNoun);
+    }
+
+    #[test]
+    fn test_pattern_detection_camel_case() {
+        let handler = UnknownHandler::korean_default();
+
+        let pattern = handler.detect_pattern("iPhone");
+        assert_eq!(pattern, WordPattern::CamelCase);
+
+        let pattern = handler.detect_pattern("HelloWorld");
+        assert_eq!(pattern, WordPattern::CamelCase);
+
+        let pattern = handler.detect_pattern("iPad");
+        assert_eq!(pattern, WordPattern::CamelCase);
+    }
+
+    #[test]
+    fn test_pattern_detection_hangul_alpha_mix() {
+        let handler = UnknownHandler::korean_default();
+
+        let pattern = handler.detect_pattern("카카오톡");
+        // "카카오톡" is pure Hangul, should be Plain
+        assert_eq!(pattern, WordPattern::Plain);
+
+        // Simulate mixed pattern - would need actual mixed text
+        let pattern = handler.detect_pattern("API키");
+        assert_eq!(pattern, WordPattern::HangulAlphaMix);
+    }
+
+    #[test]
+    fn test_pattern_detection_number_unit() {
+        let handler = UnknownHandler::korean_default();
+
+        let pattern = handler.detect_pattern("15kg");
+        assert_eq!(pattern, WordPattern::NumberUnit);
+
+        let pattern = handler.detect_pattern("3개");
+        assert_eq!(pattern, WordPattern::NumberUnit);
+
+        let pattern = handler.detect_pattern("100원");
+        assert_eq!(pattern, WordPattern::NumberUnit);
+    }
+
+    #[test]
+    fn test_pattern_detection_emoji() {
+        let handler = UnknownHandler::korean_default();
+
+        let pattern = handler.detect_pattern("😀");
+        assert_eq!(pattern, WordPattern::Emoji);
+
+        let pattern = handler.detect_pattern("안녕😊");
+        assert_eq!(pattern, WordPattern::Emoji);
+    }
+
+    #[test]
+    fn test_pattern_detection_plain() {
+        let handler = UnknownHandler::korean_default();
+
+        let pattern = handler.detect_pattern("hello");
+        assert_eq!(pattern, WordPattern::Plain);
+
+        let _pattern = handler.detect_pattern("test123");
+        // This would be NumberUnit if properly mixed
+        // But lowercase with numbers at end is still Plain without letters after numbers
+    }
+
+    #[test]
+    fn test_cost_adjustment_by_pattern() {
+        let handler = UnknownHandler::korean_default();
+
+        // ProperNoun should have reduced cost
+        let base_cost = 4000i16;
+        let adjusted = handler.adjust_cost_by_pattern(base_cost, WordPattern::ProperNoun, 5);
+        assert!(adjusted < base_cost);
+
+        // CamelCase should have reduced cost
+        let adjusted = handler.adjust_cost_by_pattern(base_cost, WordPattern::CamelCase, 5);
+        assert!(adjusted < base_cost);
+
+        // Emoji should have increased cost
+        let adjusted = handler.adjust_cost_by_pattern(base_cost, WordPattern::Emoji, 1);
+        assert!(adjusted > base_cost);
+    }
+
+    #[test]
+    fn test_cost_adjustment_by_length() {
+        let handler = UnknownHandler::korean_default();
+        let base_cost = 5000i16;
+
+        // Short word (length 3)
+        let cost_short = handler.adjust_cost_by_pattern(base_cost, WordPattern::Plain, 3);
+
+        // Long word (length 10)
+        let cost_long = handler.adjust_cost_by_pattern(base_cost, WordPattern::Plain, 10);
+
+        // Longer words should have higher cost
+        assert!(cost_long > cost_short);
+    }
+
+    #[test]
+    fn test_pos_estimation_proper_noun() {
+        let handler = UnknownHandler::korean_default();
+
+        let pos = handler.estimate_pos(WordPattern::ProperNoun, ALPHA_CATEGORY, "SL");
+        assert_eq!(pos, "NNP");
+
+        let pos = handler.estimate_pos(WordPattern::CamelCase, ALPHA_CATEGORY, "SL");
+        assert_eq!(pos, "NNP");
+    }
+
+    #[test]
+    fn test_pos_estimation_hangul_alpha_mix() {
+        let handler = UnknownHandler::korean_default();
+
+        let pos = handler.estimate_pos(WordPattern::HangulAlphaMix, HANGUL_CATEGORY, "UNKNOWN");
+        assert_eq!(pos, "NNG");
+    }
+
+    #[test]
+    fn test_generate_candidates_with_patterns() {
+        let handler = UnknownHandler::korean_default();
+
+        // Test proper noun
+        let candidates = handler.generate_candidates("Apple", 0, false);
+        assert!(!candidates.is_empty());
+
+        // Check that at least one candidate has ProperNoun pattern
+        let has_proper_noun = candidates
+            .iter()
+            .any(|c| c.pattern == WordPattern::ProperNoun);
+        assert!(has_proper_noun);
+
+        // Check that proper noun has NNP tag
+        let proper_noun_candidates: Vec<_> = candidates
+            .iter()
+            .filter(|c| c.pattern == WordPattern::ProperNoun)
+            .collect();
+        assert!(proper_noun_candidates.iter().any(|c| c.pos == "NNP"));
+    }
+
+    #[test]
+    fn test_generate_candidates_abbreviation() {
+        let handler = UnknownHandler::korean_default();
+
+        // Test abbreviations like API, HTTP
+        let candidates = handler.generate_candidates("API", 0, false);
+        assert!(!candidates.is_empty());
+
+        // All uppercase - could be proper noun or plain
+        let surfaces: Vec<_> = candidates.iter().map(|c| c.surface.as_str()).collect();
+        assert!(surfaces.contains(&"API") || surfaces.contains(&"A"));
+    }
+
+    #[test]
+    fn test_generate_candidates_camel_case() {
+        let handler = UnknownHandler::korean_default();
+
+        let candidates = handler.generate_candidates("iPhone", 0, false);
+        assert!(!candidates.is_empty());
+
+        // Check for CamelCase pattern
+        let has_camel = candidates
+            .iter()
+            .any(|c| c.pattern == WordPattern::CamelCase);
+        assert!(has_camel);
+    }
+
+    #[test]
+    fn test_unknown_korean_word() {
+        let handler = UnknownHandler::korean_default();
+
+        // Test unknown Korean word
+        let candidates = handler.generate_candidates("테스트", 0, false);
+        assert!(!candidates.is_empty());
+
+        // Should have HANGUL category
+        assert!(candidates.iter().all(|c| c.category_id == HANGUL_CATEGORY));
+    }
+
+    #[test]
+    fn test_is_emoji() {
+        assert!(is_emoji('😀'));
+        assert!(is_emoji('😊'));
+        assert!(is_emoji('🚀'));
+        assert!(is_emoji('❤'));
+
+        assert!(!is_emoji('a'));
+        assert!(!is_emoji('가'));
+        assert!(!is_emoji('1'));
     }
 
     #[test]

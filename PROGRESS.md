@@ -35,8 +35,24 @@
 - [ ] S15-03: PyPI 배포 - BLOCKED (계정 복구 대기)
 - [ ] S15-04: npm 배포 - BLOCKED (토큰 필요)
 
-### P2 대기
-- [ ] S15-05: Unknown 단어 처리 개선
+### P2 진행 중/완료
+- [x] S15-05: Unknown 단어 처리 개선 ✅
+  - `WordPattern` 열거형 추가 (Plain, ProperNoun, CamelCase, HangulAlphaMix, NumberUnit, Emoji)
+  - 패턴 감지 기능 구현 (`detect_pattern()`)
+  - 패턴별 비용 조정 (`adjust_cost_by_pattern()`)
+    - ProperNoun: -500 (선호)
+    - CamelCase: -300 (브랜드명)
+    - NumberUnit: -200 (자연스러운 패턴)
+    - HangulAlphaMix: +200 (혼합 패널티)
+    - Emoji: +1000 (높은 비용)
+    - Plain: 길이 기반 패널티 (+100/char beyond 5)
+  - 품사 태그 추정 개선 (`estimate_pos()`)
+    - ProperNoun/CamelCase → NNP (고유명사)
+    - HangulAlphaMix → NNG (일반명사)
+  - 이모지 감지 (`is_emoji()`)
+  - 27개 테스트 통과 (패턴 감지, 비용 조정, 품사 추정)
+  - Clippy 경고 없음
+  - 문서화: `unknown_patterns.md` 생성
 - [ ] S15-06: 복합명사 분해 개선
 - [ ] S15-07: 성능 벤치마크 CI 통합
 
