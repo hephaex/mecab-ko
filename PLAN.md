@@ -1,48 +1,74 @@
-# 현재 스프린트: Phase 7 - Sprint 16 (고급 토큰화 & N-best)
+# 현재 스프린트: Phase 8 - Sprint 17 (v0.3.0 릴리스 & API 개선)
 
 ## 목표
+v0.3.0 정식 릴리스, 스트리밍 API 개선, 메모리 최적화, PyPI 배포
+
+## Sprint 17 작업 목록
+
+### P0 (Critical)
+- [ ] S17-01: v0.3.0 정식 릴리스
+  - GitHub Release 생성
+  - 릴리스 노트 작성
+  - 바이너리 배포 (4개 플랫폼)
+  - crates.io 버전 업데이트 (v0.3.0)
+
+### P1 (High)
+- [ ] S17-02: PyPI 배포 (S16-03 계속)
+  - PyPI 토큰 설정 후 배포
+  - mecab-ko-python v0.3.0
+- [ ] S17-03: 스트리밍 API 개선
+  - `TokenStream` 성능 최적화
+  - 대용량 파일 처리 개선
+  - 메모리 사용량 최소화
+- [ ] S17-04: Migration Guide v0.2.0 → v0.3.0
+  - Breaking changes 문서화
+  - 코드 예제 업데이트
+  - 업그레이드 가이드
+
+### P2 (Medium)
+- [ ] S17-05: 메모리 최적화 2차
+  - entries 지연 로딩 개선
+  - String interning 적용
+  - 메모리 프로파일링
+- [ ] S17-06: API 문서 개선
+  - rustdoc 보강
+  - 예제 코드 추가
+  - 튜토리얼 업데이트
+- [ ] S17-07: 벤치마크 결과 정리
+  - 경쟁 분석기 대비 성능 비교
+  - 메모리 사용량 비교
+  - 성능 대시보드 업데이트
+
+### P3 (Low)
+- [ ] S17-08: 테스트 커버리지 향상
+  - 누락된 edge case 테스트
+  - 통합 테스트 추가
+  - 80% 커버리지 목표
+
+---
+
+# 완료된 스프린트: Phase 7 - Sprint 16 (고급 토큰화 & N-best) ✅
+
+## 목표 (완료)
 N-best 경로 탐색 개선, 사용자 정의 분석 모드, 토큰화 성능 최적화
 
 ## Sprint 16 작업 목록
 
-### P0 (Critical)
+### P0 완료
 - [x] S16-01: N-best 경로 탐색 개선 ✅
-  - N-best Viterbi 알고리즘 최적화
-  - 메모리 효율적인 경로 저장
-  - N-best 결과 API 개선
 
-### P1 (High)
+### P1 완료/BLOCKED
 - [x] S16-02: 사용자 정의 분석 모드 ✅
-  - AnalysisMode enum 확장
-  - 품사 필터링 모드
-  - 명사 추출 전용 모드
-  - 동사/형용사 원형 복원 모드
-- [ ] S16-03: PyPI 배포 (S15-03 계속) - BLOCKED
-  - PyPI 토큰 설정 후 배포
-- [x] S16-04: npm 배포 ✅
-  - npm-publish-wasm.yml 워크플로우 추가
-  - NPM_TOKEN 시크릿 설정 완료
-  - **mecab-ko-wasm v0.3.0 npm 배포 완료**
+- [ ] S16-03: PyPI 배포 - BLOCKED → S17-02
+- [x] S16-04: npm 배포 ✅ (mecab-ko-wasm v0.3.0)
 
-### P2 (Medium)
+### P2 완료
 - [x] S16-05: Lattice 시각화 도구 ✅
-  - DOT/Graphviz 출력
-  - HTML 인터랙티브 뷰어 (d3-graphviz)
-  - 디버깅용 lattice dump (Text, JSON)
 - [x] S16-06: 토큰화 캐싱 ✅
-  - 반복 입력 캐싱
-  - LRU 캐시 구현
-  - 캐시 히트율 모니터링
 - [x] S16-07: 병렬 토큰화 ✅
-  - Rayon 기반 배치 병렬 처리 (이미 구현됨)
-  - 스레드풀 설정 (pool_size 조정 가능)
-  - 처리량 벤치마크 추가
 
-### P3 (Low)
+### P3 완료
 - [x] S16-08: v0.3.0 준비 ✅
-  - Breaking changes 정리
-  - CHANGELOG 업데이트
-  - Migration guide 작성 (차기 스프린트)
 
 ---
 
@@ -219,6 +245,7 @@ PyPI/npm 배포 준비, 문서 사이트 구축, 사전 현대화 조사
 | 14 | 6 | v0.2.0 릴리스 & 사전 자동화 | ✅ |
 | 15 | 7 | 사전 품질 & 정확도 | ✅ |
 | 16 | 7 | 고급 토큰화 & N-best | ✅ |
+| 17 | 8 | v0.3.0 릴리스 & API 개선 | 🔄 |
 
 ## 크레이트 발행 현황
 
@@ -231,9 +258,9 @@ PyPI/npm 배포 준비, 문서 사이트 구축, 사전 현대화 조사
 | mecab-ko-dict-builder | v0.1.1 | crates.io | ✅ |
 | mecab-ko | v0.1.1 | crates.io | ✅ |
 | mecab-ko-python | - | PyPI | BLOCKED |
-| mecab-ko-wasm | - | npm | BLOCKED |
+| mecab-ko-wasm | v0.3.0 | npm | ✅ |
 | mecab-ko-cli | v0.1.1 | GitHub Releases | ✅ |
 | mecab-ko (docker) | latest | GHCR | ✅ |
 
 ## 다음 스프린트 예고
-Sprint 17: 스트리밍 API, 메모리 최적화, v0.3.0 릴리스 준비
+Sprint 18: 정확도 개선, mecab-ko-dic v3.0, 커뮤니티 피드백 반영
