@@ -25,10 +25,10 @@
   - npm install mecab-ko-wasm 테스트
 
 ### P2 (Medium)
-- [ ] S12-05: 국립국어원 API 연동 조사
-  - 우리말샘 API 테스트
-  - 한국어기초사전 API 테스트
+- [x] S12-05: 국립국어원 API 연동 조사 ✅
+  - 우리말샘/한국어기초사전/표준국어대사전 API 조사
   - 데이터 변환 파이프라인 설계
+  - docs/research/dictionary/korean-dict-api-survey.md 작성
 - [ ] S12-06: Streaming API 추가
   - 대용량 텍스트 스트리밍 분석
   - Iterator 기반 API
