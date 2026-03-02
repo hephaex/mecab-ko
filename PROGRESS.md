@@ -23,10 +23,22 @@
   - mdBook 설정 및 빌드 완료
   - docs.yml 워크플로우 개선
   - GitHub Pages 자동 배포 (main 푸시 시)
+- [x] S11-06: mecab-ko-dic 최신화 조사 ✅
+  - 2018년 이후 변경 조사 완료
+  - 신조어 추가 방안 (사용자 사전, 커뮤니티, 자동 수집)
+  - 국립국어원 API 활용 방안 (우리말샘, 한국어기초사전)
+  - docs/research/dictionary/mecab-ko-dic-modernization.md 작성
 - [x] S11-07: Docker 이미지 배포 ✅
   - Dockerfile 작성 (multi-stage, debian-slim)
   - docker.yml 워크플로우 추가
   - GHCR 자동 배포 (linux/amd64, linux/arm64)
+
+### P3 진행
+- [x] S11-08: 성능 대시보드 ✅
+  - Chart.js 기반 인터랙티브 대시보드
+  - 버전별 처리량/지연 시간 비교 차트
+  - 성능 개선 추이 그래프
+  - CI 자동 업데이트 워크플로우
 
 ---
 
