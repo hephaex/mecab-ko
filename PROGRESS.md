@@ -29,7 +29,14 @@
   - 30개 테스트 (22 unit + 8 doc tests)
   - CSV 출력 포맷 (MeCab-Ko 호환)
   - 예제 프로그램 `convert_neologisms`
-- [ ] S13-06: CLI 사전 동기화 명령
+- [x] S13-06: CLI 사전 동기화 명령 ✅
+  - `mecab-ko sync` 서브커맨드 추가
+  - `--source opendict` 옵션 (우리말샘 API)
+  - `--query` 검색어, `--api-key` API 키
+  - `--output` CSV 출력, `--append` 추가 모드
+  - `--max-results` 최대 결과 수 제한
+  - 환경변수 `OPENDICT_API_KEY` 지원
+  - 17개 테스트 통과
 - [ ] S13-07: v0.2.0 Breaking Changes 정리
 
 ### P3 대기

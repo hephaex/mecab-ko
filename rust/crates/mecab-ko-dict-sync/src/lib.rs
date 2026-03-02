@@ -25,7 +25,11 @@
 #![deny(unsafe_code)]
 #![warn(missing_docs)]
 
+pub mod client;
+pub mod config;
 mod converter;
+pub mod error;
+pub mod models;
 
 pub use converter::{ConverterEntry, DictConverter, UserEntry};
 

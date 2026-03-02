@@ -2,7 +2,7 @@
 
 use crate::error::{Result, SyncError};
 
-/// Configuration for the OpenDict API client.
+/// Configuration for the `OpenDict` API client.
 #[derive(Debug, Clone)]
 pub struct OpenDictConfig {
     /// API authentication key from 공공데이터포털
@@ -19,7 +19,7 @@ pub struct OpenDictConfig {
 }
 
 impl OpenDictConfig {
-    /// Default base URL for the OpenDict API.
+    /// Default base URL for the `OpenDict` API.
     pub const DEFAULT_BASE_URL: &'static str = "https://opendict.korean.go.kr/api";
 
     /// Default timeout in seconds.
@@ -80,7 +80,7 @@ impl OpenDictConfig {
     /// assert_eq!(config.timeout_secs, 60);
     /// ```
     #[must_use]
-    pub fn with_timeout_secs(mut self, secs: u64) -> Self {
+    pub const fn with_timeout_secs(mut self, secs: u64) -> Self {
         self.timeout_secs = secs;
         self
     }
@@ -97,7 +97,7 @@ impl OpenDictConfig {
     /// assert_eq!(config.max_results, 50);
     /// ```
     #[must_use]
-    pub fn with_max_results(mut self, max: u32) -> Self {
+    pub const fn with_max_results(mut self, max: u32) -> Self {
         self.max_results = max;
         self
     }

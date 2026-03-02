@@ -21,11 +21,13 @@ path = "src/main.rs"
 [dependencies]
 mecab-ko-core = { version = "0.1.1", path = "../mecab-ko-core" }
 mecab-ko-dict = { version = "0.1.1", path = "../mecab-ko-dict" }
-clap.workspace = true
+mecab-ko-dict-sync = { version = "0.1.1", path = "../mecab-ko-dict-sync" }
+clap = { workspace = true, features = ["env"] }
 clap_complete = "4.4"
 anyhow.workspace = true
 serde_json.workspace = true
 serde.workspace = true
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
 
 [lints]
 workspace = true

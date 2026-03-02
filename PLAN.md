@@ -29,7 +29,7 @@
   - 30+ 품사 태그 매핑 (명사→NNG, 동사→VV 등)
   - 빈도 기반 비용 계산 (고빈도=0, 저빈도=1000)
   - CSV 출력 (to_csv_line, convert_to_csv)
-- [ ] S13-06: CLI 사전 동기화 명령
+- [x] S13-06: CLI 사전 동기화 명령 ✅
   - `mecab-ko sync` 서브커맨드
   - `--source opendict` 옵션
   - CSV 출력 및 병합 기능

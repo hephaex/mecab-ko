@@ -187,7 +187,7 @@ impl DictDetail {
     }
 }
 
-/// Search response from the OpenDict API.
+/// Search response from the `OpenDict` API.
 #[derive(Debug, Clone, Deserialize)]
 pub(crate) struct SearchResponse {
     #[serde(rename = "channel")]
@@ -196,6 +196,7 @@ pub(crate) struct SearchResponse {
 
 /// Channel containing search results.
 #[derive(Debug, Clone, Deserialize)]
+#[allow(dead_code)]
 pub(crate) struct Channel {
     #[serde(rename = "total")]
     pub total: u32,

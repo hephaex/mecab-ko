@@ -1459,8 +1459,10 @@ dependencies = [
  "clap_complete",
  "mecab-ko-core",
  "mecab-ko-dict",
+ "mecab-ko-dict-sync",
  "serde",
  "serde_json",
+ "tokio",
 ]
 
 [[package]]

@@ -314,6 +314,7 @@ use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use clap_complete::{generate, Shell};
 use mecab_ko_core::Tokenizer;
 use mecab_ko_dict::UserDictionary;
+use mecab_ko_dict_sync::{ConverterEntry, DictConverter};
 use serde::Serialize;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -428,6 +429,32 @@ enum Commands {
         /// 사전 경로
         path: Option<PathBuf>,
     },
+    /// 외부 사전 API에서 단어 동기화
+    Sync {
+        /// 동기화 소스
+        #[arg(long, value_enum, default_value = "opendict")]
+        source: DictSource,
+
+        /// 검색어 (필수)
+        #[arg(short, long)]
+        query: String,
+
+        /// API 키 (환경변수 `OPENDICT_API_KEY` 사용 가능)
+        #[arg(long, env = "OPENDICT_API_KEY")]
+        api_key: Option<String>,
+
+        /// 최대 결과 수
+        #[arg(long, default_value = "100")]
+        max_results: u32,
+
+        /// 출력 파일 (없으면 stdout)
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+
+        /// 기존 파일에 추가 (덮어쓰기 대신)
+        #[arg(long)]
+        append: bool,
+    },
     /// 버전 정보 표시
     Version,
     /// 셸 자동완성 스크립트 생성
@@ -436,6 +463,14 @@ enum Commands {
         #[arg(value_enum)]
         shell: Shell,
     },
+}
+
+/// Dictionary source for synchronization
+#[derive(Debug, Clone, Copy, ValueEnum, Default)]
+enum DictSource {
+    /// 국립국어원 우리말샘 (`OpenDict` API)
+    #[default]
+    Opendict,
 }
 
 /// Output format options for analysis results
@@ -712,6 +747,16 @@ fn main() -> Result<()> {
             }
             Commands::Dict { path } => {
                 show_dict_info(path.as_ref());
+            }
+            Commands::Sync {
+                source,
+                query,
+                api_key,
+                max_results,
+                output,
+                append,
+            } => {
+                run_sync(*source, query, api_key.as_deref(), *max_results, output.as_ref(), *append)?;
             }
             Commands::Version => {
                 print_version();
@@ -1213,6 +1258,153 @@ fn generate_completions(shell: Shell) {
     generate(shell, &mut cmd, bin_name, &mut io::stdout());
 }
 
+/// Synchronizes dictionary entries from an external API
+///
+/// Searches for words using the specified dictionary API, converts them
+/// to MeCab-Ko CSV format, and outputs the results.
+///
+/// # Arguments
+///
+/// * `source` - Dictionary source (currently only `OpenDict`)
+/// * `query` - Search query string
+/// * `api_key` - Optional API key (uses env var if not provided)
+/// * `max_results` - Maximum number of results to fetch
+/// * `output` - Optional output file path
+/// * `append` - Whether to append to existing file
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - API key is not provided and not set in environment
+/// - API request fails
+/// - File I/O fails
+///
+/// # Examples
+///
+/// ```bash
+/// mecab-ko sync --source opendict --query "신조어" --output neologisms.csv
+/// mecab-ko sync -q "메타버스" --api-key YOUR_KEY --max-results 50
+/// ```
+fn run_sync(
+    source: DictSource,
+    query: &str,
+    api_key: Option<&str>,
+    max_results: u32,
+    output: Option<&PathBuf>,
+    append: bool,
+) -> Result<()> {
+    // Get API key
+    let api_key = api_key
+        .map(String::from)
+        .or_else(|| std::env::var("OPENDICT_API_KEY").ok())
+        .ok_or_else(|| {
+            anyhow::anyhow!(
+                "API 키가 필요합니다. --api-key 옵션이나 OPENDICT_API_KEY 환경변수를 설정하세요."
+            )
+        })?;
+
+    match source {
+        DictSource::Opendict => {
+            run_opendict_sync(&api_key, query, max_results, output, append)
+        }
+    }
+}
+
+/// Runs synchronization with the `OpenDict` API
+fn run_opendict_sync(
+    api_key: &str,
+    query: &str,
+    max_results: u32,
+    output: Option<&PathBuf>,
+    append: bool,
+) -> Result<()> {
+    use mecab_ko_dict_sync::client::OpenDictClient;
+    use mecab_ko_dict_sync::config::OpenDictConfig;
+
+    eprintln!("우리말샘 API에서 '{query}' 검색 중...");
+
+    // Create client
+    let config = OpenDictConfig::new(api_key).with_max_results(max_results);
+
+    let client = OpenDictClient::new(config).map_err(|e| anyhow::anyhow!("API 클라이언트 생성 실패: {e}"))?;
+
+    // Run async search
+    let runtime = tokio::runtime::Runtime::new().context("Tokio 런타임 생성 실패")?;
+
+    let entries: Vec<mecab_ko_dict_sync::models::DictEntry> = runtime
+        .block_on(async { client.search(query).await })
+        .map_err(|e| anyhow::anyhow!("API 검색 실패: {e}"))?;
+
+    if entries.is_empty() {
+        eprintln!("검색 결과가 없습니다.");
+        return Ok(());
+    }
+
+    eprintln!("{}개의 항목을 찾았습니다.", entries.len());
+
+    // Convert to MeCab format
+    let converter = DictConverter::new();
+
+    let mut converted_entries = Vec::new();
+    let mut failed_count = 0;
+
+    for entry in &entries {
+        let converter_entry = ConverterEntry {
+            surface: entry.word.clone(),
+            pos: entry.pos.clone(),
+            reading: entry.reading.clone(),
+            frequency: None, // API doesn't provide frequency
+        };
+
+        match converter.convert_entry(&converter_entry) {
+            Ok(user_entry) => {
+                converted_entries.push(user_entry.to_csv_line());
+            }
+            Err(_) => {
+                failed_count += 1;
+                // Skip entries with unknown POS tags
+            }
+        }
+    }
+
+    if failed_count > 0 {
+        eprintln!("{failed_count}개 항목의 품사 변환에 실패했습니다 (알 수 없는 품사 태그).");
+    }
+
+    // Output results
+    if let Some(output_path) = output {
+        let file = if append {
+            fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(output_path)
+        } else {
+            File::create(output_path)
+        }
+        .with_context(|| format!("출력 파일 생성 실패: {}", output_path.display()))?;
+
+        let mut writer = BufWriter::new(file);
+
+        for line in &converted_entries {
+            writeln!(writer, "{line}")?;
+        }
+
+        writer.flush()?;
+        eprintln!(
+            "{}개 항목을 {} 에 저장했습니다.",
+            converted_entries.len(),
+            output_path.display()
+        );
+    } else {
+        // Output to stdout
+        for line in &converted_entries {
+            println!("{line}");
+        }
+    }
+
+    Ok(())
+}
+
 /// Runs a simple performance benchmark
 ///
 /// Tokenizes the input text multiple times and reports timing statistics.
@@ -1481,5 +1673,71 @@ mod tests {
     fn test_stats_option() {
         let args = Args::try_parse_from(["mecab-ko", "--stats", "테스트"]).unwrap();
         assert!(args.stats);
+    }
+
+    #[test]
+    fn test_sync_command_basic() {
+        let args = Args::try_parse_from([
+            "mecab-ko",
+            "sync",
+            "--query",
+            "신조어",
+        ])
+        .unwrap();
+        match args.command {
+            Some(Commands::Sync { query, source, max_results, .. }) => {
+                assert_eq!(query, "신조어");
+                assert!(matches!(source, DictSource::Opendict));
+                assert_eq!(max_results, 100); // default
+            }
+            _ => panic!("Expected sync command"),
+        }
+    }
+
+    #[test]
+    fn test_sync_command_with_options() {
+        let args = Args::try_parse_from([
+            "mecab-ko",
+            "sync",
+            "-q",
+            "메타버스",
+            "--source",
+            "opendict",
+            "--max-results",
+            "50",
+            "--output",
+            "output.csv",
+            "--append",
+        ])
+        .unwrap();
+        match args.command {
+            Some(Commands::Sync {
+                query,
+                source,
+                max_results,
+                output,
+                append,
+                ..
+            }) => {
+                assert_eq!(query, "메타버스");
+                assert!(matches!(source, DictSource::Opendict));
+                assert_eq!(max_results, 50);
+                assert_eq!(output, Some(PathBuf::from("output.csv")));
+                assert!(append);
+            }
+            _ => panic!("Expected sync command"),
+        }
+    }
+
+    #[test]
+    fn test_dict_source_enum() {
+        // Test that the default is opendict
+        let args = Args::try_parse_from(["mecab-ko", "sync", "-q", "test"]).unwrap();
+        match args.command {
+            Some(Commands::Sync { source, .. }) => {
+                assert!(matches!(source, DictSource::Opendict));
+            }
+            _ => panic!("Expected sync command"),
+        }
     }
 }

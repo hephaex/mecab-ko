@@ -1,14 +1,14 @@
-//! HTTP client for the OpenDict API.
+//! HTTP client for the `OpenDict` API.
 
 use crate::config::OpenDictConfig;
 use crate::error::{Result, SyncError};
 use crate::models::{DictDetail, DictEntry, SearchResponse};
 use std::time::Duration;
 
-/// HTTP client for the OpenDict (우리말샘) API.
+/// HTTP client for the `OpenDict` (우리말샘) API.
 ///
 /// This client provides access to the Korean National Institute's
-/// OpenDict API for searching and retrieving dictionary entries.
+/// `OpenDict` API for searching and retrieving dictionary entries.
 ///
 /// # Examples
 ///
@@ -31,7 +31,7 @@ pub struct OpenDictClient {
 }
 
 impl OpenDictClient {
-    /// Creates a new OpenDict API client.
+    /// Creates a new `OpenDict` API client.
     ///
     /// # Arguments
     ///
@@ -125,7 +125,7 @@ impl OpenDictClient {
 
         // Parse JSON response
         let search_response: SearchResponse = serde_json::from_str(&text)
-            .map_err(|e| SyncError::parse_error(e))?;
+            .map_err(SyncError::parse_error)?;
 
         Ok(search_response
             .channel
@@ -197,7 +197,7 @@ impl OpenDictClient {
         // For now, parse as basic detail (simplified version)
         // Full parsing would require detailed XML/JSON schema
         let detail: DictDetail = serde_json::from_str(&text)
-            .map_err(|e| SyncError::parse_error(e))?;
+            .map_err(SyncError::parse_error)?;
 
         Ok(detail)
     }
@@ -259,7 +259,7 @@ impl OpenDictClient {
 
         let text = response.text().await?;
         let search_response: SearchResponse = serde_json::from_str(&text)
-            .map_err(|e| SyncError::parse_error(e))?;
+            .map_err(SyncError::parse_error)?;
 
         Ok(search_response
             .channel
