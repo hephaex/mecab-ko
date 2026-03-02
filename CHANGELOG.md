@@ -5,6 +5,66 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - v0.3.0
+
+### Added
+
+#### Improved N-best Path Search (mecab-ko-core)
+- `ImprovedNbestSearcher` - True K-best Viterbi algorithm maintaining K candidates per node
+- `NbestPath` - Path structure with node IDs, total cost, and rank
+- `NbestResult` - Result container with iterator support
+- K-best forward pass tracking multiple candidates at each position
+- Heap-based N-best backward pass extraction
+- Compatibility API (`search_pairs()`) for legacy code
+- 8 tests passing, benchmarks comparing legacy vs improved
+
+#### User-defined Analysis Modes (mecab-ko-core)
+- `AnalysisMode` enum: Full, NounsOnly, VerbsOnly, AdjectivesOnly, PredicatesOnly, ContentWordsOnly, SurfaceOnly, Lemmatized, PosTagsOnly, Custom
+- `PosFilter` - Flexible POS filtering with prefix/exact matching, include/exclude lists
+- `LemmatizationMode` enum: None, PredicatesOnly, All
+- `AnalyzerConfig` - Composable configuration for analysis mode, filter, lemmatization, length limits
+- `AnalyzedToken` - Transformed token structure with optional lemma
+- Convenience functions: `extract_nouns()`, `extract_verbs()`, `extract_adjectives()`, `extract_content_words()`, `extract_lemmas()`
+- 12 tests passing
+
+#### Lattice Visualization Tool (mecab-ko-core)
+- `LatticeViz` - Main visualization builder with options
+- `VizFormat` enum: Dot, Html, Text, Json
+- `VizOptions` - Configurable output (cost, POS, best path highlighting, colors, direction)
+- DOT output for Graphviz with node type coloring
+- HTML output with d3-graphviz interactive viewer
+- Text dump for debugging (nodes, positions, best path)
+- JSON output for programmatic access
+- Convenience functions: `lattice_to_dot()`, `lattice_to_html()`, `lattice_to_text()`, `lattice_to_json()`
+- 6 tests passing
+
+#### Tokenization Caching (mecab-ko-core)
+- `TokenCache` - Thread-safe LRU cache with RwLock
+- `CacheConfig` - Configurable max entries, key length limit, stats tracking
+- `CacheStats` - Hit/miss tracking with hit rate calculation
+- `CachedToken` - Cached token data structure
+- `CachingTokenizer<T>` - Generic wrapper for any tokenizer
+- `get_or_insert()` - Combined lookup/compute/store operation
+- Auto-skip caching for texts exceeding key length limit
+- 9 tests passing
+
+#### Parallel Tokenization Benchmarks (mecab-ko-benchmarks)
+- `bench_sequential_vs_parallel` - Compare sequential vs parallel processing (100/500/1000 batches)
+- `bench_parallel_scaling` - Measure scaling with 1/2/4/8 thread pools
+- `bench_parallel_chunked` - Test chunk sizes 50/100/200/500
+- `bench_parallel_throughput` - Measure parallel texts/sec
+
+### Changed
+
+- Internal code quality improvements
+- Additional test coverage
+
+### Documentation
+
+- Sprint 16 progress tracking in PLAN.md and PROGRESS.md
+
+---
+
 ## [0.2.0] - 2026-03-02
 
 ### Added
@@ -270,16 +330,23 @@ left-space-penalty-factor = 120,6000,184,6000,100,500
 
 ## Roadmap
 
-### Short-term (v0.2.0)
-- [ ] Complete binary dictionary loader implementation
-- [ ] Viterbi algorithm optimization
-- [ ] N-best path search
-- [ ] Whitespace penalty implementation
+### Short-term (v0.3.0) - In Progress
+- [x] N-best path search (ImprovedNbestSearcher)
+- [x] User-defined analysis modes
+- [x] Lattice visualization tool
+- [x] Tokenization caching (LRU)
+- [x] Parallel tokenization benchmarks
+- [ ] PyPI distribution
+- [ ] npm distribution
+- [ ] Breaking changes documentation
+- [ ] Migration guide v0.2.0 → v0.3.0
 
 ### Mid-term (v0.5.0)
 - [ ] mecab-ko-dic v3.0 dictionary
 - [ ] Performance benchmarks vs competitors
 - [ ] Enhanced unknown word handling
+- [ ] Streaming API improvements
+- [ ] Memory optimization (lazy loading)
 
 ### Long-term (v1.0.0)
 - [ ] Elasticsearch plugin production deployment

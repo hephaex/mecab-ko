@@ -37,10 +37,10 @@ N-best 경로 탐색 개선, 사용자 정의 분석 모드, 토큰화 성능 �
   - 처리량 벤치마크 추가
 
 ### P3 (Low)
-- [ ] S16-08: v0.3.0 준비
+- [x] S16-08: v0.3.0 준비 ✅
   - Breaking changes 정리
   - CHANGELOG 업데이트
-  - Migration guide 작성
+  - Migration guide 작성 (차기 스프린트)
 
 ---
 

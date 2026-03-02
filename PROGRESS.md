@@ -1,6 +1,6 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-03-03 (Sprint 16 시작)
+## 마지막 업데이트: 2026-03-03 (Sprint 16 완료)
 
 ## Sprint 16 진행 중 (2026-03-03)
 
@@ -66,7 +66,15 @@
     - `bench_parallel_throughput`: 병렬 처리량 (texts/sec)
 
 ### P3 (Low)
-- [ ] S16-08: v0.3.0 준비
+- [x] S16-08: v0.3.0 준비 ✅
+  - CHANGELOG.md v0.3.0 Unreleased 섹션 추가
+  - Sprint 16 모든 기능 문서화:
+    - ImprovedNbestSearcher (N-best 개선)
+    - AnalysisMode/PosFilter (분석 모드)
+    - LatticeViz (시각화 도구)
+    - TokenCache (캐싱)
+    - 병렬 벤치마크
+  - Roadmap 업데이트 (v0.3.0 진행 상태)
 
 ---
 
