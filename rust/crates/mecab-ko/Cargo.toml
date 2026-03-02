@@ -14,9 +14,9 @@ keywords = ["korean", "morphology", "nlp", "tokenizer", "mecab"]
 categories = ["text-processing", "science"]
 
 [dependencies]
-mecab-ko-core = { version = "0.1.1", path = "../mecab-ko-core" }
-mecab-ko-dict = { version = "0.1.1", path = "../mecab-ko-dict" }
-mecab-ko-hangul = { version = "0.1.1", path = "../mecab-ko-hangul" }
+mecab-ko-core = { version = "0.2.0", path = "../mecab-ko-core" }
+mecab-ko-dict = { version = "0.2.0", path = "../mecab-ko-dict" }
+mecab-ko-hangul = { version = "0.2.0", path = "../mecab-ko-hangul" }
 
 [dev-dependencies]
 criterion.workspace = true
@@ -38,6 +38,6 @@ default = []
 builder = ["dep:mecab-ko-dict-builder"]
 
 [dependencies.mecab-ko-dict-builder]
-version = "0.1.1"
+version = "0.2.0"
 path = "../mecab-ko-dict-builder"
 optional = true

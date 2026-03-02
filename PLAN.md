@@ -1,48 +1,73 @@
-# 현재 스프린트: Phase 6 - Sprint 13 (커뮤니티 & API 통합)
+# 현재 스프린트: Phase 6 - Sprint 14 (v0.2.0 릴리스 & 사전 자동화)
 
 ## 목표
+v0.2.0 정식 릴리스, 신조어 수집 워크플로우 검증, 사전 빌드 자동화 개선
+
+## Sprint 14 작업 목록
+
+### P0 (Critical)
+- [ ] S14-01: v0.2.0 릴리스 준비
+  - 버전 번호 업데이트 (Cargo.toml)
+  - 릴리스 노트 작성
+  - v0.2.0 태그 생성 및 푸시
+  - GitHub Release 자동 생성 확인
+
+### P1 (High)
+- [ ] S14-02: 신조어 수집 워크플로우 테스트
+  - `OPENDICT_API_KEY` secret 설정 확인
+  - `workflow_dispatch`로 dry-run 테스트
+  - 수집 결과 검증
+  - Step Summary 확인
+- [ ] S14-03: PyPI 배포 (S13-03 계속) - BLOCKED
+  - PyPI 토큰 설정 후 배포
+- [ ] S14-04: npm 배포 (S13-04 계속) - BLOCKED
+  - npm 토큰 설정 후 배포
+
+### P2 (Medium)
+- [ ] S14-05: 한국어기초사전 API 클라이언트 추가
+  - KrDictClient 구현 (표준국어대사전 기반)
+  - 다중 소스 지원 (`--source krdict`)
+  - 기존 OpenDictClient와 통합
+- [ ] S14-06: CLI collect 서브커맨드
+  - 배치 수집 기능 (`mecab-ko collect`)
+  - 키워드 목록 파일 입력
+  - 진행률 표시
+  - 결과 리포트 생성
+- [ ] S14-07: 사전 빌드 자동화 개선
+  - `mecab-ko-dict-builder` CI 워크플로우
+  - 사전 변경 시 자동 리빌드
+  - 바이너리 사전 artifact 업로드
+
+### P3 (Low)
+- [ ] S14-08: 성능 벤치마크 문서화
+  - docs/benchmarks/ 디렉토리 구성
+  - 경쟁 분석기 대비 성능 비교
+  - 그래프 및 차트 추가
+
+---
+
+# 완료된 스프린트: Phase 6 - Sprint 13 (커뮤니티 & API 통합) ✅
+
+## 목표 (완료)
 커뮤니티 기여 시스템 구축, 국립국어원 API 클라이언트 구현, v0.2.0 준비
 
 ## Sprint 13 작업 목록
 
 ### P0 (Critical)
 - [x] S13-01: 커뮤니티 기여 가이드라인 ✅
-  - CONTRIBUTING.md 업데이트 (신조어 추가 가이드)
-  - PR 템플릿 개선 (사전 변경 섹션)
-  - 이슈 템플릿 추가 (word-request, bug-report, analysis-error, feature-request)
-  - CODE_OF_CONDUCT.md 작성 (Contributor Covenant 2.0)
 
 ### P1 (High)
-- [x] S13-02: 국립국어원 API 클라이언트 (Phase 1) ✅
-  - `mecab-ko-dict-sync` 크레이트 생성
-  - OpenDictClient 구현 (search, get_detail, search_paginated)
-  - DictEntry, DictDetail 모델
-  - API 키/환경변수 처리 (OpenDictConfig)
-- [ ] S13-03: PyPI 배포 (S12-03 계속) - BLOCKED
-  - PyPI 토큰 설정 후 배포
-- [ ] S13-04: npm 배포 (S12-04 계속) - BLOCKED
-  - npm 토큰 설정 후 배포
+- [x] S13-02: 국립국어원 API 클라이언트 ✅
+- [ ] S13-03: PyPI 배포 - BLOCKED → S14-03
+- [ ] S13-04: npm 배포 - BLOCKED → S14-04
 
 ### P2 (Medium)
 - [x] S13-05: 사전 데이터 변환기 ✅
-  - DictConverter 구현 (NIKL → MeCab 변환)
-  - 30+ 품사 태그 매핑 (명사→NNG, 동사→VV 등)
-  - 빈도 기반 비용 계산 (고빈도=0, 저빈도=1000)
-  - CSV 출력 (to_csv_line, convert_to_csv)
 - [x] S13-06: CLI 사전 동기화 명령 ✅
-  - `mecab-ko sync` 서브커맨드
-  - `--source opendict` 옵션
-  - CSV 출력 및 병합 기능
 - [x] S13-07: v0.2.0 Breaking Changes 정리 ✅
-  - API 변경 사항 문서화
-  - Migration Guide 작성 (docs/MIGRATION_GUIDE.md)
-  - CHANGELOG 업데이트 (v0.2.0 섹션 추가)
 
 ### P3 (Low)
 - [x] S13-08: 신조어 자동 수집 파이프라인 설계 ✅
-  - GitHub Actions 스케줄 워크플로우
-  - 주간 신조어 PR 자동 생성
-  - 리뷰어 자동 할당
 
 ---
 
@@ -140,7 +165,8 @@ PyPI/npm 배포 준비, 문서 사이트 구축, 사전 현대화 조사
 | 10 | 4 | 안정화 & 품질 | ✅ |
 | 11 | 5 | 배포 & 생태계 확장 | ✅ |
 | 12 | 5 | 사전 현대화 & 기능 확장 | ✅ |
-| 13 | 6 | 커뮤니티 & API 통합 | 🚧 |
+| 13 | 6 | 커뮤니티 & API 통합 | ✅ |
+| 14 | 6 | v0.2.0 릴리스 & 사전 자동화 | 🚧 |
 
 ## 크레이트 발행 현황
 
@@ -158,4 +184,4 @@ PyPI/npm 배포 준비, 문서 사이트 구축, 사전 현대화 조사
 | mecab-ko (docker) | latest | GHCR | ✅ |
 
 ## 다음 스프린트 예고
-Sprint 14: 국립국어원 API 동기화 도구 완성, 자동 사전 업데이트 CI/CD
+Sprint 15: 사전 품질 개선, 정확도 측정 인프라, 경쟁 분석기 벤치마크

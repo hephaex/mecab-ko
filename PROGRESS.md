@@ -2,56 +2,49 @@
 
 ## 마지막 업데이트: 2026-03-02
 
-## Sprint 13 시작 (2026-03-02)
+## Sprint 14 시작 (2026-03-02)
+
+### P0 대기
+- [ ] S14-01: v0.2.0 릴리스 준비
+  - 버전 번호 업데이트
+  - 릴리스 노트 작성
+  - v0.2.0 태그 생성
+
+### P1 대기
+- [ ] S14-02: 신조어 수집 워크플로우 테스트
+  - `OPENDICT_API_KEY` secret 설정 필요
+- [ ] S14-03: PyPI 배포 - BLOCKED (계정 복구 대기)
+- [ ] S14-04: npm 배포 - BLOCKED (토큰 필요)
+
+### P2 대기
+- [ ] S14-05: 한국어기초사전 API 클라이언트 추가
+- [ ] S14-06: CLI collect 서브커맨드
+- [ ] S14-07: 사전 빌드 자동화 개선
+
+### P3 대기
+- [ ] S14-08: 성능 벤치마크 문서화
+
+---
+
+## Sprint 13 완료 ✅ (2026-03-02)
+
+### 완료율: 6/8 (BLOCKED 제외 시 100%)
 
 ### P0 완료
 - [x] S13-01: 커뮤니티 기여 가이드라인 ✅
-  - CONTRIBUTING.md 업데이트 (신조어 추가 가이드)
-  - 이슈 템플릿 4개 추가 (word-request, bug-report, analysis-error, feature-request)
-  - PR 템플릿 개선 (사전 변경 섹션)
-  - CODE_OF_CONDUCT.md 작성
 
-### P1 완료/진행
+### P1 완료/BLOCKED
 - [x] S13-02: 국립국어원 API 클라이언트 ✅
-  - `mecab-ko-dict-sync` 크레이트 생성
-  - OpenDictClient (search, get_detail, search_paginated)
-  - DictEntry, DictDetail, OpenDictConfig 모델
-  - 30 tests (22 unit + 8 doc tests) 통과
-- [ ] S13-03: PyPI 배포 - BLOCKED (계정 복구 대기: pypi/support#9540)
-- [ ] S13-04: npm 배포 - BLOCKED (토큰 필요)
-  - WASM 빌드 성공 (93KB)
+- [ ] S13-03: PyPI 배포 - BLOCKED → S14-03
+- [ ] S13-04: npm 배포 - BLOCKED → S14-04
 
-### P2 완료/진행
+### P2 완료
 - [x] S13-05: 사전 데이터 변환기 ✅
-  - `mecab-ko-dict-sync` 크레이트 생성
-  - `DictConverter` 구조체 구현 (POS 매핑, 비용 계산)
-  - `ConverterEntry` → `UserEntry` 변환 로직
-  - 30개 테스트 (22 unit + 8 doc tests)
-  - CSV 출력 포맷 (MeCab-Ko 호환)
-  - 예제 프로그램 `convert_neologisms`
 - [x] S13-06: CLI 사전 동기화 명령 ✅
-  - `mecab-ko sync` 서브커맨드 추가
-  - `--source opendict` 옵션 (우리말샘 API)
-  - `--query` 검색어, `--api-key` API 키
-  - `--output` CSV 출력, `--append` 추가 모드
-  - `--max-results` 최대 결과 수 제한
-  - 환경변수 `OPENDICT_API_KEY` 지원
-  - 17개 테스트 통과
 - [x] S13-07: v0.2.0 Breaking Changes 정리 ✅
-  - CHANGELOG.md에 v0.2.0 섹션 추가
-  - docs/MIGRATION_GUIDE.md 작성
-  - Breaking changes, 새 기능, 호환성 매트릭스 문서화
 
 ### P3 완료
 - [x] S13-08: 신조어 자동 수집 파이프라인 설계 ✅
-  - `.github/workflows/neologism-sync.yml` 워크플로우 생성
-  - 주간/월간 스케줄 (매주 월요일, 매월 1일 09:00 KST)
-  - `workflow_dispatch`로 수동 실행 지원
-  - 중복 검사 로직 (기존 CSV와 비교)
-  - `peter-evans/create-pull-request`로 자동 PR 생성
-  - Slack 알림, 실패 시 이슈 자동 생성
-  - `docs/research/neologism-pipeline-design.md` 설계 문서
-  - GitHub Issue #10 생성
 
 ---
 

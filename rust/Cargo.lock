@@ -1426,7 +1426,7 @@ dependencies = [
 
 [[package]]
 name = "mecab-ko"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "criterion",
  "mecab-ko-core",
@@ -1440,7 +1440,7 @@ dependencies = [
 
 [[package]]
 name = "mecab-ko-benchmarks"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "criterion",
  "mecab-ko-core",
@@ -1452,7 +1452,7 @@ dependencies = [
 
 [[package]]
 name = "mecab-ko-cli"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -1467,7 +1467,7 @@ dependencies = [
 
 [[package]]
 name = "mecab-ko-core"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "criterion",
  "mecab-ko-dict",
@@ -1482,7 +1482,7 @@ dependencies = [
 
 [[package]]
 name = "mecab-ko-dict"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "bincode",
  "byteorder",
@@ -1501,7 +1501,7 @@ dependencies = [
 
 [[package]]
 name = "mecab-ko-dict-builder"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "byteorder",
@@ -1525,7 +1525,7 @@ dependencies = [
 
 [[package]]
 name = "mecab-ko-dict-sync"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "csv",
  "mockito",
@@ -1542,7 +1542,7 @@ dependencies = [
 
 [[package]]
 name = "mecab-ko-dict-validator"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -1566,7 +1566,7 @@ dependencies = [
 
 [[package]]
 name = "mecab-ko-elasticsearch"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "criterion",
  "jni",
@@ -1585,14 +1585,14 @@ dependencies = [
 
 [[package]]
 name = "mecab-ko-hangul"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "criterion",
 ]
 
 [[package]]
 name = "mecab-ko-node"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "mecab-ko-core",
  "napi",
@@ -1603,7 +1603,7 @@ dependencies = [
 
 [[package]]
 name = "mecab-ko-profiler"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -1625,7 +1625,7 @@ dependencies = [
 
 [[package]]
 name = "mecab-ko-python"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "mecab-ko-core",
  "parking_lot",
@@ -1634,7 +1634,7 @@ dependencies = [
 
 [[package]]
 name = "mecab-ko-wasm"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "console_error_panic_hook",
  "js-sys",

@@ -22,7 +22,7 @@ crate-type = ["cdylib", "rlib"]
 doc = false  # Skip docs for WASM bindings (FFI crate, not meant for Rust docs)
 
 [dependencies]
-mecab-ko-core = { version = "0.1.1", path = "../mecab-ko-core", default-features = false }
+mecab-ko-core = { version = "0.2.0", path = "../mecab-ko-core", default-features = false }
 wasm-bindgen = { workspace = true }
 js-sys = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
