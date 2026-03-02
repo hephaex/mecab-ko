@@ -1,0 +1,29 @@
+# Build artifacts
+rust/target/
+*.pyc
+__pycache__/
+*.egg-info/
+
+# Version control
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Documentation
+docs/book/book/
+*.md
+
+# Test data
+*.log
+*.tmp
+
+# Large files
+data/mecab-ko-dic.tar.gz
+data/dict-output/
+
+# Claude config
+.claude/
+.history/
