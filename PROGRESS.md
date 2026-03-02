@@ -27,7 +27,12 @@
   - 편의 함수: `extract_nouns()`, `extract_verbs()`, `extract_adjectives()`, `extract_content_words()`, `extract_lemmas()`
   - 12개 테스트 통과
 - [ ] S16-03: PyPI 배포 - BLOCKED (토큰 필요)
-- [ ] S16-04: npm 배포 - BLOCKED (토큰 필요)
+- [~] S16-04: npm 배포 - 준비 완료 (토큰 대기)
+  - `npm-publish-wasm.yml` 워크플로우 생성
+  - WASM 빌드 (bundler, nodejs, web 타겟)
+  - 테스트 및 배포 자동화
+  - `package.json` 업데이트 (v0.2.0, ESM exports 추가)
+  - NPM_TOKEN 시크릿 설정 후 배포 가능
 
 ### P2 (Medium)
 - [x] S16-05: Lattice 시각화 도구 ✅
