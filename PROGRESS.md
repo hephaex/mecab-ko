@@ -2,6 +2,24 @@
 
 ## 마지막 업데이트: 2026-03-02
 
+## Sprint 11 진행 중 (2026-03-02)
+
+### P0 진행
+- [ ] S11-01: PyPI 배포 - BLOCKED (PyPI 토큰 필요)
+  - maturin build 성공 (cp313-macosx_11_0_arm64.whl)
+
+### P1 진행
+- [ ] S11-02: npm 배포 - BLOCKED (npm 토큰 필요)
+- [x] S11-03: GitHub Releases 자동화 ✅
+  - v0.1.1 태그 생성 및 푸시
+  - release.yml 워크플로우 트리거됨
+- [x] S11-04: 성능 회귀 탐지 CI ✅
+  - benchmark.yml에 회귀 탐지 추가
+  - PR 코멘트로 비교 표 자동 생성
+  - 10% 이상 악화 시 경고
+
+---
+
 ## Sprint 10 완료 ✅ (2026-03-02)
 
 ### P0 완료

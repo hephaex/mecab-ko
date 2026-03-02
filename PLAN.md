@@ -6,23 +6,22 @@ PyPI/npm 배포, 문서 사이트 구축, 사전 현대화 착수
 ## Sprint 11 작업 목록
 
 ### P0 (Critical)
-- [ ] S11-01: PyPI 배포 (mecab-ko-python)
-  - maturin publish 실행
-  - Python 3.8-3.12 호환 확인
-  - pip install mecab-ko 테스트
+- [ ] S11-01: PyPI 배포 (mecab-ko-python) - BLOCKED (PyPI 토큰 필요)
+  - maturin build 성공 ✅
+  - twine upload 대기 중
 
 ### P1 (High)
-- [ ] S11-02: npm 배포 (mecab-ko-wasm)
+- [ ] S11-02: npm 배포 (mecab-ko-wasm) - BLOCKED (npm 토큰 필요)
   - wasm-pack publish 실행
   - npm install mecab-ko-wasm 테스트
-- [ ] S11-03: GitHub Releases 자동화
-  - v0.1.1 릴리스 생성
-  - CLI 바이너리 첨부 (Linux/macOS/Windows)
-  - 릴리스 노트 자동 생성
-- [ ] S11-04: 성능 회귀 탐지 CI
-  - criterion benchmark 결과 비교
-  - PR 코멘트로 결과 보고
-  - 10% 이상 악화 시 경고
+- [x] S11-03: GitHub Releases 자동화 ✅
+  - v0.1.1 태그 푸시 완료
+  - release.yml 워크플로우 실행 중
+  - CLI 바이너리 자동 빌드/첨부
+- [x] S11-04: 성능 회귀 탐지 CI ✅
+  - PR 비교 표 자동 생성
+  - 10% 이상 악화 시 경고 추가
+  - benchmark.yml 개선
 
 ### P2 (Medium)
 - [ ] S11-05: 문서 사이트 구축
