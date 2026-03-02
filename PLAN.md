@@ -19,9 +19,10 @@ N-best 경로 탐색 개선, 사용자 정의 분석 모드, 토큰화 성능 �
   - 동사/형용사 원형 복원 모드
 - [ ] S16-03: PyPI 배포 (S15-03 계속) - BLOCKED
   - PyPI 토큰 설정 후 배포
-- [~] S16-04: npm 배포 (S15-04 계속) - 준비 완료
+- [x] S16-04: npm 배포 ✅
   - npm-publish-wasm.yml 워크플로우 추가
-  - NPM_TOKEN 시크릿 설정 대기
+  - NPM_TOKEN 시크릿 설정 완료
+  - **mecab-ko-wasm v0.3.0 npm 배포 완료**
 
 ### P2 (Medium)
 - [x] S16-05: Lattice 시각화 도구 ✅

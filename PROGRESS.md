@@ -1,6 +1,6 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-03-03 (Sprint 16 완료)
+## 마지막 업데이트: 2026-03-03 (Sprint 16 완료 + npm 배포)
 
 ## Sprint 16 완료 ✅ (2026-03-03)
 
@@ -27,12 +27,14 @@
   - 편의 함수: `extract_nouns()`, `extract_verbs()`, `extract_adjectives()`, `extract_content_words()`, `extract_lemmas()`
   - 12개 테스트 통과
 - [ ] S16-03: PyPI 배포 - BLOCKED (토큰 필요)
-- [~] S16-04: npm 배포 - 준비 완료 (토큰 대기)
+- [x] S16-04: npm 배포 ✅ (2026-03-03)
   - `npm-publish-wasm.yml` 워크플로우 생성
   - WASM 빌드 (bundler, nodejs, web 타겟)
   - 테스트 및 배포 자동화
-  - `package.json` 업데이트 (v0.2.0, ESM exports 추가)
-  - NPM_TOKEN 시크릿 설정 후 배포 가능
+  - `package.json` 업데이트 (v0.3.0, ESM exports 추가)
+  - NPM_TOKEN 시크릿 설정 완료
+  - **mecab-ko-wasm v0.3.0 npm 배포 완료** 🎉
+  - https://www.npmjs.com/package/mecab-ko-wasm
 
 ### P2 (Medium)
 - [x] S16-05: Lattice 시각화 도구 ✅
@@ -505,20 +507,21 @@
 
 ## 크레이트 실제 상태
 
-| 크레이트 | 상태 | 비고 |
-|----------|------|------|
-| mecab-ko-hangul | ✅ 완료 | 한글 자소 분리/결합 |
-| mecab-ko-dict | ✅ 완료 | Trie, Matrix, Loader, UserDict, HotReload, FileWatcher, entries |
-| mecab-ko-dict-builder | ✅ 완료 | CSV→binary 사전 빌더, 압축, entries 저장 |
-| mecab-ko-core | ✅ 완료 | Viterbi, Lattice, Tokenizer, Unknown handler, Normalizer (최적화) |
-| mecab-ko-cli | ✅ 완료 | CLI 인터페이스 |
-| mecab-ko-python | ✅ 완료 | PyO3 바인딩 (KoNLPy 호환) |
-| mecab-ko-wasm | ✅ 완료 | WASM 바인딩 (wasm-bindgen) |
-| mecab-ko-node | ✅ 완료 | Node.js 바인딩 (N-API, TypeScript) |
-| mecab-ko-elasticsearch | ✅ 완료 | Nori 호환 (24 pass, 6 ignored) |
-| mecab-ko-profiler | ✅ 완료 | 실제 사전 통합, baseline save/compare |
-| mecab-ko-dict-validator | ✅ 완료 | CSV 검증, 규칙 엔진, CLI, 리포트 |
-| mecab-ko (facade) | ✅ 완료 | 통합 API |
+| 크레이트 | 상태 | 플랫폼 | 비고 |
+|----------|------|--------|------|
+| mecab-ko-hangul | ✅ v0.1.1 | crates.io | 한글 자소 분리/결합 |
+| mecab-ko-dict | ✅ v0.1.1 | crates.io | Trie, Matrix, Loader, UserDict |
+| mecab-ko-dict-builder | ✅ v0.1.1 | crates.io | CSV→binary 사전 빌더 |
+| mecab-ko-core | ✅ v0.1.1 | crates.io | Viterbi, Lattice, Tokenizer |
+| mecab-ko-cli | ✅ v0.1.1 | GitHub Releases | CLI 인터페이스 |
+| mecab-ko-python | ⏸️ BLOCKED | PyPI | PyO3 바인딩 (토큰 필요) |
+| mecab-ko-wasm | ✅ v0.3.0 | **npm** | WASM 바인딩 🎉 |
+| mecab-ko-node | ✅ 완료 | - | Node.js 바인딩 |
+| mecab-ko-elasticsearch | ✅ 완료 | - | Nori 호환 |
+| mecab-ko-profiler | ✅ 완료 | - | 실제 사전 통합 |
+| mecab-ko-dict-validator | ✅ v0.1.1 | crates.io | CSV 검증 |
+| mecab-ko (facade) | ✅ v0.1.1 | crates.io | 통합 API |
+| mecab-ko (docker) | ✅ latest | GHCR | Docker 이미지 |
 
 ## 테스트 현황
 - **통과**: 746개
