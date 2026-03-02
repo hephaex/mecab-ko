@@ -11,6 +11,7 @@
 - [ ] Performance improvement
 - [ ] Code refactoring
 - [ ] Dependency update
+- [ ] Dictionary/Word addition (사전/단어 추가)
 
 ### Related Issues
 
@@ -51,6 +52,18 @@ Closes #(issue number)
 - [ ] Updated README if applicable
 - [ ] Updated CHANGELOG.md
 - [ ] Updated user guide if applicable
+
+## For Dictionary Changes (사전 변경 시)
+
+<!-- Only fill this section if adding/modifying dictionary entries -->
+
+- [ ] CSV format verified
+- [ ] No duplicates with existing entries
+- [ ] POS tags are correct
+- [ ] Reading (읽기) is accurate
+
+**Words added (추가된 단어)**:
+<!-- List words: 단어1, 단어2, ... -->
 
 ## Breaking Changes
 

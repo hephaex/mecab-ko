@@ -35,6 +35,45 @@ To suggest new features:
 2. Explain the use case and expected benefits
 3. If possible, suggest an implementation approach
 
+## How to Add New Words (신조어 추가)
+
+MeCab-Ko welcomes contributions of new words, especially:
+- 신조어 (neologisms)
+- 브랜드명 (brand names)
+- IT/기술 용어
+- K-문화 관련 용어
+- 인터넷/SNS 용어
+
+### Quick Add (단어 요청)
+
+1. Open an Issue with the **"word-request"** template
+2. Provide:
+   - 단어 (word)
+   - 품사 (POS tag): NNG(일반명사), NNP(고유명사), etc.
+   - 읽기 (reading/pronunciation)
+   - 사용 예시 (usage example)
+
+### Direct Contribution (직접 기여)
+
+1. Fork the repository
+2. Edit `data/user-dict/neologisms.csv`
+3. Follow the CSV format:
+   ```
+   표면형,0,0,0,품사,*,*,*,읽기,원형,읽기,*
+   ```
+4. Submit a PR with title: `feat(dict): add {word} to neologisms`
+
+### POS Tag Reference (품사 태그)
+
+| Tag | Description | Example |
+|-----|-------------|---------|
+| NNP | 고유명사 (Proper noun) | 챗GPT, BTS |
+| NNG | 일반명사 (Common noun) | 메타버스, 워라밸 |
+| VV | 동사 (Verb) | 플렉스하다 |
+| VA | 형용사 (Adjective) | - |
+| MAG | 일반부사 (Adverb) | - |
+| IC | 감탄사 (Interjection) | ㅋㅋㅋ |
+
 ---
 
 ## Development Setup
@@ -370,5 +409,5 @@ By contributing to this project, you agree that your contributions will be distr
 
 ---
 
-*Last Updated: 2026-02-05*
+*Last Updated: 2026-03-02*
 *Maintainer: hephaex (hephaex@gmail.com)*
