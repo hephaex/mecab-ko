@@ -24,10 +24,10 @@ PyPI/npm 배포, 문서 사이트 구축, 사전 현대화 착수
   - benchmark.yml 개선
 
 ### P2 (Medium)
-- [ ] S11-05: 문서 사이트 구축
-  - mdBook 설정
-  - API 가이드 작성
-  - 사용 예제 추가
+- [x] S11-05: 문서 사이트 구축 ✅
+  - mdBook 설정 완료
+  - docs.yml 워크플로우 개선
+  - GitHub Pages 자동 배포
 - [ ] S11-06: mecab-ko-dic 최신화 조사
   - 2018년 이후 변경 조사
   - 신조어 추가 방안 검토
