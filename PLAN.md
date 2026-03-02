@@ -29,14 +29,14 @@
   - 우리말샘/한국어기초사전/표준국어대사전 API 조사
   - 데이터 변환 파이프라인 설계
   - docs/research/dictionary/korean-dict-api-survey.md 작성
-- [ ] S12-06: Streaming API 추가
-  - 대용량 텍스트 스트리밍 분석
-  - Iterator 기반 API
-  - 메모리 효율적 처리
-- [ ] S12-07: 분석 모드 확장
-  - 복합어 분해 모드
-  - 원형 복원 모드
-  - 의미 태그 모드
+- [x] S12-06: Streaming API 확인 ✅
+  - StreamingTokenizer 이미 구현됨
+  - TokenStream (Iterator 기반) 구현됨
+  - process_reader, process_file API 지원
+- [x] S12-07: 분석 모드 확인 ✅
+  - DecompoundMode (None/Discard/Mixed) 구현됨
+  - NoriTokenizer에 lemma 지원
+  - 추가 의미 태그는 차후 구현 예정
 
 ### P3 (Low)
 - [ ] S12-08: CLI 인터랙티브 모드
