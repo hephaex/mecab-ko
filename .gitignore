@@ -1,1 +1,27 @@
 CLAUDE.md
+
+# Large dictionary data files (use Git LFS or download separately)
+data/dict-output/
+data/mecab-ko-dic-2.1.1-20180720/
+data/mecab-ko-dic.tar.gz
+
+# Jumandic and Neologd data
+mecab-jumandic/
+mecab-ipadic-neologd/
+
+# Build artifacts
+*.o
+*.a
+*.so
+*.dylib
+target/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
