@@ -1,48 +1,71 @@
-# 현재 스프린트: Phase 5 - Sprint 11 (배포 & 생태계 확장)
+# 현재 스프린트: Phase 5 - Sprint 12 (사전 현대화 & 기능 확장)
 
 ## 목표
-PyPI/npm 배포, 문서 사이트 구축, 사전 현대화 착수
+신조어 사전 구축, 사용자 사전 도구 개선, API 확장
+
+## Sprint 12 작업 목록
+
+### P0 (Critical)
+- [ ] S12-01: 신조어 시드 사전 구축
+  - 2018-2024 주요 신조어 100개 수집
+  - `data/user-dict/neologisms.csv` 생성
+  - 품사 태그 및 비용 정보 포함
+
+### P1 (High)
+- [ ] S12-02: 사용자 사전 빌드 도구 개선
+  - 신조어 자동 품사 추정 기능
+  - CSV 중복 검사 기능
+  - 시스템 사전과 충돌 검사
+- [ ] S12-03: PyPI 배포 (S11-01 계속)
+  - PyPI 토큰 설정 후 배포
+  - pip install mecab-ko 테스트
+- [ ] S12-04: npm 배포 (S11-02 계속)
+  - npm 토큰 설정 후 배포
+  - npm install mecab-ko-wasm 테스트
+
+### P2 (Medium)
+- [ ] S12-05: 국립국어원 API 연동 조사
+  - 우리말샘 API 테스트
+  - 한국어기초사전 API 테스트
+  - 데이터 변환 파이프라인 설계
+- [ ] S12-06: Streaming API 추가
+  - 대용량 텍스트 스트리밍 분석
+  - Iterator 기반 API
+  - 메모리 효율적 처리
+- [ ] S12-07: 분석 모드 확장
+  - 복합어 분해 모드
+  - 원형 복원 모드
+  - 의미 태그 모드
+
+### P3 (Low)
+- [ ] S12-08: CLI 인터랙티브 모드
+  - REPL 스타일 대화형 분석
+  - 히스토리 및 자동완성
+
+---
+
+# 완료된 스프린트: Phase 5 - Sprint 11 (배포 & 생태계 확장) ✅
+
+## 목표 (완료)
+PyPI/npm 배포 준비, 문서 사이트 구축, 사전 현대화 조사
 
 ## Sprint 11 작업 목록
 
 ### P0 (Critical)
-- [ ] S11-01: PyPI 배포 (mecab-ko-python) - BLOCKED (PyPI 토큰 필요)
-  - maturin build 성공 ✅
-  - twine upload 대기 중
+- [ ] S11-01: PyPI 배포 (mecab-ko-python) - BLOCKED (PyPI 토큰 필요) → S12-03
+- [ ] S11-02: npm 배포 (mecab-ko-wasm) - BLOCKED (npm 토큰 필요) → S12-04
 
 ### P1 (High)
-- [ ] S11-02: npm 배포 (mecab-ko-wasm) - BLOCKED (npm 토큰 필요)
-  - wasm-pack publish 실행
-  - npm install mecab-ko-wasm 테스트
 - [x] S11-03: GitHub Releases 자동화 ✅
-  - v0.1.1 태그 푸시 완료
-  - release.yml 워크플로우 실행 중
-  - CLI 바이너리 자동 빌드/첨부
 - [x] S11-04: 성능 회귀 탐지 CI ✅
-  - PR 비교 표 자동 생성
-  - 10% 이상 악화 시 경고 추가
-  - benchmark.yml 개선
 
 ### P2 (Medium)
 - [x] S11-05: 문서 사이트 구축 ✅
-  - mdBook 설정 완료
-  - docs.yml 워크플로우 개선
-  - GitHub Pages 자동 배포
 - [x] S11-06: mecab-ko-dic 최신화 조사 ✅
-  - 2018년 이후 변경 조사
-  - 신조어 추가 방안 검토
-  - 커뮤니티 사전 통합 검토
-  - docs/research/dictionary/mecab-ko-dic-modernization.md 작성
 - [x] S11-07: Docker 이미지 배포 ✅
-  - Dockerfile 작성 (multi-stage build)
-  - docker.yml 워크플로우 추가
-  - GHCR 자동 배포 (main/tags)
 
 ### P3 (Low)
 - [x] S11-08: 성능 대시보드 ✅
-  - GitHub Pages에 벤치마크 결과 시각화
-  - 버전별 성능 추이 그래프 (Chart.js)
-  - CI 자동 업데이트 워크플로우
 
 ---
 
@@ -68,126 +91,36 @@ PyPI/npm 배포, 문서 사이트 구축, 사전 현대화 착수
 
 ---
 
-# 완료된 스프린트: Phase 4 - Sprint 9 (사전 현대화 & 발행) ✅
+# 완료된 스프린트 요약
 
-## 목표 (완료)
-crates.io 발행 준비, 사전 현대화, 추가 최적화
+| Sprint | Phase | 목표 | 상태 |
+|--------|-------|------|------|
+| 1-2 | 1 | 프로젝트 셋업 | ✅ |
+| 3 | 1 | 코어 데이터 구조 | ✅ |
+| 4 | 2 | 코어 엔진 + 바인딩 | ✅ |
+| 5 | 3 | 안정화 | ✅ |
+| 6 | 3 | 성능 최적화 | ✅ |
+| 7 | 4 | crates.io 발행 준비 | ✅ |
+| 8 | 4 | Memory 최적화 | ✅ |
+| 9 | 4 | 사전 현대화 & 발행 | ✅ |
+| 10 | 4 | 안정화 & 품질 | ✅ |
+| 11 | 5 | 배포 & 생태계 확장 | ✅ |
+| 12 | 5 | 사전 현대화 & 기능 확장 | 🚧 |
 
-## Sprint 9 작업 목록
+## 크레이트 발행 현황
 
-### P0 (Critical)
-- [ ] S9-01: crates.io 정식 발행 - BLOCKED (`cargo login` 필요) → S10-01로 이동
-- [x] S9-02: 의존성 업데이트 ✅
-
-### P1 (High)
-- [x] S9-03: CLI 개선 (옵션 추가) ✅
-- [x] S9-04: Python 바인딩 PyPI 배포 준비 완료 ✅
-- [x] S9-05: 사용자 사전 기능 개선 ✅
-
-### P2 (Medium)
-- [x] S9-06: 문서화 개선 (API 가이드) ✅
-- [x] S9-07: 성능 벤치마크 자동화 ✅
-
----
-
-# 완료된 스프린트: Phase 4 - Sprint 8 (Memory 최적화 & 발행) ✅
-
-## Sprint 8 목표 (완료)
-Memory 최적화 (215MB → 150MB), WASM zstd 해결, crates.io 발행 준비
-
-## Sprint 8 작업 목록
-
-### P0 (Critical) ✅
-- [x] S8-01: Memory 최적화 - entries 지연 로딩
-- [x] S8-02: Memory 최적화 - mmap 활용 강화
-- [x] S8-03: WASM zstd-sys 이슈 해결
-
-### P1 (High) ✅
-- [x] S8-04: crates.io 발행 준비 (인증 대기)
-- [x] S8-05: PyPI 배포 준비 (maturin)
-- [x] S8-06: README.md 정리
-
-### P2 (Medium) ✅
-- [x] S8-07: npm 배포 준비 (Node.js 바인딩)
-- [x] S8-08: GitHub Maintenance 이슈 정리
-
----
-
-# 완료된 스프린트: Phase 4 - Sprint 7 (crates.io 발행 준비) ✅
-
-## Sprint 7 목표 (완료)
-crates.io 발행 준비, 바인딩 최적화, Memory KPI 측정
-
-## 완료된 이전 스프린트
-
-### Phase 1 - Sprint 1-2 (프로젝트 셋업) ✅
-- 프로젝트 구조 설계, 한글 유틸리티, CI/CD, 자동화 인프라
-
-### Phase 1 - Sprint 3 (코어 데이터 구조) ✅
-- 리서치 완료 (MeCab 내부, 생태계, Rust 크레이트, Lindera 분석, 바이너리 포맷)
-- 사전 로더, DA Trie, 연접 비용 행렬, 미등록어 처리 모두 구현 완료
-
-### Phase 2 - Sprint 4 (코어 엔진 + 바인딩) ✅
-- Viterbi 엔진, Lattice 빌더, Tokenizer, Normalizer 구현 완료
-- CLI 인터페이스, Elasticsearch Nori 호환 (부분), Python/WASM/Node 바인딩 구현 완료
-- 사전 빌더 (CSV→binary), entries 파이프라인 구현 완료
-
-### Phase 3 - Sprint 5 (안정화) ✅
-- 의존성 업데이트, CI 강화, mini-dict 테스트 활성화 159개
-- dict-validator 확인, 코드 품질 점검
-
-### Phase 3 - Sprint 6 (성능 최적화) ✅
-- 토크나이저 45-55% 개선, 238K morphs/sec, 0.086ms cold start
-- 프로파일러 완성, ES 크레이트 완료, 746 tests pass
-
-## Sprint 7 작업 목록
-
-### crates.io 발행 준비
-- [x] S7-01: Path dependency에 version 추가 (P0) ✅
-- [x] S7-02: cargo publish --dry-run 검증 (P0) ✅
-- [ ] S7-03: README.md 및 CHANGELOG.md 정리 (P1)
-
-### Memory KPI 측정
-- [x] S7-04: Full-dict 벤치마크 실행 (P1) ⚠️
-  - 측정값: 215 MB (목표 150MB 초과)
-  - Sprint 8에서 최적화 필요
-
-### 바인딩 검증
-- [x] S7-05: Python 바인딩 빌드 테스트 (P1) ✅
-- [x] S7-06: WASM 바인딩 빌드 테스트 (P2) ⚠️ zstd-sys 이슈
-- [x] S7-07: Node.js 바인딩 빌드 테스트 (P2) ✅
-
-### 문서화
-- [x] S7-08: API 문서 최종 점검 (P2) ✅ (clippy 0 warnings)
-
-## Sprint 7 완료 요약
-- **완료일**: 2026-03-01
-- **커밋**: 3개 (16aa61b, 7ef84e6, 9530a77)
-- **테스트**: 746 passed, 0 failed
-- **Clippy**: 0 warnings
-
-## 크레이트 발행 순서
-
-| 순서 | 크레이트 | 의존성 | 상태 |
-|-----|---------|--------|------|
-| 1 | mecab-ko-hangul | 없음 | 대기 |
-| 2 | mecab-ko-dict | hangul | 대기 |
-| 3 | mecab-ko-core | hangul, dict | 대기 |
-| 4 | mecab-ko-dict-validator | hangul | 대기 |
-| 5 | mecab-ko-dict-builder | hangul, dict | 대기 |
-| 6 | mecab-ko (facade) | 전체 | 대기 |
-
-## 발행 제외 크레이트 (publish=false 유지)
-
-| 크레이트 | 사유 | 배포 방식 |
-|---------|------|----------|
-| mecab-ko-cli | CLI 도구 | GitHub Releases |
-| mecab-ko-python | PyO3 바인딩 | PyPI |
-| mecab-ko-wasm | WASM 바인딩 | npm |
-| mecab-ko-node | Node.js 바인딩 | npm |
-| mecab-ko-elasticsearch | ES 플러그인 | 별도 배포 |
-| mecab-ko-profiler | 개발 도구 | 내부 사용 |
-| benchmarks | 벤치마크 | 내부 사용 |
+| 크레이트 | 버전 | 플랫폼 | 상태 |
+|---------|------|--------|------|
+| mecab-ko-hangul | v0.1.1 | crates.io | ✅ |
+| mecab-ko-dict | v0.1.1 | crates.io | ✅ |
+| mecab-ko-core | v0.1.1 | crates.io | ✅ |
+| mecab-ko-dict-validator | v0.1.1 | crates.io | ✅ |
+| mecab-ko-dict-builder | v0.1.1 | crates.io | ✅ |
+| mecab-ko | v0.1.1 | crates.io | ✅ |
+| mecab-ko-python | - | PyPI | BLOCKED |
+| mecab-ko-wasm | - | npm | BLOCKED |
+| mecab-ko-cli | v0.1.1 | GitHub Releases | ✅ |
+| mecab-ko (docker) | latest | GHCR | ✅ |
 
 ## 다음 스프린트 예고
-Sprint 8: crates.io 정식 발행, PyPI/npm 배포, 사전 현대화 착수
+Sprint 13: 커뮤니티 기여 시스템, 국립국어원 API 통합, v0.2.0 준비
