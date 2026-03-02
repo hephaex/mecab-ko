@@ -11,14 +11,17 @@
   - PR 템플릿 개선 (사전 변경 섹션)
   - CODE_OF_CONDUCT.md 작성
 
-### P1 진행
-- [ ] S13-02: 국립국어원 API 클라이언트
+### P1 완료/진행
+- [x] S13-02: 국립국어원 API 클라이언트 ✅
+  - `mecab-ko-dict-sync` 크레이트 생성
+  - OpenDictClient (search, get_detail, search_paginated)
+  - DictEntry, DictDetail, OpenDictConfig 모델
+  - 30 tests (22 unit + 8 doc tests) 통과
 - [ ] S13-03: PyPI 배포 - BLOCKED (계정 복구 대기: pypi/support#9540)
 - [ ] S13-04: npm 배포 - BLOCKED (토큰 필요)
   - WASM 빌드 성공 (93KB)
-  - wasm-opt 비활성화로 bulk memory 오류 해결
 
-### P2 진행
+### P2 완료/진행
 - [x] S13-05: 사전 데이터 변환기 ✅
   - `mecab-ko-dict-sync` 크레이트 생성
   - `DictConverter` 구조체 구현 (POS 매핑, 비용 계산)

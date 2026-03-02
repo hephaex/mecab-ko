@@ -13,21 +13,22 @@
   - CODE_OF_CONDUCT.md 작성 (Contributor Covenant 2.0)
 
 ### P1 (High)
-- [ ] S13-02: 국립국어원 API 클라이언트 (Phase 1)
+- [x] S13-02: 국립국어원 API 클라이언트 (Phase 1) ✅
   - `mecab-ko-dict-sync` 크레이트 생성
-  - OpenDictClient 구조체 구현
-  - 우리말샘 검색 API 연동
-  - API 키 환경변수 처리
+  - OpenDictClient 구현 (search, get_detail, search_paginated)
+  - DictEntry, DictDetail 모델
+  - API 키/환경변수 처리 (OpenDictConfig)
 - [ ] S13-03: PyPI 배포 (S12-03 계속) - BLOCKED
   - PyPI 토큰 설정 후 배포
 - [ ] S13-04: npm 배포 (S12-04 계속) - BLOCKED
   - npm 토큰 설정 후 배포
 
 ### P2 (Medium)
-- [ ] S13-05: 사전 데이터 변환기
-  - 국립국어원 → MeCab 포맷 변환
-  - 품사 태그 매핑 테이블 구현
-  - 비용 자동 계산 로직
+- [x] S13-05: 사전 데이터 변환기 ✅
+  - DictConverter 구현 (NIKL → MeCab 변환)
+  - 30+ 품사 태그 매핑 (명사→NNG, 동사→VV 등)
+  - 빈도 기반 비용 계산 (고빈도=0, 저빈도=1000)
+  - CSV 출력 (to_csv_line, convert_to_csv)
 - [ ] S13-06: CLI 사전 동기화 명령
   - `mecab-ko sync` 서브커맨드
   - `--source opendict` 옵션
