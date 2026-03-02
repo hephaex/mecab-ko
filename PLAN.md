@@ -23,10 +23,10 @@ N-best 경로 탐색 개선, 사용자 정의 분석 모드, 토큰화 성능 �
   - npm 토큰 설정 후 배포
 
 ### P2 (Medium)
-- [ ] S16-05: Lattice 시각화 도구
+- [x] S16-05: Lattice 시각화 도구 ✅
   - DOT/Graphviz 출력
-  - HTML 인터랙티브 뷰어
-  - 디버깅용 lattice dump
+  - HTML 인터랙티브 뷰어 (d3-graphviz)
+  - 디버깅용 lattice dump (Text, JSON)
 - [ ] S16-06: 토큰화 캐싱
   - 반복 입력 캐싱
   - LRU 캐시 구현

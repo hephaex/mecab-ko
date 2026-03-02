@@ -30,7 +30,18 @@
 - [ ] S16-04: npm 배포 - BLOCKED (토큰 필요)
 
 ### P2 (Medium)
-- [ ] S16-05: Lattice 시각화 도구
+- [x] S16-05: Lattice 시각화 도구 ✅
+  - `lattice_viz.rs` 모듈 구현
+  - `VizFormat` enum: Dot, Html, Text, Json
+  - `VizOptions`: 비용 표시, 품사 표시, 최적 경로 강조, 색상, 방향 설정
+  - `LatticeViz`: 시각화 도구 (빌더 패턴)
+  - DOT 출력: Graphviz 호환, 노드 타입별 색상 구분
+  - HTML 출력: d3-graphviz 기반 인터랙티브 뷰어
+  - Text 출력: 디버깅용 상세 덤프 (노드, 위치별, 최적 경로)
+  - JSON 출력: 프로그래밍 가능한 구조적 데이터
+  - 편의 함수: `lattice_to_dot()`, `lattice_to_html()`, `lattice_to_text()`, `lattice_to_json()`
+  - 6개 테스트 통과
+  - Clippy 경고 없음
 - [ ] S16-06: 토큰화 캐싱
 - [ ] S16-07: 병렬 토큰화
 

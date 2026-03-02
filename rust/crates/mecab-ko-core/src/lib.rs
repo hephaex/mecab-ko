@@ -34,6 +34,7 @@ pub mod batch;
 pub mod evaluate;
 pub mod kiwi_compat;
 pub mod lattice;
+pub mod lattice_viz;
 pub mod nbest;
 pub mod nori_compat;
 pub mod normalizer;
@@ -73,6 +74,10 @@ pub use analysis_mode::{
 };
 pub use nbest::{ImprovedNbestSearcher, NbestPath, NbestResult};
 pub use viterbi::{ConnectionCost, NbestSearcher, SpacePenalty, ViterbiSearcher};
+pub use lattice_viz::{
+    lattice_to_dot, lattice_to_html, lattice_to_json, lattice_to_text, LatticeViz, VizFormat,
+    VizOptions,
+};
 
 #[cfg(feature = "async")]
 pub use async_tokenizer::{AsyncStreamingTokenizer, AsyncTokenizer};
