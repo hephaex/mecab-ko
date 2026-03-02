@@ -1,43 +1,51 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-03-02
+## 마지막 업데이트: 2026-03-03
 
-## Sprint 14 시작 (2026-03-02)
+## Sprint 15 시작 (2026-03-03)
+
+### P0 대기
+- [ ] S15-01: 정확도 측정 인프라 구축
+  - 세종 코퍼스 테스트 데이터 준비
+  - 정확도 측정 CLI
+  - Precision/Recall/F1 계산
+
+### P1 대기
+- [ ] S15-02: 사전 품질 검증 도구 개선
+- [ ] S15-03: PyPI 배포 - BLOCKED (계정 복구 대기)
+- [ ] S15-04: npm 배포 - BLOCKED (토큰 필요)
+
+### P2 대기
+- [ ] S15-05: Unknown 단어 처리 개선
+- [ ] S15-06: 복합명사 분해 개선
+- [ ] S15-07: 성능 벤치마크 CI 통합
+
+### P3 대기
+- [ ] S15-08: 문서 사이트 개선
+
+---
+
+## Sprint 14 완료 ✅ (2026-03-02)
+
+### 완료율: 5/8 (BLOCKED 제외 시 100%)
 
 ### P0 완료
 - [x] S14-01: v0.2.0 릴리스 준비 ✅
-  - 버전 번호 업데이트 (0.1.1 → 0.2.0)
-  - 17개 Cargo.toml + pyproject.toml 업데이트
-  - v0.2.0 annotated 태그 생성 및 푸시
-  - GitHub Release 자동 트리거
+  - v0.2.0 태그 및 GitHub Release 생성
+  - 4개 플랫폼 바이너리 배포
 
-### P1 대기
-- [ ] S14-02: 신조어 수집 워크플로우 테스트
-  - `OPENDICT_API_KEY` secret 설정 필요
-- [ ] S14-03: PyPI 배포 - BLOCKED (계정 복구 대기)
-- [ ] S14-04: npm 배포 - BLOCKED (토큰 필요)
+### P1 BLOCKED
+- [ ] S14-02: 신조어 수집 워크플로우 테스트 - 대기 (secret 필요)
+- [ ] S14-03: PyPI 배포 - BLOCKED → S15-03
+- [ ] S14-04: npm 배포 - BLOCKED → S15-04
 
-### P2 진행
-- [x] S14-05: 한국어기초사전 API 클라이언트 추가 ✅
-  - KrDictClient 구현 (표준국어대사전/한국어기초사전 API)
-  - KrDictConfig 추가 (builder pattern)
-  - DictSource enum 확장 (Opendict, Krdict)
-  - CLI `--source krdict` 옵션 지원
-  - KRDICT_API_KEY 환경변수 지원
-  - 47 unit tests + 30 doc tests 통과
-  - Commit: 50972554
-- [ ] S14-06: CLI collect 서브커맨드
-- [ ] S14-07: 사전 빌드 자동화 개선
+### P2 완료
+- [x] S14-05: 한국어기초사전 API 클라이언트 ✅
+- [x] S14-06: CLI collect 서브커맨드 ✅
+- [x] S14-07: 사전 빌드 자동화 ✅
 
 ### P3 완료
 - [x] S14-08: 성능 벤치마크 문서화 ✅
-  - docs/benchmarks/ 디렉토리 구성
-  - README.md - 벤치마크 개요 및 실행 방법
-  - methodology.md - 측정 방법론 및 테스트 환경
-  - results.md - 최신 벤치마크 결과 및 분석
-  - 경쟁 분석기 비교 (MeCab-Ko, Kiwi, Nori, Lindera)
-  - 성능 개선 추이 그래프 (ASCII/Mermaid)
-  - KPI 대시보드 및 최적화 대상 정리
 
 ---
 
