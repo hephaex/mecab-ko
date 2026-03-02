@@ -29,9 +29,11 @@ pub mod client;
 pub mod config;
 mod converter;
 pub mod error;
+mod krdict_client;
 pub mod models;
 
 pub use converter::{ConverterEntry, DictConverter, UserEntry};
+pub use krdict_client::KrDictClient;
 
 /// Errors that can occur during dictionary synchronization and conversion.
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]

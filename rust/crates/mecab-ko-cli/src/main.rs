@@ -439,8 +439,8 @@ enum Commands {
         #[arg(short, long)]
         query: String,
 
-        /// API 키 (환경변수 `OPENDICT_API_KEY` 사용 가능)
-        #[arg(long, env = "OPENDICT_API_KEY")]
+        /// API 키 (환경변수: `OPENDICT_API_KEY` 또는 `KRDICT_API_KEY`)
+        #[arg(long)]
         api_key: Option<String>,
 
         /// 최대 결과 수
@@ -471,6 +471,8 @@ enum DictSource {
     /// 국립국어원 우리말샘 (`OpenDict` API)
     #[default]
     Opendict,
+    /// 국립국어원 한국어기초사전/표준국어대사전 (`KrDict` API)
+    Krdict,
 }
 
 /// Output format options for analysis results
@@ -1293,19 +1295,31 @@ fn run_sync(
     output: Option<&PathBuf>,
     append: bool,
 ) -> Result<()> {
-    // Get API key
+    // Get API key from argument or environment variable based on source
     let api_key = api_key
         .map(String::from)
-        .or_else(|| std::env::var("OPENDICT_API_KEY").ok())
+        .or_else(|| {
+            match source {
+                DictSource::Opendict => std::env::var("OPENDICT_API_KEY").ok(),
+                DictSource::Krdict => std::env::var("KRDICT_API_KEY").ok(),
+            }
+        })
         .ok_or_else(|| {
+            let env_var = match source {
+                DictSource::Opendict => "OPENDICT_API_KEY",
+                DictSource::Krdict => "KRDICT_API_KEY",
+            };
             anyhow::anyhow!(
-                "API 키가 필요합니다. --api-key 옵션이나 OPENDICT_API_KEY 환경변수를 설정하세요."
+                "API 키가 필요합니다. --api-key 옵션이나 {env_var} 환경변수를 설정하세요."
             )
         })?;
 
     match source {
         DictSource::Opendict => {
             run_opendict_sync(&api_key, query, max_results, output, append)
+        }
+        DictSource::Krdict => {
+            run_krdict_sync(&api_key, query, max_results, output, append)
         }
     }
 }
@@ -1327,6 +1341,101 @@ fn run_opendict_sync(
     let config = OpenDictConfig::new(api_key).with_max_results(max_results);
 
     let client = OpenDictClient::new(config).map_err(|e| anyhow::anyhow!("API 클라이언트 생성 실패: {e}"))?;
+
+    // Run async search
+    let runtime = tokio::runtime::Runtime::new().context("Tokio 런타임 생성 실패")?;
+
+    let entries: Vec<mecab_ko_dict_sync::models::DictEntry> = runtime
+        .block_on(async { client.search(query).await })
+        .map_err(|e| anyhow::anyhow!("API 검색 실패: {e}"))?;
+
+    if entries.is_empty() {
+        eprintln!("검색 결과가 없습니다.");
+        return Ok(());
+    }
+
+    eprintln!("{}개의 항목을 찾았습니다.", entries.len());
+
+    // Convert to MeCab format
+    let converter = DictConverter::new();
+
+    let mut converted_entries = Vec::new();
+    let mut failed_count = 0;
+
+    for entry in &entries {
+        let converter_entry = ConverterEntry {
+            surface: entry.word.clone(),
+            pos: entry.pos.clone(),
+            reading: entry.reading.clone(),
+            frequency: None, // API doesn't provide frequency
+        };
+
+        match converter.convert_entry(&converter_entry) {
+            Ok(user_entry) => {
+                converted_entries.push(user_entry.to_csv_line());
+            }
+            Err(_) => {
+                failed_count += 1;
+                // Skip entries with unknown POS tags
+            }
+        }
+    }
+
+    if failed_count > 0 {
+        eprintln!("{failed_count}개 항목의 품사 변환에 실패했습니다 (알 수 없는 품사 태그).");
+    }
+
+    // Output results
+    if let Some(output_path) = output {
+        let file = if append {
+            fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(output_path)
+        } else {
+            File::create(output_path)
+        }
+        .with_context(|| format!("출력 파일 생성 실패: {}", output_path.display()))?;
+
+        let mut writer = BufWriter::new(file);
+
+        for line in &converted_entries {
+            writeln!(writer, "{line}")?;
+        }
+
+        writer.flush()?;
+        eprintln!(
+            "{}개 항목을 {} 에 저장했습니다.",
+            converted_entries.len(),
+            output_path.display()
+        );
+    } else {
+        // Output to stdout
+        for line in &converted_entries {
+            println!("{line}");
+        }
+    }
+
+    Ok(())
+}
+
+/// Runs synchronization with the Korean Dictionary API (한국어기초사전/표준국어대사전)
+fn run_krdict_sync(
+    api_key: &str,
+    query: &str,
+    max_results: u32,
+    output: Option<&PathBuf>,
+    append: bool,
+) -> Result<()> {
+    use mecab_ko_dict_sync::config::KrDictConfig;
+    use mecab_ko_dict_sync::KrDictClient;
+
+    eprintln!("한국어기초사전 API에서 '{query}' 검색 중...");
+
+    // Create client
+    let config = KrDictConfig::new(api_key).with_max_results(max_results);
+
+    let client = KrDictClient::new(config).map_err(|e| anyhow::anyhow!("API 클라이언트 생성 실패: {e}"))?;
 
     // Run async search
     let runtime = tokio::runtime::Runtime::new().context("Tokio 런타임 생성 실패")?;
@@ -1736,6 +1845,26 @@ mod tests {
         match args.command {
             Some(Commands::Sync { source, .. }) => {
                 assert!(matches!(source, DictSource::Opendict));
+            }
+            _ => panic!("Expected sync command"),
+        }
+    }
+
+    #[test]
+    fn test_sync_command_krdict_source() {
+        let args = Args::try_parse_from([
+            "mecab-ko",
+            "sync",
+            "-q",
+            "컴퓨터",
+            "--source",
+            "krdict",
+        ])
+        .unwrap();
+        match args.command {
+            Some(Commands::Sync { query, source, .. }) => {
+                assert_eq!(query, "컴퓨터");
+                assert!(matches!(source, DictSource::Krdict));
             }
             _ => panic!("Expected sync command"),
         }
