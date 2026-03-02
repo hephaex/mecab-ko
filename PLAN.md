@@ -13,10 +13,10 @@
   - README.md 문서 추가
 
 ### P1 (High)
-- [ ] S12-02: 사용자 사전 빌드 도구 개선
-  - 신조어 자동 품사 추정 기능
-  - CSV 중복 검사 기능
-  - 시스템 사전과 충돌 검사
+- [x] S12-02: 사용자 사전 빌드 도구 개선 ✅
+  - 신조어 자동 품사 추정 기능 (`estimate_pos()`)
+  - CSV 중복 검사 기능 (`check_csv_duplicates()`)
+  - 시스템 사전과 충돌 검사 (`check_system_conflicts()`)
 - [ ] S12-03: PyPI 배포 (S11-01 계속)
   - PyPI 토큰 설정 후 배포
   - pip install mecab-ko 테스트

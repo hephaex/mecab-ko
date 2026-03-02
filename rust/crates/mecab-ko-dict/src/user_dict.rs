@@ -69,6 +69,97 @@ pub fn is_valid_pos_tag(pos: &str) -> bool {
     false
 }
 
+/// 자동 품사 추정
+///
+/// 표면형의 특성을 분석하여 품사를 추정합니다.
+///
+/// # Arguments
+///
+/// * `surface` - 표면형
+///
+/// # Returns
+///
+/// 추정된 품사 태그
+#[must_use]
+pub fn estimate_pos(surface: &str) -> &'static str {
+    // 빈 문자열
+    if surface.is_empty() {
+        return "NA";
+    }
+
+    let chars: Vec<char> = surface.chars().collect();
+    let first_char = chars[0];
+    let last_char = *chars.last().unwrap_or(&first_char);
+
+    // 숫자로만 이루어진 경우
+    if surface.chars().all(|c| c.is_ascii_digit()) {
+        return "SN";
+    }
+
+    // 영문자로만 이루어진 경우 (약어, 브랜드)
+    if surface.chars().all(|c| c.is_ascii_alphabetic()) {
+        // 모두 대문자면 약어/고유명사 가능성
+        if surface.chars().all(|c| c.is_ascii_uppercase()) {
+            return "SL"; // 외국어 (약어)
+        }
+        return "SL"; // 외국어
+    }
+
+    // 영문+숫자 조합 (버전, 모델명 등)
+    if surface.chars().all(|c| c.is_ascii_alphanumeric()) {
+        return "SL";
+    }
+
+    // 한글로 시작하는 경우
+    if is_hangul(first_char) {
+        // 동사/형용사 추정 (어미로 끝나는 경우)
+        if matches!(last_char, '다' | '하' | '되') {
+            return "VV"; // 동사 (기본형)
+        }
+
+        // 부사 추정
+        if matches!(last_char, '이' | '히' | '게' | '로' | '리') && chars.len() >= 2 {
+            // 마지막 글자만 보면 부정확할 수 있음
+            // "빨리", "천천히" 등
+        }
+
+        // 고유명사 추정 (브랜드, 인명, 그룹명 등)
+        // 영문이 섞여있거나 특수 패턴
+        if surface.chars().any(|c| c.is_ascii_alphabetic()) {
+            return "NNP"; // 고유명사
+        }
+
+        // 기본: 일반명사
+        return "NNG";
+    }
+
+    // 기호
+    if first_char.is_ascii_punctuation() {
+        return "SW";
+    }
+
+    // 한자
+    if is_hanja(first_char) {
+        return "SH";
+    }
+
+    // 기본: 일반명사
+    "NNG"
+}
+
+/// 한글 문자 여부 확인
+fn is_hangul(c: char) -> bool {
+    ('\u{AC00}'..='\u{D7A3}').contains(&c) || // 완성형 한글
+    ('\u{1100}'..='\u{11FF}').contains(&c) || // 한글 자모
+    ('\u{3130}'..='\u{318F}').contains(&c)    // 호환용 자모
+}
+
+/// 한자 문자 여부 확인
+fn is_hanja(c: char) -> bool {
+    ('\u{4E00}'..='\u{9FFF}').contains(&c) || // CJK 통합 한자
+    ('\u{3400}'..='\u{4DBF}').contains(&c)    // CJK 확장 A
+}
+
 /// 사전 검증 결과
 #[derive(Debug, Clone, Default)]
 pub struct ValidationResult {
@@ -625,6 +716,95 @@ impl UserDictionary {
         }
     }
 
+    /// CSV 파일 중복 검사 (파일 로드 전 검사)
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - CSV 파일 경로
+    ///
+    /// # Returns
+    ///
+    /// 중복된 엔트리 목록 (라인 번호, 표면형, 품사)
+    ///
+    /// # Errors
+    ///
+    /// 파일을 읽을 수 없는 경우 에러를 반환합니다.
+    pub fn check_csv_duplicates<P: AsRef<Path>>(
+        path: P,
+    ) -> Result<Vec<(usize, String, String)>> {
+        let file = std::fs::File::open(path.as_ref()).map_err(DictError::Io)?;
+        let reader = BufReader::new(file);
+
+        let mut seen: HashMap<(String, String), usize> = HashMap::new();
+        let mut duplicates = Vec::new();
+
+        for (line_num, line_result) in reader.lines().enumerate() {
+            let line = line_result.map_err(DictError::Io)?;
+            let line = line.trim();
+
+            if line.is_empty() || line.starts_with('#') {
+                continue;
+            }
+
+            let parts: Vec<&str> = line.split(',').collect();
+            if parts.len() >= 2 {
+                let surface = parts[0].trim().to_string();
+                let pos = parts[1].trim().to_string();
+                let key = (surface.clone(), pos.clone());
+
+                if let Some(&prev_line) = seen.get(&key) {
+                    duplicates.push((line_num + 1, surface, pos));
+                    duplicates.push((prev_line, key.0.clone(), key.1.clone()));
+                } else {
+                    seen.insert(key, line_num + 1);
+                }
+            }
+        }
+
+        Ok(duplicates)
+    }
+
+    /// 자동 품사 추정을 사용하여 엔트리 추가
+    ///
+    /// 표면형만 제공하면 품사를 자동으로 추정합니다.
+    pub fn add_entry_auto_pos(
+        &mut self,
+        surface: impl Into<String>,
+        cost: Option<i16>,
+        reading: Option<String>,
+    ) -> &mut Self {
+        let surface = surface.into();
+        let pos = estimate_pos(&surface);
+        self.add_entry(surface, pos, cost, reading)
+    }
+
+    /// 시스템 사전과 충돌 검사
+    ///
+    /// 시스템 사전에 이미 존재하는 표면형을 찾습니다.
+    ///
+    /// # Arguments
+    ///
+    /// * `system_surfaces` - 시스템 사전의 표면형 집합
+    ///
+    /// # Returns
+    ///
+    /// 충돌하는 엔트리 목록 (인덱스, 표면형, 품사)
+    #[must_use]
+    pub fn check_system_conflicts<S: std::hash::BuildHasher>(
+        &self,
+        system_surfaces: &std::collections::HashSet<String, S>,
+    ) -> Vec<(usize, String, String)> {
+        let mut conflicts = Vec::new();
+
+        for (idx, entry) in self.entries.iter().enumerate() {
+            if system_surfaces.contains(&entry.surface) {
+                conflicts.push((idx, entry.surface.clone(), entry.pos.clone()));
+            }
+        }
+
+        conflicts
+    }
+
     /// 통계 정보 반환
     #[must_use]
     pub fn stats(&self) -> DictionaryStats {
@@ -988,5 +1168,66 @@ mod tests {
         assert!(is_valid_pos_tag("VV"));
         assert!(is_valid_pos_tag("NNG+JX")); // 복합 태그
         assert!(!is_valid_pos_tag("INVALID"));
+    }
+
+    #[test]
+    fn test_estimate_pos() {
+        // 영문 약어
+        assert_eq!(estimate_pos("GPT"), "SL");
+        assert_eq!(estimate_pos("BTS"), "SL");
+
+        // 숫자
+        assert_eq!(estimate_pos("123"), "SN");
+
+        // 한글+영문 조합 (고유명사)
+        assert_eq!(estimate_pos("챗GPT"), "NNP");
+
+        // 동사 기본형
+        assert_eq!(estimate_pos("하다"), "VV");
+        assert_eq!(estimate_pos("먹다"), "VV");
+
+        // 일반 한글 (명사)
+        assert_eq!(estimate_pos("메타버스"), "NNG");
+        assert_eq!(estimate_pos("사과"), "NNG");
+
+        // 빈 문자열
+        assert_eq!(estimate_pos(""), "NA");
+    }
+
+    #[test]
+    fn test_add_entry_auto_pos() {
+        let mut dict = UserDictionary::new();
+        dict.add_entry_auto_pos("GPT", None, None);
+        dict.add_entry_auto_pos("챗GPT", None, None);
+        dict.add_entry_auto_pos("메타버스", None, None);
+
+        let entries = dict.lookup("GPT");
+        assert_eq!(entries[0].pos, "SL");
+
+        let entries = dict.lookup("챗GPT");
+        assert_eq!(entries[0].pos, "NNP");
+
+        let entries = dict.lookup("메타버스");
+        assert_eq!(entries[0].pos, "NNG");
+    }
+
+    #[test]
+    fn test_check_system_conflicts() {
+        use std::collections::HashSet;
+
+        let mut dict = UserDictionary::new();
+        dict.add_entry("사과", "NNG", None, None); // 시스템에 있음
+        dict.add_entry("챗GPT", "NNP", None, None); // 시스템에 없음
+        dict.add_entry("바나나", "NNG", None, None); // 시스템에 있음
+
+        let system_surfaces: HashSet<String> =
+            ["사과", "바나나", "포도"].iter().map(|s| s.to_string()).collect();
+
+        let conflicts = dict.check_system_conflicts(&system_surfaces);
+        assert_eq!(conflicts.len(), 2);
+
+        let surfaces: Vec<&str> = conflicts.iter().map(|(_, s, _)| s.as_str()).collect();
+        assert!(surfaces.contains(&"사과"));
+        assert!(surfaces.contains(&"바나나"));
     }
 }
