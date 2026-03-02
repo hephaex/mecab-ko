@@ -17,11 +17,15 @@
   - 8개 테스트 통과
 
 ### P1 (High)
-- [ ] S16-02: 사용자 정의 분석 모드
-  - AnalysisMode enum 확장
-  - 품사 필터링 모드
-  - 명사 추출 전용 모드
-  - 동사/형용사 원형 복원 모드
+- [x] S16-02: 사용자 정의 분석 모드 ✅
+  - `analysis_mode.rs` 모듈 구현
+  - `AnalysisMode` enum: Full, NounsOnly, VerbsOnly, AdjectivesOnly, PredicatesOnly, ContentWordsOnly, SurfaceOnly, Lemmatized, PosTagsOnly, Custom
+  - `PosFilter`: 품사 접두사/정확 매칭, 포함/제외 리스트
+  - `LemmatizationMode`: None, PredicatesOnly, All
+  - `AnalyzerConfig`: 분석 모드, 필터, 원형 복원, 길이 제한 조합
+  - `AnalyzedToken`: 변환된 토큰 구조체
+  - 편의 함수: `extract_nouns()`, `extract_verbs()`, `extract_adjectives()`, `extract_content_words()`, `extract_lemmas()`
+  - 12개 테스트 통과
 - [ ] S16-03: PyPI 배포 - BLOCKED (토큰 필요)
 - [ ] S16-04: npm 배포 - BLOCKED (토큰 필요)
 

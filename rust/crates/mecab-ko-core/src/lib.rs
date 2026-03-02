@@ -29,6 +29,7 @@
 #[cfg(any(test, feature = "test-utils"))]
 pub mod test_utils;
 
+pub mod analysis_mode;
 pub mod batch;
 pub mod evaluate;
 pub mod kiwi_compat;
@@ -66,6 +67,10 @@ pub use pos_tag::PosTag;
 pub use streaming::{StreamingTokenizer, TokenStream};
 pub use tokenizer::{Token, Tokenizer};
 pub use unknown::{CharCategoryMap, UnknownDictionary, UnknownHandler};
+pub use analysis_mode::{
+    extract_adjectives, extract_content_words, extract_lemmas, extract_nouns, extract_verbs,
+    AnalysisMode, AnalyzedToken, AnalyzerConfig, LemmatizationMode, PosFilter,
+};
 pub use nbest::{ImprovedNbestSearcher, NbestPath, NbestResult};
 pub use viterbi::{ConnectionCost, NbestSearcher, SpacePenalty, ViterbiSearcher};
 
