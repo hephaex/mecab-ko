@@ -7,6 +7,12 @@
 - [설치](installation.md)
 - [빠른 시작](quick-start.md)
 
+# 튜토리얼
+
+- [기본 사용법](tutorials/basic-usage.md)
+- [고급 기능](tutorials/advanced-features.md)
+- [웹 서버 통합](tutorials/web-integration.md)
+
 # 사용 가이드
 
 - [CLI 사용법](cli-usage.md)
@@ -15,6 +21,7 @@
 
 # API 레퍼런스
 
+- [개요](api-reference.md)
 - [Rust API](api-reference/rust.md)
 - [Python 바인딩](api-reference/python.md)
 - [Node.js 바인딩](api-reference/nodejs.md)
@@ -26,6 +33,11 @@
 - [성능 튜닝](advanced/performance-tuning.md)
 - [Elasticsearch 통합](advanced/elasticsearch.md)
 - [커스텀 분석기](advanced/custom-analyzer.md)
+
+# 성능 벤치마크
+
+- [성능 대시보드](benchmarks/index.md)
+- [벤치마크 가이드](benchmarks/guide.md)
 
 # 레퍼런스
 
@@ -44,4 +56,3 @@
 - [FAQ](faq.md)
 - [변경 이력](changelog.md)
 - [마이그레이션 가이드](appendix/migration.md)
-- [성능 대시보드](benchmarks/index.md)

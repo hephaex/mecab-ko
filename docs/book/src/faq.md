@@ -177,7 +177,18 @@ let tokens = spawn_blocking(move || {
 
 ### Python에서 사용할 수 있나요?
 
-Python 바인딩은 개발 예정입니다. 현재는 subprocess로 CLI 호출:
+Python 바인딩이 제공됩니다 (PyPI 배포 준비 중):
+
+```python
+from mecab_ko import Mecab
+
+mecab = Mecab()
+tokens = mecab.pos("안녕하세요")
+print(tokens)
+# [('안녕', 'NNG'), ('하', 'XSV'), ('세요', 'EP+EF')]
+```
+
+또는 subprocess로 CLI 호출:
 
 ```python
 import subprocess
@@ -193,7 +204,16 @@ tokens = json.loads(result.stdout)
 
 ### 웹 브라우저에서 사용할 수 있나요?
 
-WASM 지원은 개발 예정입니다.
+WASM 바인딩이 제공됩니다:
+
+```javascript
+import init, { Mecab } from 'mecab-ko-wasm';
+
+await init();
+const mecab = new Mecab();
+const tokens = mecab.tokenize("안녕하세요");
+console.log(tokens);
+```
 
 ## 오류 해결
 

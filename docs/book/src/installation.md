@@ -7,8 +7,10 @@ MeCab-Ko는 여러 가지 방법으로 설치할 수 있습니다. 사용 목적
 ### 시스템 요구 사항
 
 - **운영체제**: Linux, macOS, Windows 10+
-- **Rust**: 1.70.0 이상 (라이브러리 사용 시)
+- **Rust**: 1.75.0 이상 (라이브러리 사용 시)
 - **메모리**: 최소 256MB (사전 로딩 포함)
+- **Python**: 3.8+ (Python 바인딩 사용 시)
+- **Node.js**: 18+ (Node.js 바인딩 사용 시)
 
 ### Rust 설치
 
@@ -81,7 +83,7 @@ Rust 프로젝트에서 라이브러리로 사용하려면 `Cargo.toml`에 의�
 
 ```toml
 [dependencies]
-mecab-ko = "0.1"
+mecab-ko = "0.2"
 ```
 
 특정 기능만 사용할 경우:
@@ -89,13 +91,13 @@ mecab-ko = "0.1"
 ```toml
 [dependencies]
 # Core library only
-mecab-ko-core = "0.1"
+mecab-ko-core = "0.2"
 
 # Hangul utilities only
 mecab-ko-hangul = "0.1"
 
 # Dictionary management only
-mecab-ko-dict = "0.1"
+mecab-ko-dict = "0.2"
 ```
 
 ### Feature Flags
@@ -104,12 +106,15 @@ mecab-ko-dict = "0.1"
 
 ```toml
 [dependencies]
-mecab-ko = { version = "0.1", features = ["builder"] }
+mecab-ko = { version = "0.2", features = ["builder", "serde"] }
 ```
 
 | Feature | 설명 |
 |---------|------|
 | `builder` | 사전 빌더 기능 포함 |
+| `serde` | JSON 직렬화 지원 |
+| `rayon` | 병렬 처리 지원 |
+| `zstd` | 사전 압축 지원 (기본 활성화) |
 
 ## 사전 설치
 

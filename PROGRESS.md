@@ -1,6 +1,6 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-03-03 (S15-07 완료)
+## 마지막 업데이트: 2026-03-03 (S15-08 완료)
 
 ## Sprint 15 진행 중 (2026-03-03)
 
@@ -79,8 +79,19 @@
   - 문서 추가: BENCHMARK_CI_GUIDE.md, PERFORMANCE_BASELINES.md
   - 로컬 도구: benchmark-parser.py (결과 파싱/비교)
 
-### P3 대기
-- [ ] S15-08: 문서 사이트 개선
+### P3 완료
+- [x] S15-08: 문서 사이트 개선 ✅
+  - SUMMARY.md 구조 정리 및 튜토리얼 섹션 추가
+  - 3개 튜토리얼 문서 생성:
+    - tutorials/basic-usage.md (기본 사용법)
+    - tutorials/advanced-features.md (고급 기능)
+    - tutorials/web-integration.md (웹 서버 통합)
+  - 벤치마크 가이드 추가 (benchmarks/guide.md)
+  - changelog.md v0.2.0 변경사항 반영
+  - introduction.md v0.2.0 정보 업데이트
+  - installation.md 버전 및 feature flags 업데이트
+  - book.toml 설정 개선 (검색, 플레이그라운드, CNAME 등)
+  - FAQ Python/WASM 바인딩 정보 업데이트
 
 ---
 

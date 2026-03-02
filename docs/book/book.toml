@@ -1,6 +1,7 @@
 [book]
 title = "MeCab-Ko Documentation"
 authors = ["Mario Cho <hephaex@gmail.com>"]
+description = "한국어 형태소 분석기 MeCab-Ko 사용 가이드"
 language = "ko"
 src = "src"
 
@@ -8,11 +9,17 @@ src = "src"
 build-dir = "book"
 create-missing = true
 
+[preprocessor.links]
+
 [output.html]
 default-theme = "light"
 preferred-dark-theme = "navy"
 git-repository-url = "https://github.com/hephaex/mecab-ko"
 edit-url-template = "https://github.com/hephaex/mecab-ko/edit/main/docs/book/{path}"
+additional-css = ["src/custom.css"]
+additional-js = ["src/custom.js"]
+no-section-label = false
+cname = "mecab-ko.dev"
 
 [output.html.fold]
 enable = true
@@ -21,3 +28,11 @@ level = 1
 [output.html.search]
 enable = true
 limit-results = 30
+teaser-word-count = 30
+use-hierarchical-index = true
+copy-js = true
+
+[output.html.playground]
+editable = false
+copyable = true
+line-numbers = true

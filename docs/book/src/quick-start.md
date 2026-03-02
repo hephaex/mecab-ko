@@ -85,7 +85,7 @@ cd my-nlp-project
 
 ```toml
 [dependencies]
-mecab-ko = "0.1"
+mecab-ko = "0.2"
 ```
 
 ### 기본 형태소 분석

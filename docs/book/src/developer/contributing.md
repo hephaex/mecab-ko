@@ -15,7 +15,7 @@ cd mecab-ko
 ### 2. 개발 환경 설정
 
 ```bash
-# Rust 설치 (1.70.0 이상)
+# Rust 설치 (1.75.0 이상)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 # 빌드
