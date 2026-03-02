@@ -21,6 +21,11 @@ on:
         required: false
         default: 'false'
 
+# Skip benchmark if commit message contains [skip bench]
+concurrency:
+  group: benchmark-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: -D warnings
@@ -34,11 +39,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Skip if [skip bench] in commit message
+        id: check-skip
+        run: |
+          if [[ "${{ github.event.head_commit.message }}" == *"[skip bench]"* ]]; then
+            echo "skip_bench=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip_bench=false" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+        if: steps.check-skip.outputs.skip_bench != 'true'
 
       - name: Cache cargo build
         uses: actions/cache@v4
+        if: steps.check-skip.outputs.skip_bench != 'true'
         with:
           path: rust/target
           key: ${{ runner.os }}-cargo-bench-check-${{ hashFiles('**/Cargo.lock') }}
@@ -46,6 +63,7 @@ jobs:
             ${{ runner.os }}-cargo-bench-check-
 
       - name: Check benchmarks compilation
+        if: steps.check-skip.outputs.skip_bench != 'true'
         run: cargo bench --manifest-path rust/Cargo.toml --no-run --verbose
 
   # Run benchmarks on current branch
@@ -72,11 +90,49 @@ jobs:
         run: |
           cargo bench --manifest-path rust/Cargo.toml -- --output-format bencher | tee /tmp/current-benchmark.txt
 
+      - name: Convert results to JSON
+        run: |
+          python3 << 'EOF'
+          import json
+          import re
+          from datetime import datetime
+
+          results = {}
+          with open('/tmp/current-benchmark.txt', 'r') as f:
+              for line in f:
+                  # Parse: test name ... bench: X ns/iter (+/- Y)
+                  match = re.search(r'test\s+(\S+)\s+.*bench:\s+([\d,]+)\s+ns/iter', line)
+                  if match:
+                      name = match.group(1)
+                      time_ns = int(match.group(2).replace(',', ''))
+                      results[name] = {
+                          'time_ns': time_ns,
+                          'time_us': time_ns / 1000,
+                          'time_ms': time_ns / 1_000_000
+                      }
+
+          data = {
+              'version': '${{ github.ref_name }}',
+              'commit': '${{ github.sha }}'[:7],
+              'timestamp': datetime.utcnow().isoformat() + 'Z',
+              'platform': 'ubuntu-latest',
+              'rustc': 'stable',
+              'results': results
+          }
+
+          with open('/tmp/benchmark-results.json', 'w') as f:
+              json.dump(data, f, indent=2)
+
+          print(f"Converted {len(results)} benchmarks to JSON")
+          EOF
+
       - name: Archive benchmark results
         uses: actions/upload-artifact@v4
         with:
           name: benchmark-results-${{ github.run_id }}
-          path: /tmp/current-benchmark.txt
+          path: |
+            /tmp/current-benchmark.txt
+            /tmp/benchmark-results.json
           retention-days: 90
 
   # Compare benchmarks for PRs
@@ -139,6 +195,12 @@ jobs:
               return results;
             }
 
+            function formatTime(ns) {
+              if (ns < 1000) return ns.toFixed(1) + 'ns';
+              if (ns < 1_000_000) return (ns / 1000).toFixed(1) + 'µs';
+              return (ns / 1_000_000).toFixed(1) + 'ms';
+            }
+
             let baseBench = '';
             let prBench = '';
 
@@ -153,52 +215,72 @@ jobs:
             const baseResults = parseBenchmarks(baseBench);
             const prResults = parseBenchmarks(prBench);
 
-            let comment = '## 📊 Benchmark Comparison\n\n';
-            let hasRegression = false;
-            let regressionDetails = [];
+            let comment = '## 🚀 Performance Comparison\n\n';
+            let hasWarning = false;
+            let hasError = false;
+            let warningDetails = [];
+            let errorDetails = [];
 
             if (Object.keys(baseResults).length > 0 && Object.keys(prResults).length > 0) {
-              comment += '| Benchmark | Base | PR | Change |\n';
-              comment += '|-----------|------|----|---------|\n';
+              comment += '| Benchmark | main | PR | Change | Status |\n';
+              comment += '|-----------|------|----|---------|---------|\n';
 
               for (const [name, prTime] of Object.entries(prResults)) {
                 if (baseResults[name]) {
                   const baseTime = baseResults[name];
                   const diff = ((prTime - baseTime) / baseTime * 100).toFixed(1);
-                  const arrow = prTime > baseTime ? '🔺' : (prTime < baseTime ? '🔽' : '➡️');
+                  const diffNum = parseFloat(diff);
 
-                  // Detect regression (>10% slower)
-                  if (parseFloat(diff) > 10) {
-                    hasRegression = true;
-                    regressionDetails.push(`${name}: +${diff}%`);
+                  // Determine status
+                  let status = '✅';
+                  if (diffNum > 10) {
+                    status = '❌';
+                    hasError = true;
+                    errorDetails.push(`${name}: +${diff}%`);
+                  } else if (diffNum > 5) {
+                    status = '⚠️';
+                    hasWarning = true;
+                    warningDetails.push(`${name}: +${diff}%`);
+                  } else if (diffNum < 0) {
+                    status = '🟢';
                   }
 
                   const shortName = name.split('::').pop();
-                  comment += `| ${shortName} | ${(baseTime/1000).toFixed(1)}µs | ${(prTime/1000).toFixed(1)}µs | ${arrow} ${diff}% |\n`;
+                  comment += `| ${shortName} | ${formatTime(baseTime)} | ${formatTime(prTime)} | ${diff > 0 ? '+' : ''}${diff}% | ${status} |\n`;
                 }
               }
 
-              if (hasRegression) {
-                comment += '\n### ⚠️ Performance Regression Detected!\n\n';
-                comment += 'The following benchmarks are >10% slower:\n';
-                for (const detail of regressionDetails) {
+              // Summary
+              comment += '\n## Summary\n\n';
+              if (hasError) {
+                comment += '### ❌ Critical Performance Regression Detected!\n\n';
+                comment += 'The following benchmarks exceeded 10% regression threshold:\n';
+                for (const detail of errorDetails) {
+                  comment += `- **${detail}**\n`;
+                }
+                comment += '\n**This PR should not be merged without investigation.**\n';
+              } else if (hasWarning) {
+                comment += '### ⚠️ Performance Regression Warning\n\n';
+                comment += 'The following benchmarks show 5-10% regression:\n';
+                for (const detail of warningDetails) {
                   comment += `- ${detail}\n`;
                 }
-                comment += '\nPlease investigate before merging.\n';
+                comment += '\n**Please verify this is acceptable before merging.**\n';
               } else {
-                comment += '\n✅ No significant performance regressions detected.\n';
+                comment += '### ✅ Performance Check Passed\n\n';
+                comment += 'No significant performance regressions detected.\n';
               }
             } else if (prBench) {
-              comment += '### PR Branch Benchmarks\n```\n';
+              comment += '### ℹ️ PR Branch Benchmarks\n```\n';
               comment += prBench.substring(0, 2000);
               comment += prBench.length > 2000 ? '\n... (truncated)\n```' : '\n```';
             } else {
               comment += '⚠️ No benchmark results to compare.\n';
             }
 
-            comment += '\n\n<details><summary>Full benchmark output</summary>\n\n```\n';
+            comment += '\n<details><summary>Full output</summary>\n\n```\n';
             comment += prBench.substring(0, 5000);
-            comment += '\n```\n</details>\n';
+            comment += '\n```\n</details>';
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,
@@ -208,6 +290,65 @@ jobs:
             });
         continue-on-error: true
 
+      - name: Convert PR results to JSON
+        if: always()
+        run: |
+          python3 << 'EOF'
+          import json
+          import re
+          from datetime import datetime
+          import os
+
+          def parse_results(filename):
+              results = {}
+              if os.path.exists(filename):
+                  with open(filename, 'r') as f:
+                      for line in f:
+                          match = re.search(r'test\s+(\S+)\s+.*bench:\s+([\d,]+)\s+ns/iter', line)
+                          if match:
+                              name = match.group(1)
+                              time_ns = int(match.group(2).replace(',', ''))
+                              results[name] = {
+                                  'time_ns': time_ns,
+                                  'time_us': time_ns / 1000,
+                                  'time_ms': time_ns / 1_000_000
+                              }
+              return results
+
+          base_results = parse_results('/tmp/base-benchmark.txt')
+          pr_results = parse_results('/tmp/pr-benchmark.txt')
+
+          comparison = {
+              'pr_number': ${{ github.event.pull_request.number }},
+              'base_branch': '${{ github.base_ref }}',
+              'pr_branch': '${{ github.head_ref }}',
+              'base_commit': '${{ github.base_ref }}'[:7],
+              'pr_commit': '${{ github.sha }}'[:7],
+              'timestamp': datetime.utcnow().isoformat() + 'Z',
+              'base_results': base_results,
+              'pr_results': pr_results,
+              'comparison': {}
+          }
+
+          for name, pr_data in pr_results.items():
+              if name in base_results:
+                  base_data = base_results[name]
+                  diff_ns = pr_data['time_ns'] - base_data['time_ns']
+                  diff_pct = (diff_ns / base_data['time_ns'] * 100) if base_data['time_ns'] > 0 else 0
+                  comparison['comparison'][name] = {
+                      'base_ns': base_data['time_ns'],
+                      'pr_ns': pr_data['time_ns'],
+                      'diff_ns': diff_ns,
+                      'diff_pct': round(diff_pct, 1),
+                      'status': 'error' if diff_pct > 10 else 'warning' if diff_pct > 5 else 'pass'
+                  }
+
+          with open('/tmp/benchmark-comparison.json', 'w') as f:
+              json.dump(comparison, f, indent=2)
+
+          print(f"Comparison saved: {len(comparison['comparison'])} benchmarks")
+          EOF
+
       - name: Upload comparison results
         uses: actions/upload-artifact@v4
         if: always()
@@ -216,6 +357,7 @@ jobs:
           path: |
             /tmp/base-benchmark.txt
             /tmp/pr-benchmark.txt
+            /tmp/benchmark-comparison.json
           retention-days: 90
 
   # Update dashboard data (main branch only)
@@ -235,45 +377,34 @@ jobs:
           path: /tmp
 
       - name: Generate dashboard data
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
+        run: |
+          python3 << 'EOF'
+          import json
+          import os
+          from datetime import datetime
 
-            // Read current benchmark
-            const benchContent = fs.readFileSync('/tmp/current-benchmark.txt', 'utf8');
+          # Ensure directory exists
+          os.makedirs('docs/book/src/benchmarks', exist_ok=True)
 
-            // Parse benchmark results
-            function parseBenchmarks(content) {
-              const results = {};
-              const lines = content.split('\n');
-              for (const line of lines) {
-                const match = line.match(/test\s+(\S+)\s+.*bench:\s+([\d,]+)\s+ns\/iter/);
-                if (match) {
-                  const name = match[1].split('::').pop();
-                  const timeNs = parseInt(match[2].replace(/,/g, ''));
-                  results[name] = timeNs;
-                }
+          # Read JSON results
+          if os.path.exists('/tmp/benchmark-results.json'):
+              with open('/tmp/benchmark-results.json', 'r') as f:
+                  data = json.load(f)
+          else:
+              data = {
+                  'version': '${{ github.ref_name }}',
+                  'timestamp': datetime.utcnow().isoformat() + 'Z',
+                  'commit': '${{ github.sha }}'[:7],
+                  'results': {}
               }
-              return results;
-            }
 
-            const results = parseBenchmarks(benchContent);
-            const version = '${{ github.ref_name }}' || 'main';
-            const timestamp = new Date().toISOString();
+          # Write to dashboard file
+          output_file = 'docs/book/src/benchmarks/latest.json'
+          with open(output_file, 'w') as f:
+              json.dump(data, f, indent=2)
 
-            // Create dashboard data
-            const dashboardData = {
-              version: version,
-              timestamp: timestamp,
-              commit: '${{ github.sha }}'.substring(0, 7),
-              results: results
-            };
-
-            // Write JSON for dashboard
-            fs.writeFileSync('docs/book/src/benchmarks/latest.json', JSON.stringify(dashboardData, null, 2));
-
-            console.log('Dashboard data generated:', dashboardData);
+          print(f'Dashboard data updated: {len(data.get("results", {}))} benchmarks')
+          EOF
 
       - name: Commit dashboard data
         run: |
