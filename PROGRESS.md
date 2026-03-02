@@ -29,8 +29,15 @@
 - [ ] S14-06: CLI collect 서브커맨드
 - [ ] S14-07: 사전 빌드 자동화 개선
 
-### P3 대기
-- [ ] S14-08: 성능 벤치마크 문서화
+### P3 완료
+- [x] S14-08: 성능 벤치마크 문서화 ✅
+  - docs/benchmarks/ 디렉토리 구성
+  - README.md - 벤치마크 개요 및 실행 방법
+  - methodology.md - 측정 방법론 및 테스트 환경
+  - results.md - 최신 벤치마크 결과 및 분석
+  - 경쟁 분석기 비교 (MeCab-Ko, Kiwi, Nori, Lindera)
+  - 성능 개선 추이 그래프 (ASCII/Mermaid)
+  - KPI 대시보드 및 최적화 대상 정리
 
 ---
 
