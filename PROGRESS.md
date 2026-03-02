@@ -23,6 +23,10 @@
   - mdBook 설정 및 빌드 완료
   - docs.yml 워크플로우 개선
   - GitHub Pages 자동 배포 (main 푸시 시)
+- [x] S11-07: Docker 이미지 배포 ✅
+  - Dockerfile 작성 (multi-stage, debian-slim)
+  - docker.yml 워크플로우 추가
+  - GHCR 자동 배포 (linux/amd64, linux/arm64)
 
 ---
 

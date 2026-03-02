@@ -32,10 +32,10 @@ PyPI/npm 배포, 문서 사이트 구축, 사전 현대화 착수
   - 2018년 이후 변경 조사
   - 신조어 추가 방안 검토
   - 커뮤니티 사전 통합 검토
-- [ ] S11-07: Docker 이미지 배포
-  - Dockerfile 작성
-  - GitHub Container Registry 배포
-  - docker run 사용 가이드
+- [x] S11-07: Docker 이미지 배포 ✅
+  - Dockerfile 작성 (multi-stage build)
+  - docker.yml 워크플로우 추가
+  - GHCR 자동 배포 (main/tags)
 
 ### P3 (Low)
 - [ ] S11-08: 성능 대시보드
