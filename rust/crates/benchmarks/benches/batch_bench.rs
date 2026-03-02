@@ -17,6 +17,7 @@
 )]
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use mecab_ko_core::batch::BatchTokenizer;
 use mecab_ko_core::tokenizer::Tokenizer;
 
 /// 테스트용 텍스트 생성
@@ -306,6 +307,128 @@ fn bench_streaming_vs_batch(c: &mut Criterion) {
     group.finish();
 }
 
+/// 순차 vs 병렬 처리 비교
+fn bench_sequential_vs_parallel(c: &mut Criterion) {
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let batch_tokenizer = BatchTokenizer::new().expect("Failed to create batch tokenizer");
+    let mut group = c.benchmark_group("parallel_comparison");
+
+    for size in [100, 500, 1000].iter() {
+        let texts = generate_texts(*size);
+        let total_bytes: usize = texts.iter().map(|t| t.len()).sum();
+        let text_refs: Vec<&str> = texts.iter().map(|s| s.as_str()).collect();
+
+        group.throughput(Throughput::Bytes(total_bytes as u64));
+
+        // 순차 처리
+        group.bench_with_input(
+            BenchmarkId::new("sequential", size),
+            &texts,
+            |b, texts| {
+                b.iter(|| {
+                    let mut results = Vec::new();
+                    for text in texts {
+                        let tokens = tokenizer.tokenize(black_box(text));
+                        results.push(tokens);
+                    }
+                    black_box(results)
+                });
+            },
+        );
+
+        // 병렬 처리 (BatchTokenizer)
+        group.bench_with_input(
+            BenchmarkId::new("parallel", size),
+            &text_refs,
+            |b, texts| {
+                b.iter(|| {
+                    let results = batch_tokenizer.tokenize_batch(black_box(texts));
+                    black_box(results)
+                });
+            },
+        );
+    }
+
+    group.finish();
+}
+
+/// 병렬 스케일링 벤치마크 (코어 수에 따른 성능)
+fn bench_parallel_scaling(c: &mut Criterion) {
+    let mut group = c.benchmark_group("parallel_scaling");
+    let texts = generate_texts(1000);
+    let text_refs: Vec<&str> = texts.iter().map(|s| s.as_str()).collect();
+    let total_bytes: usize = texts.iter().map(|t| t.len()).sum();
+
+    group.throughput(Throughput::Bytes(total_bytes as u64));
+    group.sample_size(10);
+
+    // 다양한 풀 크기로 테스트
+    for pool_size in [1, 2, 4, 8].iter() {
+        if let Ok(batch) = BatchTokenizer::with_pool_size(*pool_size) {
+            group.bench_with_input(
+                BenchmarkId::new("pool_size", pool_size),
+                &text_refs,
+                |b, texts| {
+                    b.iter(|| {
+                        let results = batch.tokenize_batch(black_box(texts));
+                        black_box(results)
+                    });
+                },
+            );
+        }
+    }
+
+    group.finish();
+}
+
+/// 병렬 청크 처리 벤치마크
+fn bench_parallel_chunked(c: &mut Criterion) {
+    let batch = BatchTokenizer::new().expect("Failed to create batch tokenizer");
+    let mut group = c.benchmark_group("parallel_chunked");
+
+    // 긴 텍스트 생성
+    let long_text = "한국어 형태소 분석기는 자연어 처리의 핵심 기술입니다. ".repeat(100);
+    let text_bytes = long_text.len() as u64;
+
+    group.throughput(Throughput::Bytes(text_bytes));
+
+    for chunk_size in [50, 100, 200, 500].iter() {
+        group.bench_with_input(
+            BenchmarkId::new("chunk_size", chunk_size),
+            chunk_size,
+            |b, &size| {
+                b.iter(|| {
+                    let tokens = batch.tokenize_chunked(black_box(&long_text), size);
+                    black_box(tokens)
+                });
+            },
+        );
+    }
+
+    group.finish();
+}
+
+/// 병렬 처리량 측정 (texts/sec)
+fn bench_parallel_throughput(c: &mut Criterion) {
+    let batch = BatchTokenizer::new().expect("Failed to create batch tokenizer");
+    let mut group = c.benchmark_group("parallel_throughput");
+
+    let batch_size = 1000;
+    let texts = generate_texts(batch_size);
+    let text_refs: Vec<&str> = texts.iter().map(|s| s.as_str()).collect();
+
+    group.throughput(Throughput::Elements(batch_size as u64));
+    group.bench_function("texts_per_second_parallel", |b| {
+        b.iter(|| {
+            let results = batch.tokenize_batch(black_box(&text_refs));
+            let total_tokens: usize = results.iter().map(|t| t.len()).sum();
+            black_box(total_tokens)
+        });
+    });
+
+    group.finish();
+}
+
 criterion_group!(
     benches,
     bench_small_batches,
@@ -317,6 +440,10 @@ criterion_group!(
     bench_social_media_scenario,
     bench_news_article_scenario,
     bench_streaming_vs_batch,
+    bench_sequential_vs_parallel,
+    bench_parallel_scaling,
+    bench_parallel_chunked,
+    bench_parallel_throughput,
 );
 
 criterion_main!(benches);

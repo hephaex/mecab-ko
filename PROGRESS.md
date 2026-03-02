@@ -53,7 +53,17 @@
   - `get_or_insert_with_text()`: 긴 텍스트 자동 스킵
   - 9개 테스트 통과
   - Clippy 경고 없음
-- [ ] S16-07: 병렬 토큰화
+- [x] S16-07: 병렬 토큰화 ✅
+  - `batch.rs`: 이미 Rayon 기반 병렬 처리 구현됨
+    - `BatchTokenizer`: 토크나이저 풀 + Rayon 병렬 처리
+    - `ParallelStreamProcessor`: 대용량 파일 청크 처리
+    - `tokenize_batch()`, `tokenize_batch_owned()`, `tokenize_chunked()`, `tokenize_files()`
+    - 14개 테스트 통과
+  - 병렬 벤치마크 추가 (`batch_bench.rs`):
+    - `bench_sequential_vs_parallel`: 순차/병렬 비교 (100, 500, 1000 배치)
+    - `bench_parallel_scaling`: 풀 크기별 스케일링 (1, 2, 4, 8 스레드)
+    - `bench_parallel_chunked`: 청크 크기별 성능 (50, 100, 200, 500)
+    - `bench_parallel_throughput`: 병렬 처리량 (texts/sec)
 
 ### P3 (Low)
 - [ ] S16-08: v0.3.0 준비
