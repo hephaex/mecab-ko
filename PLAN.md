@@ -1,7 +1,54 @@
-# 현재 스프린트: Phase 4 - Sprint 10 (안정화 & 품질)
+# 현재 스프린트: Phase 5 - Sprint 11 (배포 & 생태계 확장)
 
 ## 목표
-테스트 커버리지 향상, ignored 테스트 활성화, 코드 품질 개선
+PyPI/npm 배포, 문서 사이트 구축, 사전 현대화 착수
+
+## Sprint 11 작업 목록
+
+### P0 (Critical)
+- [ ] S11-01: PyPI 배포 (mecab-ko-python)
+  - maturin publish 실행
+  - Python 3.8-3.12 호환 확인
+  - pip install mecab-ko 테스트
+
+### P1 (High)
+- [ ] S11-02: npm 배포 (mecab-ko-wasm)
+  - wasm-pack publish 실행
+  - npm install mecab-ko-wasm 테스트
+- [ ] S11-03: GitHub Releases 자동화
+  - v0.1.1 릴리스 생성
+  - CLI 바이너리 첨부 (Linux/macOS/Windows)
+  - 릴리스 노트 자동 생성
+- [ ] S11-04: 성능 회귀 탐지 CI
+  - criterion benchmark 결과 비교
+  - PR 코멘트로 결과 보고
+  - 10% 이상 악화 시 경고
+
+### P2 (Medium)
+- [ ] S11-05: 문서 사이트 구축
+  - mdBook 설정
+  - API 가이드 작성
+  - 사용 예제 추가
+- [ ] S11-06: mecab-ko-dic 최신화 조사
+  - 2018년 이후 변경 조사
+  - 신조어 추가 방안 검토
+  - 커뮤니티 사전 통합 검토
+- [ ] S11-07: Docker 이미지 배포
+  - Dockerfile 작성
+  - GitHub Container Registry 배포
+  - docker run 사용 가이드
+
+### P3 (Low)
+- [ ] S11-08: 성능 대시보드
+  - GitHub Pages에 벤치마크 결과 시각화
+  - 버전별 성능 추이 그래프
+
+---
+
+# 완료된 스프린트: Phase 4 - Sprint 10 (안정화 & 품질) ✅
+
+## 목표 (완료)
+테스트 커버리지 향상, ignored 테스트 활성화, 코드 품질 개선, crates.io 발행
 
 ## Sprint 10 작업 목록
 

@@ -290,8 +290,8 @@
 ## GitHub 이슈
 - #6: 커뮤니티 질문 (프로젝트 목표, 성능, 사전 계획 등) - ✅ 응답 완료
 
-## 다음 세션에서 할 일
-1. S9-01: crates.io 정식 발행 (`cargo login` 후)
-2. S9-02: mecab-ko-dic 최신 버전 지원
-3. S9-03: CLI 개선
-4. S9-04: Python 바인딩 PyPI 배포
+## 다음 세션에서 할 일 (Sprint 11)
+1. S11-01: PyPI 배포 (maturin publish)
+2. S11-02: npm 배포 (wasm-pack publish)
+3. S11-03: GitHub Releases 자동화
+4. S11-04: 성능 회귀 탐지 CI
