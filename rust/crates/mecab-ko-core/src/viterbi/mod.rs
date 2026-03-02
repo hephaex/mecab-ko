@@ -197,9 +197,7 @@ impl SpacePenalty {
     /// 페널티 추가
     pub fn add(&mut self, left_id: u16, penalty: i32) {
         // Insert in sorted position for binary search correctness
-        let pos = self
-            .penalties
-            .partition_point(|&(id, _)| id < left_id);
+        let pos = self.penalties.partition_point(|&(id, _)| id < left_id);
         self.penalties.insert(pos, (left_id, penalty));
     }
 
@@ -324,12 +322,7 @@ impl ViterbiSearcher {
             );
 
             for &node_id in &starting_ids {
-                self.update_node_cost_with_endings(
-                    lattice,
-                    conn_cost,
-                    node_id,
-                    &ending_nodes,
-                );
+                self.update_node_cost_with_endings(lattice, conn_cost, node_id, &ending_nodes);
             }
         }
     }

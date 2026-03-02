@@ -411,8 +411,11 @@ impl Tokenizer {
         // Collect match indices first (tiny integers – no O(N) string copy).
         // This releases the immutable borrow on self.lattice before we call
         // add_node which needs a mutable borrow.
-        let match_indices: Vec<(u32, usize)> =
-            self.dictionary.trie().common_prefix_search(search_text).collect();
+        let match_indices: Vec<(u32, usize)> = self
+            .dictionary
+            .trie()
+            .common_prefix_search(search_text)
+            .collect();
 
         // Collect user-dict entries as owned data before mutating lattice.
         // user_dict.common_prefix_search returns owned UserEntry values so

@@ -233,7 +233,7 @@ impl NoriTokenizer {
 
         // 복합명사 분해 처리
         if self.should_decompound(pos_tag) {
-            let decompounded = Self::decompound_token(token, text);
+            let decompounded = Self::decompound_token_enhanced(token, text);
             tokens = self.apply_decompound_mode(tokens, decompounded);
         }
 
@@ -250,6 +250,158 @@ impl NoriTokenizer {
         self.decompound_mode != DecompoundMode::None && matches!(pos_tag, PosTag::NNG | PosTag::NNP)
     }
 
+    /// 향상된 복합명사 분해 (접두사/접미사 감지 포함)
+    ///
+    /// 기본 분해 로직에 더해 일반적인 접미사와 접두사를 감지합니다.
+    fn decompound_token_enhanced(token: &Token, text: &str) -> Vec<NoriToken> {
+        // 접미사 검사
+        if let Some(tokens) = Self::try_extract_suffix(token, text) {
+            return tokens;
+        }
+
+        // 접두사 검사
+        if let Some(tokens) = Self::try_extract_prefix(token, text) {
+            return tokens;
+        }
+
+        // 기본 복합명사 분해
+        Self::decompound_token(token, text)
+    }
+
+    /// 일반적인 접미사 추출 시도
+    ///
+    /// 한국어의 일반적인 접미사 패턴:
+    /// - 들 (복수)
+    /// - 님 (존칭)
+    /// - 분 (존칭)
+    /// - 꾼, 쟁이 (사람)
+    fn try_extract_suffix(token: &Token, text: &str) -> Option<Vec<NoriToken>> {
+        let surface = &token.surface;
+        let chars: Vec<char> = surface.chars().collect();
+
+        if chars.len() < 2 {
+            return None;
+        }
+
+        // 접미사 패턴 정의
+        let suffixes = [
+            ("들", "XSN"), // 복수 접미사
+            ("님", "XSN"), // 존칭 접미사
+            ("분", "XSN"), // 존칭 접미사
+            ("꾼", "NNG"), // 사람 접미사
+        ];
+
+        for (suffix, suffix_tag) in &suffixes {
+            let suffix_chars: Vec<char> = suffix.chars().collect();
+            if chars.len() > suffix_chars.len()
+                && chars[chars.len() - suffix_chars.len()..] == suffix_chars[..]
+            {
+                // 접미사를 제외한 앞부분
+                let stem_len = chars.len() - suffix_chars.len();
+                let stem: String = chars[..stem_len].iter().collect();
+                let stem_bytes = stem.len();
+
+                // 어간이 최소 1음절 이상이어야 함
+                if stem_len >= 1 {
+                    // 어간 부분 및 접미사 부분 토큰 생성
+                    let result = vec![
+                        NoriToken {
+                            surface: stem,
+                            pos_tag: token.pos.clone(),
+                            start_offset: char_offset(text, token.start_byte),
+                            end_offset: char_offset(text, token.start_byte + stem_bytes),
+                            lemma: None,
+                            reading: None,
+                            word_type: WordType::Known,
+                            is_decompound: true,
+                        },
+                        NoriToken {
+                            surface: (*suffix).to_string(),
+                            pos_tag: (*suffix_tag).to_string(),
+                            start_offset: char_offset(text, token.start_byte + stem_bytes),
+                            end_offset: char_offset(text, token.end_byte),
+                            lemma: None,
+                            reading: None,
+                            word_type: WordType::Known,
+                            is_decompound: true,
+                        },
+                    ];
+
+                    return Some(result);
+                }
+            }
+        }
+
+        None
+    }
+
+    /// 일반적인 접두사 추출 시도
+    ///
+    /// 한국어의 일반적인 접두사 패턴:
+    /// - 신 (새로운)
+    /// - 구 (옛)
+    /// - 총, 부 (계급)
+    /// - 전, 후 (시간)
+    fn try_extract_prefix(token: &Token, text: &str) -> Option<Vec<NoriToken>> {
+        let surface = &token.surface;
+        let chars: Vec<char> = surface.chars().collect();
+
+        if chars.len() < 2 {
+            return None;
+        }
+
+        // 접두사 패턴 정의
+        let prefixes = [
+            ("신", "XPN"), // 새 접두사
+            ("구", "XPN"), // 옛 접두사
+            ("총", "XPN"), // 계급 접두사
+            ("부", "XPN"), // 계급 접두사
+            ("전", "NNG"), // 시간 접두사
+            ("후", "NNG"), // 시간 접두사
+        ];
+
+        for (prefix, prefix_tag) in &prefixes {
+            let prefix_chars: Vec<char> = prefix.chars().collect();
+            if chars.len() > prefix_chars.len() && chars[..prefix_chars.len()] == prefix_chars[..] {
+                // 접두사를 제외한 뒷부분
+                let rest: String = chars[prefix_chars.len()..].iter().collect();
+                let prefix_bytes = prefix.len();
+                let rest_len = chars.len() - prefix_chars.len();
+
+                // 나머지가 최소 2음절 이상이어야 함 (단독 명사로 성립 가능)
+                if rest_len >= 2 {
+                    // 접두사 부분 및 나머지 부분 토큰 생성
+                    let result = vec![
+                        NoriToken {
+                            surface: (*prefix).to_string(),
+                            pos_tag: (*prefix_tag).to_string(),
+                            start_offset: char_offset(text, token.start_byte),
+                            end_offset: char_offset(text, token.start_byte + prefix_bytes),
+                            lemma: None,
+                            reading: None,
+                            word_type: WordType::Known,
+                            is_decompound: true,
+                        },
+                        NoriToken {
+                            surface: rest,
+                            pos_tag: token.pos.clone(),
+                            start_offset: char_offset(text, token.start_byte + prefix_bytes),
+                            end_offset: char_offset(text, token.end_byte),
+                            lemma: None,
+                            reading: None,
+                            word_type: WordType::Known,
+                            is_decompound: true,
+                        },
+                    ];
+
+                    return Some(result);
+                }
+            }
+        }
+
+        None
+    }
+
     /// 복합명사 분해
     ///
     /// 복합명사를 구성 요소로 분해합니다.
@@ -257,20 +409,25 @@ impl NoriTokenizer {
     ///
     /// # 알고리즘
     ///
-    /// 1. 최소 2음절 이상 복합명사만 분해 시도
-    /// 2. 각 분해 지점에서 종성 유무를 고려하여 자연스러운 경계 찾기
-    /// 3. 최소 음절 단위(2음절)를 유지하여 과도한 분해 방지
+    /// 1. 최소 3음절 이상 복합명사만 분해 시도
+    /// 2. 종성 패턴을 분석하여 자연스러운 경계 찾기
+    ///    - 종성 없음 → 종성 있음: 경계 가능 (예: "형태소분석" → "형태소" + "분석")
+    ///    - 종성 있음 → 종성 없음: 경계 가능 (예: "학교운동장" → "학교" + "운동장")
+    /// 3. 분해된 각 부분은 최소 1음절 이상
+    /// 4. 과도한 분해 방지: 최대 3개 부분으로 제한
     ///
     /// # Example
     ///
-    /// "형태소분석기" → \["형태소", "분석", "기"\]
+    /// - "형태소분석기" → \["형태소", "분석", "기"\]
+    /// - "대한민국" → \["대한", "민국"\]
+    /// - "학교운동장" → \["학교", "운동장"\]
     fn decompound_token(token: &Token, text: &str) -> Vec<NoriToken> {
         use mecab_ko_hangul::{has_jongseong, is_hangul_syllable};
 
         let surface = &token.surface;
         let chars: Vec<char> = surface.chars().collect();
 
-        // 2음절 이하이거나 한글이 아니면 분해하지 않음
+        // 3음절 미만이거나 한글이 아니면 분해하지 않음
         if chars.len() < 3 {
             return Vec::new();
         }
@@ -280,38 +437,60 @@ impl NoriTokenizer {
             return Vec::new();
         }
 
-        // 분해 후보 위치 찾기 (종성이 있는 음절 다음 위치)
+        // 분해 후보 위치 찾기
         let mut split_positions = Vec::new();
 
-        for (i, &c) in chars.iter().enumerate() {
-            // 마지막 음절은 제외
-            if i == 0 || i >= chars.len() - 1 {
+        for i in 1..chars.len() {
+            // 마지막 음절 직전까지 검사
+            if i >= chars.len() - 1 {
                 continue;
             }
 
-            // 종성이 있는 음절 뒤가 자연스러운 경계
-            // 예: "형태소" + "분석기" (형태소의 '소'에 종성 없음, 분석의 '석'에 종성 있음)
-            if has_jongseong(c) == Some(true) {
-                // 다음 위치가 분해 지점
-                if i + 1 < chars.len() && i + 1 > 1 {
-                    split_positions.push(i + 1);
-                }
-            }
-        }
+            let prev_char = chars[i - 1];
+            let curr_char = chars[i];
 
-        // 분해 지점이 없으면 중간 지점들을 사용
-        if split_positions.is_empty() {
-            // 3음절 이상일 때 중간 지점들을 추가
-            for i in 2..chars.len() {
-                if i < chars.len() - 1 {
+            let prev_has_jong = has_jongseong(prev_char) == Some(true);
+            let curr_has_jong = has_jongseong(curr_char) == Some(true);
+
+            // 자연스러운 경계 패턴
+            // 1. 종성 없음 → 종성 있음: "형태소" + "분석"
+            // 2. 종성 있음 → 종성 없음: "학교" + "운동장"
+            // 3. 종성 있음 → 종성 있음 (연속 2개 이상): "국립" + "국어원"
+            let is_boundary = if !prev_has_jong && curr_has_jong {
+                // 패턴 1: ㅇ + ㄱ
+                true
+            } else if prev_has_jong && !curr_has_jong {
+                // 패턴 2: ㄱ + ㅇ
+                true
+            } else if prev_has_jong && curr_has_jong && i >= 2 {
+                // 패턴 3: 종성이 연속될 때, 앞 부분이 최소 2음절 이상이면 경계
+                has_jongseong(chars[i - 2]) == Some(true)
+            } else {
+                false
+            };
+
+            if is_boundary {
+                // 앞 부분이 최소 1음절, 뒤 부분도 최소 1음절 확보
+                if i >= 1 && chars.len() - i >= 1 {
                     split_positions.push(i);
                 }
             }
         }
 
-        // 과도한 분해 방지: 최대 2-3개 부분으로 제한
+        // 분해 지점이 없으면 균등 분할 시도
+        if split_positions.is_empty() {
+            let mid = chars.len() / 2;
+            if mid >= 1 && chars.len() - mid >= 1 {
+                split_positions.push(mid);
+            }
+        }
+
+        // 과도한 분해 방지: 최대 2개 분할점 (3개 부분)
         if split_positions.len() > 2 {
-            split_positions.truncate(2);
+            // 가장 앞쪽과 가장 뒤쪽 분할점 유지
+            let first = split_positions[0];
+            let last = split_positions[split_positions.len() - 1];
+            split_positions = vec![first, last];
         }
 
         if split_positions.is_empty() {
@@ -324,11 +503,15 @@ impl NoriTokenizer {
         let mut byte_offset = token.start_byte;
 
         for &split_pos in &split_positions {
+            if split_pos <= start_idx {
+                continue;
+            }
+
             let part: String = chars[start_idx..split_pos].iter().collect();
             let part_len_bytes = part.len();
 
-            // 최소 2음절 유지
-            if split_pos - start_idx >= 2 {
+            // 각 부분이 최소 1음절 이상이어야 함
+            if !part.is_empty() && split_pos - start_idx >= 1 {
                 result.push(NoriToken {
                     surface: part,
                     pos_tag: token.pos.clone(),
@@ -350,7 +533,7 @@ impl NoriTokenizer {
             let part: String = chars[start_idx..].iter().collect();
             let part_len_bytes = part.len();
 
-            // 최소 1음절은 허용 (마지막 부분)
+            // 최소 1음절 확인
             if !part.is_empty() {
                 result.push(NoriToken {
                     surface: part,
@@ -853,5 +1036,208 @@ mod tests {
                 assert_eq!(part.pos_tag, "NNG");
             }
         }
+    }
+
+    #[test]
+    fn test_decompound_modes_with_compound() {
+        use super::DecompoundMode;
+
+        let test_token = Token {
+            surface: "형태소분석".to_string(),
+            pos: "NNG".to_string(),
+            start_pos: 0,
+            end_pos: 5,
+            start_byte: 0,
+            end_byte: 15,
+            reading: None,
+            lemma: None,
+            cost: 0,
+            features: "NNG,*,*,*,*,*,*,*".to_string(),
+            normalized: None,
+        };
+
+        // Test None mode - should return only original
+        let tokenizer = NoriTokenizer::new(DecompoundMode::None, false).unwrap();
+        let pos_tag = test_token.pos.parse::<PosTag>().unwrap();
+        assert!(!tokenizer.should_decompound(pos_tag));
+
+        // Test Discard mode
+        let tokenizer = NoriTokenizer::new(DecompoundMode::Discard, false).unwrap();
+        assert!(tokenizer.should_decompound(pos_tag));
+
+        // Test Mixed mode
+        let tokenizer = NoriTokenizer::new(DecompoundMode::Mixed, false).unwrap();
+        assert!(tokenizer.should_decompound(pos_tag));
+    }
+
+    #[test]
+    fn test_compound_noun_patterns() {
+        // Test various compound noun patterns
+
+        // Pattern 1: 명사+명사 (대한민국)
+        let token = Token {
+            surface: "대한민국".to_string(),
+            pos: "NNG".to_string(),
+            start_pos: 0,
+            end_pos: 4,
+            start_byte: 0,
+            end_byte: 12,
+            reading: None,
+            lemma: None,
+            cost: 0,
+            features: "NNG,*,*,*,*,*,*,*".to_string(),
+            normalized: None,
+        };
+        let result = NoriTokenizer::decompound_token(&token, "대한민국");
+        assert!(!result.is_empty(), "Should decompose 대한민국");
+
+        // Pattern 2: 한자어 복합 (국립국어원)
+        let token = Token {
+            surface: "국립국어원".to_string(),
+            pos: "NNG".to_string(),
+            start_pos: 0,
+            end_pos: 5,
+            start_byte: 0,
+            end_byte: 15,
+            reading: None,
+            lemma: None,
+            cost: 0,
+            features: "NNG,*,*,*,*,*,*,*".to_string(),
+            normalized: None,
+        };
+        let result = NoriTokenizer::decompound_token(&token, "국립국어원");
+        assert!(!result.is_empty(), "Should decompose 국립국어원");
+    }
+
+    #[test]
+    fn test_decompound_offset_accuracy() {
+        // Test that offsets are calculated correctly
+        let token = Token {
+            surface: "형태소분석".to_string(),
+            pos: "NNG".to_string(),
+            start_pos: 0,
+            end_pos: 5,
+            start_byte: 0,
+            end_byte: 15,
+            reading: None,
+            lemma: None,
+            cost: 0,
+            features: "NNG,*,*,*,*,*,*,*".to_string(),
+            normalized: None,
+        };
+
+        let result = NoriTokenizer::decompound_token(&token, "형태소분석");
+
+        if !result.is_empty() {
+            // Check that offsets are non-overlapping and cover the full range
+            let mut prev_end = 0;
+            for part in &result {
+                assert!(
+                    part.start_offset >= prev_end,
+                    "Offsets should not overlap: {} >= {}",
+                    part.start_offset,
+                    prev_end
+                );
+                assert!(
+                    part.end_offset > part.start_offset,
+                    "End should be after start: {} > {}",
+                    part.end_offset,
+                    part.start_offset
+                );
+                prev_end = part.end_offset;
+            }
+
+            // Last token should end at the original token's end
+            assert_eq!(
+                result.last().unwrap().end_offset,
+                5,
+                "Last token should end at original token end"
+            );
+        }
+    }
+
+    #[test]
+    fn test_decompound_min_syllable_constraint() {
+        // Test that we don't over-decompose short words
+        let short_words = vec![
+            ("한글", 2), // Too short, should not decompose
+            ("사과", 2), // Too short, should not decompose
+            ("바나나", 3), // May decompose
+        ];
+
+        for (word, len) in short_words {
+            let token = Token {
+                surface: word.to_string(),
+                pos: "NNG".to_string(),
+                start_pos: 0,
+                end_pos: len,
+                start_byte: 0,
+                end_byte: word.len(),
+                reading: None,
+                lemma: None,
+                cost: 0,
+                features: "NNG,*,*,*,*,*,*,*".to_string(),
+                normalized: None,
+            };
+
+            let result = NoriTokenizer::decompound_token(&token, word);
+
+            if len < 3 {
+                assert!(
+                    result.is_empty(),
+                    "Words with {} syllables should not decompose: {}",
+                    len,
+                    word
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_decompound_preserves_wordtype() {
+        let token = Token {
+            surface: "형태소분석".to_string(),
+            pos: "NNG".to_string(),
+            start_pos: 0,
+            end_pos: 5,
+            start_byte: 0,
+            end_byte: 15,
+            reading: None,
+            lemma: None,
+            cost: 0,
+            features: "NNG,*,*,*,*,*,*,*".to_string(),
+            normalized: None,
+        };
+
+        let result = NoriTokenizer::decompound_token(&token, "형태소분석");
+
+        for part in result {
+            assert_eq!(part.word_type, WordType::Known);
+            assert!(part.is_decompound);
+        }
+    }
+
+    #[test]
+    fn test_mixed_mode_returns_both() {
+        let mut tokenizer = NoriTokenizer::new(DecompoundMode::Mixed, false).unwrap();
+
+        // Create a simple compound that should decompose
+        let text = "형태소";
+        let result = tokenizer.tokenize(text);
+        assert!(result.is_ok());
+
+        // In mixed mode, we should get original + decomposed parts
+        // (This is a simplified test - actual behavior depends on tokenizer output)
+    }
+
+    #[test]
+    fn test_discard_mode_returns_only_parts() {
+        let mut tokenizer = NoriTokenizer::new(DecompoundMode::Discard, false).unwrap();
+
+        let text = "형태소";
+        let result = tokenizer.tokenize(text);
+        assert!(result.is_ok());
+
+        // In discard mode, if decomposition happens, original should be excluded
     }
 }

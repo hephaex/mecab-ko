@@ -200,9 +200,8 @@ impl TestDataset {
                 continue;
             }
 
-            let sentence = GoldSentence::parse_tsv_line(trimmed).map_err(|e| {
-                EvaluateError::Parse(format!("Line {}: {}", line_num + 1, e))
-            })?;
+            let sentence = GoldSentence::parse_tsv_line(trimmed)
+                .map_err(|e| EvaluateError::Parse(format!("Line {}: {}", line_num + 1, e)))?;
 
             sentences.push(sentence);
         }
@@ -340,12 +339,7 @@ impl EvaluationResult {
             self.sentence_accuracy * 100.0
         )
         .unwrap();
-        writeln!(
-            report,
-            "POS Accuracy: {:.1}%",
-            self.pos_accuracy * 100.0
-        )
-        .unwrap();
+        writeln!(report, "POS Accuracy: {:.1}%", self.pos_accuracy * 100.0).unwrap();
         writeln!(report, "Precision: {:.3}", self.precision).unwrap();
         writeln!(report, "Recall: {:.3}", self.recall).unwrap();
         writeln!(report, "F1 Score: {:.3}", self.f1_score).unwrap();
@@ -469,10 +463,7 @@ pub fn evaluate_dataset(tokenizer: &mut Tokenizer, dataset: &TestDataset) -> Eva
 
         // 품사별 통계 업데이트
         for (i, gold_token) in gold_sentence.tokens.iter().enumerate() {
-            let pos_stat = result
-                .pos_stats
-                .entry(gold_token.pos.clone())
-                .or_default();
+            let pos_stat = result.pos_stats.entry(gold_token.pos.clone()).or_default();
 
             pos_stat.gold_count += 1;
 
@@ -548,8 +539,9 @@ mod tests {
 
     #[test]
     fn test_gold_sentence_parse() {
-        let sentence = GoldSentence::parse_tsv_line("나는 학생이다\t나/NP 는/JX 학생/NNG 이/VCP 다/EF")
-            .unwrap();
+        let sentence =
+            GoldSentence::parse_tsv_line("나는 학생이다\t나/NP 는/JX 학생/NNG 이/VCP 다/EF")
+                .unwrap();
         assert_eq!(sentence.text, "나는 학생이다");
         assert_eq!(sentence.tokens.len(), 5);
         assert_eq!(sentence.tokens[0].surface, "나");

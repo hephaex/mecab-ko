@@ -62,8 +62,7 @@ pub const BOS_CONTEXT_ID: u16 = 0;
 pub const EOS_CONTEXT_ID: u16 = 0;
 
 /// 노드 타입
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum NodeType {
     /// 문장 시작 (Beginning of Sentence)
     Bos,
@@ -77,7 +76,6 @@ pub enum NodeType {
     /// 사용자 정의 사전
     User,
 }
-
 
 /// Lattice 노드
 ///

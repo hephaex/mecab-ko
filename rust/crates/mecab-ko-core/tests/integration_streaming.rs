@@ -130,8 +130,7 @@ fn test_streaming_custom_delimiters() {
     let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
     // Use newline as the only custom delimiter; it is treated as whitespace by
     // the tokenizer (stripped before Viterbi) so it doesn't create unknown nodes.
-    let mut stream =
-        StreamingTokenizer::new(tokenizer).with_sentence_delimiters(vec!['\n']);
+    let mut stream = StreamingTokenizer::new(tokenizer).with_sentence_delimiters(vec!['\n']);
 
     // Use mini-dict words separated by newlines so this works without a full dictionary
     let text = "안녕\n감사\n한국어";
