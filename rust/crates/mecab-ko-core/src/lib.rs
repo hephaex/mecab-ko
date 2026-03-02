@@ -30,6 +30,7 @@
 pub mod test_utils;
 
 pub mod batch;
+pub mod evaluate;
 pub mod kiwi_compat;
 pub mod lattice;
 pub mod nori_compat;
@@ -46,6 +47,10 @@ pub mod async_tokenizer;
 
 pub use batch::{BatchTokenizer, ParallelStreamProcessor};
 pub use error::{Error, Result};
+pub use evaluate::{
+    evaluate_dataset, evaluate_tokens, EvaluateError, EvaluationResult, GoldSentence, GoldToken,
+    PosStats, TestDataset,
+};
 pub use kiwi_compat::{from_kiwi_tag, to_kiwi_tag, KiwiPosTag, KiwiToken};
 pub use lattice::{Lattice, Node, NodeBuilder, NodeType};
 pub use nori_compat::{

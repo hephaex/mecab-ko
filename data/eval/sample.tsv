@@ -1,0 +1,229 @@
+# 샘플 테스트 데이터
+# 형식: 원문\t정답 (surface/pos 쌍)
+#
+# 이 파일은 형태소 분석 정확도 측정을 위한 샘플 데이터입니다.
+# 실제 평가를 위해서는 세종 코퍼스 등의 대규모 데이터셋을 사용하세요.
+
+# 기본 문장
+나는 학교에 갔다	나/NP 는/JX 학교/NNG 에/JKB 갔/VV 다/EF
+오늘 날씨가 좋다	오늘/NNG 날씨/NNG 가/JKS 좋/VA 다/EF
+밥을 먹었습니다	밥/NNG 을/JKO 먹/VV 었/EP 습니다/EF
+책을 읽고 있어요	책/NNG 을/JKO 읽/VV 고/EC 있/VX 어요/EF
+친구와 만났어요	친구/NNG 와/JKB 만나/VV 았/EP 어요/EF
+
+# 명사구
+대한민국 수도	대한민국/NNP 수도/NNG
+서울특별시청	서울/NNP 특별시/NNG 청/NNG
+한국어 형태소 분석기	한국어/NNG 형태소/NNG 분석기/NNG
+자연어 처리 기술	자연어/NNG 처리/NNG 기술/NNG
+인공지능 연구소	인공지능/NNG 연구소/NNG
+
+# 동사 활용
+가다 갔다 가겠다	가다/VV 갔다/VV 가겠다/VV
+먹다 먹었다 먹을것이다	먹다/VV 먹었다/VV 먹을것이다/VV
+보다 봤다 볼게요	보다/VV 봤다/VV 볼게요/VV
+하다 했다 하겠습니다	하다/VV 했다/VV 하겠습니다/VV
+오다 왔다 올까요	오다/VV 왔다/VV 올까요/VV
+
+# 형용사
+크다 작다 예쁘다	크/VA 다/EF 작/VA 다/EF 예쁘/VA 다/EF
+좋다 나쁘다 재미있다	좋/VA 다/EF 나쁘/VA 다/EF 재미있/VA 다/EF
+높다 낮다 길다	높/VA 다/EF 낮/VA 다/EF 길/VA 다/EF
+빠르다 느리다	빠르/VA 다/EF 느리/VA 다/EF
+맛있다 맛없다	맛있/VA 다/EF 맛없/VA 다/EF
+
+# 조사 활용
+나는 너는 우리는	나/NP 는/JX 너/NP 는/JX 우리/NP 는/JX
+나를 너를 그를	나/NP 를/JKO 너/NP 를/JKO 그/NP 를/JKO
+나에게 너에게	나/NP 에게/JKB 너/NP 에게/JKB
+학교에서 집에서	학교/NNG 에서/JKB 집/NNG 에서/JKB
+책으로 연필로	책/NNG 으로/JKB 연필/NNG 로/JKB
+
+# 복합 문장
+나는 어제 친구를 만나서 영화를 봤다	나/NP 는/JX 어제/NNG 친구/NNG 를/JKO 만나/VV 아서/EC 영화/NNG 를/JKO 보/VV 았/EP 다/EF
+오늘은 날씨가 좋아서 산책을 했어요	오늘/NNG 은/JX 날씨/NNG 가/JKS 좋/VA 아서/EC 산책/NNG 을/JKO 하/VV 았/EP 어요/EF
+내일 회의가 있으니까 준비해야 합니다	내일/NNG 회의/NNG 가/JKS 있/VV 으니까/EC 준비/NNG 하/VV 아야/EC 합니다/EF
+학교에 가기 전에 숙제를 했습니다	학교/NNG 에/JKB 가/VV 기/ETN 전/NNG 에/JKB 숙제/NNG 를/JKO 하/VV 았/EP 습니다/EF
+밥을 먹고나서 설거지를 했어요	밥/NNG 을/JKO 먹/VV 고나서/EC 설거지/NNG 를/JKO 하/VV 았/EP 어요/EF
+
+# 의문문
+뭐 하니	뭐/NP 하/VV 니/EF
+어디 가니	어디/NP 가/VV 니/EF
+언제 올까요	언제/NP 오/VV ㄹ까요/EF
+왜 그래요	왜/MAG 그러/VV 어요/EF
+누구세요	누구/NP 이/VCP 세요/EF
+
+# 명령문과 청유문
+가자	가/VV 자/EF
+먹자	먹/VV 자/EF
+보자	보/VV 자/EF
+하자	하/VV 자/EF
+오세요	오/VV 세요/EF
+
+# 부정문
+안 가요	안/MAG 가/VV 아요/EF
+안 먹어요	안/MAG 먹/VV 어요/EF
+못 가요	못/MAG 가/VV 아요/EF
+안 했어요	안/MAG 하/VV 았/EP 어요/EF
+하지 않아요	하/VV 지/EC 않/VX 아요/EF
+
+# 수식어
+아주 좋다	아주/MAG 좋/VA 다/EF
+매우 크다	매우/MAG 크/VA 다/EF
+정말 예쁘다	정말/MAG 예쁘/VA 다/EF
+너무 작다	너무/MAG 작/VA 다/EF
+조금 덥다	조금/MAG 덥/VA 다/EF
+
+# 숫자와 단위
+일 이 삼	일/SN 이/SN 삼/SN
+하나 둘 셋	하나/NR 둘/NR 셋/NR
+첫번째 두번째	첫번째/NNG 두번째/NNG
+백만원	백만/NR 원/NNB
+삼십분	삼십/NR 분/NNB
+
+# 시간 표현
+오전 열시	오전/NNG 열/NR 시/NNB
+오후 세시	오후/NNG 세/NR 시/NNB
+어제 오늘 내일	어제/NNG 오늘/NNG 내일/NNG
+작년 올해 내년	작년/NNG 올해/NNG 내년/NNG
+아침 점심 저녁	아침/NNG 점심/NNG 저녁/NNG
+
+# 관계 표현
+나의 친구	나/NP 의/JKG 친구/NNG
+우리의 집	우리/NP 의/JKG 집/NNG
+선생님의 말씀	선생님/NNG 의/JKG 말씀/NNG
+학교의 운동장	학교/NNG 의/JKG 운동장/NNG
+한국의 수도	한국/NNP 의/JKG 수도/NNG
+
+# 접속 표현
+그리고 또한	그리고/MAJ 또한/MAG
+하지만 그러나	하지만/MAJ 그러나/MAJ
+그래서 따라서	그래서/MAJ 따라서/MAG
+또는 혹은	또는/MAJ 혹은/MAJ
+만약 그렇다면	만약/MAG 그렇/VA 다면/EC
+
+# 존댓말
+저는 학생입니다	저/NP 는/JX 학생/NNG 이/VCP 습니다/EF
+선생님께서 오셨습니다	선생님/NNG 께서/JKS 오/VV 시/EP 었/EP 습니다/EF
+말씀하세요	말씀/NNG 하/VV 세요/EF
+드시겠어요	드/VV 시/EP 겠/EP 어요/EF
+계십니다	계/VV 시/EP ㅂ니다/EF
+
+# 감탄사와 호칭
+아 예 네	아/IC 예/IC 네/IC
+어머나 세상에	어머나/IC 세상/NNG 에/JKB
+야 얘들아	야/IC 얘들/NNG 아/JX
+아버지 어머니	아버지/NNG 어머니/NNG
+선생님 학생	선생님/NNG 학생/NNG
+
+# 피동 표현
+보이다 들리다	보/VV 이/VX 다/EF 들리/VV 다/EF
+만들어지다	만들/VV 어지/VX 다/EF
+사용되다	사용/NNG 되/XSV 다/EF
+발견되다	발견/NNG 되/XSV 다/EF
+쓰이다	쓰/VV 이/VX 다/EF
+
+# 사동 표현
+먹이다 입히다	먹/VV 이/VX 다/EF 입/VV 히/VX 다/EF
+보이다 들리다	보/VV 이/VX 다/EF 들/VV 리/VX 다/EF
+앉히다 세우다	앉/VV 히/VX 다/EF 세우/VV 다/EF
+깨우다 재우다	깨우/VV 다/EF 재우/VV 다/EF
+놀리다 웃기다	놀리/VV 다/EF 웃기/VV 다/EF
+
+# 보조 용언
+가고 있다	가/VV 고/EC 있/VX 다/EF
+먹어 버렸다	먹/VV 어/EC 버리/VX 었/EP 다/EF
+해 보았다	하/VV 어/EC 보/VX 았/EP 다/EF
+읽고 싶다	읽/VV 고/EC 싶/VX 다/EF
+가지고 오다	가지/VV 고/EC 오/VV 다/EF
+
+# 연결 어미
+가면서 먹으면서	가/VV 면서/EC 먹/VV 으면서/EC
+하니까 보니까	하/VV 니까/EC 보/VV 니까/EC
+가서 와서	가/VV 아서/EC 오/VV 아서/EC
+먹으면 가면	먹/VV 으면/EC 가/VV 면/EC
+하지만 가지만	하/VV 지만/EC 가/VV 지만/EC
+
+# 종결 어미
+간다 온다	가/VV ㄴ다/EF 오/VV ㄴ다/EF
+먹는다 본다	먹/VV 는다/EF 보/VV ㄴ다/EF
+했다 왔다	하/VV 았/EP 다/EF 오/VV 았/EP 다/EF
+가요 와요	가/VV 아요/EF 오/VV 아요/EF
+합니다 갑니다	하/VV ㅂ니다/EF 가/VV ㅂ니다/EF
+
+# 명사형 어미
+가기 오기	가/VV 기/ETN 오/VV 기/ETN
+함 봄	하/VV ㅁ/ETN 보/VV ㅁ/ETN
+먹음 읽음	먹/VV 음/ETN 읽/VV 음/ETN
+걸음 달림	걷/VV 음/ETN 달리/VV ㅁ/ETN
+말함 쓰임	말하/VV ㅁ/ETN 쓰/VV 임/ETN
+
+# 관형형 어미
+가는 오는	가/VV 는/ETM 오/VV 는/ETM
+간 온	가/VV ㄴ/ETM 오/VV ㄴ/ETM
+갈 올	가/VV ㄹ/ETM 오/VV ㄹ/ETM
+먹는 먹은 먹을	먹/VV 는/ETM 먹/VV 은/ETM 먹/VV 을/ETM
+하는 한 할	하/VV 는/ETM 하/VV ㄴ/ETM 하/VV ㄹ/ETM
+
+# 부사형 어미
+가게 오게	가/VV 게/EC 오/VV 게/EC
+가도록 오도록	가/VV 도록/EC 오/VV 도록/EC
+가듯이 오듯이	가/VV 듯이/EC 오/VV 듯이/EC
+가며 오며	가/VV 며/EC 오/VV 며/EC
+가자마자 오자마자	가/VV 자마자/EC 오/VV 자마자/EC
+
+# 인용 표현
+가자고 한다	가/VV 자고/EC 하/VV ㄴ다/EF
+왔다고 한다	오/VV 았/EP 다고/EC 하/VV ㄴ다/EF
+예쁘다고 한다	예쁘/VA 다고/EC 하/VV ㄴ다/EF
+학생이라고 한다	학생/NNG 이/VCP 라고/EC 하/VV ㄴ다/EF
+갈까 한다	가/VV ㄹ까/EC 하/VV ㄴ다/EF
+
+# 의존 명사
+것 수 등	것/NNB 수/NNB 등/NNB
+바 데 지	바/NNB 데/NNB 지/NNB
+만큼 뿐 채	만큼/NNB 뿐/NNB 채/NNB
+듯 양 체	듯/NNB 양/NNB 체/NNB
+대로 따라	대로/NNB 따라/NNB
+
+# 접두사
+새해 첫눈	새/XPN 해/NNG 첫/XPN 눈/NNG
+큰집 작은집	큰/XPN 집/NNG 작/XPN 은/XPN 집/NNG
+옛날 헛소리	옛/XPN 날/NNG 헛/XPN 소리/NNG
+맨손 맨발	맨/XPN 손/NNG 맨/XPN 발/NNG
+순우리말	순/XPN 우리말/NNG
+
+# 접미사
+선생님 할머님	선생/NNG 님/XSN 할머/NNG 님/XSN
+귀엽게 아름답게	귀엽/VA 게/EC 아름답/VA 게/EC
+빠르게 느리게	빠르/VA 게/EC 느리/VA 게/EC
+크게 작게	크/VA 게/EC 작/VA 게/EC
+높이 낮이	높/VA 이/EC 낮/VA 이/EC
+
+# 어근
+놀이 먹이	놀/VV 이/ETN 먹/VV 이/ETN
+걸음 뛰움	걷/VV 음/ETN 뛰/VV 움/ETN
+웃음 울음	웃/VV 음/ETN 울/VV 음/ETN
+잠 꿈	자/VV ㅁ/ETN 꾸/VV ㅁ/ETN
+밤 낮	밤/NNG 낮/NNG
+
+# 외래어
+컴퓨터 인터넷	컴퓨터/NNG 인터넷/NNG
+커피 우유	커피/NNG 우유/NNG
+버스 택시	버스/NNG 택시/NNG
+케이크 초콜릿	케이크/NNG 초콜릿/NNG
+텔레비전 라디오	텔레비전/NNG 라디오/NNG
+
+# 한자어
+학교 도서관	학교/NNG 도서관/NNG
+대학교 중학교	대학교/NNG 중학교/NNG
+국민 시민	국민/NNG 시민/NNG
+정부 국가	정부/NNG 국가/NNG
+경제 사회	경제/NNG 사회/NNG
+
+# 의성어 의태어
+왈왈 멍멍	왈왈/NNG 멍멍/NNG
+야옹 꼬끼오	야옹/IC 꼬끼오/IC
+부릉부릉 칙칙폭폭	부릉부릉/MAG 칙칙폭폭/MAG
+반짝반짝 빙글빙글	반짝반짝/MAG 빙글빙글/MAG
+데굴데굴 폴짝폴짝	데굴데굴/MAG 폴짝폴짝/MAG

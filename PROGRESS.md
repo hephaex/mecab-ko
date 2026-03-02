@@ -2,13 +2,19 @@
 
 ## 마지막 업데이트: 2026-03-03
 
-## Sprint 15 시작 (2026-03-03)
+## Sprint 15 진행 중 (2026-03-03)
 
-### P0 대기
-- [ ] S15-01: 정확도 측정 인프라 구축
-  - 세종 코퍼스 테스트 데이터 준비
-  - 정확도 측정 CLI
+### P0 완료
+- [x] S15-01: 정확도 측정 인프라 구축 ✅
+  - `mecab-ko-core/src/evaluate.rs` 평가 모듈 구현
+  - `mecab evaluate` CLI 서브커맨드 추가
+  - Token Accuracy, Sentence Accuracy, POS Accuracy 측정
   - Precision/Recall/F1 계산
+  - 품사별 정확도 리포트
+  - 샘플 테스트 데이터 160문장 (data/eval/sample.tsv)
+  - TSV 형식 지원 (text\ttoken1/pos1 token2/pos2 ...)
+  - Verbose 모드로 틀린 문장 상세 분석
+  - 5개 테스트 통과
 
 ### P1 대기
 - [ ] S15-02: 사전 품질 검증 도구 개선

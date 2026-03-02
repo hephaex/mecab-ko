@@ -460,6 +460,28 @@ enum Commands {
         /// 사전 경로
         path: Option<PathBuf>,
     },
+    /// 정확도 평가
+    Evaluate {
+        /// 테스트 데이터 파일 경로 (TSV 형식)
+        #[arg(short, long)]
+        input: PathBuf,
+
+        /// 입력 형식
+        #[arg(long, value_enum, default_value = "tsv")]
+        format: EvalFormat,
+
+        /// 결과 저장 파일 (없으면 stdout)
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+
+        /// 상세 출력 (틀린 문장 표시)
+        #[arg(short, long)]
+        verbose: bool,
+
+        /// 사전 경로
+        #[arg(short = 'd', long)]
+        dicdir: Option<PathBuf>,
+    },
     /// 외부 사전 API에서 단어 동기화
     Sync {
         /// 동기화 소스
@@ -534,6 +556,16 @@ enum DictSource {
     Opendict,
     /// 국립국어원 한국어기초사전/표준국어대사전 (`KrDict` API)
     Krdict,
+}
+
+/// Evaluation input format
+#[derive(Debug, Clone, Copy, ValueEnum, Default)]
+enum EvalFormat {
+    /// TSV format (text\ttoken1/pos1 token2/pos2 ...)
+    #[default]
+    Tsv,
+    /// JSON format (future support)
+    Json,
 }
 
 /// Output format options for analysis results
@@ -810,6 +842,15 @@ fn main() -> Result<()> {
             }
             Commands::Dict { path } => {
                 show_dict_info(path.as_ref());
+            }
+            Commands::Evaluate {
+                input,
+                format,
+                output,
+                verbose,
+                dicdir,
+            } => {
+                run_evaluate(input, *format, output.as_ref(), *verbose, dicdir.as_ref())?;
             }
             Commands::Sync {
                 source,
@@ -2032,6 +2073,147 @@ fn deduplicate_entries(entries: Vec<UserEntry>) -> Vec<UserEntry> {
     }
 
     result
+}
+
+/// Runs evaluation on test dataset
+///
+/// # Arguments
+///
+/// * `input_path` - Path to test dataset file
+/// * `format` - Input format (TSV or JSON)
+/// * `output_path` - Optional output file path
+/// * `verbose` - Whether to show detailed output
+/// * `dicdir` - Dictionary directory path
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - Test dataset cannot be loaded
+/// - Tokenizer initialization fails
+/// - Output file cannot be written
+fn run_evaluate(
+    input_path: &PathBuf,
+    format: EvalFormat,
+    output_path: Option<&PathBuf>,
+    verbose: bool,
+    dicdir: Option<&PathBuf>,
+) -> Result<()> {
+    use mecab_ko_core::evaluate::{evaluate_dataset, TestDataset};
+
+    eprintln!("정확도 평가 시작...");
+    eprintln!("테스트 데이터: {}", input_path.display());
+
+    // Load test dataset
+    let dataset = match format {
+        EvalFormat::Tsv => {
+            TestDataset::from_tsv(input_path).context("Failed to load test dataset")?
+        }
+        EvalFormat::Json => {
+            anyhow::bail!("JSON format not yet supported");
+        }
+    };
+
+    eprintln!("테스트 문장 수: {}", dataset.len());
+
+    // Initialize tokenizer
+    let mut tokenizer = if let Some(dict_path) = dicdir {
+        Tokenizer::with_dict(
+            dict_path
+                .to_str()
+                .context("Invalid dictionary path encoding")?,
+        )
+        .context("Failed to load dictionary")?
+    } else {
+        Tokenizer::new().context("Failed to initialize tokenizer")?
+    };
+
+    eprintln!("형태소 분석 시작...");
+
+    // Run evaluation
+    let result = evaluate_dataset(&mut tokenizer, &dataset);
+
+    eprintln!("평가 완료!\n");
+
+    // Format report
+    let report = result.format_report();
+
+    // Output results
+    if let Some(output_path) = output_path {
+        let mut file = File::create(output_path).with_context(|| {
+            format!("Failed to create output file: {}", output_path.display())
+        })?;
+        write!(file, "{report}")?;
+        eprintln!("결과를 {}에 저장했습니다.", output_path.display());
+    } else {
+        print!("{report}");
+    }
+
+    // Verbose output: show incorrect sentences
+    if verbose {
+        const MAX_ERRORS: usize = 10;
+
+        eprintln!("\n=== 상세 분석 ===");
+        let mut error_count = 0;
+
+        for (idx, gold_sentence) in dataset.sentences.iter().enumerate() {
+            let pred_tokens = tokenizer.tokenize(&gold_sentence.text);
+
+            // Check if sentence matches
+            let matches = gold_sentence.tokens.len() == pred_tokens.len()
+                && gold_sentence
+                    .tokens
+                    .iter()
+                    .zip(&pred_tokens)
+                    .all(|(g, p)| g.surface == p.surface && g.pos == p.pos);
+
+            if !matches && error_count < MAX_ERRORS {
+                error_count += 1;
+                eprintln!("\n[문장 #{}] {}", idx + 1, gold_sentence.text);
+                eprintln!("  정답: {}", format_tokens_gold(&gold_sentence.tokens));
+                eprintln!("  예측: {}", format_tokens_pred(&pred_tokens));
+            }
+        }
+
+        if error_count >= MAX_ERRORS {
+            let remaining = dataset
+                .sentences
+                .iter()
+                .filter(|s| {
+                    let pred = tokenizer.tokenize(&s.text);
+                    !(s.tokens.len() == pred.len()
+                        && s.tokens
+                            .iter()
+                            .zip(&pred)
+                            .all(|(g, p)| g.surface == p.surface && g.pos == p.pos))
+                })
+                .count()
+                - MAX_ERRORS;
+
+            if remaining > 0 {
+                eprintln!("\n... 외 {remaining}개 불일치 문장");
+            }
+        }
+    }
+
+    Ok(())
+}
+
+/// Format gold tokens for display
+fn format_tokens_gold(tokens: &[mecab_ko_core::evaluate::GoldToken]) -> String {
+    tokens
+        .iter()
+        .map(|t| format!("{}/{}", t.surface, t.pos))
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+/// Format predicted tokens for display
+fn format_tokens_pred(tokens: &[mecab_ko_core::Token]) -> String {
+    tokens
+        .iter()
+        .map(|t| format!("{}/{}", t.surface, t.pos))
+        .collect::<Vec<_>>()
+        .join(" ")
 }
 
 #[cfg(test)]
