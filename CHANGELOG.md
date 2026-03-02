@@ -5,9 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - v0.3.0
+## [0.3.0] - 2026-03-03
 
 ### Added
+
+#### npm Package Published
+- `mecab-ko-wasm` v0.3.0 published to npm
+- WebAssembly bindings for browser and Node.js
+- Installation: `npm install mecab-ko-wasm`
 
 #### Improved N-best Path Search (mecab-ko-core)
 - `ImprovedNbestSearcher` - True K-best Viterbi algorithm maintaining K candidates per node
@@ -369,7 +374,8 @@ left-space-penalty-factor = 120,6000,184,6000,100,500
 
 ---
 
-[Unreleased]: https://github.com/hephaex/mecab-ko/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/hephaex/mecab-ko/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/hephaex/mecab-ko/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/hephaex/mecab-ko/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/hephaex/mecab-ko/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/hephaex/mecab-ko/compare/v0.9.2...v0.1.0
