@@ -42,7 +42,17 @@
   - 편의 함수: `lattice_to_dot()`, `lattice_to_html()`, `lattice_to_text()`, `lattice_to_json()`
   - 6개 테스트 통과
   - Clippy 경고 없음
-- [ ] S16-06: 토큰화 캐싱
+- [x] S16-06: 토큰화 캐싱 ✅
+  - `cache.rs` 모듈 구현
+  - `CacheConfig`: 최대 항목 수, 키 길이 제한, 통계 추적 설정
+  - `CacheStats`: 히트/미스 횟수, 히트율, 제거 횟수 추적
+  - `TokenCache`: LRU 캐시 (RwLock 기반 스레드 안전)
+  - `CachedToken`: 캐시된 토큰 정보 (표면형, 품사, 위치)
+  - `CachingTokenizer<T>`: 토크나이저 래퍼
+  - `get_or_insert()`: 캐시 조회/계산/삽입 통합 메서드
+  - `get_or_insert_with_text()`: 긴 텍스트 자동 스킵
+  - 9개 테스트 통과
+  - Clippy 경고 없음
 - [ ] S16-07: 병렬 토큰화
 
 ### P3 (Low)

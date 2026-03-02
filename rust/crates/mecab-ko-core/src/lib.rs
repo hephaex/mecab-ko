@@ -31,6 +31,7 @@ pub mod test_utils;
 
 pub mod analysis_mode;
 pub mod batch;
+pub mod cache;
 pub mod evaluate;
 pub mod kiwi_compat;
 pub mod lattice;
@@ -78,6 +79,7 @@ pub use lattice_viz::{
     lattice_to_dot, lattice_to_html, lattice_to_json, lattice_to_text, LatticeViz, VizFormat,
     VizOptions,
 };
+pub use cache::{CacheConfig, CacheStats, CachedToken, CachingTokenizer, TokenCache};
 
 #[cfg(feature = "async")]
 pub use async_tokenizer::{AsyncStreamingTokenizer, AsyncTokenizer};

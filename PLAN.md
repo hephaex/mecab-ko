@@ -27,7 +27,7 @@ N-best 경로 탐색 개선, 사용자 정의 분석 모드, 토큰화 성능 �
   - DOT/Graphviz 출력
   - HTML 인터랙티브 뷰어 (d3-graphviz)
   - 디버깅용 lattice dump (Text, JSON)
-- [ ] S16-06: 토큰화 캐싱
+- [x] S16-06: 토큰화 캐싱 ✅
   - 반복 입력 캐싱
   - LRU 캐시 구현
   - 캐시 히트율 모니터링
