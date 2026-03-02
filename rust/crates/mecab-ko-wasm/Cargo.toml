@@ -14,6 +14,9 @@ keywords = ["korean", "morphology", "wasm", "nlp", "mecab"]
 categories = ["text-processing", "science", "wasm"]
 publish = false
 
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 doc = false  # Skip docs for WASM bindings (FFI crate, not meant for Rust docs)
