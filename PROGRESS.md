@@ -5,10 +5,16 @@
 ## Sprint 16 진행 중 (2026-03-03)
 
 ### P0 (Critical)
-- [ ] S16-01: N-best 경로 탐색 개선
-  - N-best Viterbi 알고리즘 최적화
-  - 메모리 효율적인 경로 저장
-  - N-best 결과 API 개선
+- [x] S16-01: N-best 경로 탐색 개선 ✅
+  - `nbest.rs` 모듈 구현 (진정한 K-best Viterbi)
+  - `ImprovedNbestSearcher`: 각 노드에서 K개의 최선 후보 유지
+  - `NbestPath`, `NbestResult` 구조체 추가 (개선된 API)
+  - Forward pass에서 K-best 후보 추적
+  - Backward pass에서 N개의 최적 경로 추출
+  - 이터레이터 지원 (`iter()`, `IntoIterator`)
+  - 호환성 API (`search_pairs()`)
+  - 벤치마크 추가 (기존 vs 개선 비교)
+  - 8개 테스트 통과
 
 ### P1 (High)
 - [ ] S16-02: 사용자 정의 분석 모드

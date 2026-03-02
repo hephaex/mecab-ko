@@ -33,6 +33,7 @@ pub mod batch;
 pub mod evaluate;
 pub mod kiwi_compat;
 pub mod lattice;
+pub mod nbest;
 pub mod nori_compat;
 pub mod normalizer;
 pub mod pool;
@@ -65,6 +66,7 @@ pub use pos_tag::PosTag;
 pub use streaming::{StreamingTokenizer, TokenStream};
 pub use tokenizer::{Token, Tokenizer};
 pub use unknown::{CharCategoryMap, UnknownDictionary, UnknownHandler};
+pub use nbest::{ImprovedNbestSearcher, NbestPath, NbestResult};
 pub use viterbi::{ConnectionCost, NbestSearcher, SpacePenalty, ViterbiSearcher};
 
 #[cfg(feature = "async")]

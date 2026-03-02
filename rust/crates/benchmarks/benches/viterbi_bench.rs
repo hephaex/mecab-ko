@@ -11,6 +11,7 @@
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use mecab_ko_core::lattice::{Lattice, NodeBuilder};
+use mecab_ko_core::nbest::ImprovedNbestSearcher;
 use mecab_ko_core::viterbi::{NbestSearcher, SpacePenalty, ViterbiSearcher, ZeroConnectionCost};
 use mecab_ko_dict::matrix::DenseMatrix;
 use rand::Rng;
@@ -286,6 +287,82 @@ fn bench_nbest_search(c: &mut Criterion) {
     group.finish();
 }
 
+/// 개선된 N-best 탐색 성능 (ImprovedNbestSearcher)
+fn bench_improved_nbest_search(c: &mut Criterion) {
+    let matrix = create_test_matrix();
+
+    let mut group = c.benchmark_group("viterbi_improved_nbest");
+
+    for n in &[1, 3, 5, 10] {
+        group.bench_with_input(BenchmarkId::from_parameter(n), n, |b, &n| {
+            let searcher = ImprovedNbestSearcher::new(n);
+
+            b.iter(|| {
+                let mut lattice = create_medium_lattice();
+                let results = searcher.search(black_box(&mut lattice), &matrix);
+                black_box(results);
+            });
+        });
+    }
+
+    group.finish();
+}
+
+/// N-best 구현 비교 (기존 vs 개선)
+fn bench_nbest_comparison(c: &mut Criterion) {
+    let matrix = create_test_matrix();
+
+    let mut group = c.benchmark_group("viterbi_nbest_comparison");
+
+    // N=5 기준 비교
+    let n = 5;
+
+    // 기존 구현
+    group.bench_function("legacy_n5", |b| {
+        let searcher = NbestSearcher::new(n);
+
+        b.iter(|| {
+            let mut lattice = create_medium_lattice();
+            let results = searcher.search(black_box(&mut lattice), &matrix);
+            black_box(results);
+        });
+    });
+
+    // 개선된 구현
+    group.bench_function("improved_n5", |b| {
+        let searcher = ImprovedNbestSearcher::new(n);
+
+        b.iter(|| {
+            let mut lattice = create_medium_lattice();
+            let results = searcher.search(black_box(&mut lattice), &matrix);
+            black_box(results);
+        });
+    });
+
+    // 대형 lattice에서 N=5 비교
+    group.bench_function("legacy_large_n5", |b| {
+        let searcher = NbestSearcher::new(n);
+
+        b.iter(|| {
+            let mut lattice = create_large_lattice();
+            let results = searcher.search(black_box(&mut lattice), &matrix);
+            black_box(results);
+        });
+    });
+
+    group.bench_function("improved_large_n5", |b| {
+        let searcher = ImprovedNbestSearcher::new(n);
+
+        b.iter(|| {
+            let mut lattice = create_large_lattice();
+            let results = searcher.search(black_box(&mut lattice), &matrix);
+            black_box(results);
+        });
+    });
+
+    group.finish();
+}
+
 /// 노드 수에 따른 확장성
 fn bench_scalability_by_nodes(c: &mut Criterion) {
     let matrix = create_test_matrix();
@@ -489,6 +566,8 @@ criterion_group!(
     bench_viterbi_search,
     bench_space_penalty,
     bench_nbest_search,
+    bench_improved_nbest_search,
+    bench_nbest_comparison,
     bench_scalability_by_nodes,
     bench_path_complexity,
     bench_forward_backward_separate,

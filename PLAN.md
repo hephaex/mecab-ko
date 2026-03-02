@@ -6,7 +6,7 @@ N-best 경로 탐색 개선, 사용자 정의 분석 모드, 토큰화 성능 �
 ## Sprint 16 작업 목록
 
 ### P0 (Critical)
-- [ ] S16-01: N-best 경로 탐색 개선
+- [x] S16-01: N-best 경로 탐색 개선 ✅
   - N-best Viterbi 알고리즘 최적화
   - 메모리 효율적인 경로 저장
   - N-best 결과 API 개선
