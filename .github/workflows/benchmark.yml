@@ -123,7 +123,21 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const path = require('path');
+
+            // Parse bencher format: "test name ... bench: X ns/iter (+/- Y)"
+            function parseBenchmarks(content) {
+              const results = {};
+              const lines = content.split('\n');
+              for (const line of lines) {
+                const match = line.match(/test\s+(\S+)\s+.*bench:\s+([\d,]+)\s+ns\/iter/);
+                if (match) {
+                  const name = match[1];
+                  const time = parseInt(match[2].replace(/,/g, ''));
+                  results[name] = time;
+                }
+              }
+              return results;
+            }
 
             let baseBench = '';
             let prBench = '';
@@ -136,25 +150,55 @@ jobs:
               prBench = fs.readFileSync('/tmp/pr-benchmark.txt', 'utf8');
             }
 
-            let comment = '## Benchmark Comparison\n\n';
+            const baseResults = parseBenchmarks(baseBench);
+            const prResults = parseBenchmarks(prBench);
 
-            if (baseBench && prBench) {
-              comment += '### Base Branch Benchmarks\n```\n';
-              comment += baseBench.substring(0, 1000);
-              comment += baseBench.length > 1000 ? '\n... (truncated)\n```' : '\n```';
+            let comment = '## 📊 Benchmark Comparison\n\n';
+            let hasRegression = false;
+            let regressionDetails = [];
 
-              comment += '\n\n### PR Branch Benchmarks\n```\n';
-              comment += prBench.substring(0, 1000);
-              comment += prBench.length > 1000 ? '\n... (truncated)\n```' : '\n```';
+            if (Object.keys(baseResults).length > 0 && Object.keys(prResults).length > 0) {
+              comment += '| Benchmark | Base | PR | Change |\n';
+              comment += '|-----------|------|----|---------|\n';
 
-              comment += '\n\n**Full benchmark results are available in the artifacts.**\n';
+              for (const [name, prTime] of Object.entries(prResults)) {
+                if (baseResults[name]) {
+                  const baseTime = baseResults[name];
+                  const diff = ((prTime - baseTime) / baseTime * 100).toFixed(1);
+                  const arrow = prTime > baseTime ? '🔺' : (prTime < baseTime ? '🔽' : '➡️');
+
+                  // Detect regression (>10% slower)
+                  if (parseFloat(diff) > 10) {
+                    hasRegression = true;
+                    regressionDetails.push(`${name}: +${diff}%`);
+                  }
+
+                  const shortName = name.split('::').pop();
+                  comment += `| ${shortName} | ${(baseTime/1000).toFixed(1)}µs | ${(prTime/1000).toFixed(1)}µs | ${arrow} ${diff}% |\n`;
+                }
+              }
+
+              if (hasRegression) {
+                comment += '\n### ⚠️ Performance Regression Detected!\n\n';
+                comment += 'The following benchmarks are >10% slower:\n';
+                for (const detail of regressionDetails) {
+                  comment += `- ${detail}\n`;
+                }
+                comment += '\nPlease investigate before merging.\n';
+              } else {
+                comment += '\n✅ No significant performance regressions detected.\n';
+              }
             } else if (prBench) {
               comment += '### PR Branch Benchmarks\n```\n';
-              comment += prBench;
-              comment += '\n```\n';
+              comment += prBench.substring(0, 2000);
+              comment += prBench.length > 2000 ? '\n... (truncated)\n```' : '\n```';
             } else {
               comment += '⚠️ No benchmark results to compare.\n';
             }
+
+            comment += '\n\n<details><summary>Full benchmark output</summary>\n\n```\n';
+            comment += prBench.substring(0, 5000);
+            comment += '\n```\n</details>\n';
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,
