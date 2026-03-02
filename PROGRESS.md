@@ -18,8 +18,14 @@
   - WASM 빌드 성공 (93KB)
   - wasm-opt 비활성화로 bulk memory 오류 해결
 
-### P2 대기
-- [ ] S13-05: 사전 데이터 변환기
+### P2 진행
+- [x] S13-05: 사전 데이터 변환기 ✅
+  - `mecab-ko-dict-sync` 크레이트 생성
+  - `DictConverter` 구조체 구현 (POS 매핑, 비용 계산)
+  - `ConverterEntry` → `UserEntry` 변환 로직
+  - 30개 테스트 (22 unit + 8 doc tests)
+  - CSV 출력 포맷 (MeCab-Ko 호환)
+  - 예제 프로그램 `convert_neologisms`
 - [ ] S13-06: CLI 사전 동기화 명령
 - [ ] S13-07: v0.2.0 Breaking Changes 정리
 
