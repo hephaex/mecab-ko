@@ -1,6 +1,271 @@
 # Migration Guide
 
-This guide helps you migrate from MeCab-Ko v0.1.x to v0.2.0.
+This guide helps you migrate between MeCab-Ko versions.
+
+---
+
+## v0.2.0 → v0.3.0
+
+MeCab-Ko v0.3.0 introduces powerful new features for advanced tokenization, analysis customization, and performance optimization.
+
+### Breaking Changes
+
+#### 1. TokenStream Internal Buffer Change
+
+The `TokenStream` now uses `VecDeque` instead of `Vec` for better performance. This is an internal change, but if you were relying on undocumented behavior, note:
+
+```rust
+// v0.2.0 - Internal Vec buffer
+// v0.3.0 - Internal VecDeque buffer (O(1) dequeue)
+
+// API remains the same
+for token in token_stream {
+    println!("{}", token.surface);
+}
+```
+
+**Action Required**: None if using public API only.
+
+#### 2. StreamingTokenizer Module Reorganization
+
+Additional types are now exported from the streaming module:
+
+```rust
+// v0.2.0
+use mecab_ko_core::StreamingTokenizer;
+
+// v0.3.0 - Additional types available
+use mecab_ko_core::{
+    StreamingTokenizer,
+    TokenStream,
+    ProgressStreamingTokenizer,
+    StreamingProgress,
+    ProgressCallback,
+    ChunkedTokenIterator,
+};
+```
+
+**Action Required**: None. These are additive changes.
+
+### New Features
+
+#### 1. Improved N-best Path Search
+
+True K-best Viterbi algorithm with better accuracy:
+
+```rust
+use mecab_ko_core::ImprovedNbestSearcher;
+
+let searcher = ImprovedNbestSearcher::new(&lattice, k);
+let results = searcher.search();
+
+for (rank, path) in results.iter().enumerate() {
+    println!("Rank {}: cost={}", rank + 1, path.total_cost);
+    for node_id in &path.node_ids {
+        // process nodes
+    }
+}
+```
+
+#### 2. User-defined Analysis Modes
+
+Flexible tokenization with custom filtering:
+
+```rust
+use mecab_ko_core::{AnalysisMode, PosFilter, AnalyzerConfig};
+
+// Built-in modes
+let nouns = extract_nouns(&tokens);
+let verbs = extract_verbs(&tokens);
+let content_words = extract_content_words(&tokens);
+let lemmas = extract_lemmas(&tokens);
+
+// Custom configuration
+let config = AnalyzerConfig::new()
+    .with_mode(AnalysisMode::Custom)
+    .with_filter(PosFilter::include(&["NNG", "NNP", "VV"]))
+    .with_lemmatization(LemmatizationMode::PredicatesOnly)
+    .with_min_length(2);
+
+let analyzed: Vec<AnalyzedToken> = config.analyze(&tokens);
+```
+
+Available modes:
+- `Full` - All tokens (default)
+- `NounsOnly` - Common and proper nouns
+- `VerbsOnly` - Verbs only
+- `AdjectivesOnly` - Adjectives only
+- `PredicatesOnly` - Verbs and adjectives
+- `ContentWordsOnly` - Nouns, verbs, adjectives, adverbs
+- `SurfaceOnly` - Surface forms only (no POS)
+- `Lemmatized` - Lemmatized forms
+- `PosTagsOnly` - POS tags only
+- `Custom` - User-defined with PosFilter
+
+#### 3. Lattice Visualization Tool
+
+Debug and understand morphological analysis:
+
+```rust
+use mecab_ko_core::{LatticeViz, VizFormat, VizOptions};
+
+// Quick visualization
+let dot = lattice_to_dot(&lattice);
+let html = lattice_to_html(&lattice);
+let text = lattice_to_text(&lattice);
+let json = lattice_to_json(&lattice);
+
+// Customized output
+let options = VizOptions::new()
+    .show_cost(true)
+    .show_pos(true)
+    .highlight_best_path(true)
+    .with_colors(true);
+
+let viz = LatticeViz::new(&lattice)
+    .with_options(options)
+    .to_format(VizFormat::Html);
+
+std::fs::write("lattice.html", viz)?;
+```
+
+#### 4. Tokenization Caching
+
+LRU cache for repeated tokenization:
+
+```rust
+use mecab_ko_core::{TokenCache, CacheConfig, CachingTokenizer};
+
+// Create cache with config
+let config = CacheConfig::new()
+    .max_entries(10000)
+    .max_key_length(1000)
+    .track_stats(true);
+
+let cache = TokenCache::with_config(config);
+
+// Use with any tokenizer
+let caching_tokenizer = CachingTokenizer::new(tokenizer, cache);
+
+// Stats tracking
+let stats = caching_tokenizer.cache_stats();
+println!("Hit rate: {:.2}%", stats.hit_rate() * 100.0);
+```
+
+#### 5. Progress-aware Streaming
+
+Track progress for large file processing:
+
+```rust
+use mecab_ko_core::{ProgressStreamingTokenizer, StreamingProgress};
+
+let stream = ProgressStreamingTokenizer::new(tokenizer)
+    .with_total_bytes(file_size)
+    .with_progress_callback(|progress: StreamingProgress| {
+        let percent = progress.percent().unwrap_or(0.0);
+        println!("Progress: {:.1}%", percent);
+        println!("Tokens generated: {}", progress.tokens_generated);
+    });
+
+for token in stream.tokenize_iter(text) {
+    // process tokens
+}
+```
+
+#### 6. Large File Processing
+
+Efficient memory-streaming for large files:
+
+```rust
+use mecab_ko_core::LargeFileProcessor;
+
+let processor = LargeFileProcessor::new()?
+    .with_buffer_size(65536)  // 64KB buffer
+    .with_progress_callback(|progress| {
+        println!("{}% complete", progress.percent());
+    });
+
+// Process file without loading entirely into memory
+let tokens = processor.process_file("large_corpus.txt")?;
+```
+
+#### 7. Smart Chunking
+
+Split text at natural boundaries:
+
+```rust
+use mecab_ko_core::BatchTokenizer;
+
+// Smart chunking respects sentence boundaries
+let chunks = BatchTokenizer::split_into_chunks_smart(
+    text,
+    1000,  // chunk size
+    &['.', '!', '?', '。', '\n']  // delimiters
+);
+
+// Overlapping chunks for context preservation
+let overlapping = BatchTokenizer::split_with_overlap(
+    text,
+    1000,  // chunk size
+    100    // overlap size
+);
+```
+
+#### 8. npm Package
+
+WebAssembly bindings now available:
+
+```javascript
+// Install: npm install mecab-ko-wasm
+
+import { Tokenizer } from 'mecab-ko-wasm';
+
+const tokenizer = await Tokenizer.new();
+const tokens = tokenizer.tokenize("한국어 형태소 분석");
+
+tokens.forEach(token => {
+    console.log(`${token.surface}: ${token.pos}`);
+});
+```
+
+### Deprecated Features
+
+| Feature | Status | Replacement |
+|---------|--------|-------------|
+| `NbestSearcher::search_simple()` | Deprecated | Use `ImprovedNbestSearcher` |
+
+### Performance Improvements
+
+| Operation | v0.2.0 | v0.3.0 | Improvement |
+|-----------|--------|--------|-------------|
+| TokenStream dequeue | O(n) | O(1) | ~10x faster for large streams |
+| Smart chunking | N/A | O(n) | Memory-efficient processing |
+| Cache hit | N/A | O(1) | Instant for repeated texts |
+
+### Version Compatibility Matrix
+
+| Component | v0.2.0 | v0.3.0 |
+|-----------|--------|--------|
+| Rust | 1.75+ | 1.75+ |
+| Python | 3.8-3.13 | 3.8-3.13 |
+| Node.js | 18, 20, 22 | 18, 20, 22 |
+| WASM | ES2020+ | ES2020+ |
+| npm | N/A | mecab-ko-wasm@0.3.0 |
+
+### Migration Checklist
+
+- [ ] Update `Cargo.toml` dependencies to v0.3.0
+- [ ] Review any `NbestSearcher` usage → consider `ImprovedNbestSearcher`
+- [ ] Update npm package if using WASM: `npm update mecab-ko-wasm`
+- [ ] Test tokenization with new features
+- [ ] Consider adding caching for repeated text processing
+- [ ] Update documentation for new analysis modes
+
+---
+
+## v0.1.x → v0.2.0
+
+This section helps you migrate from MeCab-Ko v0.1.x to v0.2.0.
 
 ## Overview
 

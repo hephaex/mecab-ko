@@ -1,6 +1,6 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-03-03 (Sprint 17 진행 중 - S17-03 완료)
+## 마지막 업데이트: 2026-03-03 (Sprint 17 진행 중 - S17-04 완료)
 
 ## Sprint 17 진행 중 (2026-03-03)
 
@@ -36,7 +36,22 @@
     - 진행률 콜백 지원
     - 병렬 파일 처리 (`process_files`)
   - 213개 테스트 통과, Clippy 경고 없음
-- [ ] S17-04: Migration Guide v0.2.0 → v0.3.0 - 대기
+- [x] S17-04: Migration Guide v0.2.0 → v0.3.0 ✅
+  - `docs/MIGRATION_GUIDE.md` 업데이트
+  - v0.2.0 → v0.3.0 섹션 추가:
+    - Breaking Changes: TokenStream VecDeque 변경, 모듈 재구성
+    - New Features:
+      - ImprovedNbestSearcher (K-best Viterbi)
+      - AnalysisMode, PosFilter, AnalyzerConfig
+      - LatticeViz (시각화 도구)
+      - TokenCache, CachingTokenizer (LRU 캐싱)
+      - ProgressStreamingTokenizer (진행률 추적)
+      - LargeFileProcessor (대용량 파일 처리)
+      - 스마트 청킹 (문장 경계, 오버랩)
+      - npm mecab-ko-wasm 패키지
+    - 성능 개선 비교표
+    - 버전 호환성 매트릭스
+    - 마이그레이션 체크리스트
 
 ### P2 (Medium)
 - [ ] S17-05: 메모리 최적화 2차 - 대기
