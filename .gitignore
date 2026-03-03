@@ -4,6 +4,8 @@ CLAUDE.md
 data/dict-output/
 data/mecab-ko-dic-2.1.1-20180720/
 data/mecab-ko-dic.tar.gz
+data/mecab-ko-dic-2.1.1-20180720.tar.gz
+*.tar.gz
 
 # Jumandic and Neologd data
 mecab-jumandic/
