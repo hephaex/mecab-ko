@@ -312,8 +312,9 @@ PyPI/npm 배포 준비, 문서 사이트 구축, 사전 현대화 조사
   - sitemap.xml, robots.txt 자동 생성
   - introduction.md v0.3.0 업데이트
   - main index.html SEO 메타태그 추가
-- [ ] S18-08: 커뮤니티 이슈 대응
-  - GitHub 이슈 #6 추가 대응 (필요시)
+- [x] S18-08: 커뮤니티 이슈 대응 ✅
+  - GitHub 이슈 #6: 이미 답변 완료 (answered 라벨)
+  - 추가 대응 필요 없음
 
 ## 다음 스프린트 예고
 Sprint 19: mecab-ko-dic v3.0 릴리스, 언어 모델 기반 정확도 향상
