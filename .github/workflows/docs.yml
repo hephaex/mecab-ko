@@ -104,6 +104,52 @@ jobs:
             mkdir -p site/book
           fi
 
+      - name: Generate sitemap
+        run: |
+          cat > site/book/sitemap.xml << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+            <url>
+              <loc>https://mecab-ko.dev/</loc>
+              <lastmod>$(date -u +"%Y-%m-%d")</lastmod>
+              <changefreq>weekly</changefreq>
+              <priority>1.0</priority>
+            </url>
+            <url>
+              <loc>https://mecab-ko.dev/book/index.html</loc>
+              <lastmod>$(date -u +"%Y-%m-%d")</lastmod>
+              <changefreq>weekly</changefreq>
+              <priority>0.9</priority>
+            </url>
+            <url>
+              <loc>https://mecab-ko.dev/book/installation.html</loc>
+              <lastmod>$(date -u +"%Y-%m-%d")</lastmod>
+              <changefreq>monthly</changefreq>
+              <priority>0.8</priority>
+            </url>
+            <url>
+              <loc>https://mecab-ko.dev/book/quick-start.html</loc>
+              <lastmod>$(date -u +"%Y-%m-%d")</lastmod>
+              <changefreq>monthly</changefreq>
+              <priority>0.8</priority>
+            </url>
+            <url>
+              <loc>https://mecab-ko.dev/api/mecab_ko/index.html</loc>
+              <lastmod>$(date -u +"%Y-%m-%d")</lastmod>
+              <changefreq>weekly</changefreq>
+              <priority>0.9</priority>
+            </url>
+          </urlset>
+          EOF
+
+          # Create robots.txt
+          cat > site/book/robots.txt << 'EOF'
+          User-agent: *
+          Allow: /
+
+          Sitemap: https://mecab-ko.dev/sitemap.xml
+          EOF
+
       - name: Upload mdbook artifact
         uses: actions/upload-artifact@v4
         with:
@@ -137,11 +183,24 @@ jobs:
           mkdir -p docs-combined
           cat > docs-combined/index.html << 'EOF'
           <!DOCTYPE html>
-          <html lang="en">
+          <html lang="ko">
             <head>
               <meta charset="utf-8">
               <meta name="viewport" content="width=device-width, initial-scale=1">
-              <title>MeCab-Ko Documentation</title>
+              <title>MeCab-Ko - 한국어 형태소 분석기</title>
+              <meta name="description" content="MeCab-Ko: 빠르고 정확한 오픈소스 한국어 형태소 분석기. Rust로 작성되어 Python, Node.js, WebAssembly 바인딩을 제공합니다.">
+              <meta name="keywords" content="MeCab-Ko, 한국어, 형태소 분석기, Korean morphological analyzer, NLP, Rust, Python, WebAssembly">
+              <meta name="author" content="Mario Cho">
+              <meta name="robots" content="index, follow">
+              <link rel="canonical" href="https://mecab-ko.dev/">
+              <meta property="og:type" content="website">
+              <meta property="og:url" content="https://mecab-ko.dev/">
+              <meta property="og:title" content="MeCab-Ko - 한국어 형태소 분석기">
+              <meta property="og:description" content="빠르고 정확한 오픈소스 한국어 형태소 분석기">
+              <meta property="og:locale" content="ko_KR">
+              <meta name="twitter:card" content="summary">
+              <meta name="twitter:title" content="MeCab-Ko - 한국어 형태소 분석기">
+              <meta name="twitter:description" content="빠르고 정확한 오픈소스 한국어 형태소 분석기">
               <style>
                 * {
                   margin: 0;

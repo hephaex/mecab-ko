@@ -1,13 +1,23 @@
 # MeCab-Ko 소개
 
-**MeCab-Ko**는 한국어 형태소 분석을 위한 고성능 도구입니다. 기존 C/C++ 기반의 은전한닢(mecab-ko)을 순수 Rust로 재구현하여, 메모리 안전성과 현대적인 개발 환경을 제공합니다.
+**MeCab-Ko**는 한국어 형태소 분석을 위한 고성능 오픈소스 라이브러리입니다. 기존 C/C++ 기반의 은전한닢(mecab-ko)을 순수 Rust로 재구현하여, 메모리 안전성과 현대적인 개발 환경을 제공합니다.
 
-> **최신 버전: v0.2.0** (2026-03-02)
+> **최신 버전: v0.3.0** (2026-03-03)
 >
-> - 정확도 측정 인프라 구축
-> - Unknown 단어 처리 개선
-> - 복합명사 분해 개선
-> - 사전 품질 검증 도구
+> - K-best Viterbi 경로 탐색 (ImprovedNbestSearcher)
+> - LRU 캐싱 토크나이저 (TokenCache)
+> - 스트리밍 API 개선 (LargeFileProcessor)
+> - 병렬 토큰화 지원
+> - npm mecab-ko-wasm v0.3.0 배포
+
+## 왜 MeCab-Ko인가?
+
+**한국어 자연어 처리(NLP)**의 첫 단계는 형태소 분석입니다. MeCab-Ko는 다음과 같은 장점을 제공합니다:
+
+- **높은 정확도**: mecab-ko-dic 기반의 검증된 사전
+- **빠른 속도**: Rust의 성능 + Zero-copy 사전 로딩
+- **다양한 플랫폼**: Python, Node.js, WebAssembly, Rust
+- **Elasticsearch 호환**: Nori 분석기와 호환되는 API
 
 ## 형태소 분석이란?
 
@@ -85,12 +95,13 @@ mecab-ko/
 
 | Crate | 설명 | 상태 |
 |-------|------|------|
-| `mecab-ko` | 사용자를 위한 통합 인터페이스 | v0.2.0 |
-| `mecab-ko-core` | Lattice, Viterbi, 미등록어 처리 | v0.2.0 |
-| `mecab-ko-dict` | 사전 로딩, Trie, 연접 비용 매트릭스 | v0.2.0 |
-| `mecab-ko-hangul` | 자모 분리/결합, 문자 분류 | v0.1.1 |
-| `mecab-ko-cli` | `mecab-ko` 명령줄 도구 | v0.2.0 |
-| `mecab-ko-elasticsearch` | Nori 호환 분석기 | v0.2.0 |
+| `mecab-ko` | 사용자를 위한 통합 인터페이스 | v0.3.0 |
+| `mecab-ko-core` | Lattice, Viterbi, 미등록어 처리 | v0.3.0 |
+| `mecab-ko-dict` | 사전 로딩, Trie, 연접 비용 매트릭스 | v0.3.0 |
+| `mecab-ko-hangul` | 자모 분리/결합, 문자 분류 | v0.3.0 |
+| `mecab-ko-cli` | `mecab-ko` 명령줄 도구 | v0.3.0 |
+| `mecab-ko-elasticsearch` | Nori 호환 분석기 | v0.3.0 |
+| `mecab-ko-wasm` | WebAssembly 바인딩 | v0.3.0 (npm) |
 
 ## 다른 프로젝트와의 비교
 
@@ -101,22 +112,26 @@ mecab-ko/
 | **Lindera** | Rust | 12 MB/s | ~180 MB | 일본어 중심 |
 | **MeCab-Ko** | Rust | 15 MB/s | ~145 MB | mecab-ko 호환, 순수 Rust |
 
-## v0.2.0 주요 변경사항
+## v0.3.0 주요 변경사항
 
-### 정확도 측정 인프라
-- `mecab evaluate` CLI 서브커맨드
-- Token/Sentence/POS Accuracy 측정
-- Precision/Recall/F1 계산
+### K-best 경로 탐색
+- `ImprovedNbestSearcher`: K-best Viterbi 알고리즘
+- 다양한 분석 후보 제공
+- 사용자 정의 분석 모드 지원
 
-### Unknown 단어 처리 개선
-- 패턴 감지: CamelCase, ProperNoun, HangulAlphaMix 등
-- 패턴별 비용 조정
-- 품사 태그 추정 개선
+### 성능 최적화
+- `TokenCache`: LRU 캐싱으로 반복 분석 가속
+- `LargeFileProcessor`: 대용량 파일 스트리밍 처리
+- 병렬 토큰화: 멀티코어 활용
 
-### 복합명사 분해 개선
-- 종성 패턴 분석 알고리즘
-- 접미사/접두사 자동 감지
-- Character offset 정확도 개선
+### 스트리밍 API
+- `ProgressStreamingTokenizer`: 진행률 콜백 지원
+- 스마트 문장 경계 청킹
+- 오버랩 청킹 지원
+
+### npm 배포
+- `mecab-ko-wasm` v0.3.0 npm에서 설치 가능
+- 브라우저에서 한국어 형태소 분석 지원
 
 자세한 내용은 [변경 이력](changelog.md)을 참조하세요.
 

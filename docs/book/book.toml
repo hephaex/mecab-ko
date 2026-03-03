@@ -4,6 +4,10 @@ authors = ["Mario Cho <hephaex@gmail.com>"]
 description = "한국어 형태소 분석기 MeCab-Ko 사용 가이드"
 language = "ko"
 src = "src"
+multilingual = false
+
+[rust]
+edition = "2021"
 
 [build]
 build-dir = "book"
