@@ -597,35 +597,37 @@ impl UnknownHandler {
     fn adjust_cost_by_pattern(&self, base_cost: i16, pattern: WordPattern, length: usize) -> i16 {
         let mut cost = i32::from(base_cost);
 
-        // 패턴별 조정
+        // 패턴별 조정 (v0.3.1: 한국어 신조어에 최적화)
         match pattern {
             WordPattern::Plain => {
-                // 길이에 따른 패널티: 긴 단어일수록 비용 증가
-                if length > 5 {
+                // 길이에 따른 패널티: 6자 초과부터 점진적 증가
+                // 한국어 복합명사는 보통 2-6음절이므로 6자까지 허용
+                if length > 6 {
                     #[allow(clippy::cast_possible_wrap, clippy::cast_possible_truncation)]
-                    let penalty = ((length - 5) * 100) as i32;
+                    let penalty = ((length - 6) * 80) as i32; // 100→80: 더 완화된 패널티
                     cost += penalty;
                 }
             }
             WordPattern::ProperNoun => {
-                // 고유명사는 비용 감소 (더 선호)
-                cost -= 500;
+                // 고유명사: 브랜드명, 인명 등에서 흔함
+                cost -= 600; // 500→600: 더 강하게 선호
             }
             WordPattern::CamelCase => {
-                // CamelCase는 신조어/브랜드명 가능성 높음
-                cost -= 300;
+                // CamelCase: IT 용어, 브랜드명 (iPhone, YouTube 등)
+                cost -= 400; // 300→400: 더 강하게 선호
             }
             WordPattern::HangulAlphaMix => {
-                // 혼합 패턴은 약간 패널티
-                cost += 200;
+                // 한영 혼합: K팝, SNS족 등 현대 신조어에서 매우 흔함
+                // 패널티 제거하고 오히려 약간 선호
+                cost -= 100; // +200→-100: 신조어 패턴으로 선호
             }
             WordPattern::NumberUnit => {
-                // 숫자+단위는 자연스러운 패턴
-                cost -= 200;
+                // 숫자+단위: 3개, 10kg, 5번 등 자연스러운 패턴
+                cost -= 300; // 200→300: 더 강하게 선호
             }
             WordPattern::Emoji => {
-                // 이모지는 높은 비용
-                cost += 1000;
+                // 이모지: 단독 토큰으로 처리하지 않도록 높은 비용
+                cost += 1500; // 1000→1500: 더 강한 억제
             }
         }
 
