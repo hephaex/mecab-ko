@@ -1,6 +1,6 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-03-03 (Sprint 17 진행 중 - S17-07 완료)
+## 마지막 업데이트: 2026-03-03 (Sprint 17 완료 ✅)
 
 ## Sprint 17 진행 중 (2026-03-03)
 
@@ -103,7 +103,21 @@
   - 벤치마크 실행: tokenizer_bench, memory_bench, comparison_bench
 
 ### P3 (Low)
-- [ ] S17-08: 테스트 커버리지 향상 - 대기
+- [x] S17-08: 테스트 커버리지 향상 ✅
+  - **edge_cases.rs 신규 생성**: 47개 edge case 테스트
+    - Empty/whitespace 테스트 (5개): 빈 문자열, 공백, 개행, 혼합 공백
+    - Single character 테스트 (4개): 한글, 숫자, 영문, 특수문자
+    - Unicode edge cases (7개): 이모지, 자모, CJK, 히라가나, zero-width
+    - Long text 테스트 (2개): 1000자 반복, 긴 텍스트 처리
+    - Repeated tokenization (2개): 동일/다른 텍스트 반복 일관성
+    - Boundary conditions (4개): 선행/후행 구두점, 연속 구두점, 혼합 스크립트
+    - Number edge cases (5개): 대형 숫자, 소수점, 음수, 한글 단위, 날짜
+    - API method 테스트 (8개): wakati/morphs/pos/nouns 빈 입력 및 기본 동작
+    - Memory/state 테스트 (3개): 토크나이저 재사용, 특수 입력 후 정상화, lattice stats
+    - Special patterns (6개): URL, 이메일, 해시태그, 멘션, 괄호, 따옴표
+    - Stress 테스트 (2개): 100회 연속 호출, 빈/텍스트 교대 호출
+  - **integration_batch.rs 수정**: test_batch_chunked 뉴라인 구분자로 변경
+  - **총 54개 테스트 통과** (47 edge cases + 7 batch integration)
 
 ---
 
