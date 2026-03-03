@@ -18,7 +18,20 @@
 
 ### P1 (High)
 - [ ] S18-02: PyPI 배포 - BLOCKED (토큰 필요)
-- [ ] S18-03: 사전 엔트리 품질 개선 - 대기
+- [x] S18-03: 사전 엔트리 품질 개선 ✅
+  - Unknown 단어 비용 조정 최적화 (`unknown.rs:adjust_cost_by_pattern`)
+  - 주요 변경:
+    | 패턴 | 이전 | 이후 | 이유 |
+    |------|------|------|------|
+    | HangulAlphaMix | +200 | -100 | K팝, SNS족 등 신조어 패턴 |
+    | ProperNoun | -500 | -600 | 브랜드명, 인명 더 선호 |
+    | CamelCase | -300 | -400 | iPhone, YouTube 등 |
+    | Plain 길이임계 | 5자 | 6자 | 한국어 복합명사 길이 |
+    | Plain 패널티율 | 100 | 80 | 완화된 패널티 |
+    | NumberUnit | -200 | -300 | 3개, 10kg 더 선호 |
+    | Emoji | +1000 | +1500 | 더 강한 억제 |
+  - 27개 unknown 테스트 통과
+  - 커밋: 9e8942b
 
 ### P2 (Medium)
 - [x] S18-05: 사용자 사전 자동 검증 ✅
