@@ -1478,6 +1478,7 @@ dependencies = [
  "rayon",
  "serde",
  "string-interner",
+ "tempfile",
  "thiserror",
  "tokio",
 ]

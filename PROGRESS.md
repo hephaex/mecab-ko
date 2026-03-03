@@ -1,6 +1,6 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-03-03 (Sprint 17 진행 중 - S17-04 완료)
+## 마지막 업데이트: 2026-03-03 (Sprint 17 진행 중 - S17-05 완료)
 
 ## Sprint 17 진행 중 (2026-03-03)
 
@@ -54,7 +54,22 @@
     - 마이그레이션 체크리스트
 
 ### P2 (Medium)
-- [ ] S17-05: 메모리 최적화 2차 - 대기
+- [x] S17-05: 메모리 최적화 2차 ✅
+  - **memory.rs 모듈 생성**:
+    - `PosTagInterner`: 품사 태그 String interning (RwLock 기반 스레드 안전)
+      - ~45개 일반 품사 태그 사전 로드 (NNG, VV, JKS 등)
+      - 통계 추적: intern 호출 횟수, 캐시 히트율
+      - `InternerStats`: 히트율, 고유 태그 수 리포트
+    - `FeatureCache`: Feature 문자열 중복 제거 (LRU 방식, 최대 크기 제한)
+    - `MemoryStats`: 메모리 사용량 추적 (dictionary, lattice, pool, cache, interner, token)
+    - `estimate_tokens_memory()`: 토큰 벡터 메모리 추정
+  - **Lattice 개선**: `memory_usage()` 메서드 추가
+    - 텍스트, 노드, 인덱스, 위치 정보 메모리 계산
+  - **Tokenizer 개선**: `memory_stats()` 메서드 추가
+    - lattice, pool 메모리 사용량 리포트
+  - **lib.rs**: memory 모듈 export 추가
+  - **6개 단위 테스트** 추가 및 통과
+  - tempfile dev-dependency 추가 (evaluate.rs 테스트용)
 - [ ] S17-06: API 문서 개선 - 대기
 - [ ] S17-07: 벤치마크 결과 정리 - 대기
 

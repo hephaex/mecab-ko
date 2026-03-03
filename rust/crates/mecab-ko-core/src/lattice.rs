@@ -858,6 +858,47 @@ impl Lattice {
 
         stats
     }
+
+    /// 메모리 사용량 추정 (바이트)
+    ///
+    /// Lattice가 사용하는 대략적인 메모리 크기를 반환합니다.
+    #[must_use]
+    pub fn memory_usage(&self) -> usize {
+        // 텍스트 저장
+        let text_bytes = self.text.len() + self.original_text.len();
+
+        // 노드 배열
+        let nodes_bytes = self.nodes.capacity() * std::mem::size_of::<Node>();
+
+        // starts_at, ends_at 배열
+        let index_bytes = self.starts_at.capacity() * std::mem::size_of::<Vec<u32>>()
+            + self.ends_at.capacity() * std::mem::size_of::<Vec<u32>>()
+            + self
+                .starts_at
+                .iter()
+                .map(|v| v.capacity() * 4)
+                .sum::<usize>()
+            + self
+                .ends_at
+                .iter()
+                .map(|v| v.capacity() * 4)
+                .sum::<usize>();
+
+        // char_positions (estimated from char_count)
+        let pos_bytes = (self.char_positions.char_count() + 1) * std::mem::size_of::<usize>();
+
+        // space_positions (estimated from char_len)
+        let space_bytes = self.char_len() * std::mem::size_of::<usize>() / 10; // ~10% spaces
+
+        // 노드 내 문자열 추정
+        let node_strings: usize = self
+            .nodes
+            .iter()
+            .map(|n| n.surface.len() + n.feature.len())
+            .sum();
+
+        text_bytes + nodes_bytes + index_bytes + pos_bytes + space_bytes + node_strings
+    }
 }
 
 #[cfg(test)]

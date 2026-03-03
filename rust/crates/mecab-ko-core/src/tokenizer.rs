@@ -559,6 +559,21 @@ impl Tokenizer {
         self.pool_manager.stats()
     }
 
+    /// 메모리 사용량 통계
+    ///
+    /// 토크나이저의 메모리 사용 현황을 반환합니다.
+    #[must_use]
+    pub fn memory_stats(&self) -> crate::memory::MemoryStats {
+        crate::memory::MemoryStats {
+            dictionary_bytes: 0, // 사전 크기는 별도 측정 필요
+            lattice_bytes: self.lattice.memory_usage(),
+            pool_bytes: self.pool_manager.total_memory_usage(),
+            cache_bytes: 0,
+            interner_bytes: 0,
+            token_bytes: 0,
+        }
+    }
+
     /// 메모리 풀 초기화
     ///
     /// 모든 풀을 비워 메모리를 해제합니다.

@@ -36,6 +36,7 @@ pub mod evaluate;
 pub mod kiwi_compat;
 pub mod lattice;
 pub mod lattice_viz;
+pub mod memory;
 pub mod nbest;
 pub mod nori_compat;
 pub mod normalizer;
@@ -85,6 +86,9 @@ pub use lattice_viz::{
     VizOptions,
 };
 pub use cache::{CacheConfig, CacheStats, CachedToken, CachingTokenizer, TokenCache};
+pub use memory::{
+    estimate_tokens_memory, FeatureCache, InternerStats, MemoryStats, PosTagInterner,
+};
 
 #[cfg(feature = "async")]
 pub use async_tokenizer::{AsyncStreamingTokenizer, AsyncTokenizer};

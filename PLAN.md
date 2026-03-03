@@ -26,10 +26,12 @@ v0.3.0 정식 릴리스, 스트리밍 API 개선, 메모리 최적화, PyPI 배�
   - 업그레이드 가이드
 
 ### P2 (Medium)
-- [ ] S17-05: 메모리 최적화 2차
-  - entries 지연 로딩 개선
-  - String interning 적용
-  - 메모리 프로파일링
+- [x] S17-05: 메모리 최적화 2차 ✅
+  - PosTagInterner: 품사 태그 String interning
+  - FeatureCache: Feature 문자열 중복 제거
+  - MemoryStats: 메모리 사용량 추적 인프라
+  - Lattice.memory_usage() 메서드 추가
+  - Tokenizer.memory_stats() 메서드 추가
 - [ ] S17-06: API 문서 개선
   - rustdoc 보강
   - 예제 코드 추가
