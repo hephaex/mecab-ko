@@ -1,6 +1,6 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-03-03 (Sprint 17 진행 중 - v0.3.0 릴리스)
+## 마지막 업데이트: 2026-03-03 (Sprint 17 진행 중 - S17-03 완료)
 
 ## Sprint 17 진행 중 (2026-03-03)
 
@@ -19,7 +19,23 @@
 
 ### P1 (High)
 - [ ] S17-02: PyPI 배포 - BLOCKED (토큰 필요)
-- [ ] S17-03: 스트리밍 API 개선 - 대기
+- [x] S17-03: 스트리밍 API 개선 ✅
+  - **TokenStream 최적화**: `Vec` → `VecDeque` 변경 (O(1) `pop_front`)
+  - **진행률 콜백**: `ProgressStreamingTokenizer` 추가
+    - `StreamingProgress`: bytes_processed, total_bytes, tokens_generated
+    - `with_progress_callback()` 빌더 패턴
+    - `percent()` 메서드로 진행률 계산
+  - **청크별 이터레이터**: `ChunkedTokenIterator` 추가
+    - 토큰을 청크 단위로 반환하여 메모리 효율성 향상
+  - **스마트 문장 경계 청킹**: `split_into_chunks_smart()`
+    - 단어 중간에서 분할 방지
+    - 문장 구분자/공백에서 분할
+    - `split_with_overlap()` 오버랩 청킹 지원
+  - **대용량 파일 프로세서**: `LargeFileProcessor`
+    - 버퍼 기반 스트리밍 처리
+    - 진행률 콜백 지원
+    - 병렬 파일 처리 (`process_files`)
+  - 213개 테스트 통과, Clippy 경고 없음
 - [ ] S17-04: Migration Guide v0.2.0 → v0.3.0 - 대기
 
 ### P2 (Medium)

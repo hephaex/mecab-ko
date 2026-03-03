@@ -49,7 +49,9 @@ pub mod viterbi;
 #[cfg(feature = "async")]
 pub mod async_tokenizer;
 
-pub use batch::{BatchTokenizer, ParallelStreamProcessor};
+pub use batch::{
+    BatchTokenizer, LargeFileProcessor, LargeFileProgress, ParallelStreamProcessor,
+};
 pub use error::{Error, Result};
 pub use evaluate::{
     evaluate_dataset, evaluate_tokens, EvaluateError, EvaluationResult, GoldSentence, GoldToken,
@@ -66,7 +68,10 @@ pub use pool::{
     IdVecPool, NodeVecPool, PoolManager, PoolStats, SharedStringInterner, Symbol, TokenPool,
 };
 pub use pos_tag::PosTag;
-pub use streaming::{StreamingTokenizer, TokenStream};
+pub use streaming::{
+    ChunkedTokenIterator, ProgressCallback, ProgressStreamingTokenizer, StreamingProgress,
+    StreamingTokenizer, TokenStream,
+};
 pub use tokenizer::{Token, Tokenizer};
 pub use unknown::{CharCategoryMap, UnknownDictionary, UnknownHandler};
 pub use analysis_mode::{

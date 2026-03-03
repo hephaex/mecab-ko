@@ -15,10 +15,11 @@ v0.3.0 정식 릴리스, 스트리밍 API 개선, 메모리 최적화, PyPI 배�
 - [ ] S17-02: PyPI 배포 (S16-03 계속)
   - PyPI 토큰 설정 후 배포
   - mecab-ko-python v0.3.0
-- [ ] S17-03: 스트리밍 API 개선
-  - `TokenStream` 성능 최적화
-  - 대용량 파일 처리 개선
-  - 메모리 사용량 최소화
+- [x] S17-03: 스트리밍 API 개선 ✅
+  - `TokenStream` VecDeque 최적화 (O(1) dequeue)
+  - `ProgressStreamingTokenizer` 진행률 콜백
+  - `LargeFileProcessor` 대용량 파일 스트리밍
+  - 스마트 문장 경계 청킹
 - [ ] S17-04: Migration Guide v0.2.0 → v0.3.0
   - Breaking changes 문서화
   - 코드 예제 업데이트
