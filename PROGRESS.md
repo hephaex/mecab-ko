@@ -11,7 +11,10 @@
   - 이슈 Close 처리
 
 ### P0 (Critical)
-- [ ] S18-01: 정확도 벤치마크 실행 - 대기
+- [ ] S18-01: 정확도 벤치마크 실행 - 진행 중
+  - mini-dict 테스트 완료: Token Accuracy 0.5% (mini-dict 한계)
+  - **전체 사전 빌드 필요**: 정확한 기준선 측정에 필요
+  - 평가 인프라 동작 확인 완료 (evaluate 서브커맨드)
 
 ### P1 (High)
 - [ ] S18-02: PyPI 배포 - BLOCKED (토큰 필요)
