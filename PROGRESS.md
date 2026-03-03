@@ -20,7 +20,17 @@
 - [ ] S18-02: PyPI 배포 - BLOCKED (토큰 필요)
 - [ ] S18-03: 사전 엔트리 품질 개선 - 대기
 
-### P2-P3
+### P2 (Medium)
+- [x] S18-05: 사용자 사전 자동 검증 ✅
+  - `validate-user-dict` job 추가 (dict-build.yml)
+  - CSV 포맷 검증 (최소 5개 필드 체크)
+  - POS 태그 검증 (NNG, NNP, VV, VA 등 한국어 품사 태그)
+  - 중복 표면형 검출
+  - GitHub Step Summary 품질 리포트
+  - build-dictionary job이 validation 의존
+  - 커밋: c1072d3
+
+### P3
 - 대기
 
 ---
