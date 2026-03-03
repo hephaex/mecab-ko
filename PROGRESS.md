@@ -45,8 +45,22 @@
     - JSON 직렬화 (AnalyzerConfig, Token)
     - POS/ReadingForm/Length 필터
 
-### P3
-- 대기
+### P3 (Low)
+- [x] S18-07: 문서 사이트 SEO 개선 ✅
+  - `docs/book/theme/head.hbs` 추가:
+    - Open Graph (Facebook) 메타태그
+    - Twitter Card 메타태그
+    - JSON-LD 구조화 데이터 (SoftwareApplication)
+    - 한국어 NLP 관련 키워드
+  - `.github/workflows/docs.yml` 업데이트:
+    - sitemap.xml 자동 생성
+    - robots.txt 자동 생성
+    - main index.html SEO 메타태그
+  - `docs/book/src/introduction.md` v0.3.0 업데이트:
+    - v0.3.0 기능 (K-best, 캐싱, 스트리밍)
+    - crate 버전 테이블 업데이트
+    - "왜 MeCab-Ko인가?" 섹션 추가
+  - 커밋: 2393082
 
 ---
 

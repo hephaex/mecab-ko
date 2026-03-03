@@ -307,9 +307,11 @@ PyPI/npm 배포 준비, 문서 사이트 구축, 사전 현대화 조사
   - POS 필터, Reading Form 필터, Length 필터 검증
 
 ### P3 (Low)
-- [ ] S18-07: 문서 사이트 SEO 개선
-  - 메타데이터 추가
-  - 검색 최적화
+- [x] S18-07: 문서 사이트 SEO 개선 ✅
+  - theme/head.hbs 추가 (OG, Twitter Card, JSON-LD)
+  - sitemap.xml, robots.txt 자동 생성
+  - introduction.md v0.3.0 업데이트
+  - main index.html SEO 메타태그 추가
 - [ ] S18-08: 커뮤니티 이슈 대응
   - GitHub 이슈 #6 추가 대응 (필요시)
 
