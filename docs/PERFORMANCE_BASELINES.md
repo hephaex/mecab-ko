@@ -4,26 +4,27 @@
 
 This document defines the performance baselines and regression thresholds used by the automated benchmark CI/CD system.
 
-## Baseline Performance Metrics (v0.2.0)
+## Baseline Performance Metrics (v0.3.0)
 
-### Tokenization Performance (mini-dict)
+### Tokenization Performance
 
 | Benchmark | Metric | Baseline | Target | Threshold |
 |-----------|--------|----------|--------|-----------|
-| tokenize_short (10 chars) | µs/op | 3.8 | < 4.5 | 5% regression |
-| tokenize_medium (50 chars) | µs/op | 44.9 | < 50 | 5% regression |
-| tokenize_long (100 chars) | µs/op | 141 | < 150 | 5% regression |
-| tokenize_xlarge (500 chars) | µs/op | 2165 | < 2300 | 5% regression |
-| tokenize_batch (1000 lines) | µs/op | 8413 | < 8900 | 5% regression |
+| tokenize_short (15 chars) | µs/op | 1.84 | < 2.5 | 5% regression |
+| tokenize_medium (75 chars) | µs/op | 11.49 | < 15 | 5% regression |
+| tokenize_long (200 chars) | µs/op | 41.14 | < 50 | 5% regression |
+| tokenize_xlarge (500 chars) | µs/op | 512 | < 600 | 5% regression |
+| tokenize_batch (10 items) | µs/op | 58.33 | < 70 | 5% regression |
 
 ### Initialization & Memory
 
 | Benchmark | Metric | Baseline | Target | Status |
 |-----------|--------|----------|--------|--------|
-| Cold start | ms | 0.086 | < 200 | PASS |
+| Cold start | ms | < 1 | < 200 | ✅ PASS |
 | Dictionary load | ms | N/A | < 500 | TBD |
-| Memory usage (mini-dict) | MB | ~20 | < 50 | PASS |
+| Memory usage (mini-dict) | MB | ~20 | < 50 | ✅ PASS |
 | Memory usage (full-dict) | MB | 215 | < 150 | TBD |
+| Streaming throughput | MiB/s | 3.77 | > 3 | ✅ PASS |
 
 ### Dictionary Operations
 
@@ -99,10 +100,18 @@ Critical (> 10% worse)      │ ❌    │ Prevent merge           │ No
 - No significant baseline changes
 - Some improvements from compiler updates
 
-### v0.2.0 (Current)
+### v0.2.0
 - Optimized Viterbi decoder
 - Improved tokenization performance
 - Better cache locality
+
+### v0.3.0 (Current)
+- **3x+ performance improvement** over v0.2.0
+- Memory optimization: PosTagInterner, FeatureCache
+- Streaming API: 5x throughput with chunked processing
+- New analysis modes: nouns, pos, morphs
+- Tokenize (15 chars): ~1.84µs (was ~6µs)
+- Tokenize (75 chars): ~11.49µs (was ~42µs)
 - Current baselines as listed above
 
 ## Performance Optimization Priorities
