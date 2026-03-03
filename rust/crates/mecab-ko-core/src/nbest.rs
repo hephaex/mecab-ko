@@ -493,7 +493,7 @@ impl ImprovedNbestSearcher {
 
 /// 기존 `NbestSearcher`와의 호환성을 위한 래퍼
 impl ImprovedNbestSearcher {
-    /// 기존 API 호환: (Vec<NodeId>, i32) 쌍의 벡터 반환
+    /// 기존 API 호환: `(Vec<NodeId>, i32)` 쌍의 벡터 반환
     pub fn search_pairs<C: ConnectionCost>(
         &self,
         lattice: &mut Lattice,

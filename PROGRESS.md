@@ -1,6 +1,6 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-03-03 (Sprint 17 진행 중 - S17-05 완료)
+## 마지막 업데이트: 2026-03-03 (Sprint 17 진행 중 - S17-06 완료)
 
 ## Sprint 17 진행 중 (2026-03-03)
 
@@ -70,7 +70,23 @@
   - **lib.rs**: memory 모듈 export 추가
   - **6개 단위 테스트** 추가 및 통과
   - tempfile dev-dependency 추가 (evaluate.rs 테스트용)
-- [ ] S17-06: API 문서 개선 - 대기
+- [x] S17-06: API 문서 개선 ✅
+  - **lib.rs 모듈 문서 대폭 개선**:
+    - 주요 기능 목록 확장 (형태소 분석, N-best, 스트리밍, 캐싱 등)
+    - 고급 기능 예제 추가 (명사 추출, 스트리밍, 캐싱)
+    - 모듈 구조표 추가 (16개 모듈)
+    - Feature Flags 설명 추가
+  - **tokenizer.rs 메서드 문서 보강**:
+    - `wakati()`: 예제 및 설명 추가
+    - `morphs()`: KoNLPy 호환성 설명
+    - `pos()`: 예제 추가
+    - `set_user_dict()`: 예제 추가
+    - `dictionary()`, `lattice_stats()`: 설명 보강
+  - **nbest.rs**: `<NodeId>` HTML 태그 경고 수정 (백틱 추가)
+  - **memory.rs**: 문서 예제 타입 수정 (`Option<String>`)
+  - **mecab-ko facade**: 사용자 사전 예제 및 성능 팁 추가
+  - **52개 문서 테스트** 모두 통과
+  - **cargo doc** 경고 없음
 - [ ] S17-07: 벤치마크 결과 정리 - 대기
 
 ### P3 (Low)

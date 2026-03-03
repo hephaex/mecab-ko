@@ -36,6 +36,26 @@
 //! println!("{:?}", nouns);  // ["오늘", "날씨"]
 //! ```
 //!
+//! ## 사용자 사전 추가
+//!
+//! ```rust,no_run
+//! use mecab_ko::Tokenizer;
+//! use mecab_ko::dict::UserDictionary;
+//!
+//! let mut user_dict = UserDictionary::new();
+//! user_dict.add_entry("챗GPT", "NNP", Some(-2000), None);
+//! user_dict.add_entry("딥러닝", "NNG", Some(-1500), None);
+//!
+//! let tokenizer = Tokenizer::new().unwrap()
+//!     .with_user_dict(user_dict);
+//! ```
+//!
+//! ## 성능 팁
+//!
+//! 1. **토크나이저 재사용**: `Tokenizer`는 내부에 Lattice를 재사용하므로 매번 새로 생성하지 마세요.
+//! 2. **배치 처리**: 많은 텍스트를 처리할 때는 `mecab_ko_core::BatchTokenizer`를 사용하세요.
+//! 3. **캐싱**: 반복되는 입력이 있으면 `mecab_ko_core::CachingTokenizer`를 활용하세요.
+//!
 //! ## 모듈 구조
 //!
 //! - [`tokenizer`]: 형태소 분석 메인 인터페이스

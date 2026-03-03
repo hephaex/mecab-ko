@@ -32,10 +32,12 @@ v0.3.0 정식 릴리스, 스트리밍 API 개선, 메모리 최적화, PyPI 배�
   - MemoryStats: 메모리 사용량 추적 인프라
   - Lattice.memory_usage() 메서드 추가
   - Tokenizer.memory_stats() 메서드 추가
-- [ ] S17-06: API 문서 개선
-  - rustdoc 보강
-  - 예제 코드 추가
-  - 튜토리얼 업데이트
+- [x] S17-06: API 문서 개선 ✅
+  - lib.rs 모듈 문서 대폭 개선 (기능 목록, 예제, 모듈 구조표)
+  - tokenizer.rs 메서드 문서 보강 (wakati, morphs, pos, set_user_dict)
+  - nbest.rs HTML 태그 경고 수정
+  - memory.rs 문서 예제 수정
+  - 52개 문서 테스트 통과
 - [ ] S17-07: 벤치마크 결과 정리
   - 경쟁 분석기 대비 성능 비교
   - 메모리 사용량 비교

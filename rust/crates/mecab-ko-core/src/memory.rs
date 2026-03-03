@@ -15,7 +15,7 @@
 //!
 //! let interner = PosTagInterner::new();
 //! let sym = interner.intern("NNG");
-//! assert_eq!(interner.resolve(sym), Some("NNG"));
+//! assert_eq!(interner.resolve(sym), Some("NNG".to_string()));
 //!
 //! let stats = MemoryStats::default();
 //! println!("Memory: {} bytes", stats.estimate_total());

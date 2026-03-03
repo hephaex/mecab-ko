@@ -306,7 +306,27 @@ impl Tokenizer {
         self
     }
 
-    /// 사용자 사전 설정
+    /// 사용자 사전 설정 (in-place)
+    ///
+    /// 이미 생성된 토크나이저에 사용자 사전을 설정합니다.
+    /// 빌더 패턴이 필요 없는 경우 사용합니다.
+    ///
+    /// # Arguments
+    ///
+    /// * `user_dict` - 사용자 사전
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use mecab_ko_core::Tokenizer;
+    /// use mecab_ko_dict::UserDictionary;
+    ///
+    /// let mut tokenizer = Tokenizer::new().unwrap();
+    ///
+    /// let mut user_dict = UserDictionary::new();
+    /// user_dict.add_entry("챗GPT", "NNP", Some(-2000), None);
+    /// tokenizer.set_user_dict(user_dict);
+    /// ```
     pub fn set_user_dict(&mut self, user_dict: UserDictionary) {
         self.dictionary.set_user_dictionary(user_dict);
     }
@@ -497,7 +517,28 @@ impl Tokenizer {
     ///
     /// # Returns
     ///
-    /// 표면형 목록
+    /// 분리된 표면형 목록 (wakati gaki)
+    ///
+    /// 일본어 형태소 분석기의 wakati gaki 모드와 동일합니다.
+    /// 형태소로 분리된 표면형만 반환합니다.
+    ///
+    /// # Arguments
+    ///
+    /// * `text` - 분석할 텍스트
+    ///
+    /// # Returns
+    ///
+    /// 분리된 표면형 목록
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use mecab_ko_core::Tokenizer;
+    ///
+    /// let mut tokenizer = Tokenizer::new().unwrap();
+    /// let surfaces = tokenizer.wakati("아버지가방에들어가신다");
+    /// // ["아버지", "가", "방", "에", "들어가", "신다"]
+    /// ```
     pub fn wakati(&mut self, text: &str) -> Vec<String> {
         self.tokenize(text).into_iter().map(|t| t.surface).collect()
     }
@@ -519,12 +560,10 @@ impl Tokenizer {
             .collect()
     }
 
-    /// 형태소만 추출 (wakati와 동일)
-    pub fn morphs(&mut self, text: &str) -> Vec<String> {
-        self.wakati(text)
-    }
-
-    /// 품사 태깅
+    /// 형태소 목록 추출
+    ///
+    /// [`wakati`](Self::wakati)와 동일한 기능입니다.
+    /// Python의 KoNLPy 인터페이스와 호환됩니다.
     ///
     /// # Arguments
     ///
@@ -532,7 +571,33 @@ impl Tokenizer {
     ///
     /// # Returns
     ///
-    /// (표면형, 품사) 쌍의 벡터
+    /// 형태소 목록
+    pub fn morphs(&mut self, text: &str) -> Vec<String> {
+        self.wakati(text)
+    }
+
+    /// 품사 태깅
+    ///
+    /// 형태소와 품사 태그 쌍을 반환합니다.
+    /// Python의 KoNLPy 인터페이스와 호환됩니다.
+    ///
+    /// # Arguments
+    ///
+    /// * `text` - 분석할 텍스트
+    ///
+    /// # Returns
+    ///
+    /// `(표면형, 품사)` 쌍의 벡터
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use mecab_ko_core::Tokenizer;
+    ///
+    /// let mut tokenizer = Tokenizer::new().unwrap();
+    /// let tagged = tokenizer.pos("아버지가방에들어가신다");
+    /// // [("아버지", "NNG"), ("가", "JKS"), ("방", "NNG"), ...]
+    /// ```
     pub fn pos(&mut self, text: &str) -> Vec<(String, String)> {
         self.tokenize(text)
             .into_iter()
@@ -541,12 +606,19 @@ impl Tokenizer {
     }
 
     /// 시스템 사전 참조 반환
+    ///
+    /// 내부 시스템 사전에 대한 읽기 전용 참조를 반환합니다.
+    /// 사전 정보 조회나 디버깅에 유용합니다.
     #[must_use]
     pub const fn dictionary(&self) -> &SystemDictionary {
         &self.dictionary
     }
 
-    /// Lattice 통계 정보 (디버깅용)
+    /// Lattice 통계 정보
+    ///
+    /// 마지막 분석에서 생성된 Lattice의 통계 정보를 반환합니다.
+    /// 노드 수, 엣지 수 등 디버깅 및 프로파일링에 유용합니다.
+    #[must_use]
     pub fn lattice_stats(&self) -> crate::lattice::LatticeStats {
         self.lattice.stats()
     }
