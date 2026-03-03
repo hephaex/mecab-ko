@@ -300,9 +300,11 @@ PyPI/npm 배포 준비, 문서 사이트 구축, 사전 현대화 조사
   - POS 태그 검증 (한국어 품사 태그 목록)
   - 중복 표면형 검출
   - GitHub Step Summary 품질 리포트
-- [ ] S18-06: Elasticsearch 플러그인 테스트
-  - Nori 호환성 검증
-  - 실제 검색 시나리오 테스트
+- [x] S18-06: Elasticsearch 플러그인 테스트 ✅
+  - 63개 테스트 통과 (28 unit + 30 integration + 5 doc)
+  - Nori 호환성: NoriAnalyzer, NoriTokenizer, DecompoundMode
+  - 검색 시나리오: 캐싱, 배치 분석, 필터 체인, 직렬화
+  - POS 필터, Reading Form 필터, Length 필터 검증
 
 ### P3 (Low)
 - [ ] S18-07: 문서 사이트 SEO 개선

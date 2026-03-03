@@ -29,6 +29,21 @@
   - GitHub Step Summary 품질 리포트
   - build-dictionary job이 validation 의존
   - 커밋: c1072d3
+- [x] S18-06: Elasticsearch 플러그인 테스트 ✅
+  - 63개 테스트 전체 통과:
+    - 28개 unit tests (lib.rs)
+    - 30개 integration tests (integration_test.rs)
+    - 5개 doc tests
+  - Nori 호환성 검증 완료:
+    - NoriAnalyzer, NoriTokenizer 기본 동작
+    - DecompoundMode (None, Discard, Mixed)
+    - Stoptag 관리 (J, E 등)
+  - 검색 시나리오 검증 완료:
+    - LRU 캐싱 (cache hit/miss)
+    - 배치 분석 (analyze_batch)
+    - 필터 체인 (CompositeFilter)
+    - JSON 직렬화 (AnalyzerConfig, Token)
+    - POS/ReadingForm/Length 필터
 
 ### P3
 - 대기
