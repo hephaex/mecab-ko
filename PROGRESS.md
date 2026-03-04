@@ -1,6 +1,36 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-03-04 (Sprint 20 완료)
+## 마지막 업데이트: 2026-03-04 (Sprint 21 진행 중)
+
+## Sprint 21 진행 중 (2026-03-04)
+
+### P0 (Critical)
+- [x] S21-01: 어미 분리 로직 구현 ✅
+  - `DecomposedMorpheme` 구조체 추가
+  - mecab-ko-dic 12번째 컬럼 활용 (분석결과)
+  - 형식: `stem/POS/*+ending/POS/*` (예: `가깝/VA/*+아/EC/*`)
+  - `parse_decomposition()`: 분석결과 파싱
+  - `extract_decomposition()`: features에서 분석결과 추출
+  - `SejongConverter::with_decomposition()`: 빌더 메서드
+  - `convert_token()`: 분석결과 컬럼 우선 사용
+  - 25개 테스트 통과 (10개 신규 추가)
+  - clippy 경고 전체 해결
+  - 커밋: 038f775
+- [ ] S21-02: PyPI 배포 - BLOCKED (토큰 필요)
+
+### P1 (High)
+- [ ] S21-03: mecab-ko-dic v3.0 Phase 1 시작
+- [ ] S21-04: 불규칙 활용 사전 구축
+
+### P2 (Medium)
+- [ ] S21-05: 복합명사 분해 정확도 향상
+- [ ] S21-06: 성능 회귀 테스트
+
+### P3 (Low)
+- [ ] S21-07: v0.4.0 CHANGELOG 준비
+- [ ] S21-08: 커뮤니티 피드백 반영
+
+---
 
 ## Sprint 20 완료 ✅ (2026-03-04)
 

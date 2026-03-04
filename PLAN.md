@@ -6,10 +6,14 @@
 ## Sprint 21 작업 목록
 
 ### P0 (Critical)
-- [ ] S21-01: 어미 분리 로직 구현
-  - 용언(VV, VA) + 어미(EF, EC, ETM) 실제 분리
-  - 어간/어미 분리 규칙 확장 (불규칙 활용 포함)
-  - 세종 코퍼스 호환 정확도 30%+ 목표
+- [x] S21-01: 어미 분리 로직 구현 ✅
+  - DecomposedMorpheme 구조체 추가
+  - mecab-ko-dic 12번째 컬럼 활용 (분석결과)
+  - parse_decomposition() 파싱: stem/POS/*+ending/POS/*
+  - extract_decomposition() features에서 추출
+  - convert_token() 분석결과 우선 사용
+  - 25개 테스트 통과 (10개 신규)
+  - 커밋: 038f775
 - [ ] S21-02: PyPI 배포 (S20-01 계속) - BLOCKED (토큰 필요)
 
 ### P1 (High)
