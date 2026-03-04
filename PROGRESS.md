@@ -1,8 +1,8 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-03-04 (Sprint 20 진행 중)
+## 마지막 업데이트: 2026-03-04 (Sprint 20 완료)
 
-## Sprint 20 진행 중 (2026-03-04)
+## Sprint 20 완료 ✅ (2026-03-04)
 
 ### P0 (Critical)
 - [ ] S20-01: PyPI 배포 - BLOCKED (토큰 필요)
@@ -31,7 +31,9 @@
   - API 응답 구조 파싱 (Item.sense[] 구조)
   - User-Agent 헤더 추가
   - 테스트 검색어: 메타버스, 인플루언서, 워라밸 등 성공
-  - GitHub Secrets 설정 필요 (OPENDICT_API_KEY)
+  - GitHub Actions 워크플로우 수정 (secrets 접근 오류 해결)
+  - neologism-sync.yml 워크플로우 동작 확인
+  - 커밋: 6d038b2
 
 ### P2 (Medium)
 - [x] S20-05: v0.3.1 릴리스 ✅
