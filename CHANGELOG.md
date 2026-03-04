@@ -5,6 +5,53 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-03-05
+
+### Added
+
+#### Decomposition-based Morpheme Separation (mecab-ko-core)
+- `DecomposedMorpheme` - Structure for parsed decomposition data
+- `parse_decomposition()` - Parse mecab-ko-dic 12th column format
+- `extract_decomposition()` - Extract decomposition from features
+- `SejongConverter::with_decomposition()` - Enable decomposition mode
+- Support for 7 irregular conjugation patterns:
+  - ㅂ불규칙: 가깝다 → 가까워
+  - ㄷ불규칙: 듣다 → 들어
+  - ㅅ불규칙: 짓다 → 지어
+  - 르불규칙: 모르다 → 몰라
+  - 으불규칙: 쓰다 → 써
+  - ㄹ불규칙: 살다 → 사는
+  - 여불규칙: 하다 → 해
+- 25 sejong tests passing
+
+#### Enhanced Compound Noun Decomposition (mecab-ko-core)
+- `COMPOUND_DICT` - Dictionary-based compound decomposition (50+ patterns)
+- `PREFIXES` - Extended prefix list (23 entries)
+- `SUFFIXES` - Extended suffix list (27 entries)
+- `try_dict_decompose()` - Exact compound matching
+- Decomposition priority: Dictionary → Suffix → Prefix → Heuristics
+- 32 nori_compat tests passing
+
+#### Neologism Dictionary Expansion (mecab-ko-dic v3.0)
+- 511 neologisms (315% increase from 123)
+- Categories:
+  - AI/ML: Claude, Gemini, Midjourney, RAG, AGI
+  - Social: Threads, Bluesky, Shorts, 크리에이터
+  - MZ Generation: 갓생, 무지출, 킹받다, 레게노
+  - Economy: HBM, 밈주식, DSR
+  - Tech: Rust, Kubernetes, Docker
+  - K-culture: K팝, 최애, 덕질, 굿즈
+
+### Documentation
+
+#### Irregular Conjugation Patterns
+- `docs/research/dictionary/irregular-conjugation.md`
+- Complete documentation of 7 irregular patterns
+- mecab-ko-dic decomposition column format
+- Example vocabulary tables
+
+---
+
 ## [0.3.1] - 2026-03-04
 
 ### Added
