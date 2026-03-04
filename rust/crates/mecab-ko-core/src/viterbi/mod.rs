@@ -383,6 +383,7 @@ impl ViterbiSearcher {
 
     /// 단일 노드의 최소 비용 계산 및 업데이트 (레거시, 테스트용으로 유지)
     #[cfg(test)]
+    #[allow(dead_code)]
     fn update_node_cost<C: ConnectionCost>(
         &self,
         lattice: &mut Lattice,

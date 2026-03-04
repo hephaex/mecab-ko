@@ -8,6 +8,14 @@
 //! - mecab-ko-dic: 어미 결합 (갔다/VV+EF)
 //! - 세종 코퍼스: 어미 분리 (갔/VV 다/EF)
 //!
+//! # 분석결과 활용
+//!
+//! mecab-ko-dic의 12번째 컬럼에는 형태소 분해 정보가 저장되어 있습니다:
+//! - 형식: `stem/POS/*+ending/POS/*`
+//! - 예시: `가깝/VA/*+아/EC/*` (가까와 → 가깝 + 아)
+//!
+//! 이 정보를 활용하면 불규칙 활용도 정확하게 분리할 수 있습니다.
+//!
 //! # 예제
 //!
 //! ```rust,no_run
@@ -107,12 +115,23 @@ impl EndingRule {
     }
 }
 
+/// 분석결과에서 파싱된 형태소
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DecomposedMorpheme {
+    /// 형태소 표면형
+    pub surface: String,
+    /// 품사 태그
+    pub pos: String,
+}
+
 /// 세종 코퍼스 형식 변환기
 pub struct SejongConverter {
     /// 품사 태그 매핑 테이블 (복합 → 분리)
     tag_map: HashMap<String, Vec<String>>,
     /// 어미 분리 규칙
     ending_rules: Vec<EndingRule>,
+    /// 분석결과 컬럼 사용 여부 (불규칙 활용 지원)
+    use_decomposition: bool,
 }
 
 impl Default for SejongConverter {
@@ -128,10 +147,75 @@ impl SejongConverter {
         let mut converter = Self {
             tag_map: HashMap::new(),
             ending_rules: Vec::new(),
+            use_decomposition: true, // 기본값: 분석결과 컬럼 활용
         };
         converter.init_tag_map();
         converter.init_ending_rules();
         converter
+    }
+
+    /// 분석결과 사용 여부 설정
+    ///
+    /// `true`이면 mecab-ko-dic의 12번째 컬럼(분석결과)을 우선 사용합니다.
+    /// 불규칙 활용을 정확하게 처리하려면 `true`로 설정하세요.
+    #[must_use]
+    pub const fn with_decomposition(mut self, use_decomposition: bool) -> Self {
+        self.use_decomposition = use_decomposition;
+        self
+    }
+
+    /// 분석결과 컬럼에서 형태소 분해 정보 파싱
+    ///
+    /// 형식: `stem/POS/*+ending/POS/*+...`
+    /// 예시: `가깝/VA/*+아/EC/*` → [("가깝", "VA"), ("아", "EC")]
+    #[must_use]
+    pub fn parse_decomposition(decomposition: &str) -> Vec<DecomposedMorpheme> {
+        if decomposition.is_empty() || decomposition == "*" {
+            return Vec::new();
+        }
+
+        let mut result = Vec::new();
+
+        // '+' 로 분리하여 각 형태소 파싱
+        for part in decomposition.split('+') {
+            let part = part.trim();
+            if part.is_empty() {
+                continue;
+            }
+
+            // 형식: surface/POS/* 또는 surface/POS
+            let segments: Vec<&str> = part.split('/').collect();
+            if segments.len() >= 2 {
+                let surface = segments[0].to_string();
+                let pos = segments[1].to_string();
+
+                // 빈 표면형이나 '*' 는 스킵
+                if !surface.is_empty() && surface != "*" && !pos.is_empty() && pos != "*" {
+                    result.push(DecomposedMorpheme { surface, pos });
+                }
+            }
+        }
+
+        result
+    }
+
+    /// feature 문자열에서 분석결과(12번째 컬럼) 추출
+    ///
+    /// mecab-ko-dic CSV 형식:
+    /// `품사,의미분류,종성,읽기,타입,첫품사,끝품사,분석결과`
+    /// (0~7, 총 8개 필드이지만 인덱스 7이 분석결과)
+    #[must_use]
+    pub fn extract_decomposition(features: &str) -> Option<String> {
+        let fields: Vec<&str> = features.split(',').collect();
+        // 분석결과는 8번째 필드 (인덱스 7) 또는 그 이후
+        // Inflect 타입의 경우 인덱스 7에 분석결과가 있음
+        if fields.len() >= 8 {
+            let decomp = fields[7].trim();
+            if !decomp.is_empty() && decomp != "*" {
+                return Some(decomp.to_string());
+            }
+        }
+        None
     }
 
     /// 품사 태그 매핑 테이블 초기화
@@ -317,14 +401,14 @@ impl SejongConverter {
     /// 복합 품사 태그를 분리된 태그 목록으로 변환
     #[must_use]
     pub fn split_compound_tag(&self, pos: &str) -> Vec<String> {
-        if let Some(tags) = self.tag_map.get(pos) {
-            tags.clone()
-        } else if pos.contains('+') {
-            // 매핑 테이블에 없으면 단순 분리
-            pos.split('+').map(String::from).collect()
-        } else {
-            vec![pos.to_string()]
-        }
+        self.tag_map.get(pos).cloned().unwrap_or_else(|| {
+            if pos.contains('+') {
+                // 매핑 테이블에 없으면 단순 분리
+                pos.split('+').map(String::from).collect()
+            } else {
+                vec![pos.to_string()]
+            }
+        })
     }
 
     /// 표면형에서 어미를 분리
@@ -353,7 +437,7 @@ impl SejongConverter {
                             let stem: String = surface.chars().take(stem_len).collect();
 
                             // 분리된 형태소 생성
-                            return self.create_split_morphemes(&stem, ending, &rule.target_tags);
+                            return Self::create_split_morphemes(&stem, ending, &rule.target_tags);
                         }
                     }
                 }
@@ -372,7 +456,6 @@ impl SejongConverter {
 
     /// 분리된 형태소 생성 (어간 + 어미들)
     fn create_split_morphemes(
-        &self,
         stem: &str,
         ending: &str,
         tags: &[String],
@@ -386,10 +469,10 @@ impl SejongConverter {
         } else if tags.len() == 3 {
             // 어간 + 선어말어미 + 종결어미 (예: VV + EP + EF)
             // 어미 부분에서 선어말어미와 종결어미 분리 시도
-            let (ep_part, ef_part) = self.split_prefinal_ending(ending);
+            let (prefinal, final_ending) = Self::split_prefinal_ending(ending);
             result.push((stem.to_string(), tags[0].clone()));
-            result.push((ep_part, tags[1].clone()));
-            result.push((ef_part, tags[2].clone()));
+            result.push((prefinal, tags[1].clone()));
+            result.push((final_ending, tags[2].clone()));
         } else {
             // 기타 경우
             result.push((stem.to_string(), tags[0].clone()));
@@ -402,16 +485,16 @@ impl SejongConverter {
     }
 
     /// 선어말어미와 종결어미 분리
-    fn split_prefinal_ending(&self, ending: &str) -> (String, String) {
+    fn split_prefinal_ending(ending: &str) -> (String, String) {
         // 선어말어미 패턴: 었, 았, 였, 겠 등
         let prefinal_patterns = ["었", "았", "였", "겠"];
 
         for pattern in &prefinal_patterns {
             if ending.starts_with(pattern) {
-                let ep = pattern.to_string();
-                let ef: String = ending.chars().skip(pattern.chars().count()).collect();
-                if !ef.is_empty() {
-                    return (ep, ef);
+                let prefinal = (*pattern).to_string();
+                let final_part: String = ending.chars().skip(pattern.chars().count()).collect();
+                if !final_part.is_empty() {
+                    return (prefinal, final_part);
                 }
             }
         }
@@ -421,8 +504,25 @@ impl SejongConverter {
     }
 
     /// 토큰을 세종 형식으로 변환
+    ///
+    /// 변환 우선순위:
+    /// 1. 분석결과 컬럼 사용 (`use_decomposition=true`, features에 분석결과 있는 경우)
+    /// 2. 규칙 기반 어미 분리 (`ending_rules`)
+    /// 3. 태그만 분리 (복합 태그인 경우)
+    /// 4. 그대로 반환 (단순 태그인 경우)
     #[must_use]
     pub fn convert_token(&self, token: &Token) -> Vec<SejongToken> {
+        // 1. 분석결과 컬럼 활용 시도
+        if self.use_decomposition && !token.features.is_empty() {
+            if let Some(decomp) = Self::extract_decomposition(&token.features) {
+                let morphemes = Self::parse_decomposition(&decomp);
+                if !morphemes.is_empty() {
+                    return Self::morphemes_to_sejong_tokens(&morphemes, token);
+                }
+            }
+        }
+
+        // 2. 규칙 기반 어미 분리
         let morphemes = self.split_morpheme(&token.surface, &token.pos);
 
         if morphemes.len() == 1 {
@@ -450,6 +550,33 @@ impl SejongConverter {
                 end_pos,
                 &token.surface,
                 &token.pos,
+            ));
+
+            current_pos = end_pos;
+        }
+
+        result
+    }
+
+    /// 분해된 형태소를 `SejongToken`으로 변환
+    fn morphemes_to_sejong_tokens(
+        morphemes: &[DecomposedMorpheme],
+        original_token: &Token,
+    ) -> Vec<SejongToken> {
+        let mut result = Vec::new();
+        let mut current_pos = original_token.start_pos;
+
+        for morpheme in morphemes {
+            let char_len = morpheme.surface.chars().count();
+            let end_pos = current_pos + char_len;
+
+            result.push(SejongToken::from_split(
+                &morpheme.surface,
+                &morpheme.pos,
+                current_pos,
+                end_pos,
+                &original_token.surface,
+                &original_token.pos,
             ));
 
             current_pos = end_pos;
@@ -689,5 +816,143 @@ mod tests {
         assert_eq!(result[0], ("먹".to_string(), "VV".to_string()));
         assert_eq!(result[1], ("었".to_string(), "EP".to_string()));
         assert_eq!(result[2], ("습니다".to_string(), "EF".to_string()));
+    }
+
+    // ============================================================
+    // 분석결과(decomposition) 파싱 테스트
+    // ============================================================
+
+    #[test]
+    fn test_parse_decomposition_simple() {
+        // 단순 형태소: stem/POS/*
+        let decomp = "가깝/VA/*+아/EC/*";
+        let result = SejongConverter::parse_decomposition(decomp);
+
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0].surface, "가깝");
+        assert_eq!(result[0].pos, "VA");
+        assert_eq!(result[1].surface, "아");
+        assert_eq!(result[1].pos, "EC");
+    }
+
+    #[test]
+    fn test_parse_decomposition_three_parts() {
+        // 3개 형태소: VV + EP + EF
+        let decomp = "먹/VV/*+었/EP/*+다/EF/*";
+        let result = SejongConverter::parse_decomposition(decomp);
+
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0].surface, "먹");
+        assert_eq!(result[0].pos, "VV");
+        assert_eq!(result[1].surface, "었");
+        assert_eq!(result[1].pos, "EP");
+        assert_eq!(result[2].surface, "다");
+        assert_eq!(result[2].pos, "EF");
+    }
+
+    #[test]
+    fn test_parse_decomposition_irregular_verb() {
+        // ㅂ불규칙: 가깝 + 아 → 가까와
+        let decomp = "가깝/VA/*+아/EC/*";
+        let result = SejongConverter::parse_decomposition(decomp);
+
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0].surface, "가깝");
+        assert_eq!(result[0].pos, "VA");
+        assert_eq!(result[1].surface, "아");
+        assert_eq!(result[1].pos, "EC");
+    }
+
+    #[test]
+    fn test_parse_decomposition_empty() {
+        assert!(SejongConverter::parse_decomposition("").is_empty());
+        assert!(SejongConverter::parse_decomposition("*").is_empty());
+    }
+
+    #[test]
+    fn test_extract_decomposition_from_features() {
+        // Inflect.csv 형식: 품사,의미분류,종성,읽기,타입,첫품사,끝품사,분석결과
+        let features = "VA+EC,*,F,가까와,Inflect,VA,EC,가깝/VA/*+아/EC/*";
+        let result = SejongConverter::extract_decomposition(features);
+
+        assert!(result.is_some());
+        assert_eq!(result.unwrap(), "가깝/VA/*+아/EC/*");
+    }
+
+    #[test]
+    fn test_extract_decomposition_no_decomp() {
+        // 분석결과가 없는 경우
+        let features = "NNG,*,T,학교,*,*,*";
+        let result = SejongConverter::extract_decomposition(features);
+
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_convert_token_with_decomposition() {
+        let converter = SejongConverter::new();
+
+        // 분석결과가 있는 토큰 (불규칙 활용)
+        let token = Token {
+            surface: "가까와".to_string(),
+            pos: "VA+EC".to_string(),
+            start_pos: 0,
+            end_pos: 3,
+            start_byte: 0,
+            end_byte: 9,
+            reading: None,
+            lemma: None,
+            cost: 0,
+            features: "VA+EC,*,F,가까와,Inflect,VA,EC,가깝/VA/*+아/EC/*".to_string(),
+            normalized: None,
+        };
+
+        let sejong_tokens = converter.convert_token(&token);
+
+        // 분석결과를 활용하여 정확하게 분리
+        assert_eq!(sejong_tokens.len(), 2);
+        assert_eq!(sejong_tokens[0].surface, "가깝");
+        assert_eq!(sejong_tokens[0].pos, "VA");
+        assert_eq!(sejong_tokens[1].surface, "아");
+        assert_eq!(sejong_tokens[1].pos, "EC");
+    }
+
+    #[test]
+    fn test_convert_token_without_decomposition_flag() {
+        // 분석결과 비활성화 시 규칙 기반 분리
+        let converter = SejongConverter::new().with_decomposition(false);
+
+        let token = Token {
+            surface: "가까와".to_string(),
+            pos: "VA+EC".to_string(),
+            start_pos: 0,
+            end_pos: 3,
+            start_byte: 0,
+            end_byte: 9,
+            reading: None,
+            lemma: None,
+            cost: 0,
+            features: "VA+EC,*,F,가까와,Inflect,VA,EC,가깝/VA/*+아/EC/*".to_string(),
+            normalized: None,
+        };
+
+        let sejong_tokens = converter.convert_token(&token);
+
+        // 규칙 기반으로 분리 시도 (불규칙 활용은 정확하게 분리 못함)
+        // '아'로 끝나므로 분리 가능
+        assert!(!sejong_tokens.is_empty());
+    }
+
+    #[test]
+    fn test_decomposed_morpheme_struct() {
+        use super::DecomposedMorpheme;
+
+        let morpheme = DecomposedMorpheme {
+            surface: "가깝".to_string(),
+            pos: "VA".to_string(),
+        };
+
+        assert_eq!(morpheme.surface, "가깝");
+        assert_eq!(morpheme.pos, "VA");
     }
 }

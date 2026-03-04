@@ -526,17 +526,18 @@ pub fn evaluate_dataset(tokenizer: &mut Tokenizer, dataset: &TestDataset) -> Eva
 
 /// 세종 코퍼스 호환 모드로 데이터셋 평가
 ///
-/// MeCab-Ko의 복합 태그(VV+EF 등)를 세종 코퍼스 형식으로 변환하여 평가합니다.
+/// `MeCab-Ko`의 복합 태그(VV+EF 등)를 세종 코퍼스 형식으로 변환하여 평가합니다.
 /// 이를 통해 토큰화 기준 차이를 보정하고 더 공정한 정확도를 측정합니다.
 ///
 /// # Arguments
 ///
-/// * `tokenizer` - MeCab-Ko 토크나이저
+/// * `tokenizer` - `MeCab-Ko` 토크나이저
 /// * `dataset` - 테스트 데이터셋
 ///
 /// # Returns
 ///
 /// 세종 호환 모드로 평가된 결과
+#[allow(clippy::cast_precision_loss)]
 pub fn evaluate_dataset_sejong(
     tokenizer: &mut Tokenizer,
     dataset: &TestDataset,

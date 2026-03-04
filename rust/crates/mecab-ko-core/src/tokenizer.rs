@@ -563,7 +563,7 @@ impl Tokenizer {
     /// 형태소 목록 추출
     ///
     /// [`wakati`](Self::wakati)와 동일한 기능입니다.
-    /// Python의 KoNLPy 인터페이스와 호환됩니다.
+    /// Python의 `KoNLPy` 인터페이스와 호환됩니다.
     ///
     /// # Arguments
     ///
@@ -579,7 +579,7 @@ impl Tokenizer {
     /// 품사 태깅
     ///
     /// 형태소와 품사 태그 쌍을 반환합니다.
-    /// Python의 KoNLPy 인터페이스와 호환됩니다.
+    /// Python의 `KoNLPy` 인터페이스와 호환됩니다.
     ///
     /// # Arguments
     ///

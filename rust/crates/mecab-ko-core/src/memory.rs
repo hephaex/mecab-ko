@@ -28,7 +28,7 @@ use parking_lot::RwLock;
 
 /// 품사 태그 인터너
 ///
-/// MeCab 품사 태그는 약 45개로 제한되어 있어 인터닝에 적합합니다.
+/// `MeCab` 품사 태그는 약 45개로 제한되어 있어 인터닝에 적합합니다.
 /// 스레드 안전하며 여러 토크나이저에서 공유 가능합니다.
 #[derive(Debug)]
 pub struct PosTagInterner {
@@ -66,6 +66,7 @@ impl PosTagInterner {
     /// 품사 태그 인터닝
     ///
     /// 이미 존재하면 기존 인덱스 반환, 새로우면 등록 후 인덱스 반환
+    #[allow(clippy::significant_drop_tightening)]
     pub fn intern(&self, tag: &str) -> u16 {
         self.intern_count.fetch_add(1, Ordering::Relaxed);
 
@@ -124,6 +125,7 @@ impl PosTagInterner {
 
     /// 통계 정보
     #[must_use]
+    #[allow(clippy::cast_precision_loss)]
     pub fn stats(&self) -> InternerStats {
         let intern_count = self.intern_count.load(Ordering::Relaxed);
         let hit_count = self.hit_count.load(Ordering::Relaxed);
@@ -141,6 +143,7 @@ impl PosTagInterner {
 
     /// 메모리 사용량 추정 (바이트)
     #[must_use]
+    #[allow(clippy::significant_drop_tightening)]
     pub fn memory_usage(&self) -> usize {
         let reverse = self.reverse.read();
         let tags = self.tags.read();
@@ -162,7 +165,7 @@ impl Default for PosTagInterner {
     }
 }
 
-/// 일반적인 품사 태그 (세종 품사 체계 + MeCab 확장)
+/// 일반적인 품사 태그 (세종 품사 체계 + `MeCab` 확장)
 const COMMON_POS_TAGS: &[&str] = &[
     // 체언
     "NNG", "NNP", "NNB", "NR", "NP",
@@ -292,6 +295,7 @@ impl FeatureCache {
     /// Feature 인터닝
     ///
     /// 캐시가 가득 차면 새 feature는 인터닝하지 않고 None 반환
+    #[allow(clippy::significant_drop_tightening)]
     pub fn intern(&self, feature: &str) -> Option<u32> {
         // 읽기 잠금으로 먼저 확인
         {
@@ -345,6 +349,7 @@ impl FeatureCache {
 
     /// 메모리 사용량 (바이트)
     #[must_use]
+    #[allow(clippy::significant_drop_tightening)]
     pub fn memory_usage(&self) -> usize {
         let reverse = self.reverse.read();
         let features = self.features.read();
@@ -367,7 +372,7 @@ impl Default for FeatureCache {
 /// 토큰 벡터의 메모리 사용량을 추정합니다.
 #[must_use]
 pub fn estimate_tokens_memory(tokens: &[crate::tokenizer::Token]) -> usize {
-    let base_size = tokens.len() * std::mem::size_of::<crate::tokenizer::Token>();
+    let base_size = std::mem::size_of_val(tokens);
     let string_bytes: usize = tokens
         .iter()
         .map(|t| {
