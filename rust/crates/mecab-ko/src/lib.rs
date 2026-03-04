@@ -56,6 +56,41 @@
 //! 2. **배치 처리**: 많은 텍스트를 처리할 때는 `mecab_ko_core::BatchTokenizer`를 사용하세요.
 //! 3. **캐싱**: 반복되는 입력이 있으면 `mecab_ko_core::CachingTokenizer`를 활용하세요.
 //!
+//! ## v0.4.0 새 기능
+//!
+//! ### 세종 코퍼스 호환 출력
+//!
+//! 복합 형태소를 세종 코퍼스 표준 형식으로 분리합니다.
+//!
+//! ```rust,no_run
+//! use mecab_ko::Tokenizer;
+//! use mecab_ko::sejong::SejongConverter;
+//!
+//! let mut tokenizer = Tokenizer::new().unwrap();
+//! let tokens = tokenizer.tokenize("나는 학교에 갔다");
+//!
+//! // 세종 형식 변환
+//! let converter = SejongConverter::new();
+//! let sejong_tokens = converter.convert_tokens(&tokens);
+//!
+//! for token in sejong_tokens {
+//!     println!("{}/{}", token.surface, token.pos);
+//! }
+//! // 출력: 나/NP 는/JX 학교/NNG 에/JKB 갔다오/VV ㄴ/ETM
+//! ```
+//!
+//! ### 분해 정보 추출
+//!
+//! mecab-ko-dic의 분해 컬럼(12번째)을 활용합니다.
+//!
+//! ```rust,no_run
+//! use mecab_ko::sejong::SejongConverter;
+//!
+//! // 분해 정보 파싱
+//! let decomp = SejongConverter::parse_decomposition("가깝/VA/*+아/EC/*");
+//! // 결과: [("가깝", "VA"), ("아", "EC")]
+//! ```
+//!
 //! ## 고급 기능 (v0.3.0+)
 //!
 //! ### N-best 경로 탐색
@@ -140,6 +175,13 @@ pub use mecab_ko_dict::{Dictionary, Entry};
 /// 한글 음절의 자모 분리/결합, 종성 판별 등을 제공합니다.
 pub mod hangul {
     pub use mecab_ko_hangul::*;
+}
+
+/// 세종 코퍼스 호환 (v0.4.0+)
+///
+/// 복합 형태소를 세종 코퍼스 표준 형식으로 변환합니다.
+pub mod sejong {
+    pub use mecab_ko_core::sejong::*;
 }
 
 /// 품사 태그 정의
