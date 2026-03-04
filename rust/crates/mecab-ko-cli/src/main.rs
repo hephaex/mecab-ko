@@ -428,6 +428,14 @@ struct Args {
     #[arg(long)]
     stats: bool,
 
+    /// 분해 정보 출력 (mecab-ko-dic 12번째 컬럼 활용)
+    #[arg(long)]
+    decomp: bool,
+
+    /// 세종 코퍼스 형식 출력 (복합 형태소 분리)
+    #[arg(long)]
+    sejong: bool,
+
     /// 성능 벤치마크 실행 (반복 횟수 지정)
     #[arg(long, value_name = "ITERATIONS")]
     benchmark: Option<usize>,
@@ -723,10 +731,32 @@ impl AnalysisContext {
     fn process_text_to_writer<W: Write>(&self, text: &str, writer: &mut W) -> Result<()> {
         let tokens = self.tokenizer.borrow_mut().tokenize(text);
 
+        // 세종 모드: 복합 형태소 분리
+        if self.args.sejong {
+            use mecab_ko_core::sejong::SejongConverter;
+            let converter = SejongConverter::new();
+            let sejong_tokens = converter.convert_tokens(&tokens);
+            for token in sejong_tokens {
+                writeln!(writer, "{}\t{}", token.surface, token.pos)?;
+            }
+            writeln!(writer, "EOS")?;
+            return Ok(());
+        }
+
         match self.args.output_format {
             OutputFormat::Default => {
-                for token in tokens {
-                    writeln!(writer, "{}\t{}", token.surface, token.pos)?;
+                for token in &tokens {
+                    // 분해 정보 출력 모드
+                    if self.args.decomp {
+                        use mecab_ko_core::sejong::SejongConverter;
+                        if let Some(decomp) = SejongConverter::extract_decomposition(&token.features) {
+                            writeln!(writer, "{}\t{}\t[{}]", token.surface, token.pos, decomp)?;
+                        } else {
+                            writeln!(writer, "{}\t{}\t[-]", token.surface, token.pos)?;
+                        }
+                    } else {
+                        writeln!(writer, "{}\t{}", token.surface, token.pos)?;
+                    }
                 }
                 writeln!(writer, "EOS")?;
             }
