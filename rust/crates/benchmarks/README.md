@@ -2,6 +2,34 @@
 
 종합적인 성능 벤치마크 스위트입니다. Criterion을 사용하여 정확하고 재현 가능한 성능 측정을 제공합니다.
 
+## Accuracy Dashboard
+
+정확도 추이를 시각화하는 대시보드입니다.
+
+```bash
+# 텍스트 대시보드 (터미널)
+python3 accuracy_dashboard.py
+
+# HTML 리포트 생성
+python3 accuracy_dashboard.py --format html --output accuracy_report.html
+
+# JSON 데이터 추출
+python3 accuracy_dashboard.py --format json --output accuracy_data.json
+```
+
+정확도 이력은 `accuracy_history.json`에 저장됩니다. 새 측정값은 다음 형식으로 추가:
+
+```json
+{
+  "date": "2026-03-05",
+  "version": "0.4.0",
+  "sprint": "Sprint 22",
+  "token_accuracy": 35.4,
+  "sentence_accuracy": 10.0,
+  "notes": "고빈도 어휘 강제 매핑 추가"
+}
+```
+
 ## 벤치마크 목록
 
 ### 1. Cold Start (`cold_start_bench`)

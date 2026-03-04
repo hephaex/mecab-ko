@@ -1,0 +1,46 @@
+{
+  "version": "1.0",
+  "description": "Token Accuracy 추이 기록",
+  "history": [
+    {
+      "date": "2026-03-01",
+      "version": "0.3.0",
+      "sprint": "Sprint 19",
+      "token_accuracy": 0.0,
+      "sentence_accuracy": 0.0,
+      "notes": "초기 측정 전"
+    },
+    {
+      "date": "2026-03-03",
+      "version": "0.3.1",
+      "sprint": "Sprint 20",
+      "token_accuracy": 16.8,
+      "sentence_accuracy": 0.0,
+      "notes": "기본 토큰화"
+    },
+    {
+      "date": "2026-03-04",
+      "version": "0.4.0",
+      "sprint": "Sprint 21",
+      "token_accuracy": 22.9,
+      "sentence_accuracy": 10.0,
+      "notes": "어미 분리 로직 추가"
+    },
+    {
+      "date": "2026-03-05",
+      "version": "0.4.0",
+      "sprint": "Sprint 22",
+      "token_accuracy": 27.1,
+      "sentence_accuracy": 10.0,
+      "notes": "컨텍스트 기반 품사 보정"
+    },
+    {
+      "date": "2026-03-05",
+      "version": "0.4.0",
+      "sprint": "Sprint 22",
+      "token_accuracy": 35.4,
+      "sentence_accuracy": 10.0,
+      "notes": "고빈도 어휘 강제 매핑 추가"
+    }
+  ]
+}
