@@ -739,16 +739,85 @@ impl SejongConverter {
             .flat_map(|t| self.convert_token(t))
             .collect();
 
+        // 고빈도 어휘 강제 매핑 (문맥 무관)
+        Self::apply_lexicon_overrides(&mut sejong_tokens);
+
         // 컨텍스트 기반 품사 보정
-        self.apply_context_corrections(&mut sejong_tokens);
+        Self::apply_context_corrections(&mut sejong_tokens);
 
         sejong_tokens
+    }
+
+    /// 고빈도 어휘 강제 품사 매핑
+    ///
+    /// 문맥과 관계없이 특정 표면형은 항상 특정 품사로 지정
+    fn apply_lexicon_overrides(tokens: &mut [SejongToken]) {
+        // 고빈도 어휘 -> 올바른 품사 매핑
+        let lexicon: HashMap<&str, &str> = [
+            // 인칭대명사 (NP)
+            ("나", "NP"),
+            ("너", "NP"),
+            ("저", "NP"),
+            ("우리", "NP"),
+            ("그", "NP"),
+            ("그녀", "NP"),
+            ("그것", "NP"),
+            ("이것", "NP"),
+            ("저것", "NP"),
+            ("무엇", "NP"),
+            ("누구", "NP"),
+            // 일반명사 (NNG) - 고빈도
+            ("것", "NNB"),
+            ("수", "NNB"),
+            ("때", "NNG"),
+            ("곳", "NNG"),
+            ("사람", "NNG"),
+            // 부사 (MAG)
+            ("빨리", "MAG"),
+            ("천천히", "MAG"),
+            ("잘", "MAG"),
+            ("못", "MAG"),
+            ("안", "MAG"),
+            ("더", "MAG"),
+            ("가장", "MAG"),
+            ("매우", "MAG"),
+            ("아주", "MAG"),
+            // 고유명사 (NNP) - 주요 지명
+            ("서울", "NNP"),
+            ("부산", "NNP"),
+            ("대구", "NNP"),
+            ("인천", "NNP"),
+            ("광주", "NNP"),
+            ("대전", "NNP"),
+            ("울산", "NNP"),
+            ("세종", "NNP"),
+            ("한국", "NNP"),
+            ("대한민국", "NNP"),
+            ("일본", "NNP"),
+            ("중국", "NNP"),
+            ("미국", "NNP"),
+        ]
+        .into_iter()
+        .collect();
+
+        // 강제 매핑이 필요한 품사 집합 (잘못 인식되는 품사들)
+        let overridable_poses: std::collections::HashSet<&str> =
+            ["EF", "EC", "EP", "VV", "VA", "NNG"].into_iter().collect();
+
+        for token in tokens.iter_mut() {
+            // 오버라이드 대상 품사인 경우에만 적용
+            if overridable_poses.contains(token.pos.as_str()) {
+                if let Some(&correct_pos) = lexicon.get(token.surface.as_str()) {
+                    token.pos = correct_pos.to_string();
+                }
+            }
+        }
     }
 
     /// 컨텍스트 기반 품사 보정
     ///
     /// 체언(NNG, NNP, NP) 뒤의 어미(EF)를 조사로 보정
-    fn apply_context_corrections(&self, tokens: &mut [SejongToken]) {
+    fn apply_context_corrections(tokens: &mut [SejongToken]) {
         // 조사로 보정해야 할 표면형 -> 품사 매핑
         let particle_map: HashMap<&str, &str> = [
             // 주격조사 (JKS)
