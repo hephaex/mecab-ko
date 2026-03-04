@@ -1,0 +1,693 @@
+//! 세종 코퍼스 호환 모듈
+//!
+//! mecab-ko-dic 출력을 세종 코퍼스 형식으로 변환합니다.
+//!
+//! # 배경
+//!
+//! mecab-ko-dic과 세종 코퍼스는 토큰화 기준이 다릅니다:
+//! - mecab-ko-dic: 어미 결합 (갔다/VV+EF)
+//! - 세종 코퍼스: 어미 분리 (갔/VV 다/EF)
+//!
+//! # 예제
+//!
+//! ```rust,no_run
+//! use mecab_ko_core::sejong::{SejongConverter, SejongToken};
+//! use mecab_ko_core::tokenizer::Tokenizer;
+//!
+//! let mut tokenizer = Tokenizer::new().unwrap();
+//! let converter = SejongConverter::new();
+//!
+//! let tokens = tokenizer.tokenize("갔다");
+//! let sejong_tokens = converter.convert_tokens(&tokens);
+//!
+//! // "갔다/VV+EF" -> ["갔/VV", "다/EF"]
+//! ```
+
+use crate::tokenizer::Token;
+use std::collections::HashMap;
+
+/// 세종 코퍼스 호환 토큰
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SejongToken {
+    /// 표면형
+    pub surface: String,
+    /// 세종 품사 태그
+    pub pos: String,
+    /// 원본 텍스트 시작 위치
+    pub start_pos: usize,
+    /// 원본 텍스트 끝 위치
+    pub end_pos: usize,
+    /// 분리 전 원본 표면형 (복합 형태소일 경우)
+    pub original_surface: Option<String>,
+    /// 분리 전 원본 품사 (복합 태그일 경우)
+    pub original_pos: Option<String>,
+}
+
+impl SejongToken {
+    /// 새 세종 토큰 생성
+    #[must_use]
+    pub fn new(surface: &str, pos: &str, start_pos: usize, end_pos: usize) -> Self {
+        Self {
+            surface: surface.to_string(),
+            pos: pos.to_string(),
+            start_pos,
+            end_pos,
+            original_surface: None,
+            original_pos: None,
+        }
+    }
+
+    /// 분리된 토큰 생성 (원본 정보 포함)
+    #[must_use]
+    pub fn from_split(
+        surface: &str,
+        pos: &str,
+        start_pos: usize,
+        end_pos: usize,
+        original_surface: &str,
+        original_pos: &str,
+    ) -> Self {
+        Self {
+            surface: surface.to_string(),
+            pos: pos.to_string(),
+            start_pos,
+            end_pos,
+            original_surface: Some(original_surface.to_string()),
+            original_pos: Some(original_pos.to_string()),
+        }
+    }
+
+    /// 세종 형식 문자열 반환 (표면형/품사)
+    #[must_use]
+    pub fn to_sejong_format(&self) -> String {
+        format!("{}/{}", self.surface, self.pos)
+    }
+}
+
+/// 어미 분리 규칙
+#[derive(Debug, Clone)]
+pub struct EndingRule {
+    /// 대상 품사 패턴 (예: "VV+EF")
+    pub pos_pattern: String,
+    /// 어미 목록 (우선순위 순)
+    pub endings: Vec<String>,
+    /// 분리 후 품사 태그들
+    pub target_tags: Vec<String>,
+}
+
+impl EndingRule {
+    /// 새 어미 분리 규칙 생성
+    #[must_use]
+    pub fn new(pos_pattern: &str, endings: Vec<&str>, target_tags: Vec<&str>) -> Self {
+        Self {
+            pos_pattern: pos_pattern.to_string(),
+            endings: endings.into_iter().map(String::from).collect(),
+            target_tags: target_tags.into_iter().map(String::from).collect(),
+        }
+    }
+}
+
+/// 세종 코퍼스 형식 변환기
+pub struct SejongConverter {
+    /// 품사 태그 매핑 테이블 (복합 → 분리)
+    tag_map: HashMap<String, Vec<String>>,
+    /// 어미 분리 규칙
+    ending_rules: Vec<EndingRule>,
+}
+
+impl Default for SejongConverter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl SejongConverter {
+    /// 기본 설정으로 변환기 생성
+    #[must_use]
+    pub fn new() -> Self {
+        let mut converter = Self {
+            tag_map: HashMap::new(),
+            ending_rules: Vec::new(),
+        };
+        converter.init_tag_map();
+        converter.init_ending_rules();
+        converter
+    }
+
+    /// 품사 태그 매핑 테이블 초기화
+    fn init_tag_map(&mut self) {
+        // 동사 + 어미
+        self.tag_map
+            .insert("VV+EF".to_string(), vec!["VV".to_string(), "EF".to_string()]);
+        self.tag_map
+            .insert("VV+EC".to_string(), vec!["VV".to_string(), "EC".to_string()]);
+        self.tag_map.insert(
+            "VV+ETM".to_string(),
+            vec!["VV".to_string(), "ETM".to_string()],
+        );
+        self.tag_map.insert(
+            "VV+ETN".to_string(),
+            vec!["VV".to_string(), "ETN".to_string()],
+        );
+        self.tag_map
+            .insert("VV+EP".to_string(), vec!["VV".to_string(), "EP".to_string()]);
+        self.tag_map.insert(
+            "VV+EP+EF".to_string(),
+            vec!["VV".to_string(), "EP".to_string(), "EF".to_string()],
+        );
+        self.tag_map.insert(
+            "VV+EP+EC".to_string(),
+            vec!["VV".to_string(), "EP".to_string(), "EC".to_string()],
+        );
+
+        // 형용사 + 어미
+        self.tag_map
+            .insert("VA+EF".to_string(), vec!["VA".to_string(), "EF".to_string()]);
+        self.tag_map
+            .insert("VA+EC".to_string(), vec!["VA".to_string(), "EC".to_string()]);
+        self.tag_map.insert(
+            "VA+ETM".to_string(),
+            vec!["VA".to_string(), "ETM".to_string()],
+        );
+        self.tag_map
+            .insert("VA+EP".to_string(), vec!["VA".to_string(), "EP".to_string()]);
+        self.tag_map.insert(
+            "VA+EP+EF".to_string(),
+            vec!["VA".to_string(), "EP".to_string(), "EF".to_string()],
+        );
+
+        // 보조용언 + 어미
+        self.tag_map
+            .insert("VX+EF".to_string(), vec!["VX".to_string(), "EF".to_string()]);
+        self.tag_map
+            .insert("VX+EC".to_string(), vec!["VX".to_string(), "EC".to_string()]);
+
+        // 긍정/부정 지정사 + 어미
+        self.tag_map.insert(
+            "VCP+EF".to_string(),
+            vec!["VCP".to_string(), "EF".to_string()],
+        );
+        self.tag_map.insert(
+            "VCN+EF".to_string(),
+            vec!["VCN".to_string(), "EF".to_string()],
+        );
+
+        // 체언 + 조사 (선택적)
+        self.tag_map.insert(
+            "NNG+JKS".to_string(),
+            vec!["NNG".to_string(), "JKS".to_string()],
+        );
+        self.tag_map.insert(
+            "NNG+JKO".to_string(),
+            vec!["NNG".to_string(), "JKO".to_string()],
+        );
+        self.tag_map.insert(
+            "NNG+JKB".to_string(),
+            vec!["NNG".to_string(), "JKB".to_string()],
+        );
+        self.tag_map.insert(
+            "NNP+JKS".to_string(),
+            vec!["NNP".to_string(), "JKS".to_string()],
+        );
+        self.tag_map.insert(
+            "NNP+JKO".to_string(),
+            vec!["NNP".to_string(), "JKO".to_string()],
+        );
+    }
+
+    /// 어미 분리 규칙 초기화
+    fn init_ending_rules(&mut self) {
+        // 종결어미 (EF)
+        self.ending_rules.push(EndingRule::new(
+            "VV+EF",
+            vec![
+                "습니다", "ㅂ니다", "는다", "ㄴ다", "다", "어요", "아요", "요", "어", "아", "지",
+                "네", "군", "구나",
+            ],
+            vec!["VV", "EF"],
+        ));
+
+        self.ending_rules.push(EndingRule::new(
+            "VA+EF",
+            vec![
+                "습니다", "ㅂ니다", "다", "어요", "아요", "요", "어", "아", "지", "네", "군",
+            ],
+            vec!["VA", "EF"],
+        ));
+
+        // 연결어미 (EC)
+        self.ending_rules.push(EndingRule::new(
+            "VV+EC",
+            vec![
+                "고", "면", "서", "니", "니까", "어서", "아서", "며", "지만", "는데", "ㄴ데",
+            ],
+            vec!["VV", "EC"],
+        ));
+
+        self.ending_rules.push(EndingRule::new(
+            "VA+EC",
+            vec![
+                "고", "면", "서", "니", "니까", "어서", "아서", "며", "지만", "ㄴ데",
+            ],
+            vec!["VA", "EC"],
+        ));
+
+        // 관형형어미 (ETM)
+        self.ending_rules.push(EndingRule::new(
+            "VV+ETM",
+            vec!["는", "ㄴ", "ㄹ", "을", "던"],
+            vec!["VV", "ETM"],
+        ));
+
+        self.ending_rules.push(EndingRule::new(
+            "VA+ETM",
+            vec!["ㄴ", "ㄹ", "을", "던"],
+            vec!["VA", "ETM"],
+        ));
+
+        // 명사형어미 (ETN)
+        self.ending_rules.push(EndingRule::new(
+            "VV+ETN",
+            vec!["기", "ㅁ", "음"],
+            vec!["VV", "ETN"],
+        ));
+
+        // 선어말어미 + 종결어미 (EP+EF)
+        self.ending_rules.push(EndingRule::new(
+            "VV+EP+EF",
+            vec![
+                "었습니다",
+                "았습니다",
+                "였습니다",
+                "었어요",
+                "았어요",
+                "였어요",
+                "었다",
+                "았다",
+                "였다",
+                "었어",
+                "았어",
+            ],
+            vec!["VV", "EP", "EF"],
+        ));
+
+        self.ending_rules.push(EndingRule::new(
+            "VA+EP+EF",
+            vec![
+                "었습니다",
+                "았습니다",
+                "였습니다",
+                "었어요",
+                "았어요",
+                "였어요",
+                "었다",
+                "았다",
+                "였다",
+            ],
+            vec!["VA", "EP", "EF"],
+        ));
+    }
+
+    /// 복합 품사 태그인지 확인
+    #[must_use]
+    pub fn is_compound_tag(&self, pos: &str) -> bool {
+        pos.contains('+')
+    }
+
+    /// 복합 품사 태그를 분리된 태그 목록으로 변환
+    #[must_use]
+    pub fn split_compound_tag(&self, pos: &str) -> Vec<String> {
+        if let Some(tags) = self.tag_map.get(pos) {
+            tags.clone()
+        } else if pos.contains('+') {
+            // 매핑 테이블에 없으면 단순 분리
+            pos.split('+').map(String::from).collect()
+        } else {
+            vec![pos.to_string()]
+        }
+    }
+
+    /// 표면형에서 어미를 분리
+    ///
+    /// # Arguments
+    /// * `surface` - 표면형 (예: "갔다")
+    /// * `pos` - 품사 태그 (예: "VV+EF")
+    ///
+    /// # Returns
+    /// 분리된 (표면형, 품사) 쌍의 벡터
+    #[must_use]
+    pub fn split_morpheme(&self, surface: &str, pos: &str) -> Vec<(String, String)> {
+        // 복합 태그가 아니면 그대로 반환
+        if !self.is_compound_tag(pos) {
+            return vec![(surface.to_string(), pos.to_string())];
+        }
+
+        // 적용 가능한 규칙 찾기
+        for rule in &self.ending_rules {
+            if rule.pos_pattern == pos {
+                // 어미 패턴 매칭 시도
+                for ending in &rule.endings {
+                    if surface.ends_with(ending) {
+                        let stem_len = surface.chars().count() - ending.chars().count();
+                        if stem_len > 0 {
+                            let stem: String = surface.chars().take(stem_len).collect();
+
+                            // 분리된 형태소 생성
+                            return self.create_split_morphemes(&stem, ending, &rule.target_tags);
+                        }
+                    }
+                }
+            }
+        }
+
+        // 규칙이 적용되지 않으면 태그만 분리
+        let tags = self.split_compound_tag(pos);
+        if tags.len() > 1 {
+            // 어미를 분리할 수 없으면 표면형 전체에 첫 번째 태그 부여
+            return vec![(surface.to_string(), tags[0].clone())];
+        }
+
+        vec![(surface.to_string(), pos.to_string())]
+    }
+
+    /// 분리된 형태소 생성 (어간 + 어미들)
+    fn create_split_morphemes(
+        &self,
+        stem: &str,
+        ending: &str,
+        tags: &[String],
+    ) -> Vec<(String, String)> {
+        let mut result = Vec::new();
+
+        if tags.len() == 2 {
+            // 어간 + 어미 (예: VV + EF)
+            result.push((stem.to_string(), tags[0].clone()));
+            result.push((ending.to_string(), tags[1].clone()));
+        } else if tags.len() == 3 {
+            // 어간 + 선어말어미 + 종결어미 (예: VV + EP + EF)
+            // 어미 부분에서 선어말어미와 종결어미 분리 시도
+            let (ep_part, ef_part) = self.split_prefinal_ending(ending);
+            result.push((stem.to_string(), tags[0].clone()));
+            result.push((ep_part, tags[1].clone()));
+            result.push((ef_part, tags[2].clone()));
+        } else {
+            // 기타 경우
+            result.push((stem.to_string(), tags[0].clone()));
+            if tags.len() > 1 {
+                result.push((ending.to_string(), tags[tags.len() - 1].clone()));
+            }
+        }
+
+        result
+    }
+
+    /// 선어말어미와 종결어미 분리
+    fn split_prefinal_ending(&self, ending: &str) -> (String, String) {
+        // 선어말어미 패턴: 었, 았, 였, 겠 등
+        let prefinal_patterns = ["었", "았", "였", "겠"];
+
+        for pattern in &prefinal_patterns {
+            if ending.starts_with(pattern) {
+                let ep = pattern.to_string();
+                let ef: String = ending.chars().skip(pattern.chars().count()).collect();
+                if !ef.is_empty() {
+                    return (ep, ef);
+                }
+            }
+        }
+
+        // 분리 불가능하면 전체를 EP로
+        (ending.to_string(), String::new())
+    }
+
+    /// 토큰을 세종 형식으로 변환
+    #[must_use]
+    pub fn convert_token(&self, token: &Token) -> Vec<SejongToken> {
+        let morphemes = self.split_morpheme(&token.surface, &token.pos);
+
+        if morphemes.len() == 1 {
+            // 분리되지 않은 경우
+            return vec![SejongToken::new(
+                &token.surface,
+                &morphemes[0].1,
+                token.start_pos,
+                token.end_pos,
+            )];
+        }
+
+        // 분리된 경우
+        let mut result = Vec::new();
+        let mut current_pos = token.start_pos;
+
+        for (surface, pos) in &morphemes {
+            let char_len = surface.chars().count();
+            let end_pos = current_pos + char_len;
+
+            result.push(SejongToken::from_split(
+                surface,
+                pos,
+                current_pos,
+                end_pos,
+                &token.surface,
+                &token.pos,
+            ));
+
+            current_pos = end_pos;
+        }
+
+        result
+    }
+
+    /// 토큰 목록을 세종 형식으로 변환
+    #[must_use]
+    pub fn convert_tokens(&self, tokens: &[Token]) -> Vec<SejongToken> {
+        tokens
+            .iter()
+            .flat_map(|t| self.convert_token(t))
+            .collect()
+    }
+
+    /// 세종 형식 문자열로 변환
+    #[must_use]
+    pub fn format_sejong(&self, tokens: &[SejongToken]) -> String {
+        tokens
+            .iter()
+            .map(SejongToken::to_sejong_format)
+            .collect::<Vec<_>>()
+            .join(" ")
+    }
+
+    /// 토큰을 세종 형식 문자열로 직접 변환
+    #[must_use]
+    pub fn tokens_to_sejong_string(&self, tokens: &[Token]) -> String {
+        let sejong_tokens = self.convert_tokens(tokens);
+        self.format_sejong(&sejong_tokens)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn create_test_token(surface: &str, pos: &str) -> Token {
+        Token {
+            surface: surface.to_string(),
+            pos: pos.to_string(),
+            start_pos: 0,
+            end_pos: surface.chars().count(),
+            start_byte: 0,
+            end_byte: surface.len(),
+            reading: None,
+            lemma: None,
+            cost: 0,
+            features: String::new(),
+            normalized: None,
+        }
+    }
+
+    #[test]
+    fn test_is_compound_tag() {
+        let converter = SejongConverter::new();
+        assert!(converter.is_compound_tag("VV+EF"));
+        assert!(converter.is_compound_tag("VA+EP+EF"));
+        assert!(!converter.is_compound_tag("NNG"));
+        assert!(!converter.is_compound_tag("VV"));
+    }
+
+    #[test]
+    fn test_split_compound_tag() {
+        let converter = SejongConverter::new();
+
+        assert_eq!(
+            converter.split_compound_tag("VV+EF"),
+            vec!["VV", "EF"]
+        );
+        assert_eq!(
+            converter.split_compound_tag("VV+EP+EF"),
+            vec!["VV", "EP", "EF"]
+        );
+        assert_eq!(
+            converter.split_compound_tag("NNG"),
+            vec!["NNG"]
+        );
+    }
+
+    #[test]
+    fn test_simple_verb_ending_split() {
+        let converter = SejongConverter::new();
+
+        // 갔다 -> 갔 + 다
+        let result = converter.split_morpheme("갔다", "VV+EF");
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], ("갔".to_string(), "VV".to_string()));
+        assert_eq!(result[1], ("다".to_string(), "EF".to_string()));
+    }
+
+    #[test]
+    fn test_polite_ending_split() {
+        let converter = SejongConverter::new();
+
+        // 먹습니다 -> 먹 + 습니다
+        let result = converter.split_morpheme("먹습니다", "VV+EF");
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], ("먹".to_string(), "VV".to_string()));
+        assert_eq!(result[1], ("습니다".to_string(), "EF".to_string()));
+    }
+
+    #[test]
+    fn test_adjective_ending_split() {
+        let converter = SejongConverter::new();
+
+        // 좋다 -> 좋 + 다
+        let result = converter.split_morpheme("좋다", "VA+EF");
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], ("좋".to_string(), "VA".to_string()));
+        assert_eq!(result[1], ("다".to_string(), "EF".to_string()));
+    }
+
+    #[test]
+    fn test_connective_ending_split() {
+        let converter = SejongConverter::new();
+
+        // 먹고 -> 먹 + 고
+        let result = converter.split_morpheme("먹고", "VV+EC");
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], ("먹".to_string(), "VV".to_string()));
+        assert_eq!(result[1], ("고".to_string(), "EC".to_string()));
+    }
+
+    #[test]
+    fn test_adnominal_ending_split() {
+        let converter = SejongConverter::new();
+
+        // 먹는 -> 먹 + 는
+        let result = converter.split_morpheme("먹는", "VV+ETM");
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], ("먹".to_string(), "VV".to_string()));
+        assert_eq!(result[1], ("는".to_string(), "ETM".to_string()));
+    }
+
+    #[test]
+    fn test_past_tense_ending_split() {
+        let converter = SejongConverter::new();
+
+        // 먹었다 -> 먹 + 었 + 다
+        let result = converter.split_morpheme("먹었다", "VV+EP+EF");
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0], ("먹".to_string(), "VV".to_string()));
+        assert_eq!(result[1], ("었".to_string(), "EP".to_string()));
+        assert_eq!(result[2], ("다".to_string(), "EF".to_string()));
+    }
+
+    #[test]
+    fn test_non_compound_tag() {
+        let converter = SejongConverter::new();
+
+        // 단순 품사는 분리하지 않음
+        let result = converter.split_morpheme("학교", "NNG");
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0], ("학교".to_string(), "NNG".to_string()));
+    }
+
+    #[test]
+    fn test_convert_token() {
+        let converter = SejongConverter::new();
+
+        let token = create_test_token("갔다", "VV+EF");
+        let sejong_tokens = converter.convert_token(&token);
+
+        assert_eq!(sejong_tokens.len(), 2);
+        assert_eq!(sejong_tokens[0].surface, "갔");
+        assert_eq!(sejong_tokens[0].pos, "VV");
+        assert_eq!(sejong_tokens[1].surface, "다");
+        assert_eq!(sejong_tokens[1].pos, "EF");
+    }
+
+    #[test]
+    fn test_convert_tokens() {
+        let converter = SejongConverter::new();
+
+        let tokens = vec![
+            create_test_token("학교", "NNG"),
+            create_test_token("갔다", "VV+EF"),
+        ];
+
+        let sejong_tokens = converter.convert_tokens(&tokens);
+
+        assert_eq!(sejong_tokens.len(), 3);
+        assert_eq!(sejong_tokens[0].to_sejong_format(), "학교/NNG");
+        assert_eq!(sejong_tokens[1].to_sejong_format(), "갔/VV");
+        assert_eq!(sejong_tokens[2].to_sejong_format(), "다/EF");
+    }
+
+    #[test]
+    fn test_format_sejong() {
+        let converter = SejongConverter::new();
+
+        let tokens = vec![
+            create_test_token("학교", "NNG"),
+            create_test_token("갔다", "VV+EF"),
+        ];
+
+        let result = converter.tokens_to_sejong_string(&tokens);
+        assert_eq!(result, "학교/NNG 갔/VV 다/EF");
+    }
+
+    #[test]
+    fn test_sejong_token_format() {
+        let token = SejongToken::new("갔", "VV", 0, 1);
+        assert_eq!(token.to_sejong_format(), "갔/VV");
+    }
+
+    #[test]
+    fn test_sejong_token_from_split() {
+        let token = SejongToken::from_split("갔", "VV", 0, 1, "갔다", "VV+EF");
+        assert_eq!(token.surface, "갔");
+        assert_eq!(token.pos, "VV");
+        assert_eq!(token.original_surface, Some("갔다".to_string()));
+        assert_eq!(token.original_pos, Some("VV+EF".to_string()));
+    }
+
+    #[test]
+    fn test_informal_ending_split() {
+        let converter = SejongConverter::new();
+
+        // 먹어 -> 먹 + 어
+        let result = converter.split_morpheme("먹어", "VV+EF");
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], ("먹".to_string(), "VV".to_string()));
+        assert_eq!(result[1], ("어".to_string(), "EF".to_string()));
+    }
+
+    #[test]
+    fn test_polite_past_ending_split() {
+        let converter = SejongConverter::new();
+
+        // 먹었습니다 -> 먹 + 었 + 습니다
+        let result = converter.split_morpheme("먹었습니다", "VV+EP+EF");
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0], ("먹".to_string(), "VV".to_string()));
+        assert_eq!(result[1], ("었".to_string(), "EP".to_string()));
+        assert_eq!(result[2], ("습니다".to_string(), "EF".to_string()));
+    }
+}

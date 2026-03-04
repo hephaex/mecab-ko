@@ -139,6 +139,7 @@ pub mod nori_compat;
 pub mod normalizer;
 pub mod pool;
 pub mod pos_tag;
+pub mod sejong;
 pub mod streaming;
 pub mod tokenizer;
 pub mod unknown;
@@ -166,6 +167,7 @@ pub use pool::{
     IdVecPool, NodeVecPool, PoolManager, PoolStats, SharedStringInterner, Symbol, TokenPool,
 };
 pub use pos_tag::PosTag;
+pub use sejong::{EndingRule, SejongConverter, SejongToken};
 pub use streaming::{
     ChunkedTokenIterator, ProgressCallback, ProgressStreamingTokenizer, StreamingProgress,
     StreamingTokenizer, TokenStream,
