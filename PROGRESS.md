@@ -29,7 +29,11 @@
 - [ ] S20-04: 신조어 자동 수집 실행
 
 ### P2 (Medium)
-- [ ] S20-05: v0.3.1 릴리스
+- [x] S20-05: v0.3.1 릴리스 ✅
+  - workspace 버전 0.3.0 → 0.3.1
+  - CHANGELOG.md v0.3.1 섹션 추가
+  - 235개 테스트 통과
+  - 커밋: c1ddcef
 - [x] S20-06: 정확도 개선 측정 ✅
   - CLI에 `--sejong` 옵션 추가
   - `evaluate_dataset_sejong()` 함수 구현

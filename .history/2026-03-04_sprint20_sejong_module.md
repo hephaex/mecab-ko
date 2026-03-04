@@ -1,4 +1,4 @@
-# Sprint 20 Session Log: Sejong Corpus Compatibility Module (2026-03-04)
+# Sprint 20 Session Log: Sejong Compatibility & v0.3.1 Release (2026-03-04)
 
 ## 세션 개요
 Sprint 20 S20-02 작업: 세종 코퍼스 호환 모듈 구현 완료
@@ -115,8 +115,39 @@ test result: ok. 16 passed; 0 failed; 0 ignored
    - 세종 호환 모드 포함
    - crates.io 발행
 
+## 추가 작업 완료
+
+### S20-06: 정확도 개선 측정 ✅
+- CLI `--sejong` 옵션 추가
+- `evaluate_dataset_sejong()` 함수 구현
+- **결과**: Token Accuracy 15.2% → 16.8% (+1.6%p)
+- 커밋: 0ef058f
+
+### S20-03: mecab-ko-dic v3.0 현대화 계획 ✅
+- `docs/research/dictionary/mecab-ko-dic-v3.0-plan.md` 작성
+- 목표: 816K → 1M+ 엔트리
+- 로드맵: Phase 1-4 (Sprint 20-26)
+- 커밋: 5b65ccd
+
+### S20-05: v0.3.1 릴리스 ✅
+- workspace 버전 0.3.0 → 0.3.1
+- CHANGELOG.md v0.3.1 섹션 추가
+- 235개 테스트 통과
+- 커밋: c1ddcef
+
+## 커밋 이력 (전체)
+
+```
+c1ddcef chore: bump version to v0.3.1 (S20-05)
+5b65ccd docs(dict): add mecab-ko-dic v3.0 modernization plan (S20-03)
+0e7a760 docs: update Sprint 20 progress with Sejong mode results
+0ef058f feat(cli): add --sejong flag to evaluate command (S20-06)
+e9c2e12 feat(core): add Sejong corpus compatibility module (S20-02)
+```
+
 ## 학습 포인트
 
 1. **토큰화 표준 차이**: 세종 코퍼스와 mecab-ko-dic은 형태소 분석 기준이 다름
 2. **어미 분리 패턴**: 한국어 용언 활용은 다양한 어미 패턴이 존재
 3. **테스트 헬퍼**: 복잡한 구조체는 테스트 헬퍼 함수로 생성 단순화
+4. **복합 태그 분리 한계**: 태그 분리만으로는 정확도 향상에 한계, 실제 어미 분리 로직 필요
