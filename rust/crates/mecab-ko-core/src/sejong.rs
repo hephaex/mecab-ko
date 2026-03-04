@@ -219,6 +219,7 @@ impl SejongConverter {
     }
 
     /// 품사 태그 매핑 테이블 초기화
+    #[allow(clippy::too_many_lines)]
     fn init_tag_map(&mut self) {
         // 동사 + 어미
         self.tag_map
@@ -276,10 +277,18 @@ impl SejongConverter {
             vec!["VCN".to_string(), "EF".to_string()],
         );
 
-        // 체언 + 조사 (선택적)
+        // 체언 + 격조사
         self.tag_map.insert(
             "NNG+JKS".to_string(),
             vec!["NNG".to_string(), "JKS".to_string()],
+        );
+        self.tag_map.insert(
+            "NNG+JKC".to_string(),
+            vec!["NNG".to_string(), "JKC".to_string()],
+        );
+        self.tag_map.insert(
+            "NNG+JKG".to_string(),
+            vec!["NNG".to_string(), "JKG".to_string()],
         );
         self.tag_map.insert(
             "NNG+JKO".to_string(),
@@ -290,6 +299,14 @@ impl SejongConverter {
             vec!["NNG".to_string(), "JKB".to_string()],
         );
         self.tag_map.insert(
+            "NNG+JKV".to_string(),
+            vec!["NNG".to_string(), "JKV".to_string()],
+        );
+        self.tag_map.insert(
+            "NNG+JKQ".to_string(),
+            vec!["NNG".to_string(), "JKQ".to_string()],
+        );
+        self.tag_map.insert(
             "NNP+JKS".to_string(),
             vec!["NNP".to_string(), "JKS".to_string()],
         );
@@ -297,9 +314,42 @@ impl SejongConverter {
             "NNP+JKO".to_string(),
             vec!["NNP".to_string(), "JKO".to_string()],
         );
+        self.tag_map.insert(
+            "NNP+JKB".to_string(),
+            vec!["NNP".to_string(), "JKB".to_string()],
+        );
+        self.tag_map.insert(
+            "NP+JKS".to_string(),
+            vec!["NP".to_string(), "JKS".to_string()],
+        );
+        self.tag_map.insert(
+            "NP+JKO".to_string(),
+            vec!["NP".to_string(), "JKO".to_string()],
+        );
+
+        // 체언 + 보조사
+        self.tag_map.insert(
+            "NNG+JX".to_string(),
+            vec!["NNG".to_string(), "JX".to_string()],
+        );
+        self.tag_map.insert(
+            "NNP+JX".to_string(),
+            vec!["NNP".to_string(), "JX".to_string()],
+        );
+        self.tag_map.insert(
+            "NP+JX".to_string(),
+            vec!["NP".to_string(), "JX".to_string()],
+        );
+
+        // 체언 + 접속조사
+        self.tag_map.insert(
+            "NNG+JC".to_string(),
+            vec!["NNG".to_string(), "JC".to_string()],
+        );
     }
 
     /// 어미 분리 규칙 초기화
+    #[allow(clippy::too_many_lines)]
     fn init_ending_rules(&mut self) {
         // 종결어미 (EF)
         self.ending_rules.push(EndingRule::new(
@@ -389,6 +439,102 @@ impl SejongConverter {
                 "였다",
             ],
             vec!["VA", "EP", "EF"],
+        ));
+
+        // ========== 조사 분리 규칙 ==========
+
+        // 주격조사 (JKS)
+        self.ending_rules.push(EndingRule::new(
+            "NNG+JKS",
+            vec!["이", "가", "께서"],
+            vec!["NNG", "JKS"],
+        ));
+        self.ending_rules.push(EndingRule::new(
+            "NNP+JKS",
+            vec!["이", "가", "께서"],
+            vec!["NNP", "JKS"],
+        ));
+        self.ending_rules.push(EndingRule::new(
+            "NP+JKS",
+            vec!["이", "가", "께서"],
+            vec!["NP", "JKS"],
+        ));
+
+        // 목적격조사 (JKO)
+        self.ending_rules.push(EndingRule::new(
+            "NNG+JKO",
+            vec!["을", "를"],
+            vec!["NNG", "JKO"],
+        ));
+        self.ending_rules.push(EndingRule::new(
+            "NNP+JKO",
+            vec!["을", "를"],
+            vec!["NNP", "JKO"],
+        ));
+        self.ending_rules.push(EndingRule::new(
+            "NP+JKO",
+            vec!["을", "를"],
+            vec!["NP", "JKO"],
+        ));
+
+        // 부사격조사 (JKB)
+        self.ending_rules.push(EndingRule::new(
+            "NNG+JKB",
+            vec!["에", "에서", "에게", "로", "으로", "한테", "보다", "처럼", "같이", "까지", "부터", "와", "과"],
+            vec!["NNG", "JKB"],
+        ));
+        self.ending_rules.push(EndingRule::new(
+            "NNP+JKB",
+            vec!["에", "에서", "에게", "로", "으로", "한테", "보다", "처럼", "같이", "까지", "부터", "와", "과"],
+            vec!["NNP", "JKB"],
+        ));
+
+        // 관형격조사 (JKG)
+        self.ending_rules.push(EndingRule::new(
+            "NNG+JKG",
+            vec!["의"],
+            vec!["NNG", "JKG"],
+        ));
+        self.ending_rules.push(EndingRule::new(
+            "NNP+JKG",
+            vec!["의"],
+            vec!["NNP", "JKG"],
+        ));
+
+        // 호격조사 (JKV)
+        self.ending_rules.push(EndingRule::new(
+            "NNG+JKV",
+            vec!["아", "야", "여", "이여"],
+            vec!["NNG", "JKV"],
+        ));
+        self.ending_rules.push(EndingRule::new(
+            "NNP+JKV",
+            vec!["아", "야", "여", "이여"],
+            vec!["NNP", "JKV"],
+        ));
+
+        // 보조사 (JX)
+        self.ending_rules.push(EndingRule::new(
+            "NNG+JX",
+            vec!["은", "는", "도", "만", "까지", "부터", "마저", "조차", "라도", "밖에", "요"],
+            vec!["NNG", "JX"],
+        ));
+        self.ending_rules.push(EndingRule::new(
+            "NNP+JX",
+            vec!["은", "는", "도", "만", "까지", "부터", "마저", "조차", "라도", "밖에", "요"],
+            vec!["NNP", "JX"],
+        ));
+        self.ending_rules.push(EndingRule::new(
+            "NP+JX",
+            vec!["은", "는", "도", "만", "까지", "부터", "마저", "조차", "라도", "밖에", "요"],
+            vec!["NP", "JX"],
+        ));
+
+        // 접속조사 (JC)
+        self.ending_rules.push(EndingRule::new(
+            "NNG+JC",
+            vec!["와", "과", "이랑", "랑", "하고"],
+            vec!["NNG", "JC"],
         ));
     }
 
