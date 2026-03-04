@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-03-04
+
+### Added
+
+#### Sejong Corpus Compatibility Mode (mecab-ko-core)
+- `SejongConverter` - Convert MeCab-Ko tokens to Sejong corpus format
+- `SejongToken` - Token structure with original surface/POS tracking
+- `EndingRule` - Morpheme splitting rules for compound tags (VV+EF, VA+EF, etc.)
+- Supported ending patterns: 다, 아/어, 았/었, ㄴ/은, ㄹ, 고, 니다/습니다
+- `format_sejong()` - Format tokens as Sejong-style output
+- 16 tests passing
+
+#### Sejong Mode Evaluation (mecab-ko-cli)
+- `--sejong` flag for `evaluate` command
+- `evaluate_dataset_sejong()` function
+- Accuracy improvement: Token 15.2% → 16.8% (+1.6%p)
+
+### Documentation
+
+#### mecab-ko-dic v3.0 Modernization Plan
+- Target: 816K → 1M+ entries
+- Data sources: NIKL API, community contributions
+- Build pipeline automation
+- Roadmap: Phase 1-4 (Sprint 20-26)
+
+---
+
 ## [0.3.0] - 2026-03-03
 
 ### Added
