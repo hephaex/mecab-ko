@@ -20,7 +20,12 @@
   - 커밋: e9c2e12
 
 ### P1 (High)
-- [ ] S20-03: mecab-ko-dic v3.0 현대화 계획
+- [x] S20-03: mecab-ko-dic v3.0 현대화 계획 ✅
+  - `docs/research/dictionary/mecab-ko-dic-v3.0-plan.md` 작성
+  - **목표**: 816K → 1M+ 엔트리, Token Accuracy 50%+
+  - **데이터 소스**: 국립국어원 API, 커뮤니티 기여, 자동 수집
+  - **로드맵**: Phase 1-4 (Sprint 20-26)
+  - 품사 태그 체계 유지 (세종 코퍼스 호환)
 - [ ] S20-04: 신조어 자동 수집 실행
 
 ### P2 (Medium)

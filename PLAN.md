@@ -12,10 +12,10 @@
   - 16개 단위 테스트, format_sejong() 출력
 
 ### P1 (High)
-- [ ] S20-03: mecab-ko-dic v3.0 현대화 계획
-  - 2018년 이후 신조어 추가 방안
-  - 품사 태그 체계 정리
-  - 사전 빌드 자동화 개선
+- [x] S20-03: mecab-ko-dic v3.0 현대화 계획 ✅
+  - docs/research/dictionary/mecab-ko-dic-v3.0-plan.md 작성
+  - 목표: 816K → 1M+ 엔트리, Token Accuracy 50%+
+  - 로드맵: Phase 1-4 (Sprint 20-26)
 - [ ] S20-04: 신조어 자동 수집 실행
   - neologism-sync.yml 트리거
   - 국립국어원 API 데이터 수집
