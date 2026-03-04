@@ -58,6 +58,7 @@ impl OpenDictClient {
 
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(config.timeout_secs))
+            .user_agent("MeCab-Ko/0.3.1 (https://github.com/hephaex/mecab-ko)")
             .build()
             .map_err(SyncError::from)?;
 
@@ -95,6 +96,8 @@ impl OpenDictClient {
     pub async fn search(&self, query: &str) -> Result<Vec<DictEntry>> {
         let url = format!("{}/search", self.config.base_url);
 
+        // Note: The OpenDict API uses default num=10. Custom num values may cause errors.
+        // We only pass the essential parameters to avoid "Invalid num value" errors.
         let response = self
             .client
             .get(&url)
@@ -102,7 +105,6 @@ impl OpenDictClient {
                 ("key", self.config.api_key.as_str()),
                 ("q", query),
                 ("req_type", "json"),
-                ("num", &self.config.max_results.to_string()),
             ])
             .send()
             .await?;

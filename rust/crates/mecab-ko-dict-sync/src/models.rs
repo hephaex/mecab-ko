@@ -211,30 +211,41 @@ pub(crate) struct Channel {
 /// Individual item in search results.
 #[derive(Debug, Clone, Deserialize)]
 pub(crate) struct Item {
-    #[serde(rename = "target_code")]
-    pub target_code: String,
-
     #[serde(rename = "word")]
     pub word: String,
 
-    #[serde(rename = "pos")]
+    #[serde(rename = "sense", default)]
+    pub sense: Vec<Sense>,
+}
+
+/// Sense (meaning) within an item.
+#[derive(Debug, Clone, Deserialize)]
+pub(crate) struct Sense {
+    #[serde(rename = "target_code", default)]
+    pub target_code: String,
+
+    #[serde(rename = "pos", default)]
     pub pos: String,
 
-    #[serde(rename = "definition")]
+    #[serde(rename = "definition", default)]
     pub definition: String,
-
-    #[serde(rename = "pronunciation")]
-    pub pronunciation: Option<String>,
 }
 
 impl From<Item> for DictEntry {
     fn from(item: Item) -> Self {
+        // Use the first sense if available
+        let (target_code, pos, definition) = item
+            .sense
+            .first()
+            .map(|s| (s.target_code.clone(), s.pos.clone(), s.definition.clone()))
+            .unwrap_or_default();
+
         Self {
-            target_code: item.target_code,
+            target_code,
             word: item.word,
-            pos: item.pos,
-            definition: item.definition,
-            reading: item.pronunciation,
+            pos,
+            definition,
+            reading: None,
         }
     }
 }
@@ -280,16 +291,31 @@ mod tests {
     #[test]
     fn test_item_to_dict_entry() {
         let item = Item {
-            target_code: "123".to_string(),
             word: "사랑".to_string(),
-            pos: "명사".to_string(),
-            definition: "애정".to_string(),
-            pronunciation: Some("사랑".to_string()),
+            sense: vec![Sense {
+                target_code: "123".to_string(),
+                pos: "명사".to_string(),
+                definition: "애정".to_string(),
+            }],
         };
 
         let entry: DictEntry = item.into();
         assert_eq!(entry.target_code, "123");
         assert_eq!(entry.word, "사랑");
-        assert_eq!(entry.reading, Some("사랑".to_string()));
+        assert_eq!(entry.pos, "명사");
+        assert_eq!(entry.definition, "애정");
+    }
+
+    #[test]
+    fn test_item_to_dict_entry_empty_sense() {
+        let item = Item {
+            word: "테스트".to_string(),
+            sense: vec![],
+        };
+
+        let entry: DictEntry = item.into();
+        assert_eq!(entry.word, "테스트");
+        assert_eq!(entry.target_code, "");
+        assert_eq!(entry.pos, "");
     }
 }
