@@ -734,10 +734,95 @@ impl SejongConverter {
     /// 토큰 목록을 세종 형식으로 변환
     #[must_use]
     pub fn convert_tokens(&self, tokens: &[Token]) -> Vec<SejongToken> {
-        tokens
+        let mut sejong_tokens: Vec<SejongToken> = tokens
             .iter()
             .flat_map(|t| self.convert_token(t))
-            .collect()
+            .collect();
+
+        // 컨텍스트 기반 품사 보정
+        self.apply_context_corrections(&mut sejong_tokens);
+
+        sejong_tokens
+    }
+
+    /// 컨텍스트 기반 품사 보정
+    ///
+    /// 체언(NNG, NNP, NP) 뒤의 어미(EF)를 조사로 보정
+    fn apply_context_corrections(&self, tokens: &mut [SejongToken]) {
+        // 조사로 보정해야 할 표면형 -> 품사 매핑
+        let particle_map: HashMap<&str, &str> = [
+            // 주격조사 (JKS)
+            ("이", "JKS"),
+            ("가", "JKS"),
+            ("께서", "JKS"),
+            // 목적격조사 (JKO)
+            ("을", "JKO"),
+            ("를", "JKO"),
+            // 부사격조사 (JKB)
+            ("에", "JKB"),
+            ("에서", "JKB"),
+            ("에게", "JKB"),
+            ("로", "JKB"),
+            ("으로", "JKB"),
+            ("한테", "JKB"),
+            ("보다", "JKB"),
+            ("처럼", "JKB"),
+            ("같이", "JKB"),
+            // 관형격조사 (JKG)
+            ("의", "JKG"),
+            // 호격조사 (JKV)
+            ("아", "JKV"),
+            ("야", "JKV"),
+            ("여", "JKV"),
+            ("이여", "JKV"),
+            // 보조사 (JX)
+            ("은", "JX"),
+            ("는", "JX"),
+            ("도", "JX"),
+            ("만", "JX"),
+            ("까지", "JX"),
+            ("부터", "JX"),
+            ("마저", "JX"),
+            ("조차", "JX"),
+            ("라도", "JX"),
+            ("밖에", "JX"),
+            ("요", "JX"),
+            // 접속조사 (JC)
+            ("와", "JC"),
+            ("과", "JC"),
+            ("이랑", "JC"),
+            ("랑", "JC"),
+            ("하고", "JC"),
+        ]
+        .into_iter()
+        .collect();
+
+        // 체언 품사 집합
+        let noun_poses: std::collections::HashSet<&str> =
+            ["NNG", "NNP", "NNB", "NP", "NR"].into_iter().collect();
+
+        // 수정이 필요한 인덱스와 새 품사를 저장
+        let mut corrections: Vec<(usize, String)> = Vec::new();
+
+        for i in 1..tokens.len() {
+            let prev_pos = &tokens[i - 1].pos;
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+
+            // 체언 뒤의 EF/EC를 조사로 보정
+            if noun_poses.contains(prev_pos.as_str())
+                && (curr_pos == "EF" || curr_pos == "EC" || curr_pos == "VV" || curr_pos == "VA")
+            {
+                if let Some(&correct_pos) = particle_map.get(curr_surface.as_str()) {
+                    corrections.push((i, correct_pos.to_string()));
+                }
+            }
+        }
+
+        // 보정 적용
+        for (idx, new_pos) in corrections {
+            tokens[idx].pos = new_pos;
+        }
     }
 
     /// 세종 형식 문자열로 변환
