@@ -67,6 +67,31 @@
     - Unreleased에 Sprint 19 변경사항 반영
   - 릴리스 준비 완료
 
+- [x] S19-06: 성능 회귀 테스트 ✅
+  - 전체 사전 (816K 엔트리) 기준 벤치마크
+  - **결과**:
+    | 입력 | 글자수 | 평균 시간 | 처리 속도 |
+    |------|--------|-----------|-----------|
+    | 짧은 텍스트 | 11자 | 3.55µs | 3.67M chars/sec |
+    | 중간 텍스트 | 67자 | 22.13µs | 3.05M chars/sec |
+  - v0.3.0 대비 성능 회귀 없음 확인
+  - 전체 사전 로드 성공 (메모리 ~150MB)
+
+### P3 (Low)
+- [x] S19-07: API 문서 개선 ✅
+  - facade 크레이트 (`mecab-ko`)에 v0.3.0 기능 re-export:
+    - `AnalysisMode`, `AnalyzerConfig`, `PosFilter`
+    - `BatchTokenizer`, `LargeFileProcessor`
+    - `CacheConfig`, `CacheStats`, `CachingTokenizer`, `TokenCache`
+    - `ImprovedNbestSearcher`, `NbestPath`, `NbestResult`
+    - `StreamingTokenizer`, `TokenStream`
+  - 고급 기능 문서 예제 추가:
+    - N-best 경로 탐색
+    - 분석 모드 (PosFilter)
+    - 토큰화 캐싱
+    - 배치 처리
+  - doc tests 6개 통과
+
 ---
 
 ## Sprint 18 완료 ✅ (2026-03-04)

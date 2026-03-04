@@ -56,6 +56,46 @@
 //! 2. **배치 처리**: 많은 텍스트를 처리할 때는 `mecab_ko_core::BatchTokenizer`를 사용하세요.
 //! 3. **캐싱**: 반복되는 입력이 있으면 `mecab_ko_core::CachingTokenizer`를 활용하세요.
 //!
+//! ## 고급 기능 (v0.3.0+)
+//!
+//! ### N-best 경로 탐색
+//!
+//! ```rust,no_run
+//! use mecab_ko::{Tokenizer, ImprovedNbestSearcher};
+//!
+//! let tokenizer = Tokenizer::new().unwrap();
+//! let nbest = ImprovedNbestSearcher::new(5); // 상위 5개 경로
+//! ```
+//!
+//! ### 분석 모드
+//!
+//! ```rust,no_run
+//! use mecab_ko::{AnalysisMode, PosFilter};
+//!
+//! // 명사만 추출
+//! let filter = PosFilter::new()
+//!     .include_prefix("NNG")
+//!     .include_prefix("NNP");
+//! ```
+//!
+//! ### 토큰화 캐싱
+//!
+//! ```rust,no_run
+//! use mecab_ko::{Tokenizer, CachingTokenizer, CacheConfig};
+//!
+//! let tokenizer = Tokenizer::new().unwrap();
+//! let cached = CachingTokenizer::new(tokenizer, CacheConfig::default());
+//! ```
+//!
+//! ### 배치/스트리밍 처리
+//!
+//! ```rust,no_run
+//! use mecab_ko::BatchTokenizer;
+//!
+//! // 병렬 배치 처리 (기본 스레드 수)
+//! let batch = BatchTokenizer::new().unwrap();
+//! ```
+//!
 //! ## 모듈 구조
 //!
 //! - [`tokenizer`]: 형태소 분석 메인 인터페이스
@@ -75,6 +115,15 @@ pub use mecab_ko_core::{
     pos_tag::PosTag,
     tokenizer::{Token, Tokenizer},
     Error, Result,
+};
+
+// Re-export v0.3.0 features
+pub use mecab_ko_core::{
+    analysis_mode::{AnalysisMode, AnalyzerConfig, PosFilter},
+    batch::{BatchTokenizer, LargeFileProcessor},
+    cache::{CacheConfig, CacheStats, CachingTokenizer, TokenCache},
+    nbest::{ImprovedNbestSearcher, NbestPath, NbestResult},
+    streaming::{StreamingTokenizer, TokenStream},
 };
 
 // Re-export hangul utilities
