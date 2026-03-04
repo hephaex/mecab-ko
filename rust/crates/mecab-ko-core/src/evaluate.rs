@@ -24,6 +24,7 @@
 //! println!("F1 Score: {:.3}", result.f1_score);
 //! ```
 
+use crate::sejong::SejongConverter;
 use crate::tokenizer::{Token, Tokenizer};
 use std::collections::HashMap;
 use std::fs::File;
@@ -480,6 +481,134 @@ pub fn evaluate_dataset(tokenizer: &mut Tokenizer, dataset: &TestDataset) -> Eva
     }
 
     // 메트릭 계산
+    let total_tokens = result.total_gold_tokens;
+    if total_tokens > 0 {
+        result.token_accuracy = result.true_positives as f64 / total_tokens as f64;
+    }
+
+    if result.total_sentences > 0 {
+        result.sentence_accuracy =
+            result.exact_match_sentences as f64 / result.total_sentences as f64;
+    }
+
+    let total_pred = result.total_pred_tokens;
+    if total_pred > 0 {
+        result.precision = result.true_positives as f64 / total_pred as f64;
+    }
+
+    if total_tokens > 0 {
+        result.recall = result.true_positives as f64 / total_tokens as f64;
+    }
+
+    if result.precision + result.recall > 0.0 {
+        result.f1_score =
+            2.0 * (result.precision * result.recall) / (result.precision + result.recall);
+    }
+
+    // 품사 정확도
+    let mut total_pos_correct = 0;
+    let mut total_pos_gold = 0;
+
+    for pos_stat in result.pos_stats.values_mut() {
+        if pos_stat.gold_count > 0 {
+            pos_stat.accuracy = pos_stat.correct as f64 / pos_stat.gold_count as f64;
+        }
+        total_pos_correct += pos_stat.correct;
+        total_pos_gold += pos_stat.gold_count;
+    }
+
+    if total_pos_gold > 0 {
+        result.pos_accuracy = total_pos_correct as f64 / total_pos_gold as f64;
+    }
+
+    result
+}
+
+/// 세종 코퍼스 호환 모드로 데이터셋 평가
+///
+/// MeCab-Ko의 복합 태그(VV+EF 등)를 세종 코퍼스 형식으로 변환하여 평가합니다.
+/// 이를 통해 토큰화 기준 차이를 보정하고 더 공정한 정확도를 측정합니다.
+///
+/// # Arguments
+///
+/// * `tokenizer` - MeCab-Ko 토크나이저
+/// * `dataset` - 테스트 데이터셋
+///
+/// # Returns
+///
+/// 세종 호환 모드로 평가된 결과
+pub fn evaluate_dataset_sejong(
+    tokenizer: &mut Tokenizer,
+    dataset: &TestDataset,
+) -> EvaluationResult {
+    let converter = SejongConverter::new();
+    let mut result = EvaluationResult::new();
+    result.total_sentences = dataset.len();
+
+    for gold_sentence in &dataset.sentences {
+        let pred_tokens = tokenizer.tokenize(&gold_sentence.text);
+
+        // 세종 형식으로 변환
+        let sejong_tokens = converter.convert_tokens(&pred_tokens);
+
+        // 변환된 토큰을 GoldToken 형식으로 변환하여 비교
+        let converted_pred: Vec<Token> = sejong_tokens
+            .iter()
+            .map(|st| Token {
+                surface: st.surface.clone(),
+                pos: st.pos.clone(),
+                start_pos: st.start_pos,
+                end_pos: st.end_pos,
+                start_byte: 0,
+                end_byte: 0,
+                reading: None,
+                lemma: None,
+                cost: 0,
+                features: String::new(),
+                normalized: None,
+            })
+            .collect();
+
+        result.total_gold_tokens += gold_sentence.tokens.len();
+        result.total_pred_tokens += converted_pred.len();
+
+        let (tp, fp, fn_, _pos_match) = evaluate_tokens(&gold_sentence.tokens, &converted_pred);
+
+        result.true_positives += tp;
+        result.false_positives += fp;
+        result.false_negatives += fn_;
+
+        // 문장 완전 일치 확인
+        if gold_sentence.tokens.len() == converted_pred.len() && tp == gold_sentence.tokens.len() {
+            result.exact_match_sentences += 1;
+        }
+
+        // 품사별 통계 수집
+        for (i, gold_token) in gold_sentence.tokens.iter().enumerate() {
+            let pos_stat = result
+                .pos_stats
+                .entry(gold_token.pos.clone())
+                .or_insert_with(|| PosStats {
+                    gold_count: 0,
+                    pred_count: 0,
+                    correct: 0,
+                    accuracy: 0.0,
+                });
+            pos_stat.gold_count += 1;
+
+            if i < converted_pred.len() {
+                let pred_token = &converted_pred[i];
+                if gold_token.surface == pred_token.surface {
+                    pos_stat.pred_count += 1;
+                    if gold_token.pos == pred_token.pos {
+                        pos_stat.correct += 1;
+                    }
+                }
+            }
+        }
+    }
+
+    // 메트릭 계산 (기존과 동일)
     let total_tokens = result.total_gold_tokens;
     if total_tokens > 0 {
         result.token_accuracy = result.true_positives as f64 / total_tokens as f64;

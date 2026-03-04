@@ -153,8 +153,8 @@ pub use batch::{
 };
 pub use error::{Error, Result};
 pub use evaluate::{
-    evaluate_dataset, evaluate_tokens, EvaluateError, EvaluationResult, GoldSentence, GoldToken,
-    PosStats, TestDataset,
+    evaluate_dataset, evaluate_dataset_sejong, evaluate_tokens, EvaluateError, EvaluationResult,
+    GoldSentence, GoldToken, PosStats, TestDataset,
 };
 pub use kiwi_compat::{from_kiwi_tag, to_kiwi_tag, KiwiPosTag, KiwiToken};
 pub use lattice::{Lattice, Node, NodeBuilder, NodeType};

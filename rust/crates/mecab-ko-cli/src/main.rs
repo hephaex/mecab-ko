@@ -481,6 +481,10 @@ enum Commands {
         /// 사전 경로
         #[arg(short = 'd', long)]
         dicdir: Option<PathBuf>,
+
+        /// 세종 코퍼스 호환 모드 (복합 태그를 분리하여 평가)
+        #[arg(long)]
+        sejong: bool,
     },
     /// 외부 사전 API에서 단어 동기화
     Sync {
@@ -849,8 +853,9 @@ fn main() -> Result<()> {
                 output,
                 verbose,
                 dicdir,
+                sejong,
             } => {
-                run_evaluate(input, *format, output.as_ref(), *verbose, dicdir.as_ref())?;
+                run_evaluate(input, *format, output.as_ref(), *verbose, dicdir.as_ref(), *sejong)?;
             }
             Commands::Sync {
                 source,
@@ -2097,11 +2102,15 @@ fn run_evaluate(
     output_path: Option<&PathBuf>,
     verbose: bool,
     dicdir: Option<&PathBuf>,
+    sejong_mode: bool,
 ) -> Result<()> {
-    use mecab_ko_core::evaluate::{evaluate_dataset, TestDataset};
+    use mecab_ko_core::evaluate::{evaluate_dataset, evaluate_dataset_sejong, TestDataset};
 
     eprintln!("정확도 평가 시작...");
     eprintln!("테스트 데이터: {}", input_path.display());
+    if sejong_mode {
+        eprintln!("모드: 세종 코퍼스 호환 (복합 태그 분리)");
+    }
 
     // Load test dataset
     let dataset = match format {
@@ -2129,8 +2138,12 @@ fn run_evaluate(
 
     eprintln!("형태소 분석 시작...");
 
-    // Run evaluation
-    let result = evaluate_dataset(&mut tokenizer, &dataset);
+    // Run evaluation (with or without Sejong mode)
+    let result = if sejong_mode {
+        evaluate_dataset_sejong(&mut tokenizer, &dataset)
+    } else {
+        evaluate_dataset(&mut tokenizer, &dataset)
+    };
 
     eprintln!("평가 완료!\n");
 
