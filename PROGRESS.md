@@ -26,7 +26,10 @@
   - **데이터 소스**: 국립국어원 API, 커뮤니티 기여, 자동 수집
   - **로드맵**: Phase 1-4 (Sprint 20-26)
   - 품사 태그 체계 유지 (세종 코퍼스 호환)
-- [ ] S20-04: 신조어 자동 수집 실행
+- [ ] S20-04: 신조어 자동 수집 실행 - BLOCKED (OPENDICT_API_KEY 필요)
+  - `neologism-sync.yml` 워크플로우 이미 구현됨
+  - 수동 실행 시 `OPENDICT_API_KEY` 시크릿 필요
+  - 설정 위치: GitHub Settings > Secrets > Actions
 
 ### P2 (Medium)
 - [x] S20-05: v0.3.1 릴리스 ✅
