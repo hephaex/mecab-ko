@@ -2,13 +2,14 @@
 
 **MeCab-Ko**는 한국어 형태소 분석을 위한 고성능 오픈소스 라이브러리입니다. 기존 C/C++ 기반의 은전한닢(mecab-ko)을 순수 Rust로 재구현하여, 메모리 안전성과 현대적인 개발 환경을 제공합니다.
 
-> **최신 버전: v0.3.0** (2026-03-03)
+> **최신 버전: v0.3.1** (2026-03-04)
 >
+> - 세종 코퍼스 호환 모드 (SejongConverter)
+> - 복합 태그 분리 (VV+EF → VV, EF)
+> - CLI `--sejong` 옵션 추가
 > - K-best Viterbi 경로 탐색 (ImprovedNbestSearcher)
 > - LRU 캐싱 토크나이저 (TokenCache)
 > - 스트리밍 API 개선 (LargeFileProcessor)
-> - 병렬 토큰화 지원
-> - npm mecab-ko-wasm v0.3.0 배포
 
 ## 왜 MeCab-Ko인가?
 
@@ -95,13 +96,13 @@ mecab-ko/
 
 | Crate | 설명 | 상태 |
 |-------|------|------|
-| `mecab-ko` | 사용자를 위한 통합 인터페이스 | v0.3.0 |
-| `mecab-ko-core` | Lattice, Viterbi, 미등록어 처리 | v0.3.0 |
-| `mecab-ko-dict` | 사전 로딩, Trie, 연접 비용 매트릭스 | v0.3.0 |
-| `mecab-ko-hangul` | 자모 분리/결합, 문자 분류 | v0.3.0 |
-| `mecab-ko-cli` | `mecab-ko` 명령줄 도구 | v0.3.0 |
-| `mecab-ko-elasticsearch` | Nori 호환 분석기 | v0.3.0 |
-| `mecab-ko-wasm` | WebAssembly 바인딩 | v0.3.0 (npm) |
+| `mecab-ko` | 사용자를 위한 통합 인터페이스 | v0.3.1 |
+| `mecab-ko-core` | Lattice, Viterbi, 미등록어 처리, 세종 호환 | v0.3.1 |
+| `mecab-ko-dict` | 사전 로딩, Trie, 연접 비용 매트릭스 | v0.3.1 |
+| `mecab-ko-hangul` | 자모 분리/결합, 문자 분류 | v0.3.1 |
+| `mecab-ko-cli` | `mecab-ko` 명령줄 도구 | v0.3.1 |
+| `mecab-ko-elasticsearch` | Nori 호환 분석기 | v0.3.1 |
+| `mecab-ko-wasm` | WebAssembly 바인딩 | v0.3.1 (npm) |
 
 ## 다른 프로젝트와의 비교
 
@@ -112,7 +113,13 @@ mecab-ko/
 | **Lindera** | Rust | 12 MB/s | ~180 MB | 일본어 중심 |
 | **MeCab-Ko** | Rust | 15 MB/s | ~145 MB | mecab-ko 호환, 순수 Rust |
 
-## v0.3.0 주요 변경사항
+## v0.3.1 주요 변경사항
+
+### 세종 코퍼스 호환 모드
+- `SejongConverter`: 복합 태그를 세종 코퍼스 형식으로 분리
+- 어미 분리: 갔다/VV+EF → 갔/VV + 다/EF
+- CLI `--sejong` 옵션으로 정확도 평가 시 활용
+- 정확도 개선: Token Accuracy 15.2% → 16.8%
 
 ### K-best 경로 탐색
 - `ImprovedNbestSearcher`: K-best Viterbi 알고리즘
@@ -130,7 +137,7 @@ mecab-ko/
 - 오버랩 청킹 지원
 
 ### npm 배포
-- `mecab-ko-wasm` v0.3.0 npm에서 설치 가능
+- `mecab-ko-wasm` v0.3.1 npm에서 설치 가능
 - 브라우저에서 한국어 형태소 분석 지원
 
 자세한 내용은 [변경 이력](changelog.md)을 참조하세요.

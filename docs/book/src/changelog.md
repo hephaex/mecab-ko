@@ -4,6 +4,78 @@
 
 이 프로젝트는 [Semantic Versioning](https://semver.org/)을 따릅니다.
 
+## [0.3.1] - 2026-03-04
+
+### 추가됨 (Added)
+
+#### 세종 코퍼스 호환 모드 (mecab-ko-core)
+- `SejongToken`: 세종 코퍼스 형식 토큰 구조체
+- `SejongConverter`: 복합 태그 분리 변환기
+- `EndingRule`: 어미 분리 규칙 (VV+EF, VA+EF, EC, ETM 등)
+- 지원 어미 패턴:
+  - 다, 아/어, 았/었 (과거형)
+  - ㄴ/은, ㄹ (관형형)
+  - 고, 니다/습니다 (연결/종결)
+- `is_compound_tag()`: 복합 품사 태그 감지
+- `split_compound_tag()`: 복합 태그 분리
+- `format_sejong()`: 세종 형식 문자열 출력
+
+#### CLI 개선 (mecab-ko-cli)
+- `evaluate --sejong`: 세종 호환 모드로 정확도 평가
+- `evaluate_dataset_sejong()`: 세종 모드 평가 함수
+
+#### 사전 현대화 계획
+- mecab-ko-dic v3.0 현대화 계획 문서
+- 목표: 816K → 1M+ 엔트리
+- Phase 1-4 로드맵 (Sprint 20-26)
+
+### 측정 결과
+
+| 지표 | 기존 | 세종 모드 | 개선 |
+|------|------|-----------|------|
+| Token Accuracy | 15.2% | 16.8% | +1.6%p |
+| Sentence Accuracy | 8.1% | 10.0% | +1.9%p |
+| F1 Score | 0.165 | 0.183 | +0.018 |
+
+---
+
+## [0.3.0] - 2026-03-03
+
+### 추가됨 (Added)
+
+#### K-best 경로 탐색 (mecab-ko-core)
+- `ImprovedNbestSearcher`: K-best Viterbi 알고리즘
+- `NbestPath`, `NbestResult` 구조체
+- 각 노드에서 K개의 최선 후보 유지
+- 이터레이터 지원 (`iter()`, `IntoIterator`)
+
+#### 사용자 정의 분석 모드 (mecab-ko-core)
+- `AnalysisMode` enum: Full, NounsOnly, VerbsOnly 등 10가지 모드
+- `PosFilter`: 품사 필터링 (접두사/정확 매칭)
+- `AnalyzerConfig`: 분석 설정 조합
+- 편의 함수: `extract_nouns()`, `extract_verbs()` 등
+
+#### Lattice 시각화 (mecab-ko-core)
+- `LatticeViz`: 시각화 도구
+- DOT, HTML, Text, JSON 출력 포맷
+- d3-graphviz 기반 인터랙티브 뷰어
+
+#### 토큰화 캐싱 (mecab-ko-core)
+- `TokenCache`: LRU 캐시 (스레드 안전)
+- `CachingTokenizer<T>`: 토크나이저 래퍼
+- 캐시 히트/미스 통계
+
+#### 스트리밍 API 개선 (mecab-ko-core)
+- `ProgressStreamingTokenizer`: 진행률 콜백
+- `LargeFileProcessor`: 대용량 파일 처리
+- 스마트 문장 경계 청킹
+- 오버랩 청킹 지원
+
+#### npm 배포
+- `mecab-ko-wasm` v0.3.0 npm에서 설치 가능
+
+---
+
 ## [0.2.0] - 2026-03-02
 
 ### 추가됨 (Added)
@@ -165,20 +237,21 @@
 
 ## 로드맵
 
-### 단기 계획 (v0.3.0)
-- [ ] 신조어 자동 수집 파이프라인
-- [ ] PyPI/npm 정식 배포
-- [ ] 정확도 95% 달성
+### 단기 계획 (v0.4.0)
+- [ ] mecab-ko-dic v3.0 (100만+ 엔트리)
+- [ ] 정확도 50%+ 달성
+- [ ] 신조어 자동 수집 파이프라인 실행
+- [ ] 실시간 어미 분리
 
 ### 중기 계획 (v0.5.0)
-- [ ] mecab-ko-dic v3.0
+- [ ] 정확도 70%+ 달성
 - [ ] OpenSearch 플러그인
 - [ ] 실시간 사전 업데이트
 
 ### 장기 계획 (v1.0.0)
 - [ ] Production-ready Elasticsearch 플러그인
-- [ ] 정확도 98% 달성
-- [ ] 커뮤니티 릴리스
+- [ ] 정확도 90%+ 달성
+- [ ] PyPI 정식 배포
 
 ---
 
@@ -207,6 +280,8 @@
 
 ---
 
+[0.3.1]: https://github.com/hephaex/mecab-ko/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/hephaex/mecab-ko/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/hephaex/mecab-ko/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/hephaex/mecab-ko/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/hephaex/mecab-ko/releases/tag/v0.1.0

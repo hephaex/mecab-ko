@@ -147,6 +147,55 @@ Path: /path/to/dictionary
 (Dictionary information)
 ```
 
+### `evaluate`
+
+형태소 분석 정확도를 평가합니다. (v0.2.0+)
+
+```bash
+mecab-ko evaluate --input test.tsv --dicdir ./dict-output
+```
+
+#### 옵션
+
+| 옵션 | 설명 |
+|------|------|
+| `--input <FILE>` | 테스트 데이터 파일 (TSV 형식) |
+| `--dicdir <PATH>` | 사전 경로 |
+| `--sejong` | 세종 호환 모드로 평가 (v0.3.1+) |
+| `--verbose` | 틀린 문장 상세 출력 |
+
+#### 테스트 데이터 형식 (TSV)
+
+```
+텍스트\t토큰1/품사1 토큰2/품사2 ...
+나는 학교에 갔다\t나/NP 는/JX 학교/NNG 에/JKB 갔/VV 다/EF
+```
+
+#### 세종 호환 모드
+
+`--sejong` 옵션을 사용하면 복합 태그(VV+EF)를 세종 코퍼스 형식(VV, EF)으로 분리하여 평가합니다.
+
+```bash
+# 기본 모드
+mecab-ko evaluate --input test.tsv --dicdir ./dict-output
+# Token Accuracy: 15.2%
+
+# 세종 호환 모드
+mecab-ko evaluate --input test.tsv --dicdir ./dict-output --sejong
+# Token Accuracy: 16.8%
+```
+
+#### 출력 지표
+
+| 지표 | 설명 |
+|------|------|
+| Token Accuracy | 토큰 단위 정확도 |
+| Sentence Accuracy | 문장 단위 정확도 |
+| POS Accuracy | 품사 태그 정확도 |
+| Precision | 정밀도 |
+| Recall | 재현율 |
+| F1 Score | F1 점수 |
+
 ### `version`
 
 버전 정보를 표시합니다.
@@ -158,13 +207,14 @@ mecab-ko version
 출력 예시:
 
 ```
-mecab-ko 0.1.0
+mecab-ko 0.3.1
 Rust implementation of Korean morphological analyzer
 
 Features:
   - MeCab-compatible analysis
   - User dictionary support
   - Multiple output formats
+  - Sejong corpus compatibility (v0.3.1)
 
 Repository: https://github.com/hephaex/mecab-ko
 ```
