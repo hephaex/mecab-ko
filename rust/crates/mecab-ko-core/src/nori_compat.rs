@@ -26,6 +26,128 @@ use crate::tokenizer::{Token, Tokenizer};
 use crate::Result;
 use std::collections::HashSet;
 
+/// 일반적인 복합명사 분해 사전
+///
+/// 자주 사용되는 복합명사의 올바른 분해 패턴을 정의합니다.
+/// (표면형, [(부분1, POS), (부분2, POS), ...])
+const COMPOUND_DICT: &[(&str, &[(&str, &str)])] = &[
+    // 정보기술/IT
+    ("형태소분석기", &[("형태소", "NNG"), ("분석기", "NNG")]),
+    ("형태소분석", &[("형태소", "NNG"), ("분석", "NNG")]),
+    ("자연어처리", &[("자연어", "NNG"), ("처리", "NNG")]),
+    ("인공지능", &[("인공", "NNG"), ("지능", "NNG")]),
+    ("기계학습", &[("기계", "NNG"), ("학습", "NNG")]),
+    ("딥러닝", &[("딥", "NNG"), ("러닝", "NNG")]),
+    ("데이터베이스", &[("데이터", "NNG"), ("베이스", "NNG")]),
+    ("운영체제", &[("운영", "NNG"), ("체제", "NNG")]),
+    ("프로그래밍", &[("프로그램", "NNG"), ("밍", "XSN")]),
+    ("소프트웨어", &[("소프트", "NNG"), ("웨어", "NNG")]),
+    ("하드웨어", &[("하드", "NNG"), ("웨어", "NNG")]),
+    // 사회/기관
+    ("대한민국", &[("대한", "NNP"), ("민국", "NNG")]),
+    ("국립국어원", &[("국립", "NNG"), ("국어원", "NNP")]),
+    ("대통령", &[("대", "XPN"), ("통령", "NNG")]),
+    ("국무총리", &[("국무", "NNG"), ("총리", "NNG")]),
+    ("대법원", &[("대", "XPN"), ("법원", "NNG")]),
+    ("헌법재판소", &[("헌법", "NNG"), ("재판소", "NNG")]),
+    ("국회의원", &[("국회", "NNG"), ("의원", "NNG")]),
+    ("지방자치단체", &[("지방", "NNG"), ("자치", "NNG"), ("단체", "NNG")]),
+    // 교육
+    ("대학교", &[("대학", "NNG"), ("교", "NNG")]),
+    ("초등학교", &[("초등", "NNG"), ("학교", "NNG")]),
+    ("중학교", &[("중", "XPN"), ("학교", "NNG")]),
+    ("고등학교", &[("고등", "NNG"), ("학교", "NNG")]),
+    ("운동장", &[("운동", "NNG"), ("장", "NNG")]),
+    ("도서관", &[("도서", "NNG"), ("관", "NNG")]),
+    ("교과서", &[("교과", "NNG"), ("서", "NNG")]),
+    // 건축/장소
+    ("아파트", &[("아파트", "NNG")]),
+    ("백화점", &[("백화", "NNG"), ("점", "NNG")]),
+    ("주차장", &[("주차", "NNG"), ("장", "NNG")]),
+    ("병원", &[("병원", "NNG")]),
+    ("약국", &[("약국", "NNG")]),
+    ("편의점", &[("편의", "NNG"), ("점", "NNG")]),
+    ("공항", &[("공항", "NNG")]),
+    ("지하철", &[("지하", "NNG"), ("철", "NNG")]),
+    ("버스정류장", &[("버스", "NNG"), ("정류장", "NNG")]),
+    // 경제/금융
+    ("주식시장", &[("주식", "NNG"), ("시장", "NNG")]),
+    ("부동산", &[("부동", "NNG"), ("산", "NNG")]),
+    ("신용카드", &[("신용", "NNG"), ("카드", "NNG")]),
+    ("은행계좌", &[("은행", "NNG"), ("계좌", "NNG")]),
+    // 자연/환경
+    ("지구온난화", &[("지구", "NNG"), ("온난화", "NNG")]),
+    ("환경오염", &[("환경", "NNG"), ("오염", "NNG")]),
+    ("태양광", &[("태양", "NNG"), ("광", "NNG")]),
+    ("풍력발전", &[("풍력", "NNG"), ("발전", "NNG")]),
+    // 의료/건강
+    ("건강보험", &[("건강", "NNG"), ("보험", "NNG")]),
+    ("의료기관", &[("의료", "NNG"), ("기관", "NNG")]),
+    ("응급실", &[("응급", "NNG"), ("실", "NNG")]),
+    ("수술실", &[("수술", "NNG"), ("실", "NNG")]),
+];
+
+/// 확장된 접두사 목록
+const PREFIXES: &[(&str, &str)] = &[
+    // 관형 접두사 (XPN)
+    ("신", "XPN"),  // 새: 신제품
+    ("구", "XPN"),  // 옛: 구버전
+    ("총", "XPN"),  // 전체: 총대리
+    ("부", "XPN"),  // 보조: 부사장
+    ("대", "XPN"),  // 큰: 대통령
+    ("소", "XPN"),  // 작은: 소기업
+    ("중", "XPN"),  // 중간: 중기업
+    ("고", "XPN"),  // 높은: 고속도로
+    ("저", "XPN"),  // 낮은: 저소득층
+    ("최", "XPN"),  // 가장: 최고급
+    ("초", "XPN"),  // 처음/매우: 초고속
+    ("준", "XPN"),  // 거의: 준결승
+    ("범", "XPN"),  // 넓은: 범국민
+    ("반", "XPN"),  // 반대: 반정부
+    ("비", "XPN"),  // 아닌: 비공개
+    ("미", "XPN"),  // 아직: 미완성
+    ("재", "XPN"),  // 다시: 재개발
+    ("전", "XPN"),  // 이전: 전대통령
+    ("후", "XPN"),  // 이후: 후배
+    ("무", "XPN"),  // 없는: 무료
+    ("유", "XPN"),  // 있는: 유료
+    ("친", "XPN"),  // 친하다: 친환경
+    ("반", "XPN"),  // 반대: 반환경
+];
+
+/// 확장된 접미사 목록
+const SUFFIXES: &[(&str, &str)] = &[
+    // 파생 접미사 (XSN)
+    ("들", "XSN"),   // 복수
+    ("님", "XSN"),   // 존칭
+    ("씨", "XSN"),   // 존칭
+    ("꾼", "XSN"),   // 사람
+    ("쟁이", "XSN"), // 사람
+    ("치", "XSN"),   // 사람: 사기치
+    ("가", "XSN"),   // 사람: 전문가
+    ("자", "XSN"),   // 사람: 기술자
+    ("사", "XSN"),   // 사람: 변호사
+    ("원", "XSN"),   // 사람: 회사원
+    ("인", "XSN"),   // 사람: 한국인
+    ("생", "XSN"),   // 사람: 학생
+    ("장", "XSN"),   // 장소: 운동장
+    ("실", "XSN"),   // 장소: 사무실
+    ("관", "XSN"),   // 장소: 도서관
+    ("소", "XSN"),   // 장소: 연구소
+    ("점", "XSN"),   // 장소: 편의점
+    ("기", "XSN"),   // 도구: 분석기
+    ("화", "XSN"),   // 변화: 현대화
+    ("적", "XSN"),   // 성질: 과학적
+    ("성", "XSN"),   // 성질: 창의성
+    ("율", "XSN"),   // 비율: 합격률
+    ("도", "XSN"),   // 정도: 만족도
+    ("비", "XSN"),   // 비용: 생활비
+    ("권", "XSN"),   // 권한: 투표권
+    ("론", "XSN"),   // 이론: 진화론
+    ("학", "XSN"),   // 학문: 언어학
+    ("계", "XSN"),   // 분야: 학계
+];
+
 /// Nori 복합명사 분해 모드
 ///
 /// Lucene Nori의 decompound 설정과 호환
@@ -250,31 +372,76 @@ impl NoriTokenizer {
         self.decompound_mode != DecompoundMode::None && matches!(pos_tag, PosTag::NNG | PosTag::NNP)
     }
 
-    /// 향상된 복합명사 분해 (접두사/접미사 감지 포함)
+    /// 향상된 복합명사 분해 (사전 기반 + 접두사/접미사 감지 포함)
     ///
-    /// 기본 분해 로직에 더해 일반적인 접미사와 접두사를 감지합니다.
+    /// 분해 우선순위:
+    /// 1. 사전 기반 분해 (정확한 매칭)
+    /// 2. 접미사 추출
+    /// 3. 접두사 추출
+    /// 4. 음절 기반 휴리스틱
     fn decompound_token_enhanced(token: &Token, text: &str) -> Vec<NoriToken> {
-        // 접미사 검사
+        // 1. 사전 기반 분해 (가장 정확)
+        if let Some(tokens) = Self::try_dict_decompose(token, text) {
+            return tokens;
+        }
+
+        // 2. 접미사 검사
         if let Some(tokens) = Self::try_extract_suffix(token, text) {
             return tokens;
         }
 
-        // 접두사 검사
+        // 3. 접두사 검사
         if let Some(tokens) = Self::try_extract_prefix(token, text) {
             return tokens;
         }
 
-        // 기본 복합명사 분해
+        // 4. 기본 복합명사 분해 (음절 휴리스틱)
         Self::decompound_token(token, text)
+    }
+
+    /// 사전 기반 복합명사 분해
+    ///
+    /// `COMPOUND_DICT`에 정의된 복합명사를 정확하게 분해합니다.
+    fn try_dict_decompose(token: &Token, text: &str) -> Option<Vec<NoriToken>> {
+        let surface = &token.surface;
+
+        // 사전에서 매칭 검색
+        for (compound, parts) in COMPOUND_DICT {
+            if *compound == surface {
+                // 단일 엔트리인 경우 분해하지 않음
+                if parts.len() <= 1 {
+                    return None;
+                }
+
+                let mut result = Vec::with_capacity(parts.len());
+                let mut byte_offset = token.start_byte;
+
+                for (part_surface, part_pos) in *parts {
+                    let part_bytes = part_surface.len();
+                    result.push(NoriToken {
+                        surface: (*part_surface).to_string(),
+                        pos_tag: (*part_pos).to_string(),
+                        start_offset: char_offset(text, byte_offset),
+                        end_offset: char_offset(text, byte_offset + part_bytes),
+                        lemma: None,
+                        reading: None,
+                        word_type: WordType::Known,
+                        is_decompound: true,
+                    });
+                    byte_offset += part_bytes;
+                }
+
+                return Some(result);
+            }
+        }
+
+        None
     }
 
     /// 일반적인 접미사 추출 시도
     ///
-    /// 한국어의 일반적인 접미사 패턴:
-    /// - 들 (복수)
-    /// - 님 (존칭)
-    /// - 분 (존칭)
-    /// - 꾼, 쟁이 (사람)
+    /// `SUFFIXES` 상수에 정의된 접미사 패턴을 사용합니다.
+    /// 긴 접미사부터 검사하여 "쟁이"가 "이"보다 먼저 매칭되도록 합니다.
     fn try_extract_suffix(token: &Token, text: &str) -> Option<Vec<NoriToken>> {
         let surface = &token.surface;
         let chars: Vec<char> = surface.chars().collect();
@@ -283,15 +450,11 @@ impl NoriTokenizer {
             return None;
         }
 
-        // 접미사 패턴 정의
-        let suffixes = [
-            ("들", "XSN"), // 복수 접미사
-            ("님", "XSN"), // 존칭 접미사
-            ("분", "XSN"), // 존칭 접미사
-            ("꾼", "NNG"), // 사람 접미사
-        ];
+        // 긴 접미사부터 검사 (내림차순 정렬)
+        let mut sorted_suffixes: Vec<_> = SUFFIXES.iter().collect();
+        sorted_suffixes.sort_by(|a, b| b.0.len().cmp(&a.0.len()));
 
-        for (suffix, suffix_tag) in &suffixes {
+        for (suffix, suffix_tag) in sorted_suffixes {
             let suffix_chars: Vec<char> = suffix.chars().collect();
             if chars.len() > suffix_chars.len()
                 && chars[chars.len() - suffix_chars.len()..] == suffix_chars[..]
@@ -337,11 +500,8 @@ impl NoriTokenizer {
 
     /// 일반적인 접두사 추출 시도
     ///
-    /// 한국어의 일반적인 접두사 패턴:
-    /// - 신 (새로운)
-    /// - 구 (옛)
-    /// - 총, 부 (계급)
-    /// - 전, 후 (시간)
+    /// `PREFIXES` 상수에 정의된 접두사 패턴을 사용합니다.
+    /// 긴 접두사부터 검사하여 더 정확한 매칭을 보장합니다.
     fn try_extract_prefix(token: &Token, text: &str) -> Option<Vec<NoriToken>> {
         let surface = &token.surface;
         let chars: Vec<char> = surface.chars().collect();
@@ -350,17 +510,11 @@ impl NoriTokenizer {
             return None;
         }
 
-        // 접두사 패턴 정의
-        let prefixes = [
-            ("신", "XPN"), // 새 접두사
-            ("구", "XPN"), // 옛 접두사
-            ("총", "XPN"), // 계급 접두사
-            ("부", "XPN"), // 계급 접두사
-            ("전", "NNG"), // 시간 접두사
-            ("후", "NNG"), // 시간 접두사
-        ];
+        // 긴 접두사부터 검사 (내림차순 정렬)
+        let mut sorted_prefixes: Vec<_> = PREFIXES.iter().collect();
+        sorted_prefixes.sort_by(|a, b| b.0.len().cmp(&a.0.len()));
 
-        for (prefix, prefix_tag) in &prefixes {
+        for (prefix, prefix_tag) in sorted_prefixes {
             let prefix_chars: Vec<char> = prefix.chars().collect();
             if chars.len() > prefix_chars.len() && chars[..prefix_chars.len()] == prefix_chars[..] {
                 // 접두사를 제외한 뒷부분
@@ -1239,5 +1393,179 @@ mod tests {
         assert!(result.is_ok());
 
         // In discard mode, if decomposition happens, original should be excluded
+    }
+
+    #[test]
+    fn test_dict_decompose_basic() {
+        let token = Token {
+            surface: "형태소분석기".to_string(),
+            pos: "NNG".to_string(),
+            start_pos: 0,
+            end_pos: 6,
+            start_byte: 0,
+            end_byte: 18,
+            reading: None,
+            lemma: None,
+            cost: 0,
+            features: "NNG,*,*,*,*,*,*,*".to_string(),
+            normalized: None,
+        };
+
+        let result = NoriTokenizer::try_dict_decompose(&token, "형태소분석기");
+
+        // Should match dictionary entry
+        assert!(result.is_some(), "Should find compound in dictionary");
+        let parts = result.unwrap();
+        assert_eq!(parts.len(), 2);
+        assert_eq!(parts[0].surface, "형태소");
+        assert_eq!(parts[1].surface, "분석기");
+    }
+
+    #[test]
+    fn test_dict_decompose_대한민국() {
+        let token = Token {
+            surface: "대한민국".to_string(),
+            pos: "NNP".to_string(),
+            start_pos: 0,
+            end_pos: 4,
+            start_byte: 0,
+            end_byte: 12,
+            reading: None,
+            lemma: None,
+            cost: 0,
+            features: "NNP,*,*,*,*,*,*,*".to_string(),
+            normalized: None,
+        };
+
+        let result = NoriTokenizer::try_dict_decompose(&token, "대한민국");
+
+        // Should match dictionary entry
+        assert!(result.is_some(), "Should find 대한민국 in dictionary");
+        let parts = result.unwrap();
+        assert_eq!(parts.len(), 2);
+        assert_eq!(parts[0].surface, "대한");
+        assert_eq!(parts[0].pos_tag, "NNP");
+        assert_eq!(parts[1].surface, "민국");
+    }
+
+    #[test]
+    fn test_enhanced_suffix_extraction() {
+        // Test with suffix "화" (변화)
+        let token = Token {
+            surface: "현대화".to_string(),
+            pos: "NNG".to_string(),
+            start_pos: 0,
+            end_pos: 3,
+            start_byte: 0,
+            end_byte: 9,
+            reading: None,
+            lemma: None,
+            cost: 0,
+            features: "NNG,*,*,*,*,*,*,*".to_string(),
+            normalized: None,
+        };
+
+        let result = NoriTokenizer::try_extract_suffix(&token, "현대화");
+
+        // Should extract suffix
+        assert!(result.is_some(), "Should extract suffix 화");
+        let parts = result.unwrap();
+        assert_eq!(parts.len(), 2);
+        assert_eq!(parts[0].surface, "현대");
+        assert_eq!(parts[1].surface, "화");
+        assert_eq!(parts[1].pos_tag, "XSN");
+    }
+
+    #[test]
+    fn test_enhanced_prefix_extraction() {
+        // Test with prefix "초" (초고속)
+        let token = Token {
+            surface: "초고속".to_string(),
+            pos: "NNG".to_string(),
+            start_pos: 0,
+            end_pos: 3,
+            start_byte: 0,
+            end_byte: 9,
+            reading: None,
+            lemma: None,
+            cost: 0,
+            features: "NNG,*,*,*,*,*,*,*".to_string(),
+            normalized: None,
+        };
+
+        let result = NoriTokenizer::try_extract_prefix(&token, "초고속");
+
+        // Should extract prefix
+        assert!(result.is_some(), "Should extract prefix 초");
+        let parts = result.unwrap();
+        assert_eq!(parts.len(), 2);
+        assert_eq!(parts[0].surface, "초");
+        assert_eq!(parts[0].pos_tag, "XPN");
+        assert_eq!(parts[1].surface, "고속");
+    }
+
+    #[test]
+    fn test_decompound_enhanced_priority() {
+        // Dictionary match should take priority
+        let token = Token {
+            surface: "형태소분석".to_string(),
+            pos: "NNG".to_string(),
+            start_pos: 0,
+            end_pos: 5,
+            start_byte: 0,
+            end_byte: 15,
+            reading: None,
+            lemma: None,
+            cost: 0,
+            features: "NNG,*,*,*,*,*,*,*".to_string(),
+            normalized: None,
+        };
+
+        let result = NoriTokenizer::decompound_token_enhanced(&token, "형태소분석");
+
+        // Should use dictionary-based decomposition
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0].surface, "형태소");
+        assert_eq!(result[1].surface, "분석");
+    }
+
+    #[test]
+    fn test_multiple_suffix_entries() {
+        // Test that SUFFIXES constant is accessible and has multiple entries
+        assert!(SUFFIXES.len() > 10, "Should have many suffix entries");
+
+        // Test specific entries
+        assert!(
+            SUFFIXES.iter().any(|(s, _)| *s == "화"),
+            "Should contain 화"
+        );
+        assert!(
+            SUFFIXES.iter().any(|(s, _)| *s == "적"),
+            "Should contain 적"
+        );
+        assert!(
+            SUFFIXES.iter().any(|(s, _)| *s == "쟁이"),
+            "Should contain 쟁이"
+        );
+    }
+
+    #[test]
+    fn test_multiple_prefix_entries() {
+        // Test that PREFIXES constant is accessible and has multiple entries
+        assert!(PREFIXES.len() > 10, "Should have many prefix entries");
+
+        // Test specific entries
+        assert!(
+            PREFIXES.iter().any(|(p, _)| *p == "초"),
+            "Should contain 초"
+        );
+        assert!(
+            PREFIXES.iter().any(|(p, _)| *p == "최"),
+            "Should contain 최"
+        );
+        assert!(
+            PREFIXES.iter().any(|(p, _)| *p == "친"),
+            "Should contain 친"
+        );
     }
 }
