@@ -7,15 +7,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-03-05
+
 ### Added
-- Full mecab-ko-dic build (816,283 entries)
-- Accuracy benchmark with full dictionary (Token 15.2%, F1 0.165)
-- Unknown word cost optimization for Korean neologisms
+- **Sejong Corpus Compatibility Mode**
+  - `sejong.rs` module: Sejong corpus format output
+  - `SejongConverter`: MeCab tokens → Sejong format conversion
+  - `SejongToken`: Converted token structure
+  - `EndingRule`: Ending separation rules (VV+EF, VA+EF, etc.)
+  - `--sejong` CLI option for Sejong format output
+  - `--decomp` CLI option for decomposition info
+
+- **Token Accuracy Improvements**
+  - `apply_decomposition_corrections()`: Fix mis-analyzed patterns
+  - `apply_token_merges()`: Merge incorrectly split tokens
+  - `apply_lexicon_overrides()`: High-frequency vocabulary mapping
+  - `apply_context_corrections()`: Context-based POS correction
+  - Extended EP (prefinal ending) patterns: past (었/았/였), presumptive (겠), honorific (시/으시), retrospective (더)
+  - Extended EC (connective ending) patterns: reason, condition, time, method, concession
+  - Extended ETM/ETN patterns: adnominal and nominalization
+  - Compound EP+EC, EP+ETM patterns
+  - VX (auxiliary verb) tag mappings
+
+- **Proper Noun Lexicon Expansion**
+  - ~200 new proper noun entries
+  - Cities: 안양, 안산, 파주, 김해, 창원, 청주, 전주, 포항, 원주
+  - Seoul districts/neighborhoods: 강남, 서초, 명동, 홍대, 이태원, 잠실
+  - Countries: 멕시코, 네덜란드, 싱가포르, 말레이시아, +30 more
+  - Tech/Brands: 틱톡, 넷플릭스, 테슬라, 쿠팡, 배달의민족
+  - Universities: 서울대, 연세대, 고려대, 카이스트, 포스텍
+  - Famous people: 이순신, 세종대왕, 손흥민, 방탄소년단, 블랙핑크
+
+- **Neologism Dictionary v3.0**
+  - 511 neologisms (123 → 511, +315%)
+  - AI/ML: Claude, Gemini, Midjourney, RAG, AGI
+  - Social media: Threads, Bluesky, Shorts, 크리에이터
+  - MZ Generation: 갓생, 무지출, 킹받다, 레게노
+  - Economy: HBM, 밈주식, DSR
+  - Tech: Rust, Kubernetes, Docker
+  - K-Culture: K팝, 최애, 덕질, 굿즈
+
+- **crates.io Deployment Preparation**
+  - LICENSE-MIT, LICENSE-APACHE files
+  - Cargo.toml metadata completion
+  - README version updates (0.1.0 → 0.4.0)
+  - `cargo publish --dry-run` validation
 
 ### Changed
-- HangulAlphaMix pattern cost: +200 → -100 (favor neologisms)
-- ProperNoun/CamelCase stronger preference (-600/-400)
-- Plain length penalty threshold: 5→6 chars
+- All crates bumped to v0.4.0
+- Token Accuracy: 16.8% → **29.6%** (+12.8%p)
+- Exact sentence match: 13 → **23** sentences (160 total)
+- NNG (common noun): 52% → 64.7%
+- VV (verb): 9% → 14.9%
+- JKO (object particle): 0% → 36.4%
+- EP (prefinal ending): 47.1% → 58.8%
+
+### Performance
+- 1000 sentences in 160ms (6,250 sentences/sec)
+- Processing speed: 3.0-3.7M chars/sec
+- No regression from v0.3.0
+
+### Documentation
+- Irregular conjugation documentation (7 patterns)
+- COMPOUND_DICT with 50+ patterns
+- Extended PREFIXES (23) and SUFFIXES (27)
 
 ## [0.3.0] - 2026-03-03
 
