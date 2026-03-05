@@ -425,6 +425,58 @@ impl SejongConverter {
             vec!["VA", "EF"],
         ));
 
+        // XSV (파생접미사) + 종결어미 (EF)
+        self.ending_rules.push(EndingRule::new(
+            "XSV+EF",
+            vec![
+                // 격식체
+                "습니다", "ㅂ니다", "습니까", "ㅂ니까",
+                // 비격식체
+                "다", "어요", "아요", "요", "어", "아",
+                // 축약형
+                "ㄴ다", "ㅆ다",
+                // 기타
+                "지", "죠", "네",
+            ],
+            vec!["XSV", "EF"],
+        ));
+
+        // XSV + 연결어미 (EC)
+        self.ending_rules.push(EndingRule::new(
+            "XSV+EC",
+            vec![
+                "고", "면", "으면", "서", "어서", "아서",
+                "면서", "으면서", "니까", "으니까", "지만",
+            ],
+            vec!["XSV", "EC"],
+        ));
+
+        // VX (보조용언) + 종결어미 (EF)
+        self.ending_rules.push(EndingRule::new(
+            "VX+EF",
+            vec![
+                // 격식체
+                "습니다", "ㅂ니다", "습니까", "ㅂ니까",
+                // 비격식체
+                "어요", "아요", "요", "어", "아", "다",
+                // 축약형
+                "ㄴ다", "ㅆ다",
+                // 기타
+                "지", "죠", "네",
+            ],
+            vec!["VX", "EF"],
+        ));
+
+        // VX + 연결어미 (EC)
+        self.ending_rules.push(EndingRule::new(
+            "VX+EC",
+            vec![
+                "고", "면", "으면", "서", "어서", "아서",
+                "면서", "으면서", "니까", "으니까", "지만",
+            ],
+            vec!["VX", "EC"],
+        ));
+
         // 연결어미 (EC) - 확장
         self.ending_rules.push(EndingRule::new(
             "VV+EC",
@@ -2405,5 +2457,45 @@ mod tests {
         let (prefinal2, final_part2) = SejongConverter::split_prefinal_ending("겠어요");
         assert_eq!(prefinal2, "겠");
         assert_eq!(final_part2, "어요");
+    }
+
+    #[test]
+    fn test_xsv_ef_split() {
+        let converter = SejongConverter::new();
+
+        // 되다 -> 되 + 다
+        let result = converter.split_morpheme("되다", "XSV+EF");
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], ("되".to_string(), "XSV".to_string()));
+        assert_eq!(result[1], ("다".to_string(), "EF".to_string()));
+
+        // 한다 -> 한 + 다
+        let result2 = converter.split_morpheme("한다", "XSV+EF");
+        assert_eq!(result2.len(), 2);
+        assert_eq!(result2[0], ("한".to_string(), "XSV".to_string()));
+        assert_eq!(result2[1], ("다".to_string(), "EF".to_string()));
+
+        // 해요 -> 해 + 요
+        let result3 = converter.split_morpheme("해요", "XSV+EF");
+        assert_eq!(result3.len(), 2);
+        assert_eq!(result3[0], ("해".to_string(), "XSV".to_string()));
+        assert_eq!(result3[1], ("요".to_string(), "EF".to_string()));
+    }
+
+    #[test]
+    fn test_xsv_ec_split() {
+        let converter = SejongConverter::new();
+
+        // 하고 -> 하 + 고
+        let result = converter.split_morpheme("하고", "XSV+EC");
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], ("하".to_string(), "XSV".to_string()));
+        assert_eq!(result[1], ("고".to_string(), "EC".to_string()));
+
+        // 되면 -> 되 + 면
+        let result2 = converter.split_morpheme("되면", "XSV+EC");
+        assert_eq!(result2.len(), 2);
+        assert_eq!(result2[0], ("되".to_string(), "XSV".to_string()));
+        assert_eq!(result2[1], ("면".to_string(), "EC".to_string()));
     }
 }
