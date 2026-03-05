@@ -227,3 +227,155 @@
 부릉부릉 칙칙폭폭	부릉부릉/MAG 칙칙폭폭/MAG
 반짝반짝 빙글빙글	반짝반짝/MAG 빙글빙글/MAG
 데굴데굴 폴짝폴짝	데굴데굴/MAG 폴짝폴짝/MAG
+
+# 일상 대화 (확장)
+오늘 점심 뭐 먹을까	오늘/NNG 점심/NNG 뭐/NP 먹/VV 을까/EF
+내일 시간 있어요	내일/NNG 시간/NNG 있/VV 어요/EF
+어디서 만날까요	어디/NP 에서/JKB 만나/VV ㄹ까요/EF
+주말에 영화 보러 갈래	주말/NNG 에/JKB 영화/NNG 보/VV 러/EC 가/VV ㄹ래/EF
+피곤해서 일찍 자야겠다	피곤/NNG 하/XSA 아서/EC 일찍/MAG 자/VV 아야겠/EP 다/EF
+요즘 너무 바빠서 힘들어요	요즘/NNG 너무/MAG 바쁘/VA 아서/EC 힘들/VA 어요/EF
+커피 한잔 할래요	커피/NNG 한/NR 잔/NNB 하/VV ㄹ래요/EF
+잠깐만 기다려 주세요	잠깐/NNG 만/JX 기다리/VV 어/EC 주/VX 세요/EF
+이거 얼마예요	이거/NP 얼마/NP 이/VCP 에요/EF
+맛있겠다	맛있/VA 겠/EP 다/EF
+진짜요	진짜/NNG 요/JX
+고마워요	고맙/VA 어요/EF
+미안해요	미안하/VA 어요/EF
+괜찮아요	괜찮/VA 아요/EF
+축하해요	축하/NNG 하/XSV 어요/EF
+사랑해요	사랑/NNG 하/XSV 어요/EF
+보고 싶어요	보/VV 고/EC 싶/VX 어요/EF
+배고파요	배고프/VA 아요/EF
+목말라요	목마르/VA 아요/EF
+졸려요	졸리/VA 어요/EF
+심심해요	심심하/VA 어요/EF
+재미있어요	재미있/VA 어요/EF
+맛없어요	맛없/VA 어요/EF
+어려워요	어렵/VA 어요/EF
+쉬워요	쉽/VA 어요/EF
+그래요	그러/VV 어요/EF
+알겠어요	알/VV 겠/EP 어요/EF
+모르겠어요	모르/VV 겠/EP 어요/EF
+생각해 볼게요	생각/NNG 하/XSV 어/EC 보/VX ㄹ게요/EF
+다음에 또 만나요	다음/NNG 에/JKB 또/MAG 만나/VV 아요/EF
+
+# 뉴스/공식 문체 (확장)
+정부는 새로운 정책을 발표했다	정부/NNG 는/JX 새롭/VA ㄴ/ETM 정책/NNG 을/JKO 발표/NNG 하/XSV 았/EP 다/EF
+대통령이 기자회견을 열었습니다	대통령/NNG 이/JKS 기자회견/NNG 을/JKO 열/VV 었/EP 습니다/EF
+경제 성장률이 예상보다 높았다	경제/NNG 성장률/NNG 이/JKS 예상/NNG 보다/JKB 높/VA 았/EP 다/EF
+주가가 급등하면서 투자자들이 관심을 보이고 있다	주가/NNG 가/JKS 급등/NNG 하/XSV 면서/EC 투자자/NNG 들/XSN 이/JKS 관심/NNG 을/JKO 보이/VV 고/EC 있/VX 다/EF
+국회에서 법안이 통과되었다	국회/NNG 에서/JKB 법안/NNG 이/JKS 통과/NNG 되/XSV 었/EP 다/EF
+기업들이 신기술 개발에 투자하고 있다	기업/NNG 들/XSN 이/JKS 신/XPN 기술/NNG 개발/NNG 에/JKB 투자/NNG 하/XSV 고/EC 있/VX 다/EF
+환율이 안정세를 유지하고 있습니다	환율/NNG 이/JKS 안정세/NNG 를/JKO 유지/NNG 하/XSV 고/EC 있/VX 습니다/EF
+수출이 증가하면서 무역수지가 개선됐다	수출/NNG 이/JKS 증가/NNG 하/XSV 면서/EC 무역수지/NNG 가/JKS 개선/NNG 되/XSV 었/EP 다/EF
+선거 결과가 발표될 예정입니다	선거/NNG 결과/NNG 가/JKS 발표/NNG 되/XSV ㄹ/ETM 예정/NNG 이/VCP 습니다/EF
+재난 현장에서 구조 작업이 진행되고 있다	재난/NNG 현장/NNG 에서/JKB 구조/NNG 작업/NNG 이/JKS 진행/NNG 되/XSV 고/EC 있/VX 다/EF
+기상청이 폭염 경보를 발령했습니다	기상청/NNG 이/JKS 폭염/NNG 경보/NNG 를/JKO 발령/NNG 하/XSV 았/EP 습니다/EF
+외교부 장관이 순방길에 올랐다	외교부/NNG 장관/NNG 이/JKS 순방길/NNG 에/JKB 오르/VV 았/EP 다/EF
+국민 여론조사 결과가 공개됐다	국민/NNG 여론조사/NNG 결과/NNG 가/JKS 공개/NNG 되/XSV 었/EP 다/EF
+교통사고로 인해 도로가 통제되고 있습니다	교통사고/NNG 로/JKB 인하/VV 어/EC 도로/NNG 가/JKS 통제/NNG 되/XSV 고/EC 있/VX 습니다/EF
+검찰이 수사에 착수했습니다	검찰/NNG 이/JKS 수사/NNG 에/JKB 착수/NNG 하/XSV 았/EP 습니다/EF
+기온이 영하로 떨어질 전망입니다	기온/NNG 이/JKS 영하/NNG 로/JKB 떨어지/VV ㄹ/ETM 전망/NNG 이/VCP 습니다/EF
+미세먼지 농도가 매우 나쁨 수준입니다	미세먼지/NNG 농도/NNG 가/JKS 매우/MAG 나쁨/NNG 수준/NNG 이/VCP 습니다/EF
+정상회담이 성공적으로 마무리됐다	정상회담/NNG 이/JKS 성공적/NNG 으로/JKB 마무리/NNG 되/XSV 었/EP 다/EF
+의료진이 환자 치료에 최선을 다하고 있다	의료진/NNG 이/JKS 환자/NNG 치료/NNG 에/JKB 최선/NNG 을/JKO 다하/VV 고/EC 있/VX 다/EF
+주민들의 불편이 예상됩니다	주민/NNG 들/XSN 의/JKG 불편/NNG 이/JKS 예상/NNG 되/XSV ㅂ니다/EF
+행사가 성황리에 개최됐습니다	행사/NNG 가/JKS 성황리/NNG 에/JKB 개최/NNG 되/XSV 었/EP 습니다/EF
+피해 복구 작업이 본격화됐다	피해/NNG 복구/NNG 작업/NNG 이/JKS 본격화/NNG 되/XSV 었/EP 다/EF
+시민단체가 성명을 발표했다	시민단체/NNG 가/JKS 성명/NNG 을/JKO 발표/NNG 하/XSV 았/EP 다/EF
+협상이 결렬되면서 갈등이 심화됐다	협상/NNG 이/JKS 결렬/NNG 되/XSV 면서/EC 갈등/NNG 이/JKS 심화/NNG 되/XSV 었/EP 다/EF
+전문가들은 신중한 접근을 권고했다	전문가/NNG 들/XSN 은/JX 신중하/VA ㄴ/ETM 접근/NNG 을/JKO 권고/NNG 하/XSV 았/EP 다/EF
+관계 당국이 조사에 나섰습니다	관계/NNG 당국/NNG 이/JKS 조사/NNG 에/JKB 나서/VV 었/EP 습니다/EF
+국민의 안전을 위해 노력하겠습니다	국민/NNG 의/JKG 안전/NNG 을/JKO 위하/VV 어/EC 노력/NNG 하/XSV 겠/EP 습니다/EF
+해당 사안에 대해 면밀히 검토하겠다	해당/NNG 사안/NNG 에/JKB 대하/VV 어/EC 면밀히/MAG 검토/NNG 하/XSV 겠/EP 다/EF
+적극적인 대책 마련이 시급합니다	적극적/NNG 이/VCP ㄴ/ETM 대책/NNG 마련/NNG 이/JKS 시급하/VA ㅂ니다/EF
+관련 법안이 국회에 계류 중이다	관련/NNG 법안/NNG 이/JKS 국회/NNG 에/JKB 계류/NNG 중/NNB 이/VCP 다/EF
+
+# 기술/전문 용어 (확장)
+인공지능이 데이터를 분석한다	인공지능/NNG 이/JKS 데이터/NNG 를/JKO 분석/NNG 하/XSV ㄴ다/EF
+머신러닝 알고리즘을 훈련시켰다	머신러닝/NNG 알고리즘/NNG 을/JKO 훈련/NNG 시키/VV 었/EP 다/EF
+딥러닝 모델의 정확도가 향상됐다	딥러닝/NNG 모델/NNG 의/JKG 정확도/NNG 가/JKS 향상/NNG 되/XSV 었/EP 다/EF
+클라우드 서버에 배포했습니다	클라우드/NNG 서버/NNG 에/JKB 배포/NNG 하/XSV 았/EP 습니다/EF
+데이터베이스를 최적화해야 한다	데이터베이스/NNG 를/JKO 최적화/NNG 하/XSV 아야/EC 하/VV ㄴ다/EF
+컨테이너 기반 아키텍처를 도입했다	컨테이너/NNG 기반/NNG 아키텍처/NNG 를/JKO 도입/NNG 하/XSV 았/EP 다/EF
+오픈소스 라이브러리를 활용했습니다	오픈소스/NNG 라이브러리/NNG 를/JKO 활용/NNG 하/XSV 았/EP 습니다/EF
+네트워크 프로토콜을 분석 중이다	네트워크/NNG 프로토콜/NNG 을/JKO 분석/NNG 중/NNB 이/VCP 다/EF
+자연어 처리 기술이 발전하고 있다	자연어/NNG 처리/NNG 기술/NNG 이/JKS 발전/NNG 하/XSV 고/EC 있/VX 다/EF
+형태소 분석기를 개발했습니다	형태소/NNG 분석기/NNG 를/JKO 개발/NNG 하/XSV 았/EP 습니다/EF
+API를 호출하여 결과를 받았다	API/SL 를/JKO 호출/NNG 하/XSV 어/EC 결과/NNG 를/JKO 받/VV 았/EP 다/EF
+프레임워크를 업데이트했습니다	프레임워크/NNG 를/JKO 업데이트/NNG 하/XSV 았/EP 습니다/EF
+버전 관리 시스템을 사용합니다	버전/NNG 관리/NNG 시스템/NNG 을/JKO 사용/NNG 하/XSV ㅂ니다/EF
+코드 리뷰를 진행했다	코드/NNG 리뷰/NNG 를/JKO 진행/NNG 하/XSV 았/EP 다/EF
+테스트 커버리지를 높였습니다	테스트/NNG 커버리지/NNG 를/JKO 높이/VV 었/EP 습니다/EF
+보안 취약점을 발견했다	보안/NNG 취약점/NNG 을/JKO 발견/NNG 하/XSV 았/EP 다/EF
+암호화 알고리즘을 적용했습니다	암호화/NNG 알고리즘/NNG 을/JKO 적용/NNG 하/XSV 았/EP 습니다/EF
+쿠버네티스 클러스터를 구축했다	쿠버네티스/NNP 클러스터/NNG 를/JKO 구축/NNG 하/XSV 았/EP 다/EF
+도커 이미지를 빌드했습니다	도커/NNP 이미지/NNG 를/JKO 빌드/NNG 하/XSV 았/EP 습니다/EF
+마이크로서비스 아키텍처를 설계했다	마이크로서비스/NNG 아키텍처/NNG 를/JKO 설계/NNG 하/XSV 았/EP 다/EF
+비동기 처리를 구현했습니다	비동기/NNG 처리/NNG 를/JKO 구현/NNG 하/XSV 았/EP 습니다/EF
+성능 병목을 해결했다	성능/NNG 병목/NNG 을/JKO 해결/NNG 하/XSV 았/EP 다/EF
+메모리 누수를 수정했습니다	메모리/NNG 누수/NNG 를/JKO 수정/NNG 하/XSV 았/EP 습니다/EF
+리팩토링을 진행했다	리팩토링/NNG 을/JKO 진행/NNG 하/XSV 았/EP 다/EF
+배포 파이프라인을 자동화했습니다	배포/NNG 파이프라인/NNG 을/JKO 자동화/NNG 하/XSV 았/EP 습니다/EF
+
+# 신조어/인터넷 용어 (확장)
+요즘 틱톡이 대세야	요즘/NNG 틱톡/NNP 이/JKS 대세/NNG 이/VCP 야/EF
+인스타에 사진 올렸어	인스타/NNP 에/JKB 사진/NNG 올리/VV 었/EP 어/EF
+유튜브에서 봤어요	유튜브/NNP 에서/JKB 보/VV 았/EP 어요/EF
+넷플릭스 구독해요	넷플릭스/NNP 구독/NNG 하/XSV 어요/EF
+카톡으로 보내줘	카톡/NNP 으로/JKB 보내/VV 어/EC 주/VX 어/EF
+배민에서 시켰어	배민/NNP 에서/JKB 시키/VV 었/EP 어/EF
+쿠팡에서 주문했어요	쿠팡/NNP 에서/JKB 주문/NNG 하/XSV 았/EP 어요/EF
+갓생 살고 있어	갓생/NNG 살/VV 고/EC 있/VX 어/EF
+킹받네	킹받/VV 네/EF
+레게노다	레게노/NNG 이/VCP 다/EF
+존맛탱이야	존맛탱/NNG 이/VCP 야/EF
+인싸들이 모였어	인싸/NNG 들/XSN 이/JKS 모이/VV 었/EP 어/EF
+아싸라서 집에만 있어	아싸/NNG 이/VCP 라서/EC 집/NNG 에만/JKB 있/VV 어/EF
+꿀잼이야	꿀잼/NNG 이/VCP 야/EF
+노잼이네	노잼/NNG 이/VCP 네/EF
+TMI인데요	TMI/SL 이/VCP ㄴ데요/EF
+MBTI가 뭐예요	MBTI/SL 가/JKS 뭐/NP 이/VCP 에요/EF
+브이로그 찍었어	브이로그/NNG 찍/VV 었/EP 어/EF
+쇼츠 올렸어요	쇼츠/NNG 올리/VV 었/EP 어요/EF
+크리에이터 되고 싶어	크리에이터/NNG 되/VV 고/EC 싶/VX 어/EF
+구독 좋아요 알림 설정 해주세요	구독/NNG 좋아요/NNG 알림/NNG 설정/NNG 하/XSV 어/EC 주/VX 세요/EF
+방탄소년단 콘서트 갔어요	방탄소년단/NNP 콘서트/NNG 가/VV 았/EP 어요/EF
+블랙핑크 새 앨범 나왔어	블랙핑크/NNP 새/XPN 앨범/NNG 나오/VV 았/EP 어/EF
+AI로 그림 그렸어	AI/SL 로/JKB 그림/NNG 그리/VV 었/EP 어/EF
+챗GPT 써봤어요	챗GPT/NNP 쓰/VV 어/EC 보/VX 았/EP 어요/EF
+
+# 불규칙 활용 (확장)
+걷다 걸어 걸으면 걷는	걷/VV 다/EF 걷/VV 어/EF 걷/VV 으면/EC 걷/VV 는/ETM
+듣다 들어 들으면 듣는	듣/VV 다/EF 듣/VV 어/EF 듣/VV 으면/EC 듣/VV 는/ETM
+묻다 물어 물으면 묻는	묻/VV 다/EF 묻/VV 어/EF 묻/VV 으면/EC 묻/VV 는/ETM
+눕다 누워 누우면	눕/VV 다/EF 눕/VV 어/EF 눕/VV 으면/EC
+줍다 주워 주우면	줍/VV 다/EF 줍/VV 어/EF 줍/VV 으면/EC
+덥다 더워 더우면	덥/VA 다/EF 덥/VA 어/EF 덥/VA 으면/EC
+춥다 추워 추우면	춥/VA 다/EF 춥/VA 어/EF 춥/VA 으면/EC
+쉽다 쉬워 쉬우면	쉽/VA 다/EF 쉽/VA 어/EF 쉽/VA 으면/EC
+어렵다 어려워 어려우면	어렵/VA 다/EF 어렵/VA 어/EF 어렵/VA 으면/EC
+무겁다 무거워 무거우면	무겁/VA 다/EF 무겁/VA 어/EF 무겁/VA 으면/EC
+가볍다 가벼워 가벼우면	가볍/VA 다/EF 가볍/VA 어/EF 가볍/VA 으면/EC
+빠르다 빨라 빠르면	빠르/VA 다/EF 빠르/VA 아/EF 빠르/VA 면/EC
+다르다 달라 다르면	다르/VA 다/EF 다르/VA 아/EF 다르/VA 면/EC
+모르다 몰라 모르면	모르/VV 다/EF 모르/VV 아/EF 모르/VV 면/EC
+부르다 불러 부르면	부르/VV 다/EF 부르/VV 어/EF 부르/VV 면/EC
+고르다 골라 고르면	고르/VV 다/EF 고르/VV 아/EF 고르/VV 면/EC
+이르다 일러 이르면	이르/VV 다/EF 이르/VV 어/EF 이르/VV 면/EC
+하얗다 하얘 하얗으면	하얗/VA 다/EF 하얗/VA 아/EF 하얗/VA 으면/EC
+까맣다 까매 까맣으면	까맣/VA 다/EF 까맣/VA 아/EF 까맣/VA 으면/EC
+노랗다 노래 노랗으면	노랗/VA 다/EF 노랗/VA 아/EF 노랗/VA 으면/EC
+
+# 복합 구조 (확장)
+나는 오늘 아침에 일찍 일어나서 운동을 하고 아침밥을 먹었다	나/NP 는/JX 오늘/NNG 아침/NNG 에/JKB 일찍/MAG 일어나/VV 아서/EC 운동/NNG 을/JKO 하/VV 고/EC 아침밥/NNG 을/JKO 먹/VV 었/EP 다/EF
+그가 쓴 책이 베스트셀러가 되어서 많은 사람들이 읽고 있다	그/NP 가/JKS 쓰/VV ㄴ/ETM 책/NNG 이/JKS 베스트셀러/NNG 가/JKS 되/VV 어서/EC 많/VA 은/ETM 사람/NNG 들/XSN 이/JKS 읽/VV 고/EC 있/VX 다/EF
+비가 와서 우산을 가지고 나왔는데 막상 도착하니까 그쳤다	비/NNG 가/JKS 오/VV 아서/EC 우산/NNG 을/JKO 가지/VV 고/EC 나오/VV 았/EP 는데/EC 막상/MAG 도착/NNG 하/XSV 니까/EC 그치/VV 었/EP 다/EF
+열심히 공부했지만 시험이 어려워서 점수가 잘 안 나왔어요	열심히/MAG 공부/NNG 하/XSV 았/EP 지만/EC 시험/NNG 이/JKS 어렵/VA 어서/EC 점수/NNG 가/JKS 잘/MAG 안/MAG 나오/VV 았/EP 어요/EF
+저는 내일 회의에 참석해야 해서 오늘 자료를 준비하고 있습니다	저/NP 는/JX 내일/NNG 회의/NNG 에/JKB 참석/NNG 하/XSV 아야/EC 하/VV 어서/EC 오늘/NNG 자료/NNG 를/JKO 준비/NNG 하/XSV 고/EC 있/VX 습니다/EF
+친구가 추천해 준 식당에서 맛있는 음식을 먹으면서 이야기를 나눴다	친구/NNG 가/JKS 추천/NNG 하/XSV 어/EC 주/VX ㄴ/ETM 식당/NNG 에서/JKB 맛있/VA 는/ETM 음식/NNG 을/JKO 먹/VV 으면서/EC 이야기/NNG 를/JKO 나누/VV 었/EP 다/EF
+이 프로젝트는 여러 팀이 협력하여 진행하고 있으며 곧 완료될 예정이다	이/MM 프로젝트/NNG 는/JX 여러/MM 팀/NNG 이/JKS 협력/NNG 하/XSV 어/EC 진행/NNG 하/XSV 고/EC 있/VX 으며/EC 곧/MAG 완료/NNG 되/XSV ㄹ/ETM 예정/NNG 이/VCP 다/EF
+시장에서 사온 신선한 야채로 엄마가 맛있는 요리를 해주셨다	시장/NNG 에서/JKB 사/VV 아/EC 오/VV ㄴ/ETM 신선하/VA ㄴ/ETM 야채/NNG 로/JKB 엄마/NNG 가/JKS 맛있/VA 는/ETM 요리/NNG 를/JKO 하/VV 어/EC 주/VX 시/EP 었/EP 다/EF
+학교를 졸업한 후에 대학원에 진학할지 취업을 할지 고민하고 있다	학교/NNG 를/JKO 졸업/NNG 하/XSV ㄴ/ETM 후/NNG 에/JKB 대학원/NNG 에/JKB 진학/NNG 하/XSV ㄹ지/EC 취업/NNG 을/JKO 하/VV ㄹ지/EC 고민/NNG 하/XSV 고/EC 있/VX 다/EF
+우리가 만난 지 벌써 십 년이 되었는데 그동안 많은 일이 있었다	우리/NP 가/JKS 만나/VV ㄴ/ETM 지/NNB 벌써/MAG 십/NR 년/NNB 이/JKS 되/VV 었/EP 는데/EC 그동안/NNG 많/VA 은/ETM 일/NNG 이/JKS 있/VV 었/EP 다/EF
