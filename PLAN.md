@@ -14,10 +14,10 @@ v0.4.0 crates.io 정식 릴리스, 사전 품질 근본 개선 시작, CI 자동
     - mecab-ko-dict-validator v0.4.0 ✅
     - mecab-ko-dict-builder v0.4.0 ✅
     - mecab-ko v0.4.0 (facade) ✅
-- [ ] S24-02: mecab-ko-dic 품질 분석
-  - Viterbi 경로 오류 패턴 수집
-  - 비용값 이상치 분석
-  - 수정 필요 엔트리 목록 생성
+- [x] S24-02: mecab-ko-dic 품질 분석 ✅
+  - Viterbi 경로 오류 패턴 수집 완료
+  - 주요 오류: VV 14.9%, VA 33.3%, ETM 0%, XPN 0%
+  - 문서화: docs/research/dictionary/error-pattern-analysis-v0.4.0.md
 
 ### P1 (High)
 - [ ] S24-03: CI 자동 정확도 측정 (S23-07 이월)
