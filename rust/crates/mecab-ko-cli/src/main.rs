@@ -490,6 +490,10 @@ enum Commands {
         #[arg(short = 'd', long)]
         dicdir: Option<PathBuf>,
 
+        /// 사용자 정의 사전 (CSV 형식)
+        #[arg(short = 'u', long = "user-dic")]
+        user_dict: Option<PathBuf>,
+
         /// 세종 코퍼스 호환 모드 (복합 태그를 분리하여 평가)
         #[arg(long)]
         sejong: bool,
@@ -885,9 +889,10 @@ fn main() -> Result<()> {
                 output,
                 verbose,
                 dicdir,
+                user_dict,
                 sejong,
             } => {
-                run_evaluate(input, *format, output.as_ref(), *verbose, dicdir.as_ref(), *sejong)?;
+                run_evaluate(input, *format, output.as_ref(), *verbose, dicdir.as_ref(), user_dict.as_ref(), *sejong)?;
             }
             Commands::Sync {
                 source,
@@ -2134,6 +2139,7 @@ fn run_evaluate(
     output_path: Option<&PathBuf>,
     verbose: bool,
     dicdir: Option<&PathBuf>,
+    user_dict_path: Option<&PathBuf>,
     sejong_mode: bool,
 ) -> Result<()> {
     use mecab_ko_core::evaluate::{evaluate_dataset, evaluate_dataset_sejong, TestDataset};
@@ -2167,6 +2173,19 @@ fn run_evaluate(
     } else {
         Tokenizer::new().context("Failed to initialize tokenizer")?
     };
+
+    // Load user dictionary if specified
+    if let Some(user_dict_path) = user_dict_path {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(user_dict_path).with_context(|| {
+            format!(
+                "Failed to load user dictionary: {}",
+                user_dict_path.display()
+            )
+        })?;
+        eprintln!("사용자 사전 로드: {} 항목", user_dict.len());
+        tokenizer.set_user_dict(user_dict);
+    }
 
     eprintln!("형태소 분석 시작...");
 
