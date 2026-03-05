@@ -816,6 +816,11 @@ impl SejongConverter {
             }
         }
 
+        // 축약형 처리 시도 (했어요, 갔어요 등)
+        if let Some(result) = self.try_split_contracted(surface, pos) {
+            return result;
+        }
+
         // 규칙이 적용되지 않으면 태그만 분리
         let tags = self.split_compound_tag(pos);
         if tags.len() > 1 {
@@ -824,6 +829,57 @@ impl SejongConverter {
         }
 
         vec![(surface.to_string(), pos.to_string())]
+    }
+
+    /// 축약형 동사 분리 시도
+    /// 예: 했어요 → 하 + 았 + 어요, 갔어요 → 가 + 았 + 어요
+    fn try_split_contracted(&self, surface: &str, pos: &str) -> Option<Vec<(String, String)>> {
+        let tags = self.split_compound_tag(pos);
+        if tags.len() != 3 {
+            return None;
+        }
+
+        // 축약형 패턴 정의: (축약된 어간, 원래 어간, 선어말어미)
+        // 하다류: 하+았 → 했, 하+았+어 → 했어
+        // 가다류: 가+았 → 갔, 오+았 → 왔
+        // 보다류: 보+았 → 봤
+        let contracted_stems = [
+            ("했", "하", "았"),
+            ("갔", "가", "았"),
+            ("왔", "오", "았"),
+            ("봤", "보", "았"),
+            ("샀", "사", "았"),
+            ("잤", "자", "았"),
+            ("됐", "되", "었"),
+        ];
+
+        let chars: Vec<char> = surface.chars().collect();
+        if chars.is_empty() {
+            return None;
+        }
+
+        // 첫 글자가 축약형 어간인지 확인
+        let first_char = chars[0].to_string();
+        for (contracted, stem, prefinal) in &contracted_stems {
+            if first_char == *contracted {
+                let ending: String = chars[1..].iter().collect();
+                if !ending.is_empty() {
+                    // 종결어미 패턴 확인
+                    let ef_patterns = ["어요", "어", "다", "지", "니", "나", "습니다", "습니까"];
+                    for ef in &ef_patterns {
+                        if ending == *ef || ending.ends_with(ef) {
+                            return Some(vec![
+                                ((*stem).to_string(), tags[0].clone()),
+                                ((*prefinal).to_string(), tags[1].clone()),
+                                (ending, tags[2].clone()),
+                            ]);
+                        }
+                    }
+                }
+            }
+        }
+
+        None
     }
 
     /// 분리된 형태소 생성 (어간 + 어미들)
@@ -1930,11 +1986,9 @@ impl SejongConverter {
             // 명사 뒤의 VV/EF를 XSV로 보정
             if noun_poses.contains(prev_pos.as_str())
                 && (curr_pos == "VV" || curr_pos == "EF" || curr_pos == "VA")
-            {
-                if xsv_patterns.contains_key(curr_surface.as_str()) {
+                && xsv_patterns.contains_key(curr_surface.as_str()) {
                     xsv_corrections.push((i, "XSV".to_string()));
                 }
-            }
         }
 
         // XSV 보정 적용
