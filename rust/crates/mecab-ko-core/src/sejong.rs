@@ -742,6 +742,9 @@ impl SejongConverter {
         // 잘못된 분해 패턴 보정 (갔다오/VV + ㄴ/ETM → 갔/VV + 다/EF)
         Self::apply_decomposition_corrections(&mut sejong_tokens);
 
+        // 잘못 분해된 토큰 병합 (친/VV + 구와/NNG → 친구/NNG + 와/JC)
+        Self::apply_token_merges(&mut sejong_tokens);
+
         // 고빈도 어휘 강제 매핑 (문맥 무관)
         Self::apply_lexicon_overrides(&mut sejong_tokens);
 
@@ -1052,6 +1055,114 @@ impl SejongConverter {
                     token.pos = correct_pos.to_string();
                 }
             }
+        }
+    }
+
+    /// 잘못 분해된 토큰 병합
+    ///
+    /// 사전의 Viterbi 경로 선택 문제로 잘못 분해된 토큰들을 병합합니다.
+    /// 예: "친/VV ᆫ/ETM 구와/NNG" → "친구/NNG 와/JC"
+    /// 예: "날/NNG 씨/EP" → "날씨/NNG"
+    fn apply_token_merges(tokens: &mut Vec<SejongToken>) {
+        // 병합 규칙: (패턴, 결과)
+        // 패턴: [(surface, pos), ...] - 매칭할 토큰 시퀀스
+        // 결과: [(surface, pos), ...] - 병합 결과
+        //
+        // NOTE: 병합 규칙은 보수적으로 적용 (오탐 방지)
+        // 특정 표면형과 품사의 조합만 병합
+
+        let mut i = 0;
+        while i < tokens.len() {
+            let mut merged = false;
+
+            // 패턴 1: "친/VV + ᆫ/ETM + 구와/NNG" → "친구/NNG + 와/JC"
+            // (친구와가 치/VV+ᆫ/ETM+구와/NNG로 분석되는 문제 수정)
+            if i + 2 < tokens.len()
+                && tokens[i].surface == "치"
+                && tokens[i].pos == "VV"
+                && tokens[i + 1].surface == "ᆫ"
+                && tokens[i + 1].pos == "ETM"
+                && tokens[i + 2].surface == "구와"
+                && tokens[i + 2].pos == "NNG"
+            {
+                let start = tokens[i].start_pos;
+                let end = tokens[i + 2].end_pos;
+
+                tokens[i] = SejongToken::new("친구", "NNG", start, start + 2);
+                tokens[i + 1] = SejongToken::new("와", "JC", start + 2, end);
+                tokens.remove(i + 2);
+                merged = true;
+            }
+
+            // 패턴 2: "날/NNG + 씨/EP + 가/EF" → "날씨/NNG + 가/JKS"
+            // (날씨가가 날/NNG+씨/EP+가/EF로 분석되는 문제 수정)
+            if !merged
+                && i + 2 < tokens.len()
+                && tokens[i].surface == "날"
+                && tokens[i].pos == "NNG"
+                && tokens[i + 1].surface == "씨"
+                && tokens[i + 1].pos == "EP"
+                && tokens[i + 2].surface == "가"
+                && tokens[i + 2].pos == "EF"
+            {
+                let start = tokens[i].start_pos;
+                let end = tokens[i + 2].end_pos;
+
+                tokens[i] = SejongToken::new("날씨", "NNG", start, start + 2);
+                tokens[i + 1] = SejongToken::new("가", "JKS", start + 2, end);
+                tokens.remove(i + 2);
+                merged = true;
+            }
+
+            // 패턴 3: "대한/NNG + 민국/NNG + ᆯ/ETM" → "대한민국/NNP"
+            // (대한민국이 대한/NNG+민국/NNG+ᆯ/ETM로 분석되는 문제 수정)
+            if !merged
+                && i + 2 < tokens.len()
+                && tokens[i].surface == "대한"
+                && tokens[i].pos == "NNG"
+                && tokens[i + 1].surface == "민국"
+                && tokens[i + 1].pos == "NNG"
+                && tokens[i + 2].surface == "ᆯ"
+                && tokens[i + 2].pos == "ETM"
+            {
+                let start = tokens[i].start_pos;
+                let _end = tokens[i + 2].end_pos;
+
+                tokens[i] = SejongToken::new("대한민국", "NNP", start, start + 4);
+                tokens.remove(i + 2);
+                tokens.remove(i + 1);
+                merged = true;
+            }
+
+            // 패턴 4: "먹/NNG + 었/EF" → "먹/VV + 었/EP"
+            // (먹었이 먹/NNG+었/EF로 분석되는 문제 수정)
+            if !merged
+                && i + 1 < tokens.len()
+                && tokens[i].surface == "먹"
+                && tokens[i].pos == "NNG"
+                && tokens[i + 1].surface == "었"
+                && tokens[i + 1].pos == "EF"
+            {
+                tokens[i].pos = "VV".to_string();
+                tokens[i + 1].pos = "EP".to_string();
+                merged = true;
+            }
+
+            // 패턴 5: "읽/VA + 고/EF" → "읽/VV + 고/EC"
+            // (읽고가 읽/VA+고/EF로 분석되는 문제 수정)
+            if !merged
+                && i + 1 < tokens.len()
+                && tokens[i].surface == "읽"
+                && tokens[i].pos == "VA"
+                && tokens[i + 1].surface == "고"
+                && tokens[i + 1].pos == "EF"
+            {
+                tokens[i].pos = "VV".to_string();
+                tokens[i + 1].pos = "EC".to_string();
+                merged = true;
+            }
+
+            i += 1;
         }
     }
 
