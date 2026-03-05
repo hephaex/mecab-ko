@@ -2,14 +2,14 @@
 
 **MeCab-Ko**는 한국어 형태소 분석을 위한 고성능 오픈소스 라이브러리입니다. 기존 C/C++ 기반의 은전한닢(mecab-ko)을 순수 Rust로 재구현하여, 메모리 안전성과 현대적인 개발 환경을 제공합니다.
 
-> **최신 버전: v0.3.1** (2026-03-04)
+> **최신 버전: v0.4.0** (2026-03-05) 🎉 **crates.io 정식 배포!**
 >
-> - 세종 코퍼스 호환 모드 (SejongConverter)
-> - 복합 태그 분리 (VV+EF → VV, EF)
-> - CLI `--sejong` 옵션 추가
-> - K-best Viterbi 경로 탐색 (ImprovedNbestSearcher)
-> - LRU 캐싱 토크나이저 (TokenCache)
-> - 스트리밍 API 개선 (LargeFileProcessor)
+> - **6개 크레이트 crates.io 정식 배포**
+> - 세종 코퍼스 호환 모드 강화 (후처리 파이프라인 완성)
+> - 고유명사 ~200개 추가 (도시, 국가, 브랜드, 유명인)
+> - 신조어 사전 v3.0 (511개)
+> - 평가 데이터셋 확장 (160 → 300문장)
+> - CI 자동 정확도 측정 (회귀 탐지)
 
 ## 왜 MeCab-Ko인가?
 
@@ -96,12 +96,14 @@ mecab-ko/
 
 | Crate | 설명 | 상태 |
 |-------|------|------|
-| `mecab-ko` | 사용자를 위한 통합 인터페이스 | v0.3.1 |
-| `mecab-ko-core` | Lattice, Viterbi, 미등록어 처리, 세종 호환 | v0.3.1 |
-| `mecab-ko-dict` | 사전 로딩, Trie, 연접 비용 매트릭스 | v0.3.1 |
-| `mecab-ko-hangul` | 자모 분리/결합, 문자 분류 | v0.3.1 |
-| `mecab-ko-cli` | `mecab-ko` 명령줄 도구 | v0.3.1 |
-| `mecab-ko-elasticsearch` | Nori 호환 분석기 | v0.3.1 |
+| `mecab-ko` | 사용자를 위한 통합 인터페이스 | **v0.4.0** (crates.io) |
+| `mecab-ko-core` | Lattice, Viterbi, 미등록어 처리, 세종 호환 | **v0.4.0** (crates.io) |
+| `mecab-ko-dict` | 사전 로딩, Trie, 연접 비용 매트릭스 | **v0.4.0** (crates.io) |
+| `mecab-ko-hangul` | 자모 분리/결합, 문자 분류 | **v0.4.0** (crates.io) |
+| `mecab-ko-dict-builder` | 사전 빌드 도구 | **v0.4.0** (crates.io) |
+| `mecab-ko-dict-validator` | 사전 검증 도구 | **v0.4.0** (crates.io) |
+| `mecab-ko-cli` | `mecab-ko` 명령줄 도구 | v0.4.0 |
+| `mecab-ko-elasticsearch` | Nori 호환 분석기 | v0.4.0 |
 | `mecab-ko-wasm` | WebAssembly 바인딩 | v0.3.1 (npm) |
 
 ## 다른 프로젝트와의 비교
@@ -113,32 +115,35 @@ mecab-ko/
 | **Lindera** | Rust | 12 MB/s | ~180 MB | 일본어 중심 |
 | **MeCab-Ko** | Rust | 15 MB/s | ~145 MB | mecab-ko 호환, 순수 Rust |
 
-## v0.3.1 주요 변경사항
+## v0.4.0 주요 변경사항
 
-### 세종 코퍼스 호환 모드
-- `SejongConverter`: 복합 태그를 세종 코퍼스 형식으로 분리
-- 어미 분리: 갔다/VV+EF → 갔/VV + 다/EF
-- CLI `--sejong` 옵션으로 정확도 평가 시 활용
-- 정확도 개선: Token Accuracy 15.2% → 16.8%
+### crates.io 정식 배포 🎉
+- 6개 크레이트 crates.io 정식 배포 완료
+- `cargo add mecab-ko`로 손쉬운 설치
+- MIT/Apache 2.0 듀얼 라이선스
 
-### K-best 경로 탐색
-- `ImprovedNbestSearcher`: K-best Viterbi 알고리즘
-- 다양한 분석 후보 제공
-- 사용자 정의 분석 모드 지원
+### 세종 코퍼스 호환 모드 강화
+- 후처리 파이프라인 완성 (4단계)
+  1. `apply_decomposition_corrections()`: 오분석 패턴 보정
+  2. `apply_token_merges()`: 잘못 분해된 토큰 병합
+  3. `apply_lexicon_overrides()`: 고빈도 어휘 매핑
+  4. `apply_context_corrections()`: 컨텍스트 기반 품사 보정
+- EP/EC/ETM/ETN 패턴 확장
 
-### 성능 최적화
-- `TokenCache`: LRU 캐싱으로 반복 분석 가속
-- `LargeFileProcessor`: 대용량 파일 스트리밍 처리
-- 병렬 토큰화: 멀티코어 활용
+### 고유명사 및 신조어 확장
+- 고유명사 ~200개 추가 (도시, 국가, 브랜드, 대학, 유명인)
+- 신조어 사전 v3.0 (511개): AI/ML, 소셜미디어, MZ세대 용어
 
-### 스트리밍 API
-- `ProgressStreamingTokenizer`: 진행률 콜백 지원
-- 스마트 문장 경계 청킹
-- 오버랩 청킹 지원
+### 평가 인프라 강화
+- 평가 데이터셋: 160 → 300문장 확장
+- CI 자동 정확도 측정 (회귀 탐지)
+- 기준선: Token Accuracy 23.8% (세종 모드)
 
-### npm 배포
-- `mecab-ko-wasm` v0.3.1 npm에서 설치 가능
-- 브라우저에서 한국어 형태소 분석 지원
+### 이전 버전 주요 기능
+- K-best Viterbi 경로 탐색 (v0.3.0)
+- LRU 캐싱 토크나이저 (v0.3.0)
+- 스트리밍 API (v0.3.0)
+- npm WASM 배포 (v0.3.1)
 
 자세한 내용은 [변경 이력](changelog.md)을 참조하세요.
 

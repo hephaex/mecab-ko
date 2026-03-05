@@ -4,6 +4,78 @@
 
 이 프로젝트는 [Semantic Versioning](https://semver.org/)을 따릅니다.
 
+## [0.4.0] - 2026-03-05 🎉 crates.io 정식 배포
+
+### 추가됨 (Added)
+
+#### crates.io 배포
+- 6개 크레이트 정식 배포 완료
+  - `mecab-ko` (파사드 크레이트)
+  - `mecab-ko-hangul` (한글 유틸리티)
+  - `mecab-ko-dict` (사전 로더)
+  - `mecab-ko-core` (핵심 엔진)
+  - `mecab-ko-dict-builder` (사전 빌드 도구)
+  - `mecab-ko-dict-validator` (사전 검증 도구)
+
+#### 세종 코퍼스 호환 모드 강화 (mecab-ko-core)
+- `apply_decomposition_corrections()`: 오분석 패턴 보정
+- `apply_token_merges()`: 잘못 분해된 토큰 병합
+- `apply_lexicon_overrides()`: 고빈도 어휘 매핑
+- `apply_context_corrections()`: 컨텍스트 기반 품사 보정
+- EP (선어말어미) 패턴 확장: 과거, 추측, 높임, 회상
+- EC (연결어미) 패턴 확장: 이유, 조건, 시간, 양보
+- ETM/ETN 패턴 확장: 관형형, 명사형
+
+#### 고유명사 사전 확장
+- ~200개 고유명사 추가
+  - 도시: 안양, 안산, 파주, 김해, 창원, 청주, 전주, 포항, 원주
+  - 서울 구/동: 강남, 서초, 송파, 명동, 홍대, 이태원, 잠실
+  - 국가: 멕시코, 네덜란드, 싱가포르, 말레이시아 등 30+
+  - 기업/브랜드: 틱톡, 넷플릭스, 테슬라, 쿠팡, 배달의민족
+  - 대학: 서울대, 연세대, 고려대, 카이스트, 포스텍
+  - 유명인: 이순신, 세종대왕, 손흥민, 방탄소년단, 블랙핑크
+
+#### 신조어 사전 v3.0
+- 511개 신조어 (123 → 511, +315%)
+- AI/ML: Claude, Gemini, Midjourney, RAG, AGI
+- 소셜미디어: Threads, Bluesky, Shorts, 크리에이터
+- MZ세대: 갓생, 무지출, 킹받다, 레게노
+- 경제: HBM, 밈주식, DSR
+- 기술: Rust, Kubernetes, Docker
+
+#### 평가 데이터셋 확장
+- 160 → **300문장** 확장
+- 추가 카테고리: 일상대화, 뉴스, 기술, 신조어, 불규칙, 복합
+
+#### CI 자동 정확도 측정
+- `dict-build.yml`에 accuracy-test job 추가
+- 기준선 대비 회귀 탐지
+- 정확도 이력 JSON 아티팩트 (90일 보관)
+- GitHub Step Summary 통합
+
+### 변경됨 (Changed)
+
+- 모든 크레이트 v0.4.0 버전 업그레이드
+- 정확도 기준선 업데이트: 23.8% (300문장, 세종 모드)
+
+### 측정 결과 (300문장 데이터셋, 세종 모드)
+
+| 지표 | v0.3.x (160문장) | v0.4.0 (300문장) |
+|------|------------------|------------------|
+| Token Accuracy | 29.6% | **23.8%** |
+| Sentence Accuracy | 14.4% | 7.3% |
+| F1 Score | 0.295 | 0.229 |
+
+> **Note**: 확장된 데이터셋에는 복잡한 문장, 신조어, 불규칙 활용이 포함되어 절대값이 낮아짐
+
+### 성능 (회귀 없음)
+
+- 처리 속도: 6,250 문장/초
+- 처리량: 3.0-3.7M chars/sec
+- v0.3.0 대비 회귀 없음
+
+---
+
 ## [0.3.1] - 2026-03-04
 
 ### 추가됨 (Added)
@@ -237,11 +309,12 @@
 
 ## 로드맵
 
-### 단기 계획 (v0.4.0)
+### 단기 계획 (v0.4.x - v0.5.0)
+- [x] crates.io 정식 배포 ✅
 - [ ] mecab-ko-dic v3.0 (100만+ 엔트리)
-- [ ] 정확도 50%+ 달성
+- [ ] 정확도 40%+ 달성 (사전 품질 개선)
+- [ ] PyPI 배포
 - [ ] 신조어 자동 수집 파이프라인 실행
-- [ ] 실시간 어미 분리
 
 ### 중기 계획 (v0.5.0)
 - [ ] 정확도 70%+ 달성
@@ -280,6 +353,7 @@
 
 ---
 
+[0.4.0]: https://github.com/hephaex/mecab-ko/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/hephaex/mecab-ko/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/hephaex/mecab-ko/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/hephaex/mecab-ko/compare/v0.1.1...v0.2.0

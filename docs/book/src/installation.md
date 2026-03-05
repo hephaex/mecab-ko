@@ -79,25 +79,39 @@ export PATH="$PATH:$(pwd)/target/release"
 
 ## 라이브러리로 사용
 
+### crates.io에서 설치 (권장) 🎉
+
 Rust 프로젝트에서 라이브러리로 사용하려면 `Cargo.toml`에 의존성을 추가하세요:
 
 ```toml
 [dependencies]
-mecab-ko = "0.2"
+mecab-ko = "0.4"
+```
+
+또는 cargo add 명령어를 사용합니다:
+
+```bash
+cargo add mecab-ko
 ```
 
 특정 기능만 사용할 경우:
 
 ```toml
 [dependencies]
-# Core library only
-mecab-ko-core = "0.2"
+# Core library only (Viterbi, Lattice, Sejong converter)
+mecab-ko-core = "0.4"
 
-# Hangul utilities only
-mecab-ko-hangul = "0.1"
+# Hangul utilities only (자모 분리/결합)
+mecab-ko-hangul = "0.4"
 
-# Dictionary management only
-mecab-ko-dict = "0.2"
+# Dictionary management only (사전 로딩)
+mecab-ko-dict = "0.4"
+
+# Dictionary builder (사전 빌드 도구)
+mecab-ko-dict-builder = "0.4"
+
+# Dictionary validator (사전 검증 도구)
+mecab-ko-dict-validator = "0.4"
 ```
 
 ### Feature Flags
@@ -106,7 +120,7 @@ mecab-ko-dict = "0.2"
 
 ```toml
 [dependencies]
-mecab-ko = { version = "0.2", features = ["builder", "serde"] }
+mecab-ko = { version = "0.4", features = ["builder", "serde"] }
 ```
 
 | Feature | 설명 |
