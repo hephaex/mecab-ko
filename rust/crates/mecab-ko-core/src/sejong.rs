@@ -1843,6 +1843,41 @@ impl SejongConverter {
         for (idx, new_pos) in etm_corrections {
             tokens[idx].pos = new_pos;
         }
+
+        // 3차 보정: XSV (파생접미사) 보정
+        // 명사 뒤의 "하다/되다" 계열을 XSV로 보정
+        // 패턴: NNG + 하/했/해/되/됐 → NNG + XSV
+        let xsv_patterns: HashMap<&str, bool> = [
+            ("하", true),   // 하다
+            ("해", true),   // 해요 (하+어)
+            ("했", true),   // 했다 (하+았)
+            ("되", true),   // 되다
+            ("됐", true),   // 됐다 (되+었)
+        ]
+        .into_iter()
+        .collect();
+
+        let mut xsv_corrections: Vec<(usize, String)> = Vec::new();
+
+        for i in 1..tokens.len() {
+            let prev_pos = &tokens[i - 1].pos;
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+
+            // 명사 뒤의 VV/EF를 XSV로 보정
+            if noun_poses.contains(prev_pos.as_str())
+                && (curr_pos == "VV" || curr_pos == "EF" || curr_pos == "VA")
+            {
+                if xsv_patterns.contains_key(curr_surface.as_str()) {
+                    xsv_corrections.push((i, "XSV".to_string()));
+                }
+            }
+        }
+
+        // XSV 보정 적용
+        for (idx, new_pos) in xsv_corrections {
+            tokens[idx].pos = new_pos;
+        }
     }
 
     /// 세종 형식 문자열로 변환
