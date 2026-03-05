@@ -121,10 +121,41 @@ F1 Score: 0.231
 1. `c93b67f` - feat(dict): Add verb inflection user dictionary
 2. `a5d408e` - feat(dict): Expand verb inflection dictionary
 3. `54ac5e4` - feat(dict): Add more patterns to user dictionary
+4. `c0edcb2` - fix(viterbi): Disable incorrect SpacePenalty range
+5. `538815b` - feat(dict): Expand user dictionary for 30% accuracy target
+
+## 세션 2: SpacePenalty 버그 수정 및 30% 달성 ✅
+
+### SpacePenalty 버그 발견
+"형태소 분석기"가 "형태 소분 석기"로 오분석되는 문제 발견:
+- 원인: SpacePenalty의 left_id 범위 (1780~1809)가 NNG(명사)를 포함
+- 결과: 공백 직후의 명사에 잘못된 페널티 적용
+- 해결: SpacePenalty 완전 비활성화
+- 정확도 개선: 27.0% → 28.1% (+1.1%p)
+
+### 사용자 사전 최종 확장
+149개 패턴 추가:
+- NP+JX: 나는, 너는, 우리는 등
+- NP+JKS: 내가, 네가, 제가
+- NP+JKO: 나를, 너를, 저를
+- NNG+JKB: 학교에, 집에 등
+- NNG: 날씨, 오늘, 내일 (오늘날 compound 방지)
+- VA+EF: 좋다, 나쁘다 등
+
+### 최종 정확도 달성 🎉
+| 지표 | 시작 | 최종 | 개선 |
+|------|------|------|------|
+| Token Accuracy | 23.8% | **30.4%** | +6.6%p |
+| Sentence | 7.3% | 12.3% | +5.0%p |
+| VA | 40.2% | 58.6% | +18.4%p |
+| NP | 34.6% | 53.8% | +19.2%p |
+| VV | 16.8% | 28.3% | +11.5%p |
+| ETM | 0% | 29.0% | +29.0%p |
 
 ## 학습 포인트
 
 1. **후처리 vs 사용자 사전**: 후처리는 태그만 수정 가능, 사용자 사전은 토큰화 경로 자체를 변경 가능
 2. **비용값의 중요성**: Viterbi는 총 비용이 낮은 경로 선택, 낮은 비용으로 올바른 경로 유도 가능
-3. **점진적 개선**: 23.9% → 26.7% (+2.8%p) - 매 단계별 검증 중요
+3. **점진적 개선**: 23.9% → 26.7% → 28.1% → 30.4% - 매 단계별 검증 중요
 4. **트레이드오프**: 일부 패턴 추가 시 다른 패턴에 부정적 영향 가능 (VX 케이스)
+5. **SpacePenalty 설계 오류**: left_id 범위가 품사와 매칭되지 않으면 역효과 발생
