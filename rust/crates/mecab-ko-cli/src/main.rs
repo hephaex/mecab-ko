@@ -662,7 +662,7 @@ impl AnalysisContext {
     /// - The tokenizer initialization fails
     fn new(args: Args) -> Result<Self> {
         // 토크나이저 초기화
-        let tokenizer = if let Some(ref dict_path) = args.dicdir {
+        let mut tokenizer = if let Some(ref dict_path) = args.dicdir {
             Tokenizer::with_dict(
                 dict_path
                     .to_str()
@@ -686,6 +686,8 @@ impl AnalysisContext {
             if !args.quiet {
                 eprintln!("Loaded {} entries from user dictionary", dict.len());
             }
+            // 사용자 사전을 tokenizer에 설정
+            tokenizer.set_user_dict(dict.clone());
             Some(dict)
         } else {
             None
