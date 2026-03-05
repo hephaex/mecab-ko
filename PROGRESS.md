@@ -47,7 +47,12 @@
   - 커밋: de04f4e
 
 ### P3 (Low)
-- [ ] S24-07: PyPI 배포 준비
+- [x] S24-07: PyPI 배포 준비 ✅
+  - pyproject.toml 버전 0.4.0 업데이트
+  - mecab-ko-python 빌드 확인 (cargo check 통과)
+  - maturin 빌드 시스템 준비 완료
+  - 커밋: 792c8a7
+  - **Note**: 실제 배포는 PyPI 토큰 확보 후 진행
 - [ ] S24-08: 커뮤니티 기능 요청 검토
 
 ---
