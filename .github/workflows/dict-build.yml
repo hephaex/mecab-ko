@@ -509,8 +509,8 @@ jobs:
           echo "| F1 Score | ${F1} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          # Compare with baseline (29.6%)
-          BASELINE=29.6
+          # Compare with baseline (23.8% with 300-sentence dataset)
+          BASELINE=23.8
           DIFF=$(echo "$TOKEN_ACC - $BASELINE" | bc 2>/dev/null || echo "0")
 
           if (( $(echo "$TOKEN_ACC < $BASELINE" | bc -l 2>/dev/null || echo 0) )); then
