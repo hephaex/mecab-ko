@@ -1206,6 +1206,49 @@ impl SejongConverter {
                 merged = true;
             }
 
+            // 패턴 10: "오다/NNG" → "오다/VV" (동사 기본형)
+            if !merged && tokens[i].surface == "오다" && tokens[i].pos == "NNG" {
+                tokens[i].pos = "VV".to_string();
+                merged = true;
+            }
+
+            // 패턴 11: "먹/NNG + 다/EF" → "먹다/VV" (동사 기본형 병합)
+            if !merged
+                && i + 1 < tokens.len()
+                && tokens[i].surface == "먹"
+                && tokens[i].pos == "NNG"
+                && tokens[i + 1].surface == "다"
+                && tokens[i + 1].pos == "EF"
+            {
+                let start = tokens[i].start_pos;
+                let end = tokens[i + 1].end_pos;
+                tokens[i] = SejongToken::new("먹다", "VV", start, end);
+                tokens.remove(i + 1);
+                merged = true;
+            }
+
+            // 패턴 12: "하/IC" → "하다/VV" 앞에 오는 경우 보정
+            // "하다 했다"에서 "하/IC 다하/VV"로 분석되는 문제
+            if !merged
+                && i + 1 < tokens.len()
+                && tokens[i].surface == "하"
+                && tokens[i].pos == "IC"
+                && tokens[i + 1].surface.starts_with("다")
+            {
+                let start = tokens[i].start_pos;
+                tokens[i] = SejongToken::new("하다", "VV", start, start + 2);
+                // 다음 토큰의 "다" 부분 제거
+                if tokens[i + 1].surface == "다하" {
+                    tokens[i + 1].surface = "하".to_string();
+                    tokens[i + 1].start_pos += 1;
+                }
+                merged = true;
+            }
+
+            // 패턴 13: 일반적인 VV 기본형 - "X/NNG" 다음에 어미가 오면 VV로 추정
+            // 이 패턴은 너무 공격적이므로 주석 처리
+            // 대신 특정 동사들만 처리
+
             i += 1;
         }
     }
