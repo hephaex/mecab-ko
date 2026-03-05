@@ -237,7 +237,7 @@ impl Tokenizer {
         let dictionary = SystemDictionary::load_default()?;
         let unknown_handler = UnknownHandler::korean_default();
         let viterbi_searcher =
-            ViterbiSearcher::new().with_space_penalty(SpacePenalty::korean_default());
+            ViterbiSearcher::new();
 
         // 초기 Lattice 생성 (빈 텍스트)
         let lattice = Lattice::new("");
@@ -267,7 +267,7 @@ impl Tokenizer {
         let dictionary = SystemDictionary::load(dict_path)?;
         let unknown_handler = UnknownHandler::korean_default();
         let viterbi_searcher =
-            ViterbiSearcher::new().with_space_penalty(SpacePenalty::korean_default());
+            ViterbiSearcher::new();
 
         let lattice = Lattice::new("");
 
@@ -798,7 +798,7 @@ mod tests {
 
         let unknown_handler = UnknownHandler::korean_default();
         let viterbi_searcher =
-            ViterbiSearcher::new().with_space_penalty(SpacePenalty::korean_default());
+            ViterbiSearcher::new();
         let lattice = Lattice::new("");
 
         Tokenizer {
