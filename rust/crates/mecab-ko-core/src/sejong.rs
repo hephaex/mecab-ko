@@ -1186,9 +1186,12 @@ impl SejongConverter {
             let curr_surface = &tokens[i].surface;
             let curr_pos = &tokens[i].pos;
 
-            // 체언 뒤의 EF/EC를 조사로 보정
+            // 체언 뒤의 잘못 태그된 품사를 조사로 보정
+            // ETN: "을" 등이 명사형어미로 잘못 태그되는 경우
+            // EF/EC: "가", "는" 등이 어미로 잘못 태그되는 경우
+            // EP: "씨" 등이 선어말어미로 잘못 태그되는 경우
             if noun_poses.contains(prev_pos.as_str())
-                && (curr_pos == "EF" || curr_pos == "EC" || curr_pos == "VV" || curr_pos == "VA")
+                && (curr_pos == "EF" || curr_pos == "EC" || curr_pos == "ETN" || curr_pos == "EP" || curr_pos == "VV" || curr_pos == "VA")
             {
                 if let Some(&correct_pos) = particle_map.get(curr_surface.as_str()) {
                     corrections.push((i, correct_pos.to_string()));
