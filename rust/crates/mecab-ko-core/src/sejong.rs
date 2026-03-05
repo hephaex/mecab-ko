@@ -1162,6 +1162,50 @@ impl SejongConverter {
                 merged = true;
             }
 
+            // 패턴 6: "있/EP + 어요/EF" → "있/VX + 어요/EF"
+            // (보조용언 "있다"가 EP로 분석되는 문제 수정)
+            if !merged
+                && i + 1 < tokens.len()
+                && tokens[i].surface == "있"
+                && tokens[i].pos == "EP"
+                && tokens[i + 1].pos == "EF"
+            {
+                tokens[i].pos = "VX".to_string();
+                merged = true;
+            }
+
+            // 패턴 7: "수/NNB + 도/JX" (after NNP) → "수도/NNG"
+            // ("대한민국 수도"에서 "수도"가 분리되는 문제 수정)
+            if !merged
+                && i > 0
+                && i + 1 < tokens.len()
+                && tokens[i - 1].pos == "NNP"
+                && tokens[i].surface == "수"
+                && tokens[i].pos == "NNB"
+                && tokens[i + 1].surface == "도"
+                && tokens[i + 1].pos == "JX"
+            {
+                let start = tokens[i].start_pos;
+                let end = tokens[i + 1].end_pos;
+
+                tokens[i] = SejongToken::new("수도", "NNG", start, end);
+                tokens.remove(i + 1);
+                merged = true;
+            }
+
+            // 패턴 8: "가다/NNG" → "가다/VV" (동사 기본형)
+            // (동사 기본형이 NNG으로 분석되는 문제 수정)
+            if !merged && tokens[i].surface == "가다" && tokens[i].pos == "NNG" {
+                tokens[i].pos = "VV".to_string();
+                merged = true;
+            }
+
+            // 패턴 9: "보다/JKB" → "보다/VV" (동사 기본형)
+            if !merged && tokens[i].surface == "보다" && tokens[i].pos == "JKB" {
+                tokens[i].pos = "VV".to_string();
+                merged = true;
+            }
+
             i += 1;
         }
     }
