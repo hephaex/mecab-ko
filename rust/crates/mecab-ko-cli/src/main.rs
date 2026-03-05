@@ -2193,47 +2193,86 @@ fn run_evaluate(
 
     // Verbose output: show incorrect sentences
     if verbose {
+        use mecab_ko_core::sejong::SejongConverter;
+
         const MAX_ERRORS: usize = 10;
 
         eprintln!("\n=== 상세 분석 ===");
         let mut error_count = 0;
 
-        for (idx, gold_sentence) in dataset.sentences.iter().enumerate() {
-            let pred_tokens = tokenizer.tokenize(&gold_sentence.text);
+        // Use SejongConverter for sejong_mode
+        let converter = if sejong_mode {
+            Some(SejongConverter::new())
+        } else {
+            None
+        };
 
-            // Check if sentence matches
-            let matches = gold_sentence.tokens.len() == pred_tokens.len()
-                && gold_sentence
-                    .tokens
+        for (idx, gold_sentence) in dataset.sentences.iter().enumerate() {
+            let raw_tokens = tokenizer.tokenize(&gold_sentence.text);
+
+            // Convert to SejongToken format if in sejong_mode
+            let pred_display = if let Some(ref conv) = converter {
+                let sejong_tokens = conv.convert_tokens(&raw_tokens);
+                sejong_tokens
                     .iter()
-                    .zip(&pred_tokens)
-                    .all(|(g, p)| g.surface == p.surface && g.pos == p.pos);
+                    .map(|t| format!("{}/{}", t.surface, t.pos))
+                    .collect::<Vec<_>>()
+                    .join(" ")
+            } else {
+                format_tokens_pred(&raw_tokens)
+            };
+
+            // Check if sentence matches using the same logic as evaluate function
+            let matches = if converter.is_some() {
+                // For sejong mode, compare with converted tokens
+                let sejong_tokens = converter.as_ref().unwrap().convert_tokens(&raw_tokens);
+                gold_sentence.tokens.len() == sejong_tokens.len()
+                    && gold_sentence.tokens.iter().zip(&sejong_tokens).all(|(g, p)| {
+                        g.surface == p.surface && g.pos == p.pos
+                    })
+            } else {
+                gold_sentence.tokens.len() == raw_tokens.len()
+                    && gold_sentence
+                        .tokens
+                        .iter()
+                        .zip(&raw_tokens)
+                        .all(|(g, p)| g.surface == p.surface && g.pos == p.pos)
+            };
 
             if !matches && error_count < MAX_ERRORS {
                 error_count += 1;
                 eprintln!("\n[문장 #{}] {}", idx + 1, gold_sentence.text);
                 eprintln!("  정답: {}", format_tokens_gold(&gold_sentence.tokens));
-                eprintln!("  예측: {}", format_tokens_pred(&pred_tokens));
+                eprintln!("  예측: {}", pred_display);
             }
         }
 
         if error_count >= MAX_ERRORS {
-            let remaining = dataset
+            let remaining_count = dataset
                 .sentences
                 .iter()
                 .filter(|s| {
                     let pred = tokenizer.tokenize(&s.text);
-                    !(s.tokens.len() == pred.len()
-                        && s.tokens
-                            .iter()
-                            .zip(&pred)
-                            .all(|(g, p)| g.surface == p.surface && g.pos == p.pos))
+                    if let Some(ref conv) = converter {
+                        let sejong_tokens = conv.convert_tokens(&pred);
+                        !(s.tokens.len() == sejong_tokens.len()
+                            && s.tokens
+                                .iter()
+                                .zip(&sejong_tokens)
+                                .all(|(g, p)| g.surface == p.surface && g.pos == p.pos))
+                    } else {
+                        !(s.tokens.len() == pred.len()
+                            && s.tokens
+                                .iter()
+                                .zip(&pred)
+                                .all(|(g, p)| g.surface == p.surface && g.pos == p.pos))
+                    }
                 })
                 .count()
-                - MAX_ERRORS;
+                .saturating_sub(MAX_ERRORS);
 
-            if remaining > 0 {
-                eprintln!("\n... 외 {remaining}개 불일치 문장");
+            if remaining_count > 0 {
+                eprintln!("\n... 외 {remaining_count}개 불일치 문장");
             }
         }
     }
