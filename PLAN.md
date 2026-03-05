@@ -1,51 +1,64 @@
-# 현재 스프린트: Phase 13 - Sprint 24 (v0.4.0 릴리스 & 사전 품질 개선)
+# 현재 스프린트: Phase 14 - Sprint 25 (정확도 30% & npm 배포)
 
 ## 목표
-v0.4.0 crates.io 정식 릴리스, 사전 품질 근본 개선 시작, CI 자동화 강화
+정확도 30% 달성, npm WASM 패키지 v0.4.0 배포, 후처리 파이프라인 강화
 
-## Sprint 24 작업 목록
+## Sprint 25 작업 목록
 
 ### P0 (Critical)
-- [x] S24-01: v0.4.0 crates.io 정식 릴리스 ✅
-  - 6개 크레이트 순서대로 배포 완료 🎉
-    - mecab-ko-hangul v0.4.0 ✅
-    - mecab-ko-dict v0.4.0 ✅
-    - mecab-ko-core v0.4.0 ✅
-    - mecab-ko-dict-validator v0.4.0 ✅
-    - mecab-ko-dict-builder v0.4.0 ✅
-    - mecab-ko v0.4.0 (facade) ✅
-- [x] S24-02: mecab-ko-dic 품질 분석 ✅
-  - Viterbi 경로 오류 패턴 수집 완료
-  - 주요 오류: VV 14.9%, VA 33.3%, ETM 0%, XPN 0%
-  - 문서화: docs/research/dictionary/error-pattern-analysis-v0.4.0.md
+- [ ] S25-01: 정확도 30% 달성
+  - 현재: 23.8% (300문장, 세종 모드)
+  - 목표: 30%+
+  - 접근: ETM/EC/VX 패턴 강화
+- [ ] S25-02: npm mecab-ko-wasm v0.4.0 배포
+  - wasm-pack 빌드 검증
+  - npm publish
 
 ### P1 (High)
-- [x] S24-03: CI 자동 정확도 측정 (S23-07 이월) ✅
-  - dict-build.yml에 accuracy-test job 추가
-  - 정확도 이력 JSON 저장 (90일)
-  - 기준선(29.6%) 대비 회귀 경고
-  - GitHub Step Summary에 결과 표시
-- [ ] S24-04: 평가 데이터셋 확장
-  - 160 → 300 문장 목표
-  - 카테고리별 균형: 일상, 뉴스, 문학, 기술
-  - 엣지 케이스 추가
+- [ ] S25-03: ETM (관형형어미) 정확도 개선
+  - 현재: 0%
+  - 패턴: ㄴ/는/ㄹ/은/을 매칭
+- [ ] S25-04: EC (연결어미) 정확도 개선
+  - 현재: 14.5%
+  - 패턴: 아서/어서, 고, 면, 니까 강화
 
 ### P2 (Medium)
-- [ ] S24-05: mecab-ko-dic 비용값 튜닝
+- [ ] S25-05: mecab-ko-dic 비용값 튜닝 (S24-05 이월)
   - 고빈도 오분석 패턴 비용 조정
   - 신조어 비용 최적화
-- [ ] S24-06: 문서 사이트 v0.4.0 업데이트
-  - introduction.md 버전 업데이트
-  - 정확도 가이드 추가
-  - API 변경사항 문서
+- [ ] S25-06: 신조어 자동 수집 파이프라인
+  - NIKL API 연동
+  - 크롤러 구현
 
 ### P3 (Low)
-- [ ] S24-07: PyPI 배포 준비 (토큰 확보 시)
-  - maturin 빌드 검증
-  - README 업데이트
-- [ ] S24-08: 커뮤니티 기능 요청 검토
-  - GitHub Discussions 설정
-  - 로드맵 공개
+- [ ] S25-07: PyPI 실제 배포 (토큰 확보 시)
+- [ ] S25-08: GitHub Discussions 설정
+
+---
+
+# 완료된 스프린트: Phase 13 - Sprint 24 (v0.4.0 릴리스 & 사전 품질 개선) ✅
+
+## 목표 (87.5% 달성)
+v0.4.0 crates.io 정식 릴리스 ✅, 사전 품질 근본 개선 시작 ✅
+
+## Sprint 24 작업 목록 (완료)
+
+### P0 (Critical) ✅
+- [x] S24-01: v0.4.0 crates.io 정식 릴리스 ✅
+  - 6개 크레이트 순서대로 배포 완료 🎉
+- [x] S24-02: mecab-ko-dic 품질 분석 ✅
+
+### P1 (High) ✅
+- [x] S24-03: CI 자동 정확도 측정 ✅
+- [x] S24-04: 평가 데이터셋 확장 ✅ (300문장)
+
+### P2 (Medium) ⚠️
+- [→] S24-05: mecab-ko-dic 비용값 튜닝 → Sprint 25 이월
+- [x] S24-06: 문서 사이트 v0.4.0 업데이트 ✅
+
+### P3 (Low) ✅
+- [x] S24-07: PyPI 배포 준비 ✅
+- [x] S24-08: 커뮤니티 기능 요청 검토 ✅
 
 ---
 
