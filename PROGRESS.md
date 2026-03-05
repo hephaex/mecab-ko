@@ -12,7 +12,13 @@
 ## Sprint 24 진행 중 (2026-03-05)
 
 ### P0 (Critical)
-- [ ] S24-01: v0.4.0 crates.io 정식 릴리스
+- [x] S24-01: v0.4.0 crates.io 정식 릴리스 ✅ 🎉
+  - mecab-ko-hangul v0.4.0 ✅
+  - mecab-ko-dict v0.4.0 ✅
+  - mecab-ko-core v0.4.0 ✅
+  - mecab-ko-dict-validator v0.4.0 ✅
+  - mecab-ko-dict-builder v0.4.0 ✅
+  - mecab-ko v0.4.0 (facade) ✅
 - [ ] S24-02: mecab-ko-dic 품질 분석
 
 ### P1 (High)

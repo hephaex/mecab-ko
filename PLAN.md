@@ -6,10 +6,14 @@ v0.4.0 crates.io 정식 릴리스, 사전 품질 근본 개선 시작, CI 자동
 ## Sprint 24 작업 목록
 
 ### P0 (Critical)
-- [ ] S24-01: v0.4.0 crates.io 정식 릴리스
-  - 6개 크레이트 순서대로 배포 (hangul → dict → core → validator → builder → facade)
-  - 버전 검증 및 테스트
-  - crates.io 페이지 확인
+- [x] S24-01: v0.4.0 crates.io 정식 릴리스 ✅
+  - 6개 크레이트 순서대로 배포 완료 🎉
+    - mecab-ko-hangul v0.4.0 ✅
+    - mecab-ko-dict v0.4.0 ✅
+    - mecab-ko-core v0.4.0 ✅
+    - mecab-ko-dict-validator v0.4.0 ✅
+    - mecab-ko-dict-builder v0.4.0 ✅
+    - mecab-ko v0.4.0 (facade) ✅
 - [ ] S24-02: mecab-ko-dic 품질 분석
   - Viterbi 경로 오류 패턴 수집
   - 비용값 이상치 분석
