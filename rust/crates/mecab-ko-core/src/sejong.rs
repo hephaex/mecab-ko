@@ -798,6 +798,19 @@ impl SejongConverter {
             return vec![(surface.to_string(), pos.to_string())];
         }
 
+        // 축약형 처리를 먼저 시도 (해요→하+어요, 했어요→하+았+어요 등)
+        // 이 처리가 일반 규칙보다 우선해야 함 (해요가 해+요로 분리되는 것 방지)
+
+        // 3개 태그 축약형 처리 (했어요, 갔어요 등)
+        if let Some(result) = self.try_split_contracted(surface, pos) {
+            return result;
+        }
+
+        // 2개 태그 축약형 처리 (해요, 돼요 등)
+        if let Some(result) = self.try_split_contracted_two_tags(surface, pos) {
+            return result;
+        }
+
         // 적용 가능한 규칙 찾기
         for rule in &self.ending_rules {
             if rule.pos_pattern == pos {
@@ -814,11 +827,6 @@ impl SejongConverter {
                     }
                 }
             }
-        }
-
-        // 축약형 처리 시도 (했어요, 갔어요 등)
-        if let Some(result) = self.try_split_contracted(surface, pos) {
-            return result;
         }
 
         // 규칙이 적용되지 않으면 태그만 분리
@@ -876,6 +884,61 @@ impl SejongConverter {
                         }
                     }
                 }
+            }
+        }
+
+        None
+    }
+
+    /// 2개 태그 축약형 동사 분리 시도
+    /// 예: 해요 → 하 + 어요, 돼요 → 되 + 어요
+    /// VV+EF, VA+EF 에서 '하다/되다' 축약형 처리
+    fn try_split_contracted_two_tags(
+        &self,
+        surface: &str,
+        pos: &str,
+    ) -> Option<Vec<(String, String)>> {
+        let tags = self.split_compound_tag(pos);
+        if tags.len() != 2 {
+            return None;
+        }
+
+        // 축약형 패턴: (축약된 1음절, 원래 어간, 연결되는 어미 접두사)
+        // 해요 = 하+어요, 해 = 하+어, 했다 = 하+았+다 (이건 3태그라 위에서 처리)
+        let contracted_patterns = [
+            ("해", "하", "어"),  // 하+어 → 해
+            ("돼", "되", "어"),  // 되+어 → 돼
+            ("봬", "뵈", "어"),  // 뵈+어 → 봬
+        ];
+
+        let chars: Vec<char> = surface.chars().collect();
+        if chars.is_empty() {
+            return None;
+        }
+
+        let first_char = chars[0].to_string();
+        let rest: String = chars[1..].iter().collect();
+
+        for (contracted, stem, vowel) in &contracted_patterns {
+            if first_char == *contracted && !rest.is_empty() {
+                // 해요 → 하 + 어요
+                // 해 → 하 + 어 (rest가 비어있으면 안됨)
+                let ending = format!("{vowel}{rest}");
+                return Some(vec![
+                    ((*stem).to_string(), tags[0].clone()),
+                    (ending, tags[1].clone()),
+                ]);
+            }
+        }
+
+        // 특수 케이스: 단독 축약형 (해, 돼 만 있는 경우)
+        // 이 경우 rest가 비어있으므로 위에서 처리 안됨
+        for (contracted, stem, vowel) in &contracted_patterns {
+            if surface == *contracted {
+                return Some(vec![
+                    ((*stem).to_string(), tags[0].clone()),
+                    ((*vowel).to_string(), tags[1].clone()),
+                ]);
             }
         }
 
@@ -1513,6 +1576,7 @@ impl SejongConverter {
     /// 사전의 Viterbi 경로 선택 문제로 잘못 분해된 토큰들을 병합합니다.
     /// 예: "친/VV ᆫ/ETM 구와/NNG" → "친구/NNG 와/JC"
     /// 예: "날/NNG 씨/EP" → "날씨/NNG"
+    #[allow(clippy::useless_let_if_seq, clippy::too_many_lines)]
     fn apply_token_merges(tokens: &mut Vec<SejongToken>) {
         // 병합 규칙: (패턴, 결과)
         // 패턴: [(surface, pos), ...] - 매칭할 토큰 시퀀스
@@ -1576,7 +1640,6 @@ impl SejongConverter {
                 && tokens[i + 2].pos == "ETM"
             {
                 let start = tokens[i].start_pos;
-                let _end = tokens[i + 2].end_pos;
 
                 tokens[i] = SejongToken::new("대한민국", "NNP", start, start + 4);
                 tokens.remove(i + 2);
@@ -1849,6 +1912,7 @@ impl SejongConverter {
     /// 컨텍스트 기반 품사 보정
     ///
     /// 체언(NNG, NNP, NP) 뒤의 어미(EF)를 조사로 보정
+    #[allow(clippy::too_many_lines)]
     fn apply_context_corrections(tokens: &mut [SejongToken]) {
         // 조사로 보정해야 할 표면형 -> 품사 매핑
         let particle_map: HashMap<&str, &str> = [
@@ -2210,6 +2274,29 @@ mod tests {
     }
 
     #[test]
+    fn test_contracted_hada_split() {
+        let converter = SejongConverter::new();
+
+        // 해요 -> 하 + 어요 (하다 축약형)
+        let result = converter.split_morpheme("해요", "VV+EF");
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], ("하".to_string(), "VV".to_string()));
+        assert_eq!(result[1], ("어요".to_string(), "EF".to_string()));
+
+        // 돼요 -> 되 + 어요 (되다 축약형)
+        let result2 = converter.split_morpheme("돼요", "VV+EF");
+        assert_eq!(result2.len(), 2);
+        assert_eq!(result2[0], ("되".to_string(), "VV".to_string()));
+        assert_eq!(result2[1], ("어요".to_string(), "EF".to_string()));
+
+        // 해 -> 하 + 어
+        let result3 = converter.split_morpheme("해", "VV+EF");
+        assert_eq!(result3.len(), 2);
+        assert_eq!(result3[0], ("하".to_string(), "VV".to_string()));
+        assert_eq!(result3[1], ("어".to_string(), "EF".to_string()));
+    }
+
+    #[test]
     fn test_polite_past_ending_split() {
         let converter = SejongConverter::new();
 
@@ -2540,11 +2627,12 @@ mod tests {
         assert_eq!(result2[0], ("한".to_string(), "XSV".to_string()));
         assert_eq!(result2[1], ("다".to_string(), "EF".to_string()));
 
-        // 해요 -> 해 + 요
+        // 해요 -> 하 + 어요 (하다 축약형 처리)
+        // 세종 코퍼스에서는 해요가 하+어요로 분리됨
         let result3 = converter.split_morpheme("해요", "XSV+EF");
         assert_eq!(result3.len(), 2);
-        assert_eq!(result3[0], ("해".to_string(), "XSV".to_string()));
-        assert_eq!(result3[1], ("요".to_string(), "EF".to_string()));
+        assert_eq!(result3[0], ("하".to_string(), "XSV".to_string()));
+        assert_eq!(result3[1], ("어요".to_string(), "EF".to_string()));
     }
 
     #[test]
