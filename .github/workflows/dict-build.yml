@@ -434,10 +434,118 @@ jobs:
             fi
           done
 
+  # ============================================================================
+  # Accuracy Evaluation (runs after tokenize-test)
+  # ============================================================================
+  accuracy-test:
+    name: Accuracy Evaluation
+    runs-on: ubuntu-latest
+    needs: [tokenize-test]
+    outputs:
+      token_accuracy: ${{ steps.evaluate.outputs.token_accuracy }}
+      sentence_accuracy: ${{ steps.evaluate.outputs.sentence_accuracy }}
+      f1_score: ${{ steps.evaluate.outputs.f1_score }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-cargo-cli-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-cli-
+
+      - name: Download dictionary artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dict-binary-${{ github.run_number }}
+          path: dict-output
+
+      - name: Build CLI
+        run: |
+          cargo build --manifest-path rust/Cargo.toml \
+            --release \
+            -p mecab-ko-cli
+
+      - name: Run accuracy evaluation
+        id: evaluate
+        run: |
+          echo "## Accuracy Evaluation Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Run evaluation
+          RESULT=$(cargo run --manifest-path rust/Cargo.toml \
+            --release \
+            --bin mecab \
+            -- evaluate \
+            -i data/eval/sample.tsv \
+            -d dict-output \
+            --sejong 2>&1)
+
+          echo "$RESULT"
+
+          # Parse results
+          TOKEN_ACC=$(echo "$RESULT" | grep "Token Accuracy:" | awk '{print $3}' | tr -d '%')
+          SENTENCE_ACC=$(echo "$RESULT" | grep "Sentence Accuracy:" | awk '{print $3}' | tr -d '%')
+          F1=$(echo "$RESULT" | grep "F1 Score:" | awk '{print $3}')
+
+          echo "token_accuracy=${TOKEN_ACC}" >> $GITHUB_OUTPUT
+          echo "sentence_accuracy=${SENTENCE_ACC}" >> $GITHUB_OUTPUT
+          echo "f1_score=${F1}" >> $GITHUB_OUTPUT
+
+          # Add to summary
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Token Accuracy | ${TOKEN_ACC}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| Sentence Accuracy | ${SENTENCE_ACC}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| F1 Score | ${F1} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Compare with baseline (29.6%)
+          BASELINE=29.6
+          DIFF=$(echo "$TOKEN_ACC - $BASELINE" | bc 2>/dev/null || echo "0")
+
+          if (( $(echo "$TOKEN_ACC < $BASELINE" | bc -l 2>/dev/null || echo 0) )); then
+            echo "::warning::Token accuracy ($TOKEN_ACC%) is below baseline ($BASELINE%)"
+            echo "⚠️ **Regression detected**: ${TOKEN_ACC}% < ${BASELINE}% baseline" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ Token accuracy ($TOKEN_ACC%) meets or exceeds baseline ($BASELINE%)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Save accuracy history
+        run: |
+          mkdir -p accuracy-history
+          DATE=$(date -u +"%Y-%m-%d")
+          cat > accuracy-history/accuracy-${DATE}.json << EOF
+          {
+            "date": "${DATE}",
+            "run_number": ${{ github.run_number }},
+            "commit": "${{ github.sha }}",
+            "token_accuracy": ${{ steps.evaluate.outputs.token_accuracy || 0 }},
+            "sentence_accuracy": ${{ steps.evaluate.outputs.sentence_accuracy || 0 }},
+            "f1_score": ${{ steps.evaluate.outputs.f1_score || 0 }}
+          }
+          EOF
+
+      - name: Upload accuracy history
+        uses: actions/upload-artifact@v4
+        with:
+          name: accuracy-history-${{ github.run_number }}
+          path: accuracy-history/
+          retention-days: 90
+
   generate-report:
     name: Generate Build Report
     runs-on: ubuntu-latest
-    needs: [build-dictionary, tokenize-test]
+    needs: [build-dictionary, tokenize-test, accuracy-test]
     if: always()
     steps:
       - name: Checkout code
@@ -523,7 +631,7 @@ jobs:
   notify-status:
     name: Workflow Status
     runs-on: ubuntu-latest
-    needs: [validate-user-dict, build-dictionary, tokenize-test, generate-report]
+    needs: [validate-user-dict, build-dictionary, tokenize-test, accuracy-test, generate-report]
     if: always()
     steps:
       - name: Determine workflow status
@@ -532,6 +640,7 @@ jobs:
           VALIDATE_STATUS="${{ needs.validate-user-dict.result }}"
           BUILD_STATUS="${{ needs.build-dictionary.result }}"
           TEST_STATUS="${{ needs.tokenize-test.result }}"
+          ACCURACY_STATUS="${{ needs.accuracy-test.result }}"
           REPORT_STATUS="${{ needs.generate-report.result }}"
 
           if [ "$VALIDATE_STATUS" = "failure" ] || [ "$BUILD_STATUS" = "failure" ] || [ "$TEST_STATUS" = "failure" ] || [ "$REPORT_STATUS" = "failure" ]; then
@@ -552,6 +661,7 @@ jobs:
           | User Dict Validation | ${{ needs.validate-user-dict.result }} |
           | Dictionary Build | ${{ needs.build-dictionary.result }} |
           | Tokenization Tests | ${{ needs.tokenize-test.result }} |
+          | Accuracy Evaluation | ${{ needs.accuracy-test.result }} |
           | Report Generation | ${{ needs.generate-report.result }} |
 
           ### User Dictionary Stats
@@ -559,10 +669,16 @@ jobs:
           - **Errors**: ${{ needs.validate-user-dict.outputs.error_count }}
           - **Valid**: ${{ needs.validate-user-dict.outputs.is_valid }}
 
+          ### Accuracy Metrics
+          - **Token Accuracy**: ${{ needs.accuracy-test.outputs.token_accuracy }}%
+          - **Sentence Accuracy**: ${{ needs.accuracy-test.outputs.sentence_accuracy }}%
+          - **F1 Score**: ${{ needs.accuracy-test.outputs.f1_score }}
+
           ### Artifacts
           - **Dictionary**: dict-binary-${{ github.run_number }}
           - **Report**: dict-build-report-${{ github.run_number }}
+          - **Accuracy**: accuracy-history-${{ github.run_number }}
           - **Logs**: dict-build-logs-${{ github.run_number }}
 
-          All artifacts retained for 30 days.
+          All artifacts retained for 30-90 days.
           EOF

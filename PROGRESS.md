@@ -26,7 +26,11 @@
   - 문서: docs/research/dictionary/error-pattern-analysis-v0.4.0.md
 
 ### P1 (High)
-- [ ] S24-03: CI 자동 정확도 측정 (S23-07 이월)
+- [x] S24-03: CI 자동 정확도 측정 (S23-07 이월) ✅
+  - dict-build.yml에 accuracy-test job 추가
+  - 기준선(29.6%) 대비 회귀 탐지
+  - 정확도 이력 JSON 아티팩트 (90일 보관)
+  - GitHub Step Summary 통합
 - [ ] S24-04: 평가 데이터셋 확장
 
 ### P2 (Medium)

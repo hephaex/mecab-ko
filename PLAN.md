@@ -20,10 +20,11 @@ v0.4.0 crates.io 정식 릴리스, 사전 품질 근본 개선 시작, CI 자동
   - 문서화: docs/research/dictionary/error-pattern-analysis-v0.4.0.md
 
 ### P1 (High)
-- [ ] S24-03: CI 자동 정확도 측정 (S23-07 이월)
-  - dict-build.yml에 accuracy job 추가
-  - 전체 사전 캐싱으로 빌드 시간 단축
-  - 정확도 이력 저장
+- [x] S24-03: CI 자동 정확도 측정 (S23-07 이월) ✅
+  - dict-build.yml에 accuracy-test job 추가
+  - 정확도 이력 JSON 저장 (90일)
+  - 기준선(29.6%) 대비 회귀 경고
+  - GitHub Step Summary에 결과 표시
 - [ ] S24-04: 평가 데이터셋 확장
   - 160 → 300 문장 목표
   - 카테고리별 균형: 일상, 뉴스, 문학, 기술
