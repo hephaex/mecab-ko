@@ -23,7 +23,7 @@ Cargo.toml에 추가:
 
 ```toml
 [dependencies]
-mecab-ko = "0.1.0"
+mecab-ko = "0.4.0"
 ```
 
 ## 빠른 시작

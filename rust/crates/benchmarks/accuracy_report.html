@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeCab-Ko Accuracy Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .metrics {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+        .metric {
+            padding: 20px;
+        }
+        .metric-value {
+            font-size: 48px;
+            font-weight: bold;
+            color: #2563eb;
+        }
+        .metric-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+        }
+        .improvement {
+            color: #16a34a;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MeCab-Ko Accuracy Dashboard</h1>
+        <p>Version 0.4.0 | Sprint 22</p>
+    </div>
+
+    <div class="card">
+        <div class="metrics">
+            <div class="metric">
+                <div class="metric-value">35.4%</div>
+                <div class="metric-label">Token Accuracy</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">10.0%</div>
+                <div class="metric-label">Sentence Accuracy</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value improvement">+35.4%</div>
+                <div class="metric-label">Total Improvement</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Accuracy Trend</h2>
+        <div class="chart-container">
+            <canvas id="accuracyChart"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>History</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Version</th>
+                    <th>Sprint</th>
+                    <th>Token Accuracy</th>
+                    <th>Sentence Accuracy</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>2026-03-05</td>
+                    <td>0.4.0</td>
+                    <td>Sprint 22</td>
+                    <td>35.4%</td>
+                    <td>10.0%</td>
+                    <td>고빈도 어휘 강제 매핑 추가</td>
+                </tr>
+                <tr>
+                    <td>2026-03-05</td>
+                    <td>0.4.0</td>
+                    <td>Sprint 22</td>
+                    <td>27.1%</td>
+                    <td>10.0%</td>
+                    <td>컨텍스트 기반 품사 보정</td>
+                </tr>
+                <tr>
+                    <td>2026-03-04</td>
+                    <td>0.4.0</td>
+                    <td>Sprint 21</td>
+                    <td>22.9%</td>
+                    <td>10.0%</td>
+                    <td>어미 분리 로직 추가</td>
+                </tr>
+                <tr>
+                    <td>2026-03-03</td>
+                    <td>0.3.1</td>
+                    <td>Sprint 20</td>
+                    <td>16.8%</td>
+                    <td>0.0%</td>
+                    <td>기본 토큰화</td>
+                </tr>
+                <tr>
+                    <td>2026-03-01</td>
+                    <td>0.3.0</td>
+                    <td>Sprint 19</td>
+                    <td>0.0%</td>
+                    <td>0.0%</td>
+                    <td>초기 측정 전</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('accuracyChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ["2026-03-01", "2026-03-03", "2026-03-04", "2026-03-05", "2026-03-05"],
+                datasets: [{
+                    label: 'Token Accuracy (%)',
+                    data: [0.0, 16.8, 22.9, 27.1, 35.4],
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }, {
+                    label: 'Sentence Accuracy (%)',
+                    data: [0.0, 0.0, 10.0, 10.0, 10.0],
+                    borderColor: '#16a34a',
+                    backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Accuracy (%)'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

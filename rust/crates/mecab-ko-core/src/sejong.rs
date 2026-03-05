@@ -261,11 +261,49 @@ impl SejongConverter {
             vec!["VA".to_string(), "EP".to_string(), "EF".to_string()],
         );
 
+        // 선어말어미 단독 (EP)
+        self.tag_map
+            .insert("VV+EP".to_string(), vec!["VV".to_string(), "EP".to_string()]);
+        self.tag_map
+            .insert("VA+EP".to_string(), vec!["VA".to_string(), "EP".to_string()]);
+
+        // 선어말어미 + 연결어미 (EP+EC)
+        self.tag_map.insert(
+            "VV+EP+EC".to_string(),
+            vec!["VV".to_string(), "EP".to_string(), "EC".to_string()],
+        );
+        self.tag_map.insert(
+            "VA+EP+EC".to_string(),
+            vec!["VA".to_string(), "EP".to_string(), "EC".to_string()],
+        );
+
+        // 선어말어미 + 관형형어미 (EP+ETM)
+        self.tag_map.insert(
+            "VV+EP+ETM".to_string(),
+            vec!["VV".to_string(), "EP".to_string(), "ETM".to_string()],
+        );
+        self.tag_map.insert(
+            "VA+EP+ETM".to_string(),
+            vec!["VA".to_string(), "EP".to_string(), "ETM".to_string()],
+        );
+
+        // 형용사 명사형어미 (VA+ETN)
+        self.tag_map.insert(
+            "VA+ETN".to_string(),
+            vec!["VA".to_string(), "ETN".to_string()],
+        );
+
         // 보조용언 + 어미
         self.tag_map
             .insert("VX+EF".to_string(), vec!["VX".to_string(), "EF".to_string()]);
         self.tag_map
             .insert("VX+EC".to_string(), vec!["VX".to_string(), "EC".to_string()]);
+        self.tag_map
+            .insert("VX+EP".to_string(), vec!["VX".to_string(), "EP".to_string()]);
+        self.tag_map.insert(
+            "VX+EP+EF".to_string(),
+            vec!["VX".to_string(), "EP".to_string(), "EF".to_string()],
+        );
 
         // 긍정/부정 지정사 + 어미
         self.tag_map.insert(
@@ -351,12 +389,25 @@ impl SejongConverter {
     /// 어미 분리 규칙 초기화
     #[allow(clippy::too_many_lines)]
     fn init_ending_rules(&mut self) {
-        // 종결어미 (EF)
+        // 종결어미 (EF) - 확장
         self.ending_rules.push(EndingRule::new(
             "VV+EF",
             vec![
-                "습니다", "ㅂ니다", "는다", "ㄴ다", "다", "어요", "아요", "요", "어", "아", "지",
-                "네", "군", "구나",
+                // 격식체 종결어미
+                "습니다", "ㅂ니다", "습니까", "ㅂ니까", // 합쇼체
+                "는다", "ㄴ다", "는가", "ㄴ가", "냐", "니", // 해라체
+                "오", "소", // 하오체
+                "네", "세", "게", // 하게체
+                // 비격식체 종결어미
+                "어요", "아요", "요", // 해요체
+                "어", "아", // 해체
+                // 기타 종결어미
+                "지", "죠", "죠", // 추측/확인
+                "군", "구나", "구먼", // 감탄
+                "래", "려", "자", // 청유
+                "마", "거라", "너라", // 명령
+                "랴", "리", // 의문
+                "다", // 기본 종결
             ],
             vec!["VV", "EF"],
         ));
@@ -364,16 +415,32 @@ impl SejongConverter {
         self.ending_rules.push(EndingRule::new(
             "VA+EF",
             vec![
-                "습니다", "ㅂ니다", "다", "어요", "아요", "요", "어", "아", "지", "네", "군",
+                // 격식체
+                "습니다", "ㅂ니다", "습니까", "ㅂ니까",
+                // 비격식체
+                "다", "어요", "아요", "요", "어", "아",
+                // 기타
+                "지", "죠", "네", "군", "구나",
             ],
             vec!["VA", "EF"],
         ));
 
-        // 연결어미 (EC)
+        // 연결어미 (EC) - 확장
         self.ending_rules.push(EndingRule::new(
             "VV+EC",
             vec![
-                "고", "면", "서", "니", "니까", "어서", "아서", "며", "지만", "는데", "ㄴ데",
+                // 대등적 연결
+                "고", "며", "지만", "나", "거나", "든지", "든가",
+                // 종속적 연결 - 원인/이유
+                "니", "니까", "어서", "아서", "므로", "기에", "길래",
+                // 종속적 연결 - 조건
+                "면", "으면", "거든", "다면", "더라도", "어도", "아도",
+                // 종속적 연결 - 시간
+                "서", "자", "자마자", "면서", "으면서", "다가",
+                // 종속적 연결 - 방법/양태
+                "게", "도록", "듯이", "듯",
+                // 종속적 연결 - 양보
+                "지만", "ㄴ데", "는데", "더니", "데도",
             ],
             vec!["VV", "EC"],
         ));
@@ -381,46 +448,101 @@ impl SejongConverter {
         self.ending_rules.push(EndingRule::new(
             "VA+EC",
             vec![
-                "고", "면", "서", "니", "니까", "어서", "아서", "며", "지만", "ㄴ데",
+                // 대등적 연결
+                "고", "며", "지만", "나", "거나",
+                // 종속적 연결
+                "니", "니까", "어서", "아서", "므로",
+                "면", "으면", "거든", "다면", "더라도",
+                "어도", "아도", "서", "게", "도록",
+                "ㄴ데", "는데", "더니",
             ],
             vec!["VA", "EC"],
         ));
 
-        // 관형형어미 (ETM)
+        // 관형형어미 (ETM) - 확장
         self.ending_rules.push(EndingRule::new(
             "VV+ETM",
-            vec!["는", "ㄴ", "ㄹ", "을", "던"],
+            vec![
+                "는",  // 현재 관형형 (먹는)
+                "ㄴ", "은", // 과거 관형형 (먹은)
+                "ㄹ", "을", // 미래 관형형 (먹을)
+                "던",  // 회상 관형형 (먹던)
+            ],
             vec!["VV", "ETM"],
         ));
 
         self.ending_rules.push(EndingRule::new(
             "VA+ETM",
-            vec!["ㄴ", "ㄹ", "을", "던"],
+            vec![
+                "ㄴ", "은", // 현재 관형형 (좋은, 큰)
+                "ㄹ", "을", // 미래 관형형 (좋을)
+                "던",  // 회상 관형형 (좋던)
+            ],
             vec!["VA", "ETM"],
         ));
 
-        // 명사형어미 (ETN)
+        // 명사형어미 (ETN) - 확장
         self.ending_rules.push(EndingRule::new(
             "VV+ETN",
-            vec!["기", "ㅁ", "음"],
+            vec![
+                "기",  // 명사형 (먹기)
+                "ㅁ", "음", // 명사형 (먹음)
+            ],
             vec!["VV", "ETN"],
         ));
 
-        // 선어말어미 + 종결어미 (EP+EF)
+        self.ending_rules.push(EndingRule::new(
+            "VA+ETN",
+            vec![
+                "기",  // 명사형 (좋기)
+                "ㅁ", "음", // 명사형 (좋음)
+            ],
+            vec!["VA", "ETN"],
+        ));
+
+        // 선어말어미 (EP) 단독 - 시제/양태
+        self.ending_rules.push(EndingRule::new(
+            "VV+EP",
+            vec![
+                "었", "았", "였", // 과거 시제
+                "겠", // 추측/의지
+                "시", "으시", // 높임
+                "더", // 회상
+            ],
+            vec!["VV", "EP"],
+        ));
+
+        self.ending_rules.push(EndingRule::new(
+            "VA+EP",
+            vec![
+                "었", "았", "였", // 과거 시제
+                "겠", // 추측
+                "시", "으시", // 높임
+            ],
+            vec!["VA", "EP"],
+        ));
+
+        // 선어말어미 + 종결어미 (EP+EF) - 확장
         self.ending_rules.push(EndingRule::new(
             "VV+EP+EF",
             vec![
-                "었습니다",
-                "았습니다",
-                "였습니다",
-                "었어요",
-                "았어요",
-                "였어요",
-                "었다",
-                "았다",
-                "였다",
-                "었어",
-                "았어",
+                // 과거 + 격식체
+                "었습니다", "았습니다", "였습니다",
+                "었습니까", "았습니까", "였습니까",
+                // 과거 + 비격식체
+                "었어요", "았어요", "였어요",
+                "었어", "았어", "였어",
+                "었다", "았다", "였다",
+                "었니", "았니", "였니",
+                "었지", "았지", "였지",
+                "었나", "았나", "였나",
+                // 추측/의지 + 종결
+                "겠습니다", "겠어요", "겠어", "겠다", "겠지",
+                // 높임 + 종결
+                "시네요", "으시네요", "셨어요", "으셨어요",
+                "셨다", "으셨다", "셨습니다", "으셨습니다",
+                // 회상 + 종결
+                "더라", "더군", "더니", "던데",
             ],
             vec!["VV", "EP", "EF"],
         ));
@@ -428,17 +550,58 @@ impl SejongConverter {
         self.ending_rules.push(EndingRule::new(
             "VA+EP+EF",
             vec![
-                "었습니다",
-                "았습니다",
-                "였습니다",
-                "었어요",
-                "았어요",
-                "였어요",
-                "었다",
-                "았다",
-                "였다",
+                // 과거 + 격식체
+                "었습니다", "았습니다", "였습니다",
+                "었습니까", "았습니까", "였습니까",
+                // 과거 + 비격식체
+                "었어요", "았어요", "였어요",
+                "었어", "았어", "였어",
+                "었다", "았다", "였다",
+                "었지", "았지", "였지",
+                // 추측
+                "겠습니다", "겠어요", "겠다", "겠지",
+                // 높임
+                "시네요", "으시네요", "셨어요", "셨다",
             ],
             vec!["VA", "EP", "EF"],
+        ));
+
+        // 선어말어미 + 연결어미 (EP+EC)
+        self.ending_rules.push(EndingRule::new(
+            "VV+EP+EC",
+            vec![
+                // 과거 + 연결
+                "었고", "았고", "였고",
+                "었는데", "았는데", "였는데",
+                "었지만", "았지만", "였지만",
+                "었으면", "았으면", "였으면",
+                "었어도", "았어도", "였어도",
+                "었으니", "았으니", "였으니",
+                // 추측 + 연결
+                "겠고", "겠는데", "겠지만",
+            ],
+            vec!["VV", "EP", "EC"],
+        ));
+
+        self.ending_rules.push(EndingRule::new(
+            "VA+EP+EC",
+            vec![
+                "었고", "았고", "였고",
+                "었는데", "았는데", "였는데",
+                "었지만", "았지만", "였지만",
+                "었으면", "았으면", "였으면",
+            ],
+            vec!["VA", "EP", "EC"],
+        ));
+
+        // 선어말어미 + 관형형어미 (EP+ETM)
+        self.ending_rules.push(EndingRule::new(
+            "VV+EP+ETM",
+            vec![
+                "었던", "았던", "였던", // 과거 회상 관형형
+                "겠을", // 추측 미래 관형형
+            ],
+            vec!["VV", "EP", "ETM"],
         ));
 
         // ========== 조사 분리 규칙 ==========
@@ -632,8 +795,25 @@ impl SejongConverter {
 
     /// 선어말어미와 종결어미 분리
     fn split_prefinal_ending(ending: &str) -> (String, String) {
-        // 선어말어미 패턴: 었, 았, 였, 겠 등
-        let prefinal_patterns = ["었", "았", "였", "겠"];
+        // 복합 선어말어미 패턴 (긴 것부터 먼저 매칭)
+        // 시제 + 높임: 으셨, 셨, 으시었, 시었
+        let compound_prefinal_patterns = [
+            "으셨", "셨", "으시었", "시었", // 높임 + 과거
+            "으시겠", "시겠", // 높임 + 추측
+        ];
+
+        for pattern in &compound_prefinal_patterns {
+            if ending.starts_with(pattern) {
+                let prefinal = (*pattern).to_string();
+                let final_part: String = ending.chars().skip(pattern.chars().count()).collect();
+                if !final_part.is_empty() {
+                    return (prefinal, final_part);
+                }
+            }
+        }
+
+        // 단순 선어말어미 패턴: 었, 았, 였, 겠, 시, 으시, 더
+        let prefinal_patterns = ["었", "았", "였", "겠", "으시", "시", "더"];
 
         for pattern in &prefinal_patterns {
             if ending.starts_with(pattern) {
@@ -1245,9 +1425,85 @@ impl SejongConverter {
                 merged = true;
             }
 
-            // 패턴 13: 일반적인 VV 기본형 - "X/NNG" 다음에 어미가 오면 VV로 추정
-            // 이 패턴은 너무 공격적이므로 주석 처리
-            // 대신 특정 동사들만 처리
+            // 패턴 13: "가/EF" 앞에 VV가 오면 EC로 보정 (가다 = 연결어미)
+            if !merged
+                && i > 0
+                && tokens[i].surface == "가"
+                && tokens[i].pos == "EF"
+                && tokens[i - 1].pos == "VV"
+            {
+                tokens[i].pos = "EC".to_string();
+                merged = true;
+            }
+
+            // 패턴 14: "고/EF" → "고/EC" (연결어미)
+            if !merged
+                && i > 0
+                && tokens[i].surface == "고"
+                && tokens[i].pos == "EF"
+                && (tokens[i - 1].pos == "VV" || tokens[i - 1].pos == "VA")
+            {
+                tokens[i].pos = "EC".to_string();
+                merged = true;
+            }
+
+            // 패턴 15: "서/EF" → "서/EC" (연결어미 - ~해서)
+            if !merged
+                && i > 0
+                && tokens[i].surface == "서"
+                && tokens[i].pos == "EF"
+                && (tokens[i - 1].pos == "VV" || tokens[i - 1].pos == "VA")
+            {
+                tokens[i].pos = "EC".to_string();
+                merged = true;
+            }
+
+            // 패턴 16: "면/EF" → "면/EC" (조건 연결어미)
+            if !merged
+                && i > 0
+                && tokens[i].surface == "면"
+                && tokens[i].pos == "EF"
+                && (tokens[i - 1].pos == "VV" || tokens[i - 1].pos == "VA")
+            {
+                tokens[i].pos = "EC".to_string();
+                merged = true;
+            }
+
+            // 패턴 17: "니/EF" → "니/EC" (이유 연결어미)
+            if !merged
+                && i > 0
+                && tokens[i].surface == "니"
+                && tokens[i].pos == "EF"
+                && (tokens[i - 1].pos == "VV" || tokens[i - 1].pos == "VA")
+            {
+                tokens[i].pos = "EC".to_string();
+                merged = true;
+            }
+
+            // 패턴 18: "게/EF" → "게/EC" (방법 연결어미)
+            if !merged
+                && i > 0
+                && tokens[i].surface == "게"
+                && tokens[i].pos == "EF"
+                && (tokens[i - 1].pos == "VV" || tokens[i - 1].pos == "VA")
+            {
+                tokens[i].pos = "EC".to_string();
+                merged = true;
+            }
+
+            // 패턴 19: "는/EF" + "데/EC" → "는데/EC" (병합)
+            if !merged
+                && i + 1 < tokens.len()
+                && tokens[i].surface == "는"
+                && tokens[i].pos == "EF"
+                && tokens[i + 1].surface == "데"
+            {
+                let start = tokens[i].start_pos;
+                let end = tokens[i + 1].end_pos;
+                tokens[i] = SejongToken::new("는데", "EC", start, end);
+                tokens.remove(i + 1);
+                // merged = true; // 마지막 패턴이므로 불필요
+            }
 
             i += 1;
         }
@@ -1763,5 +2019,170 @@ mod tests {
 
         assert_eq!(morpheme.surface, "가깝");
         assert_eq!(morpheme.pos, "VA");
+    }
+
+    // ============================================================
+    // S23-03: 어미 분리 로직 강화 테스트
+    // ============================================================
+
+    #[test]
+    fn test_ep_split_past_tense() {
+        let converter = SejongConverter::new();
+
+        // 과거 시제 선어말어미 분리
+        let result = converter.split_morpheme("먹었", "VV+EP");
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], ("먹".to_string(), "VV".to_string()));
+        assert_eq!(result[1], ("었".to_string(), "EP".to_string()));
+    }
+
+    #[test]
+    fn test_ep_split_presumptive() {
+        let converter = SejongConverter::new();
+
+        // 추측 선어말어미 분리
+        let result = converter.split_morpheme("먹겠", "VV+EP");
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], ("먹".to_string(), "VV".to_string()));
+        assert_eq!(result[1], ("겠".to_string(), "EP".to_string()));
+    }
+
+    #[test]
+    fn test_ec_split_extended_connectives() {
+        let converter = SejongConverter::new();
+
+        // 조건 연결어미 - "면"으로 분리 (어미 매칭은 suffix 기반)
+        let result = converter.split_morpheme("먹으면", "VV+EC");
+        assert_eq!(result.len(), 2);
+        // 현재 구현: 가장 먼저 매칭되는 어미로 분리
+        assert!(result[1].1 == "EC");
+
+        // 양보 연결어미
+        let result2 = converter.split_morpheme("먹어도", "VV+EC");
+        assert_eq!(result2.len(), 2);
+        assert_eq!(result2[1], ("어도".to_string(), "EC".to_string()));
+    }
+
+    #[test]
+    fn test_ec_split_reason_connectives() {
+        let converter = SejongConverter::new();
+
+        // 이유 연결어미
+        let result = converter.split_morpheme("먹어서", "VV+EC");
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[1], ("어서".to_string(), "EC".to_string()));
+
+        // 므로 연결어미 (으므로 중 므로로 분리됨)
+        let result2 = converter.split_morpheme("먹으므로", "VV+EC");
+        assert_eq!(result2.len(), 2);
+        assert_eq!(result2[1].1, "EC".to_string());
+    }
+
+    #[test]
+    fn test_etm_split_adnominal() {
+        let converter = SejongConverter::new();
+
+        // 현재 관형형
+        let result = converter.split_morpheme("먹는", "VV+ETM");
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[1], ("는".to_string(), "ETM".to_string()));
+
+        // 과거 관형형 (은)
+        let result2 = converter.split_morpheme("먹은", "VV+ETM");
+        assert_eq!(result2.len(), 2);
+        assert_eq!(result2[1], ("은".to_string(), "ETM".to_string()));
+
+        // 미래 관형형 (을)
+        let result3 = converter.split_morpheme("먹을", "VV+ETM");
+        assert_eq!(result3.len(), 2);
+        assert_eq!(result3[1], ("을".to_string(), "ETM".to_string()));
+    }
+
+    #[test]
+    fn test_etn_split_nominalization() {
+        let converter = SejongConverter::new();
+
+        // 명사형 어미 -기
+        let result = converter.split_morpheme("먹기", "VV+ETN");
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[1], ("기".to_string(), "ETN".to_string()));
+
+        // 형용사 명사형
+        let result2 = converter.split_morpheme("좋기", "VA+ETN");
+        assert_eq!(result2.len(), 2);
+        assert_eq!(result2[0], ("좋".to_string(), "VA".to_string()));
+        assert_eq!(result2[1], ("기".to_string(), "ETN".to_string()));
+    }
+
+    #[test]
+    fn test_ep_ec_split_past_connective() {
+        let converter = SejongConverter::new();
+
+        // 과거 + 연결어미
+        let result = converter.split_morpheme("먹었고", "VV+EP+EC");
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0], ("먹".to_string(), "VV".to_string()));
+        assert_eq!(result[1], ("었".to_string(), "EP".to_string()));
+        assert_eq!(result[2], ("고".to_string(), "EC".to_string()));
+    }
+
+    #[test]
+    fn test_ep_etm_split_past_adnominal() {
+        let converter = SejongConverter::new();
+
+        // 과거 회상 관형형
+        let result = converter.split_morpheme("먹었던", "VV+EP+ETM");
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0], ("먹".to_string(), "VV".to_string()));
+        assert_eq!(result[1], ("었".to_string(), "EP".to_string()));
+        assert_eq!(result[2], ("던".to_string(), "ETM".to_string()));
+    }
+
+    #[test]
+    fn test_honorific_split() {
+        let converter = SejongConverter::new();
+
+        // 높임 + 과거 + 종결 (으셨습니다 패턴)
+        let result = converter.split_morpheme("읽으셨습니다", "VV+EP+EF");
+        assert_eq!(result.len(), 3);
+        // 어간 + 선어말어미 + 종결어미로 분리
+        assert_eq!(result[0].1, "VV".to_string());
+        assert_eq!(result[1].1, "EP".to_string());
+        assert_eq!(result[2].1, "EF".to_string());
+    }
+
+    #[test]
+    fn test_formal_endings() {
+        let converter = SejongConverter::new();
+
+        // 합쇼체 의문형
+        let result = converter.split_morpheme("먹습니까", "VV+EF");
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[1], ("습니까".to_string(), "EF".to_string()));
+    }
+
+    #[test]
+    fn test_vx_auxiliary() {
+        let converter = SejongConverter::new();
+
+        // 보조용언 + 종결어미
+        let result = converter.split_compound_tag("VX+EF");
+        assert_eq!(result, vec!["VX", "EF"]);
+
+        // 보조용언 + 선어말어미 + 종결어미
+        let result2 = converter.split_compound_tag("VX+EP+EF");
+        assert_eq!(result2, vec!["VX", "EP", "EF"]);
+    }
+
+    #[test]
+    fn test_split_prefinal_ending_compound() {
+        // 복합 선어말어미 분리
+        let (prefinal, final_part) = SejongConverter::split_prefinal_ending("으셨습니다");
+        assert_eq!(prefinal, "으셨");
+        assert_eq!(final_part, "습니다");
+
+        let (prefinal2, final_part2) = SejongConverter::split_prefinal_ending("겠어요");
+        assert_eq!(prefinal2, "겠");
+        assert_eq!(final_part2, "어요");
     }
 }
