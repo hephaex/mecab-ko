@@ -942,6 +942,31 @@ impl SejongConverter {
             }
         }
 
+        // 과거 시제 축약형 처리 (봤다, 갔다, 왔다 등)
+        // VV+EF로 분석되지만 실제로는 VV+EP+EF여야 함
+        // 봤다 → 보/VV + 았/EP + 다/EF
+        let past_contracted_patterns = [
+            ("봤", "보", "았"),  // 보+았 → 봤
+            ("갔", "가", "았"),  // 가+았 → 갔
+            ("왔", "오", "았"),  // 오+았 → 왔
+            ("샀", "사", "았"),  // 사+았 → 샀
+            ("잤", "자", "았"),  // 자+았 → 잤
+            ("됐", "되", "었"),  // 되+었 → 됐
+            ("했", "하", "았"),  // 하+았 → 했
+        ];
+
+        for (contracted, stem, prefinal) in &past_contracted_patterns {
+            if first_char == *contracted {
+                // 봤다 → 보 + 았 + 다
+                // tags[0]=VV, 중간에 EP를 삽입, tags[1]=EF
+                return Some(vec![
+                    ((*stem).to_string(), tags[0].clone()),
+                    ((*prefinal).to_string(), "EP".to_string()),
+                    (rest, tags[1].clone()),
+                ]);
+            }
+        }
+
         None
     }
 
@@ -1981,8 +2006,13 @@ impl SejongConverter {
             if noun_poses.contains(prev_pos.as_str())
                 && (curr_pos == "EF" || curr_pos == "EC" || curr_pos == "ETN" || curr_pos == "EP" || curr_pos == "VV" || curr_pos == "VA")
             {
-                if let Some(&correct_pos) = particle_map.get(curr_surface.as_str()) {
-                    corrections.push((i, correct_pos.to_string()));
+                // 다음 토큰이 EP(선어말어미)인 경우 동사의 일부이므로 조사로 보정하지 않음
+                // 예: 학교/NNG 가/VV 았/EP 다/EF -> "가"는 동사 "가다"의 어간
+                let next_is_ep = i + 1 < tokens.len() && tokens[i + 1].pos == "EP";
+                if !next_is_ep {
+                    if let Some(&correct_pos) = particle_map.get(curr_surface.as_str()) {
+                        corrections.push((i, correct_pos.to_string()));
+                    }
                 }
             }
         }
@@ -2130,11 +2160,13 @@ mod tests {
     fn test_simple_verb_ending_split() {
         let converter = SejongConverter::new();
 
-        // 갔다 -> 갔 + 다
+        // 갔다 -> 가 + 았 + 다 (과거 시제 축약형 분리)
+        // 세종 코퍼스: 가/VV + 았/EP + 다/EF
         let result = converter.split_morpheme("갔다", "VV+EF");
-        assert_eq!(result.len(), 2);
-        assert_eq!(result[0], ("갔".to_string(), "VV".to_string()));
-        assert_eq!(result[1], ("다".to_string(), "EF".to_string()));
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0], ("가".to_string(), "VV".to_string()));
+        assert_eq!(result[1], ("았".to_string(), "EP".to_string()));
+        assert_eq!(result[2], ("다".to_string(), "EF".to_string()));
     }
 
     #[test]
@@ -2210,11 +2242,14 @@ mod tests {
         let token = create_test_token("갔다", "VV+EF");
         let sejong_tokens = converter.convert_token(&token);
 
-        assert_eq!(sejong_tokens.len(), 2);
-        assert_eq!(sejong_tokens[0].surface, "갔");
+        // 과거 시제 축약형: 갔다 → 가 + 았 + 다
+        assert_eq!(sejong_tokens.len(), 3);
+        assert_eq!(sejong_tokens[0].surface, "가");
         assert_eq!(sejong_tokens[0].pos, "VV");
-        assert_eq!(sejong_tokens[1].surface, "다");
-        assert_eq!(sejong_tokens[1].pos, "EF");
+        assert_eq!(sejong_tokens[1].surface, "았");
+        assert_eq!(sejong_tokens[1].pos, "EP");
+        assert_eq!(sejong_tokens[2].surface, "다");
+        assert_eq!(sejong_tokens[2].pos, "EF");
     }
 
     #[test]
@@ -2228,10 +2263,12 @@ mod tests {
 
         let sejong_tokens = converter.convert_tokens(&tokens);
 
-        assert_eq!(sejong_tokens.len(), 3);
+        // 과거 시제 축약형: 갔다 → 가 + 았 + 다
+        assert_eq!(sejong_tokens.len(), 4);
         assert_eq!(sejong_tokens[0].to_sejong_format(), "학교/NNG");
-        assert_eq!(sejong_tokens[1].to_sejong_format(), "갔/VV");
-        assert_eq!(sejong_tokens[2].to_sejong_format(), "다/EF");
+        assert_eq!(sejong_tokens[1].to_sejong_format(), "가/VV");
+        assert_eq!(sejong_tokens[2].to_sejong_format(), "았/EP");
+        assert_eq!(sejong_tokens[3].to_sejong_format(), "다/EF");
     }
 
     #[test]
@@ -2244,7 +2281,8 @@ mod tests {
         ];
 
         let result = converter.tokens_to_sejong_string(&tokens);
-        assert_eq!(result, "학교/NNG 갔/VV 다/EF");
+        // 과거 시제 축약형: 갔다 → 가 + 았 + 다
+        assert_eq!(result, "학교/NNG 가/VV 았/EP 다/EF");
     }
 
     #[test]
@@ -2294,6 +2332,32 @@ mod tests {
         assert_eq!(result3.len(), 2);
         assert_eq!(result3[0], ("하".to_string(), "VV".to_string()));
         assert_eq!(result3[1], ("어".to_string(), "EF".to_string()));
+    }
+
+    #[test]
+    fn test_contracted_past_split() {
+        let converter = SejongConverter::new();
+
+        // 봤다 -> 보 + 았 + 다 (VV+EF를 VV+EP+EF로 확장)
+        let result = converter.split_morpheme("봤다", "VV+EF");
+        assert_eq!(result.len(), 3);
+        assert_eq!(result[0], ("보".to_string(), "VV".to_string()));
+        assert_eq!(result[1], ("았".to_string(), "EP".to_string()));
+        assert_eq!(result[2], ("다".to_string(), "EF".to_string()));
+
+        // 갔다 -> 가 + 았 + 다
+        let result2 = converter.split_morpheme("갔다", "VV+EF");
+        assert_eq!(result2.len(), 3);
+        assert_eq!(result2[0], ("가".to_string(), "VV".to_string()));
+        assert_eq!(result2[1], ("았".to_string(), "EP".to_string()));
+        assert_eq!(result2[2], ("다".to_string(), "EF".to_string()));
+
+        // 했다 -> 하 + 았 + 다
+        let result3 = converter.split_morpheme("했다", "VV+EF");
+        assert_eq!(result3.len(), 3);
+        assert_eq!(result3[0], ("하".to_string(), "VV".to_string()));
+        assert_eq!(result3[1], ("았".to_string(), "EP".to_string()));
+        assert_eq!(result3[2], ("다".to_string(), "EF".to_string()));
     }
 
     #[test]
