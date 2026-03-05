@@ -1808,6 +1808,41 @@ impl SejongConverter {
         for (idx, new_pos) in corrections {
             tokens[idx].pos = new_pos;
         }
+
+        // 2차 보정: 동사/형용사 뒤의 관형형어미(ETM) 보정
+        let verb_poses: std::collections::HashSet<&str> = ["VV", "VA", "VX"].into_iter().collect();
+        let etm_map: HashMap<&str, &str> = [
+            ("는", "ETM"), // 현재 관형형: 가는, 먹는
+            ("ㄴ", "ETM"), // 과거 관형형: 간, 먹은
+            ("은", "ETM"), // 과거 관형형: 먹은
+            ("ㄹ", "ETM"), // 미래 관형형: 갈, 먹을
+            ("을", "ETM"), // 미래 관형형: 먹을
+            ("던", "ETM"), // 회상 관형형: 가던, 먹던
+        ]
+        .into_iter()
+        .collect();
+
+        let mut etm_corrections: Vec<(usize, String)> = Vec::new();
+
+        for i in 1..tokens.len() {
+            let prev_pos = &tokens[i - 1].pos;
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+
+            // 동사/형용사 뒤의 JX/EF를 ETM으로 보정
+            if verb_poses.contains(prev_pos.as_str())
+                && (curr_pos == "JX" || curr_pos == "EF" || curr_pos == "EC")
+            {
+                if let Some(&correct_pos) = etm_map.get(curr_surface.as_str()) {
+                    etm_corrections.push((i, correct_pos.to_string()));
+                }
+            }
+        }
+
+        // ETM 보정 적용
+        for (idx, new_pos) in etm_corrections {
+            tokens[idx].pos = new_pos;
+        }
     }
 
     /// 세종 형식 문자열로 변환
