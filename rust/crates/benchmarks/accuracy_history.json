@@ -129,6 +129,14 @@
       "token_accuracy": 50.5,
       "sentence_accuracy": 32.0,
       "notes": "관형격조사 분리, 님의 패턴 병합, MAJ→MAG 보정"
+    },
+    {
+      "date": "2026-03-07",
+      "version": "0.5.1",
+      "sprint": "Sprint 30",
+      "token_accuracy": 51.1,
+      "sentence_accuracy": 33.3,
+      "notes": "VCP 보정, 시간표현 분리, 그렇다면 분리, 명사형어미 분리"
     }
   ]
 }

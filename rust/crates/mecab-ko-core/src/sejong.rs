@@ -2779,6 +2779,107 @@ impl SejongConverter {
                 token.pos = "MAG".to_string();
             }
         }
+
+        // 21차 보정: VCP 삽입 - NNG + "이/EP" → NNG + "이/VCP"
+        // 예: "학생입니다" → 학생/NNG + 이/EP + ㅂ니다/EF → 학생/NNG + 이/VCP + 습니다/EF
+        // NNG/NNP/NP 다음에 오는 "이/EP"를 "이/VCP"로 보정
+        for i in 1..tokens.len() {
+            let prev_pos = &tokens[i - 1].pos;
+            let curr_pos = &tokens[i].pos;
+            let curr_surface = &tokens[i].surface;
+
+            // NNG/NNP/NP 다음에 "이/EP" 패턴 → "이/VCP"로 보정
+            if (prev_pos == "NNG" || prev_pos == "NNP" || prev_pos == "NP")
+                && curr_pos == "EP"
+                && curr_surface == "이"
+            {
+                tokens[i].pos = "VCP".to_string();
+            }
+        }
+
+        // 22차 보정: 시간 표현 분리 - "열시/NNG" → "열/NR + 시/NNB"
+        // "세시", "열시", "한시" 등의 패턴
+        let time_words: std::collections::HashMap<&str, (&str, &str)> = [
+            ("열시", ("열", "시")),
+            ("세시", ("세", "시")),
+            ("한시", ("한", "시")),
+            ("두시", ("두", "시")),
+            ("네시", ("네", "시")),
+            ("다섯시", ("다섯", "시")),
+            ("여섯시", ("여섯", "시")),
+            ("일곱시", ("일곱", "시")),
+            ("여덟시", ("여덟", "시")),
+            ("아홉시", ("아홉", "시")),
+        ]
+        .into_iter()
+        .collect();
+
+        let mut time_split_indices: Vec<(usize, String, String)> = Vec::new();
+        for (i, token) in tokens.iter().enumerate() {
+            if token.pos == "NNG" {
+                if let Some(&(num, unit)) = time_words.get(token.surface.as_str()) {
+                    time_split_indices.push((i, num.to_string(), unit.to_string()));
+                }
+            }
+        }
+
+        for (idx, num, unit) in time_split_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx].end_pos;
+            let mid = start + num.chars().count();
+            tokens[idx] = SejongToken::new(&num, "NR", start, mid);
+            tokens.insert(idx + 1, SejongToken::new(&unit, "NNB", mid, end));
+        }
+
+        // 23차 보정: "그렇다면/MAJ" → "그렇/VA + 다면/EC"
+        let mut maj_split_indices: Vec<usize> = Vec::new();
+        for (i, token) in tokens.iter().enumerate() {
+            if token.pos == "MAJ" && token.surface == "그렇다면" {
+                maj_split_indices.push(i);
+            }
+        }
+
+        for idx in maj_split_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx].end_pos;
+            tokens[idx] = SejongToken::new("그렇", "VA", start, start + 2);
+            tokens.insert(idx + 1, SejongToken::new("다면", "EC", start + 2, end));
+        }
+
+        // 24차 보정: 명사형 어미 분리 - "가기/NNG" → "가/VV + 기/ETN" (동사 어간 + 기)
+        // 동사 기본형 사전 (가기, 오기, 하기, 먹기, 보기 등)
+        let verb_gi_words: std::collections::HashMap<&str, &str> = [
+            ("가기", "가"),
+            ("오기", "오"),
+            ("하기", "하"),
+            ("먹기", "먹"),
+            ("보기", "보"),
+            ("듣기", "듣"),
+            ("읽기", "읽"),
+            ("쓰기", "쓰"),
+            ("걷기", "걷"),
+            ("달리기", "달리"),
+            ("말하기", "말하"),
+        ]
+        .into_iter()
+        .collect();
+
+        let mut verb_gi_split_indices: Vec<(usize, String)> = Vec::new();
+        for (i, token) in tokens.iter().enumerate() {
+            if token.pos == "NNG" {
+                if let Some(&stem) = verb_gi_words.get(token.surface.as_str()) {
+                    verb_gi_split_indices.push((i, stem.to_string()));
+                }
+            }
+        }
+
+        for (idx, stem) in verb_gi_split_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx].end_pos;
+            let stem_len = stem.chars().count();
+            tokens[idx] = SejongToken::new(&stem, "VV", start, start + stem_len);
+            tokens.insert(idx + 1, SejongToken::new("기", "ETN", start + stem_len, end));
+        }
     }
 
     /// 한글 음절에서 모음 추출
