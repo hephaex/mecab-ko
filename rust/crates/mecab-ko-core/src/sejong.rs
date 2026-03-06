@@ -2880,6 +2880,50 @@ impl SejongConverter {
             tokens[idx] = SejongToken::new(&stem, "VV", start, start + stem_len);
             tokens.insert(idx + 1, SejongToken::new("기", "ETN", start + stem_len, end));
         }
+
+        // 25차 보정: "X하/VV" → "X/NNG + 하/VV" 분리 (명사 + 하다 동사)
+        // 예: "말씀하/VV" → "말씀/NNG + 하/VV", "공부하/VV" → "공부/NNG + 하/VV"
+        let hada_noun_verbs: std::collections::HashMap<&str, &str> = [
+            ("말씀하", "말씀"),
+            ("공부하", "공부"),
+            ("준비하", "준비"),
+            ("사용하", "사용"),
+            ("시작하", "시작"),
+            ("운동하", "운동"),
+            ("요리하", "요리"),
+            ("청소하", "청소"),
+            ("여행하", "여행"),
+            ("산책하", "산책"),
+            ("연습하", "연습"),
+            ("설명하", "설명"),
+        ]
+        .into_iter()
+        .collect();
+
+        let mut hada_split_indices: Vec<(usize, String)> = Vec::new();
+        for (i, token) in tokens.iter().enumerate() {
+            if token.pos == "VV" {
+                if let Some(&noun) = hada_noun_verbs.get(token.surface.as_str()) {
+                    hada_split_indices.push((i, noun.to_string()));
+                }
+            }
+        }
+
+        for (idx, noun) in hada_split_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx].end_pos;
+            let noun_len = noun.chars().count();
+            tokens[idx] = SejongToken::new(&noun, "NNG", start, start + noun_len);
+            tokens.insert(idx + 1, SejongToken::new("하", "VV", start + noun_len, end));
+        }
+
+        // 26차 보정: "전/NNG" + "에/JKB" 패턴 보정
+        // "전에"가 "저/NP + ᆫ/JX + 에/EF"로 분석되는 경우를 위해
+        // 이 패턴은 사용자 사전에 추가하는 것이 더 좋음
+
+        // 27차 보정: "습니다/EF" vs "ㅂ니다/EF" 정규화
+        // 둘 다 동일한 의미이므로 "ㅂ니다"를 "습니다"로 표준화하지 않음
+        // (평가 데이터의 표기에 맞춰 예측해야 하므로, 사전에서 처리 필요)
     }
 
     /// 한글 음절에서 모음 추출

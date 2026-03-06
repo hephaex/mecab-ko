@@ -137,6 +137,14 @@
       "token_accuracy": 51.1,
       "sentence_accuracy": 33.3,
       "notes": "VCP 보정, 시간표현 분리, 그렇다면 분리, 명사형어미 분리"
+    },
+    {
+      "date": "2026-03-07",
+      "version": "0.5.2",
+      "sprint": "Sprint 30",
+      "token_accuracy": 51.3,
+      "sentence_accuracy": 33.7,
+      "notes": "명사+하다 분리 (말씀하→말씀/NNG+하/VV)"
     }
   ]
 }
