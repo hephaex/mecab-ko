@@ -121,6 +121,14 @@
       "token_accuracy": 50.1,
       "sentence_accuracy": 30.3,
       "notes": "50% 목표 달성! 올해 복합어, 나의/우리의 대명사 분리"
+    },
+    {
+      "date": "2026-03-07",
+      "version": "0.5.0",
+      "sprint": "Sprint 30",
+      "token_accuracy": 50.5,
+      "sentence_accuracy": 32.0,
+      "notes": "관형격조사 분리, 님의 패턴 병합, MAJ→MAG 보정"
     }
   ]
 }
