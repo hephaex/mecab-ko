@@ -2089,6 +2089,55 @@ impl SejongConverter {
         for (idx, new_pos) in xsv_corrections {
             tokens[idx].pos = new_pos;
         }
+
+        // 4차 보정: 축약된 연결어미 복원
+        // 동사 뒤의 "서"를 "아서/어서"로 복원 (모음 조화)
+        // 예: 만나/VV + 서/EC → 만나/VV + 아서/EC
+        let mut ec_restorations: Vec<(usize, String)> = Vec::new();
+
+        for i in 1..tokens.len() {
+            let prev_surface = &tokens[i - 1].surface;
+            let prev_pos = &tokens[i - 1].pos;
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+
+            // VV/VA 뒤의 "서"를 복원
+            if (prev_pos == "VV" || prev_pos == "VA") && curr_surface == "서" && curr_pos == "EC" {
+                // 어간의 마지막 모음에 따라 아서/어서 결정
+                // ㅏ, ㅗ → 아서 (양성모음)
+                // 그 외 → 어서 (음성모음)
+                if let Some(last_char) = prev_surface.chars().last() {
+                    let vowel = Self::extract_vowel(last_char);
+                    let restored = if vowel == 'ㅏ' || vowel == 'ㅗ' {
+                        "아서"
+                    } else {
+                        "어서"
+                    };
+                    ec_restorations.push((i, restored.to_string()));
+                }
+            }
+        }
+
+        // 연결어미 복원 적용
+        for (idx, new_surface) in ec_restorations {
+            tokens[idx].surface = new_surface;
+        }
+    }
+
+    /// 한글 음절에서 모음 추출
+    fn extract_vowel(ch: char) -> char {
+        let code = ch as u32;
+        // 한글 음절 범위: 0xAC00 ~ 0xD7A3
+        if (0xAC00..=0xD7A3).contains(&code) {
+            // 모음 인덱스 = ((code - 0xAC00) / 28) % 21
+            let vowel_idx = ((code - 0xAC00) / 28) % 21;
+            // 모음: ㅏ ㅐ ㅑ ㅒ ㅓ ㅔ ㅕ ㅖ ㅗ ㅘ ㅙ ㅚ ㅛ ㅜ ㅝ ㅞ ㅟ ㅠ ㅡ ㅢ ㅣ
+            let vowels = ['ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 'ㅗ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ', 'ㅡ', 'ㅢ', 'ㅣ'];
+            vowels[vowel_idx as usize]
+        } else {
+            // 한글 자모 범위인 경우 그대로 반환
+            ch
+        }
     }
 
     /// 세종 형식 문자열로 변환
@@ -2714,5 +2763,28 @@ mod tests {
         assert_eq!(result2.len(), 2);
         assert_eq!(result2[0], ("되".to_string(), "XSV".to_string()));
         assert_eq!(result2[1], ("면".to_string(), "EC".to_string()));
+    }
+
+    #[test]
+    fn test_vx_ef_split() {
+        let converter = SejongConverter::new();
+
+        // 있어요 -> 있 + 어요 (VX+EF)
+        let result = converter.split_morpheme("있어요", "VX+EF");
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], ("있".to_string(), "VX".to_string()));
+        assert_eq!(result[1], ("어요".to_string(), "EF".to_string()));
+
+        // 있다 -> 있 + 다
+        let result2 = converter.split_morpheme("있다", "VX+EF");
+        assert_eq!(result2.len(), 2);
+        assert_eq!(result2[0], ("있".to_string(), "VX".to_string()));
+        assert_eq!(result2[1], ("다".to_string(), "EF".to_string()));
+
+        // 않아요 -> 않 + 아요
+        let result3 = converter.split_morpheme("않아요", "VX+EF");
+        assert_eq!(result3.len(), 2);
+        assert_eq!(result3[0], ("않".to_string(), "VX".to_string()));
+        assert_eq!(result3[1], ("아요".to_string(), "EF".to_string()));
     }
 }
