@@ -1898,7 +1898,30 @@ impl SejongConverter {
                 let end = tokens[i].end_pos;
                 tokens[i] = SejongToken::new("저러", "VV", start, start + 2);
                 tokens.insert(i + 1, SejongToken::new("어요", "EF", start + 2, end));
-                // merged = true; // 마지막 패턴이므로 불필요
+                merged = true;
+            }
+
+            // 패턴 23: "X세/NNG + 요/EF|JX" → "X/VV + 세요/EF" (동사 + 존칭 종결어미)
+            // 오세요, 가세요, 하세요, 보세요 등
+            if !merged
+                && i + 1 < tokens.len()
+                && tokens[i].pos == "NNG"
+                && tokens[i].surface.ends_with("세")
+                && tokens[i + 1].surface == "요"
+                && (tokens[i + 1].pos == "JX" || tokens[i + 1].pos == "EF")
+            {
+                let surface = &tokens[i].surface;
+                // 어간 추출: "오세" → "오", "가세" → "가"
+                if let Some(stem) = surface.strip_suffix("세") {
+                    if !stem.is_empty() {
+                        let start = tokens[i].start_pos;
+                        let end = tokens[i + 1].end_pos;
+                        let stem_len = stem.chars().count();
+                        tokens[i] = SejongToken::new(stem, "VV", start, start + stem_len);
+                        tokens[i + 1] = SejongToken::new("세요", "EF", start + stem_len, end);
+                        merged = true;
+                    }
+                }
             }
 
             i += 1;
