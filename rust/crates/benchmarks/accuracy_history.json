@@ -73,6 +73,14 @@
       "token_accuracy": 42.1,
       "sentence_accuracy": 25.7,
       "notes": "고나서 EC 병합, 명사형어미 분리 패턴"
+    },
+    {
+      "date": "2026-03-06",
+      "version": "0.4.4",
+      "sprint": "Sprint 28",
+      "token_accuracy": 42.2,
+      "sentence_accuracy": 26.0,
+      "notes": "ㄹ 받침 이동 패턴 (올까요→오+ㄹ까요)"
     }
   ]
 }

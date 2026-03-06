@@ -1996,6 +1996,50 @@ impl SejongConverter {
                 }
             }
 
+            // 패턴 27: "Xㄹ/VV + 까요/EF" → "X/VV + ㄹ까요/EF" (ㄹ 이동)
+            // "올까요" → "오/VV + ㄹ까요/EF", "볼까요" → "보/VV + ㄹ까요/EF" 등
+            // ㄹ-final verb stems where ㄹ should be part of the ending
+            if !merged
+                && i + 1 < tokens.len()
+                && tokens[i].pos == "VV"
+                && tokens[i + 1].pos == "EF"
+            {
+                let surface = &tokens[i].surface;
+                let next_surface = &tokens[i + 1].surface;
+                // ㄹ을 떼어내기: 올 → 오
+                if let Some(last_char) = surface.chars().last() {
+                    // 받침이 ㄹ인 경우 (종성 ㄹ = 0x11AF)
+                    // 올 = 오 + ㅗ + ㄹ => 떼면 오
+                    let code = last_char as u32;
+                    if code >= 0xAC00 && code <= 0xD7A3 {
+                        let final_jamo = (code - 0xAC00) % 28;
+                        if final_jamo == 8 {
+                            // ㄹ 받침
+                            // ㄹ을 떼면 새로운 글자
+                            let new_code = code - 8;
+                            if let Some(new_char) = char::from_u32(new_code) {
+                                // 어미에 ㄹ을 붙임
+                                let new_ending = format!("ㄹ{}", next_surface);
+                                let new_stem: String = surface
+                                    .chars()
+                                    .take(surface.chars().count() - 1)
+                                    .chain(std::iter::once(new_char))
+                                    .collect();
+
+                                let start = tokens[i].start_pos;
+                                let end = tokens[i + 1].end_pos;
+                                let stem_len = new_stem.chars().count();
+                                tokens[i] =
+                                    SejongToken::new(&new_stem, "VV", start, start + stem_len);
+                                tokens[i + 1] =
+                                    SejongToken::new(&new_ending, "EF", start + stem_len, end);
+                                // merged = true; // 마지막 패턴이므로 불필요
+                            }
+                        }
+                    }
+                }
+            }
+
             i += 1;
         }
     }
