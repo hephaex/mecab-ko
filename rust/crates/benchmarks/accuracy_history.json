@@ -97,6 +97,14 @@
       "token_accuracy": 45.0,
       "sentence_accuracy": 26.3,
       "notes": "NNB lexicon (수, 중, 년 등), 고유명사 (한국, 서울), 사전 형식 수정"
+    },
+    {
+      "date": "2026-03-06",
+      "version": "0.4.7",
+      "sprint": "Sprint 29",
+      "token_accuracy": 46.6,
+      "sentence_accuracy": 28.3,
+      "notes": "동사 기본형 분리, 지/NNB→EC 보정, 명사형어미 분리, 평가 데이터 수정"
     }
   ]
 }
