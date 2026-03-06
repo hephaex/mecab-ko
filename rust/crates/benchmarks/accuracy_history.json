@@ -169,6 +169,14 @@
       "token_accuracy": 52.6,
       "sentence_accuracy": 35.3,
       "notes": "전에/JKB 보정, 입니다(EP+EF) 분리, 습니다/ㅂ니다 조건부 정규화"
+    },
+    {
+      "date": "2026-03-07",
+      "version": "0.5.6",
+      "sprint": "Sprint 30",
+      "token_accuracy": 52.6,
+      "sentence_accuracy": 35.3,
+      "notes": "피동동사 VV+리/VX 병합 (들리다→들리/VV)"
     }
   ]
 }

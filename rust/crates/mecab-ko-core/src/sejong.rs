@@ -3127,6 +3127,47 @@ impl SejongConverter {
                 }
             }
         }
+
+        // 32차 보정: 피동 동사 "VV + 리/VX" → 병합
+        // "들리다" 같은 피동사가 "들/VV + 리/VX + 다/EF"로 잘못 분리된 경우 병합
+        let passive_verbs: std::collections::HashMap<&str, &str> = [
+            ("들", "들리"),
+            ("열", "열리"),
+            ("걸", "걸리"),
+            ("눌", "눌리"),
+            ("밀", "밀리"),
+            ("끌", "끌리"),
+            ("뚫", "뚫리"),
+        ]
+        .into_iter()
+        .collect();
+
+        let mut passive_merge_indices: Vec<usize> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(1) {
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+            let next_surface = &tokens[i + 1].surface;
+            let next_pos = &tokens[i + 1].pos;
+
+            // "VV + 리/VX" 패턴
+            if curr_pos == "VV"
+                && next_surface == "리"
+                && next_pos == "VX"
+                && passive_verbs.contains_key(curr_surface.as_str())
+            {
+                passive_merge_indices.push(i);
+            }
+        }
+
+        for idx in passive_merge_indices.into_iter().rev() {
+            let stem = tokens[idx].surface.clone();
+            if let Some(&merged) = passive_verbs.get(stem.as_str()) {
+                let start = tokens[idx].start_pos;
+                let end = tokens[idx + 1].end_pos;
+                tokens[idx] = SejongToken::new(merged, "VV", start, end);
+                tokens.remove(idx + 1);
+            }
+        }
     }
 
     /// 한글 음절에서 모음 추출
