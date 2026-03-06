@@ -2205,6 +2205,39 @@ impl SejongConverter {
             tokens[idx].surface = new_surface;
         }
 
+        // 4-2차 보정: 축약된 종결어미 복원
+        // 동사 뒤의 "요"를 "아요/어요"로 복원 (모음 조화)
+        // 예: 가/VV + 요/EF → 가/VV + 아요/EF
+        let mut ef_restorations: Vec<(usize, String)> = Vec::new();
+
+        for i in 1..tokens.len() {
+            let prev_surface = &tokens[i - 1].surface;
+            let prev_pos = &tokens[i - 1].pos;
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+
+            // VV/VA 뒤의 "요"를 복원
+            if (prev_pos == "VV" || prev_pos == "VA") && curr_surface == "요" && curr_pos == "EF" {
+                // 어간의 마지막 모음에 따라 아요/어요 결정
+                // ㅏ, ㅗ → 아요 (양성모음)
+                // 그 외 → 어요 (음성모음)
+                if let Some(last_char) = prev_surface.chars().last() {
+                    let vowel = Self::extract_vowel(last_char);
+                    let restored = if vowel == 'ㅏ' || vowel == 'ㅗ' {
+                        "아요"
+                    } else {
+                        "어요"
+                    };
+                    ef_restorations.push((i, restored.to_string()));
+                }
+            }
+        }
+
+        // 종결어미 복원 적용
+        for (idx, new_surface) in ef_restorations {
+            tokens[idx].surface = new_surface;
+        }
+
         // 5차 보정: "하면/XSV + 서/EC" → "하/XSV + 면서/EC" 변환
         // MeCab이 "하면서"를 "하면" + "서"로 잘못 분리하는 문제 해결
         let mut ec_merge_corrections: Vec<(usize, String, String)> = Vec::new();
