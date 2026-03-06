@@ -3187,44 +3187,39 @@ impl SejongConverter {
             }
         }
 
-        // 32차 보정: 피동 동사 "VV + 리/VX" → 병합
-        // "들리다" 같은 피동사가 "들/VV + 리/VX + 다/EF"로 잘못 분리된 경우 병합
-        let passive_verbs: std::collections::HashMap<&str, &str> = [
-            ("들", "들리"),
-            ("열", "열리"),
-            ("걸", "걸리"),
-            ("눌", "눌리"),
-            ("밀", "밀리"),
-            ("끌", "끌리"),
-            ("뚫", "뚫리"),
+        // 32차 보정: 피동 동사 분리 "VV" → "VV + 리/VX"
+        // "들리/VV + 다/EF" → "들/VV + 리/VX + 다/EF"
+        let passive_verbs: std::collections::HashMap<&str, (&str, &str)> = [
+            ("들리", ("들", "리")),
+            ("열리", ("열", "리")),
+            ("걸리", ("걸", "리")),
+            ("눌리", ("눌", "리")),
+            ("밀리", ("밀", "리")),
+            ("끌리", ("끌", "리")),
+            ("뚫리", ("뚫", "리")),
+            ("풀리", ("풀", "리")),
+            ("팔리", ("팔", "리")),
+            ("불리", ("불", "리")),
         ]
         .into_iter()
         .collect();
 
-        let mut passive_merge_indices: Vec<usize> = Vec::new();
-        for i in 0..tokens.len().saturating_sub(1) {
-            let curr_surface = &tokens[i].surface;
-            let curr_pos = &tokens[i].pos;
-            let next_surface = &tokens[i + 1].surface;
-            let next_pos = &tokens[i + 1].pos;
-
-            // "VV + 리/VX" 패턴
-            if curr_pos == "VV"
-                && next_surface == "리"
-                && next_pos == "VX"
-                && passive_verbs.contains_key(curr_surface.as_str())
-            {
-                passive_merge_indices.push(i);
+        let mut passive_split_indices: Vec<usize> = Vec::new();
+        for i in 0..tokens.len() {
+            if tokens[i].pos == "VV" && passive_verbs.contains_key(tokens[i].surface.as_str()) {
+                passive_split_indices.push(i);
             }
         }
 
-        for idx in passive_merge_indices.into_iter().rev() {
-            let stem = tokens[idx].surface.clone();
-            if let Some(&merged) = passive_verbs.get(stem.as_str()) {
+        for idx in passive_split_indices.into_iter().rev() {
+            let surface = tokens[idx].surface.clone();
+            if let Some(&(stem, suffix)) = passive_verbs.get(surface.as_str()) {
                 let start = tokens[idx].start_pos;
-                let end = tokens[idx + 1].end_pos;
-                tokens[idx] = SejongToken::new(merged, "VV", start, end);
-                tokens.remove(idx + 1);
+                let end = tokens[idx].end_pos;
+                let stem_len = stem.chars().count();
+
+                tokens[idx] = SejongToken::new(stem, "VV", start, start + stem_len);
+                tokens.insert(idx + 1, SejongToken::new(suffix, "VX", start + stem_len, end));
             }
         }
 
@@ -3251,6 +3246,57 @@ impl SejongConverter {
                 if is_honorific_context {
                     tokens[i + 1].pos = "EP".to_string();
                 }
+            }
+        }
+
+        // 34차 보정: 사동사 분리 "VV" → "VV + VX"
+        // 예: "입히/VV + 다/EF" → "입/VV + 히/VX + 다/EF"
+        let causative_verbs: std::collections::HashMap<&str, (&str, &str)> = [
+            // -히- 사동
+            ("입히", ("입", "히")),
+            ("읽히", ("읽", "히")),
+            ("익히", ("익", "히")),
+            ("앉히", ("앉", "히")),
+            ("눕히", ("눕", "히")),
+            ("없히", ("없", "히")),
+            ("묻히", ("묻", "히")),
+            ("넓히", ("넓", "히")),
+            // -이- 사동
+            ("죽이", ("죽", "이")),
+            ("살리", ("살", "리")),
+            ("올리", ("올", "리")),
+            ("내리", ("내", "리")),
+            ("돌리", ("돌", "리")),
+            ("굴리", ("굴", "리")),
+            ("울리", ("울", "리")),
+            // -기- 사동
+            ("벗기", ("벗", "기")),
+            ("웃기", ("웃", "기")),
+            ("숨기", ("숨", "기")),
+            ("옮기", ("옮", "기")),
+            // -리- 사동
+            ("알리", ("알", "리")),
+            ("날리", ("날", "리")),
+        ]
+        .into_iter()
+        .collect();
+
+        let mut causative_split_indices: Vec<usize> = Vec::new();
+        for i in 0..tokens.len() {
+            if tokens[i].pos == "VV" && causative_verbs.contains_key(tokens[i].surface.as_str()) {
+                causative_split_indices.push(i);
+            }
+        }
+
+        for idx in causative_split_indices.into_iter().rev() {
+            let surface = tokens[idx].surface.clone();
+            if let Some(&(stem, suffix)) = causative_verbs.get(surface.as_str()) {
+                let start = tokens[idx].start_pos;
+                let end = tokens[idx].end_pos;
+                let stem_len = stem.chars().count();
+
+                tokens[idx] = SejongToken::new(stem, "VV", start, start + stem_len);
+                tokens.insert(idx + 1, SejongToken::new(suffix, "VX", start + stem_len, end));
             }
         }
     }
