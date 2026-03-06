@@ -2247,8 +2247,9 @@ impl SejongConverter {
             // EF/EC: "가", "는" 등이 어미로 잘못 태그되는 경우
             // EP: "씨" 등이 선어말어미로 잘못 태그되는 경우
             // JKB: "께서" 등이 부사격조사로 잘못 태그되는 경우 → JKS로 보정
+            // NNG: "의" 등이 명사로 잘못 태그되는 경우 → JKG로 보정
             if noun_poses.contains(prev_pos.as_str())
-                && (curr_pos == "EF" || curr_pos == "EC" || curr_pos == "ETN" || curr_pos == "EP" || curr_pos == "VV" || curr_pos == "VA" || curr_pos == "JKB")
+                && (curr_pos == "EF" || curr_pos == "EC" || curr_pos == "ETN" || curr_pos == "EP" || curr_pos == "VV" || curr_pos == "VA" || curr_pos == "JKB" || curr_pos == "NNG")
             {
                 // 다음 토큰이 EP(선어말어미)인 경우 동사의 일부이므로 조사로 보정하지 않음
                 // 예: 학교/NNG 가/VV 았/EP 다/EF -> "가"는 동사 "가다"의 어간
@@ -2704,6 +2705,78 @@ impl SejongConverter {
                     tokens[idx] = SejongToken::new(stem, "NP", start, start + stem_len);
                     tokens.insert(idx + 1, SejongToken::new("의", "JKG", start + stem_len, end));
                 }
+            }
+        }
+
+        // 18차 보정: NP + "의X/NNG" → NP + "의/JKG" + "X/NNG" 분리
+        // "우리의 집" → "우리/NP + 의집/NNG" → "우리/NP + 의/JKG + 집/NNG"
+        let mut genitive_split_indices: Vec<usize> = Vec::new();
+
+        for i in 1..tokens.len() {
+            let prev_pos = &tokens[i - 1].pos;
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+
+            // NP 뒤의 "의X/NNG" 패턴 감지
+            if prev_pos == "NP"
+                && curr_pos == "NNG"
+                && curr_surface.starts_with("의")
+                && curr_surface.chars().count() >= 2
+            {
+                genitive_split_indices.push(i);
+            }
+        }
+
+        // 역순으로 분리 (인덱스 변화 방지)
+        for idx in genitive_split_indices.into_iter().rev() {
+            let surface = tokens[idx].surface.clone();
+            if let Some(rest) = surface.strip_prefix("의") {
+                if !rest.is_empty() {
+                    let start = tokens[idx].start_pos;
+                    let end = tokens[idx].end_pos;
+                    let rest_owned = rest.to_string();
+                    tokens[idx] = SejongToken::new("의", "JKG", start, start + 1);
+                    tokens.insert(idx + 1, SejongToken::new(&rest_owned, "NNG", start + 1, end));
+                }
+            }
+        }
+
+        // 19차 보정: "선생/NNG + 님의/NNP" → "선생님/NNG + 의/JKG"
+        // 또는 "X/NNG + 님의/NNP" 패턴을 "X님/NNG + 의/JKG"로 병합
+        let mut honorific_merge_indices: Vec<usize> = Vec::new();
+
+        for i in 0..tokens.len().saturating_sub(1) {
+            let curr_pos = &tokens[i].pos;
+            let next_surface = &tokens[i + 1].surface;
+            let next_pos = &tokens[i + 1].pos;
+
+            // NNG + "님의/NNP" 패턴 감지
+            if curr_pos == "NNG"
+                && next_surface == "님의"
+                && (next_pos == "NNP" || next_pos == "NNG")
+            {
+                honorific_merge_indices.push(i);
+            }
+        }
+
+        // 역순으로 병합 (인덱스 변화 방지)
+        for idx in honorific_merge_indices.into_iter().rev() {
+            let merged = format!("{}님", tokens[idx].surface);
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx + 1].end_pos;
+            tokens[idx] = SejongToken::new(&merged, "NNG", start, end - 1);
+            tokens[idx + 1] = SejongToken::new("의", "JKG", end - 1, end);
+        }
+
+        // 20차 보정: MAJ → MAG 보정
+        // "또한", "따라서" 등 일반부사(MAG)로 분류되어야 하는 단어들
+        // 주의: "하지만", "그러나", "그래서", "그리고"는 접속부사(MAJ) 유지
+        let maj_to_mag: std::collections::HashSet<&str> =
+            ["또한", "따라서", "그러므로"].into_iter().collect();
+
+        for token in tokens.iter_mut() {
+            if token.pos == "MAJ" && maj_to_mag.contains(token.surface.as_str()) {
+                token.pos = "MAG".to_string();
             }
         }
     }
