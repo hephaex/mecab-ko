@@ -2509,6 +2509,116 @@ impl SejongConverter {
             let start = tokens[idx].start_pos;
             tokens.insert(idx, SejongToken::new("이", "VCP", start, start));
         }
+
+        // 12차 보정: "지/NNB" + "않/VX" → "지/EC" + "않/VX"
+        // "하지 않아요"에서 "지"는 연결어미(EC)
+        let mut nnb_to_ec_indices: Vec<usize> = Vec::new();
+
+        for i in 0..tokens.len().saturating_sub(1) {
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+            let next_surface = &tokens[i + 1].surface;
+            let next_pos = &tokens[i + 1].pos;
+
+            // 지/NNB + 않/VX → 지/EC + 않/VX
+            if curr_surface == "지" && curr_pos == "NNB"
+                && next_surface == "않" && next_pos == "VX"
+            {
+                nnb_to_ec_indices.push(i);
+            }
+        }
+
+        for idx in nnb_to_ec_indices {
+            tokens[idx].pos = "EC".to_string();
+        }
+
+        // 13차 보정: 동사 기본형 분리 (Xda/VV → X/VV + 다/EF)
+        // 가다, 먹다, 오다, 보다, 하다 등 기본형을 분리
+        // 주의: 단독 사용 시만 분리 (문장 내에서는 어간+어미로 분석됨)
+        let base_verbs: std::collections::HashSet<&str> = [
+            "가다", "오다", "보다", "먹다", "되다", "주다", "받다",
+            "쓰다", "읽다", "듣다", "말다", "살다", "죽다", "자다", "일다",
+            "앉다", "서다", "놓다", "두다", "치다", "잡다", "놀다", "울다",
+        ].into_iter().collect();
+
+        // "하다"는 별도 처리 (XSV인 경우만 VV로 변환 후 분리)
+
+        let mut verb_split_indices: Vec<usize> = Vec::new();
+
+        for (i, token) in tokens.iter().enumerate() {
+            if token.pos == "VV" && base_verbs.contains(token.surface.as_str()) {
+                verb_split_indices.push(i);
+            }
+        }
+
+        // 역순으로 분리 (인덱스 변화 방지)
+        for idx in verb_split_indices.into_iter().rev() {
+            let surface = &tokens[idx].surface;
+            if let Some(stem) = surface.strip_suffix("다") {
+                if !stem.is_empty() {
+                    let start = tokens[idx].start_pos;
+                    let end = tokens[idx].end_pos;
+                    let stem_len = stem.chars().count();
+                    tokens[idx] = SejongToken::new(stem, "VV", start, start + stem_len);
+                    tokens.insert(idx + 1, SejongToken::new("다", "EF", start + stem_len, end));
+                }
+            }
+        }
+
+        // 14차 보정: "하/XSV + 다/EF" → "하/VV + 다/EF"
+        // 단독 "하다"는 VV로 분석
+        let mut xsv_da_to_vv_indices: Vec<usize> = Vec::new();
+
+        for i in 0..tokens.len().saturating_sub(1) {
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+            let next_surface = &tokens[i + 1].surface;
+            let next_pos = &tokens[i + 1].pos;
+
+            // 하/XSV + 다/EF → 하/VV + 다/EF
+            if curr_surface == "하" && curr_pos == "XSV"
+                && next_surface == "다" && next_pos == "EF"
+            {
+                xsv_da_to_vv_indices.push(i);
+            }
+        }
+
+        for idx in xsv_da_to_vv_indices {
+            tokens[idx].pos = "VV".to_string();
+        }
+
+        // 15차 보정: 복합명사+기(NNG) + 전(NNG) → 어간+기(ETN) + 전(NNG)
+        // "가기 전에", "먹기 전에" 등 명사형어미 분리
+        let mut gi_split_indices: Vec<usize> = Vec::new();
+
+        for i in 0..tokens.len().saturating_sub(1) {
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+            let next_surface = &tokens[i + 1].surface;
+
+            // X기/NNG + 전/NNG → X/VV + 기/ETN + 전/NNG
+            if curr_pos == "NNG"
+                && curr_surface.ends_with("기")
+                && curr_surface.chars().count() >= 2
+                && (next_surface == "전" || next_surface == "위해" || next_surface == "시작")
+            {
+                gi_split_indices.push(i);
+            }
+        }
+
+        // 역순으로 분리 (인덱스 변화 방지)
+        for idx in gi_split_indices.into_iter().rev() {
+            let surface = &tokens[idx].surface;
+            if let Some(stem) = surface.strip_suffix("기") {
+                if !stem.is_empty() {
+                    let start = tokens[idx].start_pos;
+                    let end = tokens[idx].end_pos;
+                    let stem_len = stem.chars().count();
+                    tokens[idx] = SejongToken::new(stem, "VV", start, start + stem_len);
+                    tokens.insert(idx + 1, SejongToken::new("기", "ETN", start + stem_len, end));
+                }
+            }
+        }
     }
 
     /// 한글 음절에서 모음 추출
