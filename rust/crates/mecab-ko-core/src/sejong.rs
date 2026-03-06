@@ -2298,6 +2298,30 @@ impl SejongConverter {
         // 10차 보정: "고/EC + 나/NP" 다음에 서/EC가 아니면 "고나서" 패턴 아님
         // 일단 단순한 보정: "먹고/EC 나서/EC" → "먹/VV 고나서/EC"
         // 이 패턴은 apply_token_merges에서 처리하는 것이 더 적절
+
+        // 11차 보정: NP + 세요/EF → NP + 이/VCP + 세요/EF
+        // "누구세요"에서 계사 "이다"가 생략된 경우 복원
+        let mut vcp_insert_indices: Vec<usize> = Vec::new();
+
+        for i in 0..tokens.len().saturating_sub(1) {
+            let curr_pos = &tokens[i].pos;
+            let next_surface = &tokens[i + 1].surface;
+            let next_pos = &tokens[i + 1].pos;
+
+            // NP + 세요/EF 또는 NP + 에요/EF → NP + 이/VCP + 세요/EF
+            if curr_pos == "NP"
+                && next_pos == "EF"
+                && (next_surface == "세요" || next_surface == "에요" || next_surface == "예요")
+            {
+                vcp_insert_indices.push(i + 1);
+            }
+        }
+
+        // 역순으로 삽입 (인덱스 변화 방지)
+        for idx in vcp_insert_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            tokens.insert(idx, SejongToken::new("이", "VCP", start, start));
+        }
     }
 
     /// 한글 음절에서 모음 추출
