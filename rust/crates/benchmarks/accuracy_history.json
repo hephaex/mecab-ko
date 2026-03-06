@@ -177,6 +177,14 @@
       "token_accuracy": 52.6,
       "sentence_accuracy": 35.3,
       "notes": "피동동사 VV+리/VX 병합 (들리다→들리/VV)"
+    },
+    {
+      "date": "2026-03-07",
+      "version": "0.5.7",
+      "sprint": "Sprint 30",
+      "token_accuracy": 52.9,
+      "sentence_accuracy": 36.0,
+      "notes": "VV+EP+EP+EF 존칭+과거 패턴, 사동/피동 분리, 시/NNB→EP 보정"
     }
   ]
 }
