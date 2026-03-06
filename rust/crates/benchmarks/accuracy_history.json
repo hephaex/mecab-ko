@@ -113,6 +113,14 @@
       "token_accuracy": 49.8,
       "sentence_accuracy": 29.7,
       "notes": "VV+VX+EF 피동/사동 분리, JKS 명사 사전, 들이 분해 버그 수정"
+    },
+    {
+      "date": "2026-03-06",
+      "version": "0.4.9",
+      "sprint": "Sprint 29",
+      "token_accuracy": 50.1,
+      "sentence_accuracy": 30.3,
+      "notes": "50% 목표 달성! 올해 복합어, 나의/우리의 대명사 분리"
     }
   ]
 }

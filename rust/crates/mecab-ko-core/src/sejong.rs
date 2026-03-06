@@ -2679,6 +2679,33 @@ impl SejongConverter {
         for idx in jx_delete_indices.into_iter().rev() {
             tokens.remove(idx);
         }
+
+        // 17차 보정: "X의/NNG" → "X/NP + 의/JKG" 분리
+        // "나의", "우리의" 등 대명사+관형격조사 패턴 분리
+        let possessive_pronouns: std::collections::HashSet<&str> =
+            ["나의", "너의", "우리의", "저의", "그의", "그녀의"].into_iter().collect();
+
+        let mut possessive_split_indices: Vec<usize> = Vec::new();
+
+        for (i, token) in tokens.iter().enumerate() {
+            if token.pos == "NNG" && possessive_pronouns.contains(token.surface.as_str()) {
+                possessive_split_indices.push(i);
+            }
+        }
+
+        // 역순으로 분리 (인덱스 변화 방지)
+        for idx in possessive_split_indices.into_iter().rev() {
+            let surface = &tokens[idx].surface;
+            if let Some(stem) = surface.strip_suffix("의") {
+                if !stem.is_empty() {
+                    let start = tokens[idx].start_pos;
+                    let end = tokens[idx].end_pos;
+                    let stem_len = stem.chars().count();
+                    tokens[idx] = SejongToken::new(stem, "NP", start, start + stem_len);
+                    tokens.insert(idx + 1, SejongToken::new("의", "JKG", start + stem_len, end));
+                }
+            }
+        }
     }
 
     /// 한글 음절에서 모음 추출
