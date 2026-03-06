@@ -41,6 +41,14 @@
       "token_accuracy": 35.4,
       "sentence_accuracy": 10.0,
       "notes": "고빈도 어휘 강제 매핑 추가"
+    },
+    {
+      "date": "2026-03-06",
+      "version": "0.4.0",
+      "sprint": "Sprint 27",
+      "token_accuracy": 40.0,
+      "sentence_accuracy": 22.7,
+      "notes": "EC 복원, 복합명사, XSV 보정"
     }
   ]
 }

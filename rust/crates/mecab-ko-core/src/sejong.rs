@@ -2003,8 +2003,9 @@ impl SejongConverter {
             // ETN: "을" 등이 명사형어미로 잘못 태그되는 경우
             // EF/EC: "가", "는" 등이 어미로 잘못 태그되는 경우
             // EP: "씨" 등이 선어말어미로 잘못 태그되는 경우
+            // JKB: "께서" 등이 부사격조사로 잘못 태그되는 경우 → JKS로 보정
             if noun_poses.contains(prev_pos.as_str())
-                && (curr_pos == "EF" || curr_pos == "EC" || curr_pos == "ETN" || curr_pos == "EP" || curr_pos == "VV" || curr_pos == "VA")
+                && (curr_pos == "EF" || curr_pos == "EC" || curr_pos == "ETN" || curr_pos == "EP" || curr_pos == "VV" || curr_pos == "VA" || curr_pos == "JKB")
             {
                 // 다음 토큰이 EP(선어말어미)인 경우 동사의 일부이므로 조사로 보정하지 않음
                 // 예: 학교/NNG 가/VV 았/EP 다/EF -> "가"는 동사 "가다"의 어간
@@ -2126,6 +2127,37 @@ impl SejongConverter {
         // 연결어미 복원 적용
         for (idx, new_surface) in ec_restorations {
             tokens[idx].surface = new_surface;
+        }
+
+        // 5차 보정: "하면/XSV + 서/EC" → "하/XSV + 면서/EC" 변환
+        // MeCab이 "하면서"를 "하면" + "서"로 잘못 분리하는 문제 해결
+        let mut ec_merge_corrections: Vec<(usize, String, String)> = Vec::new();
+
+        for i in 1..tokens.len() {
+            let prev_surface = &tokens[i - 1].surface;
+            let prev_pos = &tokens[i - 1].pos;
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+
+            // XSV/VV/VA 뒤 "서/EC" 패턴 체크
+            if (prev_pos == "XSV" || prev_pos == "VV" || prev_pos == "VA")
+                && curr_surface == "서"
+                && curr_pos == "EC"
+            {
+                // "하면" → "하", "서" → "면서"
+                if prev_surface.ends_with("면") {
+                    let new_prev = prev_surface.trim_end_matches("면").to_string();
+                    ec_merge_corrections.push((i - 1, new_prev, "면서".to_string()));
+                }
+            }
+        }
+
+        // EC 병합 보정 적용
+        for (prev_idx, new_prev_surface, new_curr_surface) in ec_merge_corrections {
+            if !new_prev_surface.is_empty() {
+                tokens[prev_idx].surface = new_prev_surface;
+            }
+            tokens[prev_idx + 1].surface = new_curr_surface;
         }
     }
 
