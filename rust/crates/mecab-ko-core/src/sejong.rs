@@ -1158,6 +1158,7 @@ impl SejongConverter {
             ("이것", "NP"),
             ("저것", "NP"),
             ("무엇", "NP"),
+            ("뭐", "NP"),  // 무엇의 준말
             ("누구", "NP"),
             ("자기", "NP"),
             ("자신", "NP"),
@@ -1168,6 +1169,13 @@ impl SejongConverter {
             ("이분", "NP"),
             ("그분", "NP"),
             ("저분", "NP"),
+            // ===== 의문대명사 (NP) =====
+            ("어디", "NP"),
+            ("언제", "NP"),
+            ("어느", "NP"),
+            ("어떤", "NP"),
+            ("어찌", "NP"),
+            ("왜", "NP"),
             // ===== 의존명사 (NNB) =====
             ("것", "NNB"),
             ("줄", "NNB"),
@@ -1584,7 +1592,7 @@ impl SejongConverter {
 
         // 강제 매핑이 필요한 품사 집합 (잘못 인식되는 품사들)
         let overridable_poses: std::collections::HashSet<&str> =
-            ["EF", "EC", "EP", "VV", "VA", "NNG"].into_iter().collect();
+            ["EF", "EC", "EP", "VV", "VA", "NNG", "IC", "MAG"].into_iter().collect();
 
         for token in tokens.iter_mut() {
             // 오버라이드 대상 품사인 경우에만 적용
@@ -1938,7 +1946,7 @@ impl SejongConverter {
     ///
     /// 체언(NNG, NNP, NP) 뒤의 어미(EF)를 조사로 보정
     #[allow(clippy::too_many_lines)]
-    fn apply_context_corrections(tokens: &mut [SejongToken]) {
+    fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
         // 조사로 보정해야 할 표면형 -> 품사 매핑
         let particle_map: HashMap<&str, &str> = [
             // 주격조사 (JKS)
@@ -1994,7 +2002,12 @@ impl SejongConverter {
         // 수정이 필요한 인덱스와 새 품사를 저장
         let mut corrections: Vec<(usize, String)> = Vec::new();
 
+        // 의문대명사 집합 (이 뒤의 VV는 조사가 아님)
+        let interrogatives: std::collections::HashSet<&str> =
+            ["어디", "언제", "뭐", "무엇", "누구", "어느", "어떤", "왜", "어찌"].into_iter().collect();
+
         for i in 1..tokens.len() {
+            let prev_surface = &tokens[i - 1].surface;
             let prev_pos = &tokens[i - 1].pos;
             let curr_surface = &tokens[i].surface;
             let curr_pos = &tokens[i].pos;
@@ -2010,7 +2023,17 @@ impl SejongConverter {
                 // 다음 토큰이 EP(선어말어미)인 경우 동사의 일부이므로 조사로 보정하지 않음
                 // 예: 학교/NNG 가/VV 았/EP 다/EF -> "가"는 동사 "가다"의 어간
                 let next_is_ep = i + 1 < tokens.len() && tokens[i + 1].pos == "EP";
-                if !next_is_ep {
+
+                // 다음 토큰이 EF/EC인 경우 현재 토큰은 동사의 어간이므로 조사로 보정하지 않음
+                // 예: 어디/NP 가/VV 니/EF -> "가"는 동사 "가다"의 어간
+                let next_is_ending = i + 1 < tokens.len()
+                    && (tokens[i + 1].pos == "EF" || tokens[i + 1].pos == "EC");
+
+                // 의문대명사 뒤의 VV는 동사로 유지 (조사가 아님)
+                // 예: 어디 가니, 뭐 하니
+                let prev_is_interrogative = interrogatives.contains(prev_surface.as_str());
+
+                if !next_is_ep && !next_is_ending && !prev_is_interrogative {
                     if let Some(&correct_pos) = particle_map.get(curr_surface.as_str()) {
                         corrections.push((i, correct_pos.to_string()));
                     }
@@ -2159,6 +2182,92 @@ impl SejongConverter {
             }
             tokens[prev_idx + 1].surface = new_curr_surface;
         }
+
+        // 6차 보정: JC → JKB 변환 (동사 앞)
+        // "친구와/JC 만나다" → "친구와/JKB 만나다"
+        // 접속조사(JC)가 동사 앞에 올 때 부사격조사(JKB)로 보정
+        let mut jc_to_jkb_corrections: Vec<usize> = Vec::new();
+
+        for i in 0..tokens.len().saturating_sub(1) {
+            let curr_pos = &tokens[i].pos;
+            let curr_surface = &tokens[i].surface;
+            let next_pos = &tokens[i + 1].pos;
+
+            // JC가 VV/VA 앞에 오면 JKB로 보정
+            if curr_pos == "JC"
+                && (curr_surface == "와" || curr_surface == "과")
+                && (next_pos == "VV" || next_pos == "VA")
+            {
+                jc_to_jkb_corrections.push(i);
+            }
+        }
+
+        for idx in jc_to_jkb_corrections {
+            tokens[idx].pos = "JKB".to_string();
+        }
+
+        // 7차 보정: "합니/VV + 다/EF" → "합니다/EF"
+        // MeCab이 "합니다"를 "합니 + 다"로 분리하는 문제 해결
+        let mut merge_indices: Vec<usize> = Vec::new();
+
+        for i in 0..tokens.len().saturating_sub(1) {
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+            let next_surface = &tokens[i + 1].surface;
+            let next_pos = &tokens[i + 1].pos;
+
+            // 합니/VV + 다/EF → 합니다/EF
+            if curr_surface == "합니" && curr_pos == "VV"
+                && next_surface == "다" && next_pos == "EF"
+            {
+                merge_indices.push(i);
+            }
+        }
+
+        // 역순으로 병합 (인덱스 변화 방지)
+        for idx in merge_indices.into_iter().rev() {
+            let merged = format!("{}{}", tokens[idx].surface, tokens[idx + 1].surface);
+            tokens[idx].surface = merged;
+            tokens[idx].pos = "EF".to_string();
+            tokens[idx].end_pos = tokens[idx + 1].end_pos;
+            tokens.remove(idx + 1);
+        }
+
+        // 8차 보정: 문장 끝 "니/EC" → "니/EF"
+        // "하니/VV+니/EC" → "하니/VV+니/EF" (종결어미로 사용될 때)
+        if let Some(last) = tokens.last_mut() {
+            if last.surface == "니" && last.pos == "EC" {
+                last.pos = "EF".to_string();
+            }
+        }
+
+        // 9차 보정: "하/XSV + 아야/EC" → "하/VV + 아야/EC"
+        // "준비해야" 등에서 "하다"는 VV로 분석
+        let mut xsv_to_vv_indices: Vec<usize> = Vec::new();
+
+        for i in 0..tokens.len().saturating_sub(1) {
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+            let next_surface = &tokens[i + 1].surface;
+            let next_pos = &tokens[i + 1].pos;
+
+            // 하/XSV + 아야/EC → 하/VV + 아야/EC
+            if (curr_surface == "하" || curr_surface == "해" || curr_surface == "했")
+                && curr_pos == "XSV"
+                && next_pos == "EC"
+                && (next_surface == "아야" || next_surface == "어야" || next_surface == "야")
+            {
+                xsv_to_vv_indices.push(i);
+            }
+        }
+
+        for idx in xsv_to_vv_indices {
+            tokens[idx].pos = "VV".to_string();
+        }
+
+        // 10차 보정: "고/EC + 나/NP" 다음에 서/EC가 아니면 "고나서" 패턴 아님
+        // 일단 단순한 보정: "먹고/EC 나서/EC" → "먹/VV 고나서/EC"
+        // 이 패턴은 apply_token_merges에서 처리하는 것이 더 적절
     }
 
     /// 한글 음절에서 모음 추출
