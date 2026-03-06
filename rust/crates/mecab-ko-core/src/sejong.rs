@@ -2202,7 +2202,11 @@ impl SejongConverter {
                 // 예: 어디 가니, 뭐 하니
                 let prev_is_interrogative = interrogatives.contains(prev_surface.as_str());
 
-                if !next_is_ep && !next_is_ending && !prev_is_interrogative {
+                // "께서"는 항상 주격조사 (동사 어간이 될 수 없음)
+                let is_definite_particle = curr_surface == "께서";
+
+                if is_definite_particle || (!next_is_ep && !next_is_ending && !prev_is_interrogative)
+                {
                     if let Some(&correct_pos) = particle_map.get(curr_surface.as_str()) {
                         corrections.push((i, correct_pos.to_string()));
                     }
