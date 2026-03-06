@@ -1174,8 +1174,10 @@ impl SejongConverter {
             ("언제", "NP"),
             ("어느", "NP"),
             ("어떤", "NP"),
-            ("어찌", "NP"),
-            ("왜", "NP"),
+            // ===== 의문부사 (MAG) =====
+            ("왜", "MAG"),
+            ("어찌", "MAG"),
+            ("어떻게", "MAG"),
             // ===== 의존명사 (NNB) =====
             ("것", "NNB"),
             ("줄", "NNB"),
@@ -1868,6 +1870,34 @@ impl SejongConverter {
                 let end = tokens[i + 1].end_pos;
                 tokens[i] = SejongToken::new("는데", "EC", start, end);
                 tokens.remove(i + 1);
+                merged = true;
+            }
+
+            // 패턴 20: "그래요/IC" → "그러/VV + 어요/EF" (분리)
+            // "그러다"의 활용형 보정
+            if !merged && tokens[i].surface == "그래요" && tokens[i].pos == "IC" {
+                let start = tokens[i].start_pos;
+                let end = tokens[i].end_pos;
+                tokens[i] = SejongToken::new("그러", "VV", start, start + 2);
+                tokens.insert(i + 1, SejongToken::new("어요", "EF", start + 2, end));
+                merged = true;
+            }
+
+            // 패턴 21: "이래요/IC" → "이러/VV + 어요/EF" (분리)
+            if !merged && tokens[i].surface == "이래요" && tokens[i].pos == "IC" {
+                let start = tokens[i].start_pos;
+                let end = tokens[i].end_pos;
+                tokens[i] = SejongToken::new("이러", "VV", start, start + 2);
+                tokens.insert(i + 1, SejongToken::new("어요", "EF", start + 2, end));
+                merged = true;
+            }
+
+            // 패턴 22: "저래요/IC" → "저러/VV + 어요/EF" (분리)
+            if !merged && tokens[i].surface == "저래요" && tokens[i].pos == "IC" {
+                let start = tokens[i].start_pos;
+                let end = tokens[i].end_pos;
+                tokens[i] = SejongToken::new("저러", "VV", start, start + 2);
+                tokens.insert(i + 1, SejongToken::new("어요", "EF", start + 2, end));
                 // merged = true; // 마지막 패턴이므로 불필요
             }
 
