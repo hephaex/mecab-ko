@@ -65,6 +65,14 @@
       "token_accuracy": 42.0,
       "sentence_accuracy": 25.7,
       "notes": "종결어미 복원, -지 분리, 형용사 lexicon"
+    },
+    {
+      "date": "2026-03-06",
+      "version": "0.4.3",
+      "sprint": "Sprint 28",
+      "token_accuracy": 42.1,
+      "sentence_accuracy": 25.7,
+      "notes": "고나서 EC 병합, 명사형어미 분리 패턴"
     }
   ]
 }

@@ -1942,8 +1942,57 @@ impl SejongConverter {
                         let stem_len = stem.chars().count();
                         tokens[i] = SejongToken::new(stem, "VV", start, start + stem_len);
                         tokens.insert(i + 1, SejongToken::new("지", "EC", start + stem_len, end));
-                        // merged = true; // 마지막 패턴이므로 불필요
+                        merged = true;
                     }
+                }
+            }
+
+            // 패턴 25: "X기/NNG" + "전/NNG" → "X/VV + 기/ETN" (명사형어미 분리)
+            // "가기 전에", "먹기 전에", "오기 전에" 등
+            if !merged
+                && i + 1 < tokens.len()
+                && tokens[i].pos == "NNG"
+                && tokens[i].surface.ends_with("기")
+                && tokens[i + 1].surface == "전"
+            {
+                let surface = &tokens[i].surface;
+                if let Some(stem) = surface.strip_suffix("기") {
+                    if !stem.is_empty() {
+                        let start = tokens[i].start_pos;
+                        let end = tokens[i].end_pos;
+                        let stem_len = stem.chars().count();
+                        tokens[i] = SejongToken::new(stem, "VV", start, start + stem_len);
+                        tokens.insert(i + 1, SejongToken::new("기", "ETN", start + stem_len, end));
+                        merged = true;
+                    }
+                }
+            }
+
+            // 패턴 26: "고/EC + 나/NP + ..." → "고나서/EC" (연결어미 병합)
+            // "먹고나서", "하고나서" 등
+            if !merged
+                && i + 1 < tokens.len()
+                && tokens[i].surface == "고"
+                && tokens[i].pos == "EC"
+                && tokens[i + 1].surface == "나"
+                && tokens[i + 1].pos == "NP"
+            {
+                // "나서"가 따라오는지 확인
+                if i + 2 < tokens.len() && tokens[i + 2].surface.starts_with("서") {
+                    let start = tokens[i].start_pos;
+                    let end = tokens[i + 1].end_pos + 1; // "나" + "서" 일부
+                    tokens[i] = SejongToken::new("고나서", "EC", start, end);
+                    tokens.remove(i + 1);
+                    // i+2가 "서"로 시작하면 처리
+                    if i + 1 < tokens.len() && tokens[i + 1].surface.starts_with("서") {
+                        let remaining = tokens[i + 1].surface.strip_prefix("서").unwrap_or("");
+                        if remaining.is_empty() {
+                            tokens.remove(i + 1);
+                        } else {
+                            tokens[i + 1].surface = remaining.to_string();
+                        }
+                    }
+                    merged = true;
                 }
             }
 
