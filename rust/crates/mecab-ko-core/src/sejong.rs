@@ -1924,6 +1924,22 @@ impl SejongConverter {
                 }
             }
 
+            // 패턴 24: "X지/VV" → "X/VV + 지/EC" (부정 연결어미 분리)
+            // 하지, 먹지, 가지 등
+            if !merged && tokens[i].pos == "VV" && tokens[i].surface.ends_with("지") {
+                let surface = &tokens[i].surface;
+                if let Some(stem) = surface.strip_suffix("지") {
+                    if !stem.is_empty() {
+                        let start = tokens[i].start_pos;
+                        let end = tokens[i].end_pos;
+                        let stem_len = stem.chars().count();
+                        tokens[i] = SejongToken::new(stem, "VV", start, start + stem_len);
+                        tokens.insert(i + 1, SejongToken::new("지", "EC", start + stem_len, end));
+                        // merged = true; // 마지막 패턴이므로 불필요
+                    }
+                }
+            }
+
             i += 1;
         }
     }
