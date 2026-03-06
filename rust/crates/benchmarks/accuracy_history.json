@@ -161,6 +161,14 @@
       "token_accuracy": 52.4,
       "sentence_accuracy": 34.3,
       "notes": "존칭 시/NNB 중복 제거, 전/NNG 병합 (저/NP+ㄴ/JX→전/NNG)"
+    },
+    {
+      "date": "2026-03-07",
+      "version": "0.5.5",
+      "sprint": "Sprint 30",
+      "token_accuracy": 52.6,
+      "sentence_accuracy": 35.3,
+      "notes": "전에/JKB 보정, 입니다(EP+EF) 분리, 습니다/ㅂ니다 조건부 정규화"
     }
   ]
 }

@@ -321,6 +321,12 @@ impl SejongConverter {
             vec!["VCN".to_string(), "EF".to_string()],
         );
 
+        // EP+EF (선어말어미+종결어미 복합) - "입니다" 같은 패턴
+        self.tag_map.insert(
+            "EP+EF".to_string(),
+            vec!["VCP".to_string(), "EF".to_string()],
+        );
+
         // 체언 + 격조사
         self.tag_map.insert(
             "NNG+JKS".to_string(),
@@ -475,6 +481,16 @@ impl SejongConverter {
                 "지", "죠", "네",
             ],
             vec!["VX", "EF"],
+        ));
+
+        // EP+EF (긍정지정사+어미) - "입니다" 패턴 처리
+        // "입니다" → "이/VCP + 습니다/EF"
+        self.ending_rules.push(EndingRule::new(
+            "EP+EF",
+            vec![
+                "입니다", "입니까",
+            ],
+            vec!["VCP", "EF"],
         ));
 
         // VV + VX + EF (피동/사동 구문) - 특별 처리
@@ -813,6 +829,22 @@ impl SejongConverter {
         // 복합 태그가 아니면 그대로 반환
         if !self.is_compound_tag(pos) {
             return vec![(surface.to_string(), pos.to_string())];
+        }
+
+        // EP+EF (긍정지정사+어미) 특별 처리
+        // "입니다" → "이/VCP + 습니다/EF", "입니까" → "이/VCP + 습니까/EF"
+        if pos == "EP+EF" {
+            if surface == "입니다" {
+                return vec![
+                    ("이".to_string(), "VCP".to_string()),
+                    ("습니다".to_string(), "EF".to_string()),
+                ];
+            } else if surface == "입니까" {
+                return vec![
+                    ("이".to_string(), "VCP".to_string()),
+                    ("습니까".to_string(), "EF".to_string()),
+                ];
+            }
         }
 
         // 축약형 처리를 먼저 시도 (해요→하+어요, 했어요→하+았+어요 등)
@@ -3011,6 +3043,89 @@ impl SejongConverter {
             let end = tokens[idx + 1].end_pos;
             tokens[idx] = SejongToken::new("전", "NNG", start, end);
             tokens.remove(idx + 1);
+        }
+
+        // 29차 보정: "전/NNG + 에/EF" → "전/NNG + 에/JKB"
+        // 시간/장소 명사 뒤의 "에"는 부사격 조사(JKB)여야 함
+        let time_place_nouns: std::collections::HashSet<&str> = [
+            "전", "후", "동안", "사이", "때", "곳", "집", "학교", "회사",
+            "시작", "끝", "처음", "마지막", "오늘", "내일", "어제",
+        ]
+        .into_iter()
+        .collect();
+
+        for i in 0..tokens.len().saturating_sub(1) {
+            let curr_pos = &tokens[i].pos;
+            let curr_surface = &tokens[i].surface;
+            let next_surface = &tokens[i + 1].surface;
+            let next_pos = &tokens[i + 1].pos;
+
+            // 시간/장소 명사 + "에/EF" → "에/JKB"
+            if (curr_pos == "NNG" || curr_pos == "NNB")
+                && time_place_nouns.contains(curr_surface.as_str())
+                && next_surface == "에"
+                && next_pos == "EF"
+            {
+                tokens[i + 1].pos = "JKB".to_string();
+            }
+        }
+
+        // 30차 보정: "ᄇ니다/EC" → "ㅂ니다/EF" 정규화 (품사만 변경, 표면형 유지)
+        // 종결어미가 EC로 잘못 태깅된 경우 EF로 보정
+        for token in tokens.iter_mut() {
+            let surface = token.surface.clone();
+            // "ᄇ니다" 또는 "ㅂ니다" 형태가 EC인 경우 EF로 보정
+            if (surface == "ᄇ니다" || surface == "ㅂ니다") && token.pos == "EC" {
+                token.pos = "EF".to_string();
+                // 표면형은 표준 자모로만 정규화 (ᄇ → ㅂ)
+                token.surface = "ㅂ니다".to_string();
+            } else if (surface == "ᄇ니까" || surface == "ㅂ니까") && token.pos == "EC" {
+                token.pos = "EF".to_string();
+                token.surface = "ㅂ니까".to_string();
+            }
+        }
+
+        // 31차 보정: "ㅂ니다/EF" ↔ "습니다/EF" 조건부 정규화
+        // 규칙:
+        //   - "었/EP", "겠/EP" 뒤: "습니다" (먹었습니다, 하겠습니다)
+        //   - "시/EP" 뒤: "ㅂ니다" (계십니다, 가십니다)
+        //   - "이/VCP" 뒤: "습니다" (학생입니다 → 이/VCP 습니다/EF)
+        //   - 어간 직접 연결: "ㅂ니다" (합니다, 갑니다)
+        for i in 0..tokens.len() {
+            if tokens[i].pos != "EF" {
+                continue;
+            }
+
+            let surface = tokens[i].surface.clone();
+            let prev_surface = if i > 0 { tokens[i - 1].surface.clone() } else { String::new() };
+            let prev_pos = if i > 0 { tokens[i - 1].pos.clone() } else { String::new() };
+
+            // 종결어미 "ㅂ니다/습니다" 정규화
+            let is_bnida = surface == "ㅂ니다" || surface == "ᄇ니다";
+            let is_bnikka = surface == "ㅂ니까" || surface == "ᄇ니까";
+
+            if is_bnida || is_bnikka {
+                // "시/EP" 뒤에서는 "ㅂ니다" 유지
+                // "었/EP", "겠/EP" 뒤에서는 "습니다"로 변환
+                // "이/VCP" 뒤에서는 "습니다"로 변환
+                let use_seupnida = (prev_pos == "EP" && (prev_surface == "었" || prev_surface == "겠" || prev_surface == "았" || prev_surface == "였"))
+                    || prev_pos == "VCP";
+
+                if use_seupnida {
+                    if is_bnida {
+                        tokens[i].surface = "습니다".to_string();
+                    } else {
+                        tokens[i].surface = "습니까".to_string();
+                    }
+                } else {
+                    // 표준 자모로 정규화
+                    if surface == "ᄇ니다" {
+                        tokens[i].surface = "ㅂ니다".to_string();
+                    } else if surface == "ᄇ니까" {
+                        tokens[i].surface = "ㅂ니까".to_string();
+                    }
+                }
+            }
         }
     }
 
