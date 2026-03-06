@@ -81,6 +81,14 @@
       "token_accuracy": 42.2,
       "sentence_accuracy": 26.0,
       "notes": "ㄹ 받침 이동 패턴 (올까요→오+ㄹ까요)"
+    },
+    {
+      "date": "2026-03-06",
+      "version": "0.4.5",
+      "sprint": "Sprint 28",
+      "token_accuracy": 44.3,
+      "sentence_accuracy": 25.0,
+      "notes": "복합명사 사전 추가 (기자회견, 설거지, 선생님 등 19개)"
     }
   ]
 }
