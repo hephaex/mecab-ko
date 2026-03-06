@@ -2917,13 +2917,67 @@ impl SejongConverter {
             tokens.insert(idx + 1, SejongToken::new("하", "VV", start + noun_len, end));
         }
 
-        // 26차 보정: "전/NNG" + "에/JKB" 패턴 보정
-        // "전에"가 "저/NP + ᆫ/JX + 에/EF"로 분석되는 경우를 위해
-        // 이 패턴은 사용자 사전에 추가하는 것이 더 좋음
+        // 26차 보정: "고/EC + 나서/VV" → "고나서/EC" 병합
+        // 예: "먹고나서" → 먹/VV + 고/EC + 나서/VV + 어/EC → 먹/VV + 고나서/EC
+        let mut gonaseo_merge_indices: Vec<usize> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(2) {
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+            let next_surface = &tokens[i + 1].surface;
+            let next_pos = &tokens[i + 1].pos;
 
-        // 27차 보정: "습니다/EF" vs "ㅂ니다/EF" 정규화
-        // 둘 다 동일한 의미이므로 "ㅂ니다"를 "습니다"로 표준화하지 않음
-        // (평가 데이터의 표기에 맞춰 예측해야 하므로, 사전에서 처리 필요)
+            // "고/EC + 나서/VV" 패턴
+            if curr_surface == "고"
+                && curr_pos == "EC"
+                && next_surface == "나서"
+                && next_pos == "VV"
+            {
+                gonaseo_merge_indices.push(i);
+            }
+        }
+
+        for idx in gonaseo_merge_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx + 1].end_pos;
+            tokens[idx] = SejongToken::new("고나서", "EC", start, end);
+            tokens.remove(idx + 1);
+            // 다음 토큰 "어/EC"도 제거 (있을 경우)
+            if idx + 1 < tokens.len() && tokens[idx + 1].surface == "어" && tokens[idx + 1].pos == "EC" {
+                tokens.remove(idx + 1);
+            }
+        }
+
+        // 27차 보정: 존칭 "-시-" 선어말어미 보정
+        // "드시/VV" → "드/VV + 시/EP", "오시/VV" → "오/VV + 시/EP"
+        let honorific_verbs: std::collections::HashSet<&str> = [
+            "드시", "오시", "가시", "주시", "보시", "하시",
+            "잡수시", "계시", "나오시", "들어오시",
+        ]
+        .into_iter()
+        .collect();
+
+        let mut honorific_split_indices: Vec<usize> = Vec::new();
+        for (i, token) in tokens.iter().enumerate() {
+            if (token.pos == "VV" || token.pos == "VA") && honorific_verbs.contains(token.surface.as_str()) {
+                honorific_split_indices.push(i);
+            }
+        }
+
+        for idx in honorific_split_indices.into_iter().rev() {
+            let surface = tokens[idx].surface.clone();
+            let pos = tokens[idx].pos.clone();
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx].end_pos;
+
+            // "시" 앞부분 추출
+            if let Some(stem) = surface.strip_suffix("시") {
+                if !stem.is_empty() {
+                    let stem_len = stem.chars().count();
+                    tokens[idx] = SejongToken::new(stem, &pos, start, start + stem_len);
+                    tokens.insert(idx + 1, SejongToken::new("시", "EP", start + stem_len, end));
+                }
+            }
+        }
     }
 
     /// 한글 음절에서 모음 추출

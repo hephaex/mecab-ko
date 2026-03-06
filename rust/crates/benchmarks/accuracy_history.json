@@ -145,6 +145,14 @@
       "token_accuracy": 51.3,
       "sentence_accuracy": 33.7,
       "notes": "명사+하다 분리 (말씀하→말씀/NNG+하/VV)"
+    },
+    {
+      "date": "2026-03-07",
+      "version": "0.5.3",
+      "sprint": "Sprint 30",
+      "token_accuracy": 51.8,
+      "sentence_accuracy": 34.0,
+      "notes": "고나서/EC 병합, 존칭 -시- 분리 (드시→드/VV+시/EP)"
     }
   ]
 }
