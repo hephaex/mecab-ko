@@ -105,6 +105,14 @@
       "token_accuracy": 46.6,
       "sentence_accuracy": 28.3,
       "notes": "동사 기본형 분리, 지/NNB→EC 보정, 명사형어미 분리, 평가 데이터 수정"
+    },
+    {
+      "date": "2026-03-06",
+      "version": "0.4.8",
+      "sprint": "Sprint 29",
+      "token_accuracy": 49.8,
+      "sentence_accuracy": 29.7,
+      "notes": "VV+VX+EF 피동/사동 분리, JKS 명사 사전, 들이 분해 버그 수정"
     }
   ]
 }
