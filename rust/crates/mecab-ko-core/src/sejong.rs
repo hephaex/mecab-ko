@@ -305,6 +305,12 @@ impl SejongConverter {
             vec!["VX".to_string(), "EP".to_string(), "EF".to_string()],
         );
 
+        // 피동/사동 구문 (VV+VX+EF)
+        self.tag_map.insert(
+            "VV+VX+EF".to_string(),
+            vec!["VV".to_string(), "VX".to_string(), "EF".to_string()],
+        );
+
         // 긍정/부정 지정사 + 어미
         self.tag_map.insert(
             "VCP+EF".to_string(),
@@ -469,6 +475,17 @@ impl SejongConverter {
                 "지", "죠", "네",
             ],
             vec!["VX", "EF"],
+        ));
+
+        // VV + VX + EF (피동/사동 구문) - 특별 처리
+        // 예: 보이다 → 보/VV + 이/VX + 다/EF
+        // 패턴: 어간 + (이/히/리/기) + 다
+        self.ending_rules.push(EndingRule::new(
+            "VV+VX+EF",
+            vec![
+                "이다", "히다", "리다", "기다", // 피동/사동 기본형
+            ],
+            vec!["VV", "VX", "EF"],
         ));
 
         // VX + 연결어미 (EC)
@@ -983,12 +1000,21 @@ impl SejongConverter {
             result.push((stem.to_string(), tags[0].clone()));
             result.push((ending.to_string(), tags[1].clone()));
         } else if tags.len() == 3 {
-            // 어간 + 선어말어미 + 종결어미 (예: VV + EP + EF)
-            // 어미 부분에서 선어말어미와 종결어미 분리 시도
-            let (prefinal, final_ending) = Self::split_prefinal_ending(ending);
-            result.push((stem.to_string(), tags[0].clone()));
-            result.push((prefinal, tags[1].clone()));
-            result.push((final_ending, tags[2].clone()));
+            // VV + VX + EF (피동/사동) 특수 처리
+            // 예: "이다" → "이/VX + 다/EF"
+            if tags[1] == "VX" && tags[2] == "EF" {
+                let (vx_part, ef_part) = Self::split_causative_ending(ending);
+                result.push((stem.to_string(), tags[0].clone()));
+                result.push((vx_part, tags[1].clone()));
+                result.push((ef_part, tags[2].clone()));
+            } else {
+                // 어간 + 선어말어미 + 종결어미 (예: VV + EP + EF)
+                // 어미 부분에서 선어말어미와 종결어미 분리 시도
+                let (prefinal, final_ending) = Self::split_prefinal_ending(ending);
+                result.push((stem.to_string(), tags[0].clone()));
+                result.push((prefinal, tags[1].clone()));
+                result.push((final_ending, tags[2].clone()));
+            }
         } else {
             // 기타 경우
             result.push((stem.to_string(), tags[0].clone()));
@@ -998,6 +1024,30 @@ impl SejongConverter {
         }
 
         result
+    }
+
+    /// 피동/사동 접미사와 종결어미 분리
+    /// 예: "이다" → ("이", "다"), "히다" → ("히", "다")
+    fn split_causative_ending(ending: &str) -> (String, String) {
+        let causative_patterns = ["이", "히", "리", "기"];
+
+        for pattern in &causative_patterns {
+            if ending.starts_with(pattern) {
+                let vx_part = (*pattern).to_string();
+                let ef_part: String = ending.chars().skip(pattern.chars().count()).collect();
+                if !ef_part.is_empty() {
+                    return (vx_part, ef_part);
+                }
+            }
+        }
+
+        // 분리 불가능하면 첫 글자를 VX로, 나머지를 EF로
+        let chars: Vec<char> = ending.chars().collect();
+        if chars.len() >= 2 {
+            (chars[0].to_string(), chars[1..].iter().collect())
+        } else {
+            (ending.to_string(), String::new())
+        }
     }
 
     /// 선어말어미와 종결어미 분리
@@ -2400,28 +2450,8 @@ impl SejongConverter {
             tokens[prev_idx + 1].surface = new_curr_surface;
         }
 
-        // 6차 보정: JC → JKB 변환 (동사 앞)
-        // "친구와/JC 만나다" → "친구와/JKB 만나다"
-        // 접속조사(JC)가 동사 앞에 올 때 부사격조사(JKB)로 보정
-        let mut jc_to_jkb_corrections: Vec<usize> = Vec::new();
-
-        for i in 0..tokens.len().saturating_sub(1) {
-            let curr_pos = &tokens[i].pos;
-            let curr_surface = &tokens[i].surface;
-            let next_pos = &tokens[i + 1].pos;
-
-            // JC가 VV/VA 앞에 오면 JKB로 보정
-            if curr_pos == "JC"
-                && (curr_surface == "와" || curr_surface == "과")
-                && (next_pos == "VV" || next_pos == "VA")
-            {
-                jc_to_jkb_corrections.push(i);
-            }
-        }
-
-        for idx in jc_to_jkb_corrections {
-            tokens[idx].pos = "JKB".to_string();
-        }
+        // 6차 보정: (비활성화) JC → JKB 변환은 평가 데이터와 불일치
+        // "친구와/JC 만나다" - JC 유지 (평가 데이터 기준)
 
         // 7차 보정: "합니/VV + 다/EF" → "합니다/EF"
         // MeCab이 "합니다"를 "합니 + 다"로 분리하는 문제 해결
@@ -2618,6 +2648,36 @@ impl SejongConverter {
                     tokens.insert(idx + 1, SejongToken::new("기", "ETN", start + stem_len, end));
                 }
             }
+        }
+
+        // 16차 보정: 잘못된 "는/JX + 들/XSN + 이/JKS" 패턴 수정
+        // 사전 버그로 인해 "들이"가 "는+들+이"로 분해됨
+        // 실제로는 "들+이"여야 함 → "는/JX" 토큰 삭제
+        let mut jx_delete_indices: Vec<usize> = Vec::new();
+
+        for i in 0..tokens.len().saturating_sub(2) {
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+            let next_surface = &tokens[i + 1].surface;
+            let next_pos = &tokens[i + 1].pos;
+            let next2_surface = &tokens[i + 2].surface;
+            let next2_pos = &tokens[i + 2].pos;
+
+            // "는/JX + 들/XSN + 이/JKS" 패턴 감지
+            if curr_surface == "는"
+                && curr_pos == "JX"
+                && next_surface == "들"
+                && next_pos == "XSN"
+                && next2_surface == "이"
+                && next2_pos == "JKS"
+            {
+                jx_delete_indices.push(i);
+            }
+        }
+
+        // 역순으로 삭제 (인덱스 변화 방지)
+        for idx in jx_delete_indices.into_iter().rev() {
+            tokens.remove(idx);
         }
     }
 
