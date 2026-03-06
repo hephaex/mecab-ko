@@ -2058,8 +2058,9 @@ impl SejongConverter {
         }
 
         // 3차 보정: XSV (파생접미사) 보정
-        // 명사 뒤의 "하다/되다" 계열을 XSV로 보정
+        // 일반명사 뒤의 "하다/되다" 계열을 XSV로 보정
         // 패턴: NNG + 하/했/해/되/됐 → NNG + XSV
+        // 주의: NP(대명사) 뒤에는 적용하지 않음 (예: "뭐 하니"에서 "하"는 VV)
         let xsv_patterns: HashMap<&str, bool> = [
             ("하", true),   // 하다
             ("해", true),   // 해요 (하+어)
@@ -2070,6 +2071,10 @@ impl SejongConverter {
         .into_iter()
         .collect();
 
+        // XSV 보정 대상: 일반명사만 (대명사 NP 제외)
+        let xsv_trigger_poses: std::collections::HashSet<&str> =
+            ["NNG", "NNP", "NNB"].into_iter().collect();
+
         let mut xsv_corrections: Vec<(usize, String)> = Vec::new();
 
         for i in 1..tokens.len() {
@@ -2077,8 +2082,8 @@ impl SejongConverter {
             let curr_surface = &tokens[i].surface;
             let curr_pos = &tokens[i].pos;
 
-            // 명사 뒤의 VV/EF를 XSV로 보정
-            if noun_poses.contains(prev_pos.as_str())
+            // 일반명사 뒤의 VV/EF를 XSV로 보정 (대명사 NP 제외)
+            if xsv_trigger_poses.contains(prev_pos.as_str())
                 && (curr_pos == "VV" || curr_pos == "EF" || curr_pos == "VA")
                 && xsv_patterns.contains_key(curr_surface.as_str()) {
                     xsv_corrections.push((i, "XSV".to_string()));
