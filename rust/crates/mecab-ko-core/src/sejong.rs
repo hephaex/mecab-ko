@@ -410,6 +410,7 @@ impl SejongConverter {
             "NNG+JC".to_string(),
             vec!["NNG".to_string(), "JC".to_string()],
         );
+
     }
 
     /// 어미 분리 규칙 초기화
@@ -434,6 +435,8 @@ impl SejongConverter {
                 "마", "거라", "너라", // 명령
                 "랴", "리", // 의문
                 "다", // 기본 종결
+                // 미래/의지 종결어미
+                "ㄹ게요", "ㄹ게", "ㄹ래요", "ㄹ래", "ㄹ까요", "ㄹ까",
             ],
             vec!["VV", "EF"],
         ));
@@ -3297,6 +3300,53 @@ impl SejongConverter {
 
                 tokens[idx] = SejongToken::new(stem, "VV", start, start + stem_len);
                 tokens.insert(idx + 1, SejongToken::new(suffix, "VX", start + stem_len, end));
+            }
+        }
+
+        // 35차 보정: EC+VX+EF 패턴 분리 (볼게요 → 보/VV + ㄹ게요/EF)
+        // 표면형에서 어간과 어미를 분리
+        let vx_ef_patterns: std::collections::HashMap<&str, (&str, &str)> = [
+            // ㄹ게요 패턴: "볼게요" → ("보", "ㄹ게요")
+            ("볼게요", ("보", "ㄹ게요")),
+            ("할게요", ("하", "ㄹ게요")),
+            ("갈게요", ("가", "ㄹ게요")),
+            ("올게요", ("오", "ㄹ게요")),
+            ("줄게요", ("주", "ㄹ게요")),
+            ("볼게", ("보", "ㄹ게")),
+            ("할게", ("하", "ㄹ게")),
+            ("갈게", ("가", "ㄹ게")),
+            ("올게", ("오", "ㄹ게")),
+            ("줄게", ("주", "ㄹ게")),
+            // ㄹ까요 패턴
+            ("볼까요", ("보", "ㄹ까요")),
+            ("할까요", ("하", "ㄹ까요")),
+            ("갈까요", ("가", "ㄹ까요")),
+            ("올까요", ("오", "ㄹ까요")),
+            // ㄹ래요 패턴
+            ("볼래요", ("보", "ㄹ래요")),
+            ("할래요", ("하", "ㄹ래요")),
+            ("갈래요", ("가", "ㄹ래요")),
+        ]
+        .into_iter()
+        .collect();
+
+        for i in 0..tokens.len() {
+            let surface = &tokens[i].surface;
+            let pos = &tokens[i].pos;
+
+            // EC+VX+EF 또는 EC+VX+EP 패턴
+            if pos.contains("EC+VX") {
+                if let Some(&(stem, ending)) = vx_ef_patterns.get(surface.as_str()) {
+                    let start = tokens[i].start_pos;
+                    let end = tokens[i].end_pos;
+                    let stem_len = stem.chars().count();
+
+                    // 기존 토큰을 VV로 변경
+                    tokens[i] = SejongToken::new(stem, "VV", start, start + stem_len);
+                    // EF 토큰 삽입
+                    tokens.insert(i + 1, SejongToken::new(ending, "EF", start + stem_len, end));
+                    break; // 하나만 처리하고 종료 (인덱스 변경 방지)
+                }
             }
         }
     }
