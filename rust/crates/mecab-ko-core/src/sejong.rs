@@ -1588,13 +1588,20 @@ impl SejongConverter {
             ("머리", "NNG"),
             ("얼굴", "NNG"),
             ("가슴", "NNG"),
+            // ===== 형용사 (VA) - 자주 잘못 인식되는 것 =====
+            ("덥", "VA"),
+            ("춥", "VA"),
+            ("좁", "VA"),
+            ("넓", "VA"),
+            ("깊", "VA"),
+            ("얕", "VA"),
         ]
         .into_iter()
         .collect();
 
         // 강제 매핑이 필요한 품사 집합 (잘못 인식되는 품사들)
         let overridable_poses: std::collections::HashSet<&str> =
-            ["EF", "EC", "EP", "VV", "VA", "NNG", "IC", "MAG"].into_iter().collect();
+            ["EF", "EC", "EP", "VV", "VA", "NNG", "NNP", "IC", "MAG"].into_iter().collect();
 
         for token in tokens.iter_mut() {
             // 오버라이드 대상 품사인 경우에만 적용
