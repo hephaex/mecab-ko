@@ -244,6 +244,16 @@ impl SejongConverter {
             "VV+EP+EC".to_string(),
             vec!["VV".to_string(), "EP".to_string(), "EC".to_string()],
         );
+        // 존칭+과거 복합형 (VV+EP+EP+EF): 오시+었+습니다
+        self.tag_map.insert(
+            "VV+EP+EP+EF".to_string(),
+            vec![
+                "VV".to_string(),
+                "EP".to_string(),
+                "EP".to_string(),
+                "EF".to_string(),
+            ],
+        );
 
         // 형용사 + 어미
         self.tag_map
@@ -609,6 +619,15 @@ impl SejongConverter {
                 "시", "으시", // 높임
             ],
             vec!["VA", "EP"],
+        ));
+
+        // 존칭+과거 복합형 (VV+EP+EP+EF): 오시었습니다 → 오 + 시 + 었 + 습니다
+        self.ending_rules.push(EndingRule::new(
+            "VV+EP+EP+EF",
+            vec![
+                "셨습니다", "셨습니까", "셨어요", "셨어", "셨다",
+            ],
+            vec!["VV", "EP", "EP", "EF"],
         ));
 
         // 선어말어미 + 종결어미 (EP+EF) - 확장
@@ -1047,6 +1066,14 @@ impl SejongConverter {
                 result.push((prefinal, tags[1].clone()));
                 result.push((final_ending, tags[2].clone()));
             }
+        } else if tags.len() == 4 {
+            // VV + EP + EP + EF (존칭+과거 복합형)
+            // 예: "셨습니다" → "시/EP + 었/EP + 습니다/EF"
+            let (ep1, ep2, ef) = Self::split_honorific_past_ending(ending);
+            result.push((stem.to_string(), tags[0].clone()));
+            result.push((ep1, tags[1].clone()));
+            result.push((ep2, tags[2].clone()));
+            result.push((ef, tags[3].clone()));
         } else {
             // 기타 경우
             result.push((stem.to_string(), tags[0].clone()));
@@ -1116,6 +1143,38 @@ impl SejongConverter {
 
         // 분리 불가능하면 전체를 EP로
         (ending.to_string(), String::new())
+    }
+
+    /// 존칭+과거 복합 어미 분리
+    /// 예: "셨습니다" → ("시", "었", "습니다")
+    fn split_honorific_past_ending(ending: &str) -> (String, String, String) {
+        // "셨습니다" → "시" + "었" + "습니다"
+        // "셨어요" → "시" + "었" + "어요"
+        let patterns = [
+            ("셨습니다", "시", "었", "습니다"),
+            ("셨습니까", "시", "었", "습니까"),
+            ("셨어요", "시", "었", "어요"),
+            ("셨어", "시", "었", "어"),
+            ("셨다", "시", "었", "다"),
+        ];
+
+        for (pattern, ep1, ep2, ef) in &patterns {
+            if ending == *pattern {
+                return (ep1.to_string(), ep2.to_string(), ef.to_string());
+            }
+        }
+
+        // 기본 분리: 첫 글자 + 둘째 글자 + 나머지
+        let chars: Vec<char> = ending.chars().collect();
+        if chars.len() >= 3 {
+            (
+                chars[0].to_string(),
+                chars[1].to_string(),
+                chars[2..].iter().collect(),
+            )
+        } else {
+            (ending.to_string(), String::new(), String::new())
+        }
     }
 
     /// 토큰을 세종 형식으로 변환
@@ -3166,6 +3225,32 @@ impl SejongConverter {
                 let end = tokens[idx + 1].end_pos;
                 tokens[idx] = SejongToken::new(merged, "VV", start, end);
                 tokens.remove(idx + 1);
+            }
+        }
+
+        // 33차 보정: VV 뒤의 "시/NNB" → "시/EP" (존칭 선어말어미)
+        // "오/VV 시/NNB 었/EP" → "오/VV 시/EP 었/EP"
+        for i in 0..tokens.len().saturating_sub(1) {
+            let curr_pos = tokens[i].pos.clone();
+            let next_surface = tokens[i + 1].surface.clone();
+            let next_pos = tokens[i + 1].pos.clone();
+
+            // VV 뒤에 "시/NNB"가 오고, 그 다음에 EP나 EF가 오면 EP로 보정
+            if curr_pos == "VV"
+                && next_surface == "시"
+                && next_pos == "NNB"
+            {
+                // 다음에 EP, EF, EC가 오는지 확인 (존칭 어미 패턴)
+                let is_honorific_context = if i + 2 < tokens.len() {
+                    let following_pos = &tokens[i + 2].pos;
+                    following_pos == "EP" || following_pos == "EF" || following_pos == "EC"
+                } else {
+                    false
+                };
+
+                if is_honorific_context {
+                    tokens[i + 1].pos = "EP".to_string();
+                }
             }
         }
     }
