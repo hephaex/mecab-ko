@@ -153,6 +153,14 @@
       "token_accuracy": 51.8,
       "sentence_accuracy": 34.0,
       "notes": "고나서/EC 병합, 존칭 -시- 분리 (드시→드/VV+시/EP)"
+    },
+    {
+      "date": "2026-03-07",
+      "version": "0.5.4",
+      "sprint": "Sprint 30",
+      "token_accuracy": 52.4,
+      "sentence_accuracy": 34.3,
+      "notes": "존칭 시/NNB 중복 제거, 전/NNG 병합 (저/NP+ㄴ/JX→전/NNG)"
     }
   ]
 }

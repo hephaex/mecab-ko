@@ -2975,8 +2975,42 @@ impl SejongConverter {
                     let stem_len = stem.chars().count();
                     tokens[idx] = SejongToken::new(stem, &pos, start, start + stem_len);
                     tokens.insert(idx + 1, SejongToken::new("시", "EP", start + stem_len, end));
+
+                    // 다음 토큰이 "시/NNB"이면 제거 (중복 시 제거)
+                    if idx + 2 < tokens.len()
+                        && tokens[idx + 2].surface == "시"
+                        && tokens[idx + 2].pos == "NNB"
+                    {
+                        tokens.remove(idx + 2);
+                    }
                 }
             }
+        }
+
+        // 28차 보정: "전/NNG" 패턴 보정
+        // "저/NP + ᆫ/JX" 패턴을 "전/NNG"으로 병합
+        let mut jeon_merge_indices: Vec<usize> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(1) {
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+            let next_surface = &tokens[i + 1].surface;
+            let next_pos = &tokens[i + 1].pos;
+
+            // "저/NP + ᆫ/JX" → "전/NNG" 패턴
+            if curr_surface == "저"
+                && curr_pos == "NP"
+                && (next_surface == "ᆫ" || next_surface == "ㄴ")
+                && next_pos == "JX"
+            {
+                jeon_merge_indices.push(i);
+            }
+        }
+
+        for idx in jeon_merge_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx + 1].end_pos;
+            tokens[idx] = SejongToken::new("전", "NNG", start, end);
+            tokens.remove(idx + 1);
         }
     }
 
