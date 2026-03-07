@@ -3427,6 +3427,27 @@ impl SejongConverter {
             tokens[idx] = SejongToken::new("하", "XSV", start, start + 1);
             tokens.insert(idx + 1, SejongToken::new("고", "EC", start + 1, end));
         }
+
+        // 39차 보정: NNG + "하/IC" + "면서/EF" → "하/XSV + 면서/EC"
+        // "급등하면서" → "급등/NNG + 하/XSV + 면서/EC"
+        for i in 1..tokens.len().saturating_sub(1) {
+            let prev_pos = tokens[i - 1].pos.clone();
+            let curr_surface = tokens[i].surface.clone();
+            let curr_pos = tokens[i].pos.clone();
+            let next_surface = tokens[i + 1].surface.clone();
+            let next_pos = tokens[i + 1].pos.clone();
+
+            // NNG + "하/IC" + "면서/EF" 패턴
+            if prev_pos == "NNG"
+                && curr_surface == "하"
+                && curr_pos == "IC"
+                && next_surface == "면서"
+                && next_pos == "EF"
+            {
+                tokens[i].pos = "XSV".to_string();
+                tokens[i + 1].pos = "EC".to_string();
+            }
+        }
     }
 
     /// 한글 음절에서 모음 추출
