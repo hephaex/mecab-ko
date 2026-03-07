@@ -185,6 +185,14 @@
       "token_accuracy": 52.9,
       "sentence_accuracy": 36.0,
       "notes": "VV+EP+EP+EF 존칭+과거 패턴, 사동/피동 분리, 시/NNB→EP 보정"
+    },
+    {
+      "date": "2026-03-07",
+      "version": "0.5.8",
+      "sprint": "Sprint 30",
+      "token_accuracy": 52.9,
+      "sentence_accuracy": 36.0,
+      "notes": "36-39차 보정: 아요/EC→어요/EF, 고/EF→EC, 하고/JC 분리, 하/IC→XSV"
     }
   ]
 }
