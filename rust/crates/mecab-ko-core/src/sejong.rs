@@ -3349,6 +3349,32 @@ impl SejongConverter {
                 }
             }
         }
+
+        // 36차 보정: 문장 끝 "아요/EC" → "어요/EF"
+        // XSV나 VV 뒤의 "아요/EC"는 종결어미(EF)
+        for i in 0..tokens.len() {
+            let surface = &tokens[i].surface;
+            let pos = &tokens[i].pos;
+
+            // 마지막 토큰이거나, 다음 토큰이 없는 경우
+            let is_final = i == tokens.len() - 1
+                || (i + 1 < tokens.len() && tokens[i + 1].pos == "SF");
+
+            if is_final && pos == "EC" && surface == "아요" {
+                // 이전 토큰이 XSV, VV, VA인지 확인
+                let prev_is_verb = if i > 0 {
+                    let prev_pos = &tokens[i - 1].pos;
+                    prev_pos == "XSV" || prev_pos == "VV" || prev_pos == "VA" || prev_pos == "VX"
+                } else {
+                    false
+                };
+
+                if prev_is_verb {
+                    tokens[i].surface = "어요".to_string();
+                    tokens[i].pos = "EF".to_string();
+                }
+            }
+        }
     }
 
     /// 한글 음절에서 모음 추출
