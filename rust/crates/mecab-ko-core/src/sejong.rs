@@ -3375,6 +3375,30 @@ impl SejongConverter {
                 }
             }
         }
+
+        // 37차 보정: 문장 중간 "고/EF" → "고/EC" (연결어미)
+        // 문장 끝이 아닌 "고"는 연결어미(EC)
+        for i in 0..tokens.len() {
+            let surface = &tokens[i].surface;
+            let pos = &tokens[i].pos;
+
+            // 문장 중간인지 확인 (마지막 토큰이 아님)
+            let is_mid_sentence = i + 1 < tokens.len();
+
+            if is_mid_sentence && pos == "EF" && surface == "고" {
+                // 이전 토큰이 동사/형용사 계열인지 확인
+                let prev_is_verb = if i > 0 {
+                    let prev_pos = &tokens[i - 1].pos;
+                    prev_pos == "XSV" || prev_pos == "VV" || prev_pos == "VA" || prev_pos == "VX"
+                } else {
+                    false
+                };
+
+                if prev_is_verb {
+                    tokens[i].pos = "EC".to_string();
+                }
+            }
+        }
     }
 
     /// 한글 음절에서 모음 추출
