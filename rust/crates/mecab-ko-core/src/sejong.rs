@@ -3399,6 +3399,34 @@ impl SejongConverter {
                 }
             }
         }
+
+        // 38차 보정: NNG + "하고/JC" + VX → "하/XSV + 고/EC" 분리
+        // "투자하고 있다" → "투자/NNG + 하/XSV + 고/EC + 있/VX + 다/EF"
+        let mut hago_split_indices: Vec<usize> = Vec::new();
+        for i in 1..tokens.len().saturating_sub(1) {
+            let prev_pos = &tokens[i - 1].pos;
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+            let next_pos = &tokens[i + 1].pos;
+
+            // NNG + "하고/JC" + VX 패턴
+            if prev_pos == "NNG"
+                && curr_surface == "하고"
+                && curr_pos == "JC"
+                && next_pos == "VX"
+            {
+                hago_split_indices.push(i);
+            }
+        }
+
+        for idx in hago_split_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx].end_pos;
+
+            // "하고" → "하/XSV + 고/EC"
+            tokens[idx] = SejongToken::new("하", "XSV", start, start + 1);
+            tokens.insert(idx + 1, SejongToken::new("고", "EC", start + 1, end));
+        }
     }
 
     /// 한글 음절에서 모음 추출
