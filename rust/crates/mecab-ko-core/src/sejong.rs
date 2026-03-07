@@ -3448,6 +3448,43 @@ impl SejongConverter {
                 tokens[i + 1].pos = "EC".to_string();
             }
         }
+
+        // 40차 보정: 동사형 관형사 분리 "X는/MM" → "X/VV + 는/ETM"
+        // "오는" → "오/VV + 는/ETM"
+        let mm_split_patterns: std::collections::HashMap<&str, (&str, &str)> = [
+            ("오는", ("오", "는")),
+            ("가는", ("가", "는")),
+            ("하는", ("하", "는")),
+            ("되는", ("되", "는")),
+            ("있는", ("있", "는")),
+            ("없는", ("없", "는")),
+            ("먹는", ("먹", "는")),
+            ("보는", ("보", "는")),
+            ("받는", ("받", "는")),
+            ("주는", ("주", "는")),
+        ]
+        .into_iter()
+        .collect();
+
+        let mut mm_split_indices: Vec<usize> = Vec::new();
+        for i in 0..tokens.len() {
+            if tokens[i].pos == "MM" && mm_split_patterns.contains_key(tokens[i].surface.as_str())
+            {
+                mm_split_indices.push(i);
+            }
+        }
+
+        for idx in mm_split_indices.into_iter().rev() {
+            let surface = tokens[idx].surface.clone();
+            if let Some(&(stem, ending)) = mm_split_patterns.get(surface.as_str()) {
+                let start = tokens[idx].start_pos;
+                let end = tokens[idx].end_pos;
+                let stem_len = stem.chars().count();
+
+                tokens[idx] = SejongToken::new(stem, "VV", start, start + stem_len);
+                tokens.insert(idx + 1, SejongToken::new(ending, "ETM", start + stem_len, end));
+            }
+        }
     }
 
     /// 한글 음절에서 모음 추출
