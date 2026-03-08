@@ -1,12 +1,13 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-03-07 (Sprint 30 진행 중)
+## 마지막 업데이트: 2026-03-08 (Sprint 30 블로커)
 
-### 🎯 Sprint 30 진행 중 - 정확도 55% 목표
+### 🎯 Sprint 30 - 정확도 55% 목표 (BLOCKED)
 - **현재 정확도**: **52.9%** (Sprint 29 완료 50.1% → 52.9%, +2.8%p)
 - **문장 정확도**: 36.0%
 - **완전 일치 문장**: 108 / 300
 - **목표**: 55% (2.1%p 남음)
+- **상태**: ⚠️ MeCab 사전 한계로 코드 레벨 개선 불가
 
 ---
 
@@ -46,7 +47,16 @@
     - 숫자 (일/SN, 이/SN, 삼/SN) 인식 문제
     - 감탄사 (아/IC, 예/IC, 네/IC) 인식 문제
     - 복합명사 인식 문제 (영화, 회의, 발표 등)
-- [ ] S30-02: npm mecab-ko-wasm v0.4.0 배포 (npm 토큰 필요)
+  - **시도한 접근**:
+    - 사용자 사전에 숫자/감탄사 추가 → 실패 (다른 분석 깨짐, 37.4%로 하락)
+    - 단일 품사 강제 할당은 동음이의어 문제 발생
+  - **결론**: MeCab 사전 자체 수정 또는 컨텍스트 기반 후처리 필요
+- [x] S30-02: npm mecab-ko-wasm v0.4.0 배포 ✅ (2026-03-08)
+  - https://www.npmjs.com/package/mecab-ko-wasm
+- [~] S30-03: PyPI 계정 복구 진행 중
+  - GitHub Issue: https://github.com/pypi/support/issues/9540
+  - support@pypi.org 이메일 발송 완료 (2026-03-08)
+  - 응답 대기 중
 
 ### Git 커밋 이력 (Sprint 30)
 - `a4dd72e` - feat(accuracy): Improve to 50.5% with genitive and adverb corrections
