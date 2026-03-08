@@ -102,8 +102,8 @@ pub struct InflectedForm {
 }
 
 impl InflectedForm {
-    /// MeCab Inflect.csv 형식으로 출력
-    /// 형식: 표면형,left_id,right_id,cost,품사,의미,종성,읽기,타입,시작품사,끝품사,분석결과
+    /// `MeCab` `Inflect.csv` 형식으로 출력
+    /// 형식: `표면형,left_id,right_id,cost,품사,의미,종성,읽기,타입,시작품사,끝품사,분석결과`
     #[must_use]
     pub fn to_csv_line(&self) -> String {
         let jong = if self.has_jongseong { "T" } else { "F" };
@@ -623,9 +623,12 @@ impl InflectGenerator {
         // 먼저 EP 적용
         let intermediate = self.apply_ending(verb, ep)?;
 
+        // 모음 축약 적용 (가았 → 갔, 오았 → 왔)
+        let contracted = contract_vowels(&intermediate.surface);
+
         // 그 결과에 EF 적용
         let intermediate_verb = VerbEntry {
-            stem: intermediate.surface,
+            stem: contracted,
             pos: verb.pos.clone(),
             irregular_type: IrregularType::Regular, // EP 적용 후는 규칙 활용
             base_cost: verb.base_cost,
@@ -633,8 +636,11 @@ impl InflectGenerator {
 
         let final_form = self.apply_ending(&intermediate_verb, ef)?;
 
+        // 최종 결과에도 모음 축약 적용
+        let contracted_surface = contract_vowels(&final_form.surface);
+
         Some(InflectedForm {
-            surface: final_form.surface,
+            surface: contracted_surface,
             compound_pos: format!("{}+{}+{}", verb.pos, ep.pos, ef.pos),
             cost: verb.base_cost,
             has_jongseong: final_form.has_jongseong,
@@ -706,6 +712,76 @@ const fn jamo_to_jongseong(c: char) -> Option<char> {
         'ㅎ' => Some('ㅎ'),
         _ => None,
     }
+}
+
+/// 모음 축약 처리 (가았다 → 갔다, 오았다 → 왔다)
+/// 연속 모음을 한 음절로 축약
+#[must_use]
+#[allow(clippy::match_same_arms)]
+pub fn contract_vowels(surface: &str) -> String {
+    let chars: Vec<char> = surface.chars().collect();
+    if chars.len() < 2 {
+        return surface.to_string();
+    }
+
+    let mut result = String::new();
+    let mut i = 0;
+
+    while i < chars.len() {
+        if i + 1 < chars.len() {
+            let c1 = chars[i];
+            let c2 = chars[i + 1];
+
+            // 두 글자 모두 한글이고, 축약 가능한 경우 처리
+            if let (Some((cho1, jung1, jong1)), Some((cho2, jung2, jong2))) =
+                (decompose(c1), decompose(c2))
+            {
+                // 축약 패턴 매칭
+                // 가 + 았 → 갔 (ㅏ + ㅏ + ㅆ → ㅏ + ㅆ)
+                // 오 + 았 → 왔 (ㅗ + ㅏ + ㅆ → ㅘ + ㅆ)
+                // 서 + 었 → 섰 (ㅓ + ㅓ + ㅆ → ㅓ + ㅆ)
+                // 해 + 었 → 했 (ㅐ + ㅓ + ㅆ → ㅐ + ㅆ)
+                if jong1.is_none() && (cho2 == 'ㅇ') {
+                    let contracted = match (jung1, jung2) {
+                        // 아 + 아 → 아
+                        ('ㅏ', 'ㅏ') => Some((cho1, 'ㅏ', jong2)),
+                        // 아 + 어 → 아 (불규칙)
+                        ('ㅏ', 'ㅓ') => Some((cho1, 'ㅏ', jong2)),
+                        // 오 + 아 → 와
+                        ('ㅗ', 'ㅏ') => Some((cho1, 'ㅘ', jong2)),
+                        // 어 + 어 → 어
+                        ('ㅓ', 'ㅓ') => Some((cho1, 'ㅓ', jong2)),
+                        // 어 + 아 → 어
+                        ('ㅓ', 'ㅏ') => Some((cho1, 'ㅓ', jong2)),
+                        // 우 + 어 → 워
+                        ('ㅜ', 'ㅓ') => Some((cho1, 'ㅝ', jong2)),
+                        // 이 + 어 → 여
+                        ('ㅣ', 'ㅓ') => Some((cho1, 'ㅕ', jong2)),
+                        // 으 + 어 → 어 (어간 탈락)
+                        ('ㅡ', 'ㅓ') => Some((cho1, 'ㅓ', jong2)),
+                        // 애 + 어 → 애
+                        ('ㅐ', 'ㅓ') => Some((cho1, 'ㅐ', jong2)),
+                        // 해 + 어 → 해
+                        ('ㅐ', 'ㅏ') => Some((cho1, 'ㅐ', jong2)),
+                        _ => None,
+                    };
+
+                    if let Some((cho, jung, jong)) = contracted {
+                        if let Some(combined) = compose(cho, jung, jong) {
+                            result.push(combined);
+                            i += 2;
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
+
+        result.push(chars[i]);
+        i += 1;
+    }
+
+    result
 }
 
 #[cfg(test)]
@@ -805,5 +881,34 @@ mod tests {
         assert!(csv.contains("가는"));
         assert!(csv.contains("VV+ETM"));
         assert!(csv.contains("Inflect"));
+    }
+
+    #[test]
+    fn test_vowel_contraction() {
+        // 기본 축약
+        assert_eq!(contract_vowels("가았다"), "갔다");
+        assert_eq!(contract_vowels("오았다"), "왔다");
+        assert_eq!(contract_vowels("서었다"), "섰다");
+
+        // 축약 없는 경우
+        assert_eq!(contract_vowels("먹었다"), "먹었다");
+        assert_eq!(contract_vowels("가다"), "가다");
+    }
+
+    #[test]
+    fn test_ep_ef_contraction() {
+        let gen = InflectGenerator::new();
+        let verb = VerbEntry {
+            stem: "가".to_string(),
+            pos: "VV".to_string(),
+            irregular_type: IrregularType::Regular,
+            base_cost: -500,
+        };
+
+        let forms = gen.generate(&verb);
+
+        // "갔다" 가 생성되어야 함 (가 + 았 + 다 → 갔다)
+        let gatda = forms.iter().find(|f| f.surface == "갔다");
+        assert!(gatda.is_some(), "갔다 should be generated (가았다 contracted)");
     }
 }
