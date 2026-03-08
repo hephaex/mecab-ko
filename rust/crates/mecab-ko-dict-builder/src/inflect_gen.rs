@@ -101,6 +101,30 @@ pub struct InflectedForm {
     pub analysis: String,
 }
 
+impl InflectedForm {
+    /// MeCab Inflect.csv 형식으로 출력
+    /// 형식: 표면형,left_id,right_id,cost,품사,의미,종성,읽기,타입,시작품사,끝품사,분석결과
+    #[must_use]
+    pub fn to_csv_line(&self) -> String {
+        let jong = if self.has_jongseong { "T" } else { "F" };
+        let parts: Vec<&str> = self.compound_pos.split('+').collect();
+        let start_pos = parts.first().unwrap_or(&"");
+        let end_pos = parts.last().unwrap_or(&"");
+
+        format!(
+            "{},0,0,{},{},*,{},{},Inflect,{},{},{}",
+            self.surface,
+            self.cost,
+            self.compound_pos,
+            jong,
+            self.surface,
+            start_pos,
+            end_pos,
+            self.analysis
+        )
+    }
+}
+
 /// 활용형 생성기
 #[allow(clippy::struct_field_names)]
 pub struct InflectGenerator {
