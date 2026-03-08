@@ -193,6 +193,14 @@
       "token_accuracy": 52.9,
       "sentence_accuracy": 36.0,
       "notes": "36-39차 보정: 아요/EC→어요/EF, 고/EF→EC, 하고/JC 분리, 하/IC→XSV"
+    },
+    {
+      "date": "2026-03-08",
+      "version": "0.5.9",
+      "sprint": "Sprint 30",
+      "token_accuracy": 52.9,
+      "sentence_accuracy": 36.0,
+      "notes": "40차 보정(MM→VV+ETM), npm v0.4.0 배포, 코드 레벨 최대치 도달 (MeCab 사전 한계)"
     }
   ]
 }
