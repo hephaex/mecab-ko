@@ -912,16 +912,18 @@ impl SejongConverter {
 
     /// 축약형 동사 분리 시도
     /// 예: 했어요 → 하 + 았 + 어요, 갔어요 → 가 + 았 + 어요
+    /// 예: 만났어요 → 만나 + 았 + 어요
     fn try_split_contracted(&self, surface: &str, pos: &str) -> Option<Vec<(String, String)>> {
         let tags = self.split_compound_tag(pos);
         if tags.len() != 3 {
             return None;
         }
 
-        // 축약형 패턴 정의: (축약된 어간, 원래 어간, 선어말어미)
+        // 축약형 패턴 정의: (축약된 음절, 원래 어간 끝, 선어말어미)
         // 하다류: 하+았 → 했, 하+았+어 → 했어
         // 가다류: 가+았 → 갔, 오+았 → 왔
         // 보다류: 보+았 → 봤
+        // 나다류: 나+았 → 났 (만나다 등)
         let contracted_stems = [
             ("했", "하", "았"),
             ("갔", "가", "았"),
@@ -930,6 +932,9 @@ impl SejongConverter {
             ("샀", "사", "았"),
             ("잤", "자", "았"),
             ("됐", "되", "었"),
+            ("났", "나", "았"), // 만났다, 났다
+            ("랐", "라", "았"), // 불렀다 (부르다+았)
+            ("섰", "서", "었"), // 섰다 (서다+었)
         ];
 
         let chars: Vec<char> = surface.chars().collect();
@@ -937,14 +942,15 @@ impl SejongConverter {
             return None;
         }
 
-        // 첫 글자가 축약형 어간인지 확인
+        // 종결어미 패턴
+        let ef_patterns = ["어요", "어", "다", "지", "니", "나", "습니다", "습니까"];
+
+        // 1. 첫 글자가 축약형 어간인 경우 (했어요, 갔다 등)
         let first_char = chars[0].to_string();
         for (contracted, stem, prefinal) in &contracted_stems {
             if first_char == *contracted {
                 let ending: String = chars[1..].iter().collect();
                 if !ending.is_empty() {
-                    // 종결어미 패턴 확인
-                    let ef_patterns = ["어요", "어", "다", "지", "니", "나", "습니다", "습니까"];
                     for ef in &ef_patterns {
                         if ending == *ef || ending.ends_with(ef) {
                             return Some(vec![
@@ -952,6 +958,33 @@ impl SejongConverter {
                                 ((*prefinal).to_string(), tags[1].clone()),
                                 (ending, tags[2].clone()),
                             ]);
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. 중간에 축약형이 있는 경우 (만났어요 → 만나+았+어요)
+        // 패턴: prefix + contracted + suffix
+        for i in 1..chars.len() {
+            let mid_char = chars[i].to_string();
+            for (contracted, stem, prefinal) in &contracted_stems {
+                if mid_char == *contracted {
+                    // prefix + 원래어간끝 = 동사어간
+                    let prefix: String = chars[..i].iter().collect();
+                    let full_stem = format!("{prefix}{stem}");
+
+                    // suffix = 종결어미
+                    let suffix: String = chars[i+1..].iter().collect();
+                    if !suffix.is_empty() {
+                        for ef in &ef_patterns {
+                            if suffix == *ef || suffix.ends_with(ef) {
+                                return Some(vec![
+                                    (full_stem, tags[0].clone()),
+                                    ((*prefinal).to_string(), tags[1].clone()),
+                                    (suffix, tags[2].clone()),
+                                ]);
+                            }
                         }
                     }
                 }
@@ -2584,11 +2617,17 @@ impl SejongConverter {
             tokens.remove(idx + 1);
         }
 
-        // 8차 보정: 문장 끝 "니/EC" → "니/EF"
+        // 8차 보정: 문장 끝 종결어미 보정
+        // EC로 분석되었지만 문장 끝에 있으면 EF로 보정
         // "하니/VV+니/EC" → "하니/VV+니/EF" (종결어미로 사용될 때)
+        // "먹다/VV+다/EC" → "먹다/VV+다/EF" (종결어미로 사용될 때)
         if let Some(last) = tokens.last_mut() {
-            if last.surface == "니" && last.pos == "EC" {
-                last.pos = "EF".to_string();
+            if last.pos == "EC" {
+                // 문장 끝에서 종결어미로 사용되는 패턴
+                let final_endings = ["니", "다", "요", "죠", "지", "나", "자"];
+                if final_endings.contains(&last.surface.as_str()) {
+                    last.pos = "EF".to_string();
+                }
             }
         }
 
