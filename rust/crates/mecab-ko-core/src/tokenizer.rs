@@ -428,14 +428,11 @@ impl Tokenizer {
             return false;
         }
 
-        // Collect match indices first (tiny integers – no O(N) string copy).
-        // This releases the immutable borrow on self.lattice before we call
-        // add_node which needs a mutable borrow.
-        let match_indices: Vec<(u32, usize)> = self
-            .dictionary
-            .trie()
-            .common_prefix_search(search_text)
-            .collect();
+        // Use dictionary.common_prefix_search which returns all entries for
+        // the same surface (not just the first one). This is essential for
+        // the Viterbi algorithm to consider all possible POS tags and select
+        // the best path based on connection costs.
+        let dict_entries: Vec<_> = self.dictionary.common_prefix_search(search_text);
 
         // Collect user-dict entries as owned data before mutating lattice.
         // user_dict.common_prefix_search returns owned UserEntry values so
@@ -450,25 +447,23 @@ impl Tokenizer {
         // Immutable borrows on self.lattice are now finished; we can mutate.
         let mut found = false;
 
-        for (index, byte_len) in match_indices {
-            if let Some(entry) = self.dictionary.get_entry(index) {
-                // Use the trie-provided byte_len to compute end_pos via
-                // binary search on char_positions, avoiding chars().count().
-                let end_pos = self
-                    .lattice
-                    .char_pos_from_start_and_byte_len(start_pos, byte_len);
+        for (entry, byte_len) in dict_entries {
+            // Use the trie-provided byte_len to compute end_pos via
+            // binary search on char_positions, avoiding chars().count().
+            let end_pos = self
+                .lattice
+                .char_pos_from_start_and_byte_len(start_pos, byte_len);
 
-                self.lattice.add_node(
-                    NodeBuilder::new(&entry.surface, start_pos, end_pos)
-                        .left_id(entry.left_id)
-                        .right_id(entry.right_id)
-                        .word_cost(i32::from(entry.cost))
-                        .node_type(NodeType::Known)
-                        .feature(&entry.feature),
-                );
+            self.lattice.add_node(
+                NodeBuilder::new(&entry.surface, start_pos, end_pos)
+                    .left_id(entry.left_id)
+                    .right_id(entry.right_id)
+                    .word_cost(i32::from(entry.cost))
+                    .node_type(NodeType::Known)
+                    .feature(&entry.feature),
+            );
 
-                found = true;
-            }
+            found = true;
         }
 
         for user_entry in user_entries {
