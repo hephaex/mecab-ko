@@ -191,6 +191,7 @@ impl InflectGenerator {
     }
 
     /// EC (연결어미) 기본 목록
+    #[allow(clippy::too_many_lines)]
     fn default_ec_endings() -> Vec<Ending> {
         vec![
             // 나열
@@ -227,9 +228,29 @@ impl InflectGenerator {
                 pos: "EC".to_string(),
                 join_type: JoinType::Direct,
             },
+            Ending {
+                surface: "는데".to_string(),
+                pos: "EC".to_string(),
+                join_type: JoinType::Direct,
+            },
+            Ending {
+                surface: "ㄴ데".to_string(),
+                pos: "EC".to_string(),
+                join_type: JoinType::Direct,
+            },
+            Ending {
+                surface: "은데".to_string(),
+                pos: "EC".to_string(),
+                join_type: JoinType::Eu,
+            },
             // 동시
             Ending {
                 surface: "면서".to_string(),
+                pos: "EC".to_string(),
+                join_type: JoinType::Eu,
+            },
+            Ending {
+                surface: "며".to_string(),
                 pos: "EC".to_string(),
                 join_type: JoinType::Eu,
             },
@@ -244,6 +265,11 @@ impl InflectGenerator {
                 pos: "EC".to_string(),
                 join_type: JoinType::Eu,
             },
+            Ending {
+                surface: "려".to_string(),
+                pos: "EC".to_string(),
+                join_type: JoinType::Eu,
+            },
             // 의도
             Ending {
                 surface: "도".to_string(),
@@ -253,6 +279,108 @@ impl InflectGenerator {
             // 선행
             Ending {
                 surface: "다가".to_string(),
+                pos: "EC".to_string(),
+                join_type: JoinType::Direct,
+            },
+            // 시간/순서
+            Ending {
+                surface: "자".to_string(),
+                pos: "EC".to_string(),
+                join_type: JoinType::Direct,
+            },
+            Ending {
+                surface: "자마자".to_string(),
+                pos: "EC".to_string(),
+                join_type: JoinType::Direct,
+            },
+            Ending {
+                surface: "고서".to_string(),
+                pos: "EC".to_string(),
+                join_type: JoinType::Direct,
+            },
+            Ending {
+                surface: "고나서".to_string(),
+                pos: "EC".to_string(),
+                join_type: JoinType::Direct,
+            },
+            // 정도/상황
+            Ending {
+                surface: "도록".to_string(),
+                pos: "EC".to_string(),
+                join_type: JoinType::Direct,
+            },
+            Ending {
+                surface: "게".to_string(),
+                pos: "EC".to_string(),
+                join_type: JoinType::Direct,
+            },
+            // 양보
+            Ending {
+                surface: "더라도".to_string(),
+                pos: "EC".to_string(),
+                join_type: JoinType::Direct,
+            },
+            Ending {
+                surface: "ㄹ지라도".to_string(),
+                pos: "EC".to_string(),
+                join_type: JoinType::Direct,
+            },
+            Ending {
+                surface: "을지라도".to_string(),
+                pos: "EC".to_string(),
+                join_type: JoinType::Eu,
+            },
+            // 가정
+            Ending {
+                surface: "ㄹ수록".to_string(),
+                pos: "EC".to_string(),
+                join_type: JoinType::Direct,
+            },
+            Ending {
+                surface: "을수록".to_string(),
+                pos: "EC".to_string(),
+                join_type: JoinType::Eu,
+            },
+            // 인용
+            Ending {
+                surface: "다고".to_string(),
+                pos: "EC".to_string(),
+                join_type: JoinType::Direct,
+            },
+            Ending {
+                surface: "라고".to_string(),
+                pos: "EC".to_string(),
+                join_type: JoinType::Direct,
+            },
+            Ending {
+                surface: "냐고".to_string(),
+                pos: "EC".to_string(),
+                join_type: JoinType::Direct,
+            },
+            // 부정
+            Ending {
+                surface: "지".to_string(),
+                pos: "EC".to_string(),
+                join_type: JoinType::Direct,
+            },
+            // 추가 연결어미
+            Ending {
+                surface: "거나".to_string(),
+                pos: "EC".to_string(),
+                join_type: JoinType::Direct,
+            },
+            Ending {
+                surface: "든지".to_string(),
+                pos: "EC".to_string(),
+                join_type: JoinType::Direct,
+            },
+            Ending {
+                surface: "듯이".to_string(),
+                pos: "EC".to_string(),
+                join_type: JoinType::Direct,
+            },
+            Ending {
+                surface: "듯".to_string(),
                 pos: "EC".to_string(),
                 join_type: JoinType::Direct,
             },
