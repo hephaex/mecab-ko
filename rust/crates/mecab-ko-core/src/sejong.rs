@@ -869,6 +869,22 @@ impl SejongConverter {
             }
         }
 
+        // VCP+EF (긍정지정사+종결어미) 특별 처리
+        // "입니다" → "이/VCP + 습니다/EF"
+        if pos == "VCP+EF" {
+            if surface == "입니다" {
+                return vec![
+                    ("이".to_string(), "VCP".to_string()),
+                    ("습니다".to_string(), "EF".to_string()),
+                ];
+            } else if surface == "입니까" {
+                return vec![
+                    ("이".to_string(), "VCP".to_string()),
+                    ("습니까".to_string(), "EF".to_string()),
+                ];
+            }
+        }
+
         // 축약형 처리를 먼저 시도 (해요→하+어요, 했어요→하+았+어요 등)
         // 이 처리가 일반 규칙보다 우선해야 함 (해요가 해+요로 분리되는 것 방지)
 
