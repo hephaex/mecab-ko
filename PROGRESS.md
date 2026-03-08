@@ -1,6 +1,6 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-03-08 (Sprint 31 진행 - 84.2%)
+## 마지막 업데이트: 2026-03-08 (Sprint 31 완료 - 94.7%)
 
 ### 🎯 Sprint 31 - MeCab 사전 개선
 - **현재 정확도**: **52.9%** (코드 레벨 최대치)
@@ -58,7 +58,11 @@
 
 ### P3 (Low)
 - [~] S31-08: PyPI 계정 복구 - 응답 대기 (Issue #9540)
-- [~] S31-09: BERT 기반 재순위화 조사 - 진행 중
+- [x] S31-09: BERT 기반 재순위화 조사 ✅
+  - docs/research/bert-reranking.md 작성 완료
+  - ETRI 2024 연구: 2단계 재순위화로 30% 오류 감소
+  - KMAwithBERTs: 98.31% F1 Score
+  - 권장: Confidence-based Hybrid 전략
 
 ---
 
