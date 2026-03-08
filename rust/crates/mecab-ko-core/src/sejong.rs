@@ -2668,9 +2668,10 @@ impl SejongConverter {
             let next_surface = &tokens[i + 1].surface;
             let next_pos = &tokens[i + 1].pos;
 
-            // NP + 세요/EF 또는 NP + 에요/EF → NP + 이/VCP + 세요/EF
+            // NP + 세요/EF|EC 또는 NP + 에요/EF|EC → NP + 이/VCP + 세요/EF
+            // "세요"가 EC로 분석되는 경우도 포함
             if curr_pos == "NP"
-                && next_pos == "EF"
+                && (next_pos == "EF" || next_pos == "EC")
                 && (next_surface == "세요" || next_surface == "에요" || next_surface == "예요")
             {
                 vcp_insert_indices.push(i + 1);
@@ -2680,6 +2681,10 @@ impl SejongConverter {
         // 역순으로 삽입 (인덱스 변화 방지)
         for idx in vcp_insert_indices.into_iter().rev() {
             let start = tokens[idx].start_pos;
+            // "세요/EC" → "세요/EF"로 변환
+            if tokens[idx].pos == "EC" {
+                tokens[idx].pos = "EF".to_string();
+            }
             tokens.insert(idx, SejongToken::new("이", "VCP", start, start));
         }
 
@@ -3531,6 +3536,81 @@ impl SejongConverter {
 
                 tokens[idx] = SejongToken::new(stem, "VV", start, start + stem_len);
                 tokens.insert(idx + 1, SejongToken::new(ending, "ETM", start + stem_len, end));
+            }
+        }
+
+        // 41차 보정: "하/VX + 합니다/EF" → "합니다/EF" (불필요한 하/VX 삭제)
+        // "준비해야 합니다"에서 "해야/VV+EC+VX" 분리 시 발생하는 여분의 "하/VX" 삭제
+        let mut vx_delete_indices: Vec<usize> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(1) {
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+            let next_surface = &tokens[i + 1].surface;
+            let next_pos = &tokens[i + 1].pos;
+
+            // "하/VX + 합니다/EF" 패턴
+            if curr_surface == "하"
+                && curr_pos == "VX"
+                && next_surface == "합니다"
+                && next_pos == "EF"
+            {
+                vx_delete_indices.push(i);
+            }
+        }
+
+        for idx in vx_delete_indices.into_iter().rev() {
+            tokens.remove(idx);
+        }
+
+        // 42차 보정: "전에/MAG" → "전/NNG + 에/JKB" 분리
+        // "학교에 가기 전에"에서 "전에"는 명사+조사
+        let mut jeone_split_indices: Vec<usize> = Vec::new();
+        for (i, token) in tokens.iter().enumerate() {
+            if token.pos == "MAG" && token.surface == "전에" {
+                jeone_split_indices.push(i);
+            }
+        }
+
+        for idx in jeone_split_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx].end_pos;
+            tokens[idx] = SejongToken::new("전", "NNG", start, start + 1);
+            tokens.insert(idx + 1, SejongToken::new("에", "JKB", start + 1, end));
+        }
+
+        // 43차 보정: "하/IC + 지/VX" → "하/VV + 지/EC" 수정
+        // "하지 않아요"에서 "하"는 동사 어간
+        for i in 0..tokens.len().saturating_sub(1) {
+            let curr_surface = tokens[i].surface.clone();
+            let curr_pos = tokens[i].pos.clone();
+            let next_surface = tokens[i + 1].surface.clone();
+            let next_pos = tokens[i + 1].pos.clone();
+
+            // "하/IC + 지/VX" → "하/VV + 지/EC"
+            if curr_surface == "하"
+                && curr_pos == "IC"
+                && next_surface == "지"
+                && next_pos == "VX"
+            {
+                tokens[i].pos = "VV".to_string();
+                tokens[i + 1].pos = "EC".to_string();
+            }
+        }
+
+        // 44차 보정: "있/VX + 으니까/EC" → "있/VV + 으니까/EC"
+        // "있다"가 본동사로 사용되는 경우 VV로 보정
+        // 패턴: NNG + 가/이 + 있/VX → NNG + 가/이 + 있/VV
+        for i in 2..tokens.len() {
+            let prev_pos = &tokens[i - 1].pos;
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+
+            // JKS 뒤의 "있/VX"는 본동사 (회의가 있다)
+            if prev_pos == "JKS"
+                && curr_surface == "있"
+                && curr_pos == "VX"
+            {
+                tokens[i].pos = "VV".to_string();
             }
         }
     }
