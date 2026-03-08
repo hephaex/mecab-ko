@@ -57,6 +57,9 @@
   - GitHub Issue: https://github.com/pypi/support/issues/9540
   - support@pypi.org 이메일 발송 완료 (2026-03-08)
   - 응답 대기 중
+- [~] S30-04: GitHub Contributors "claude" 제거 요청
+  - Discussion: https://github.com/orgs/community/discussions/188915
+  - 응답 대기 중
 
 ### Git 커밋 이력 (Sprint 30)
 - `a4dd72e` - feat(accuracy): Improve to 50.5% with genitive and adverb corrections
