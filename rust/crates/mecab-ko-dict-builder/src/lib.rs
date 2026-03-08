@@ -25,6 +25,7 @@ pub use builder::DictionaryBuilder;
 pub use error::{BuildError, Result};
 
 pub mod char_def_parser;
+pub mod inflect_gen;
 pub mod unk_def_parser;
 
 /// 빌더 에러 모듈
