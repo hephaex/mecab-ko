@@ -701,6 +701,15 @@ impl ConnectionMatrix {
         Ok(Self::Mmap(MmapMatrix::from_file(path)?))
     }
 
+    /// 압축된 바이너리 파일에서 로드 (.zst)
+    ///
+    /// # Errors
+    ///
+    /// 파일을 읽거나 압축 해제/파싱할 수 없는 경우 에러를 반환합니다.
+    pub fn from_compressed_file<P: AsRef<Path>>(path: P) -> Result<Self> {
+        Ok(Self::Dense(DenseMatrix::from_compressed_file(path)?))
+    }
+
     /// 자동 포맷 감지 로드
     ///
     /// # Errors

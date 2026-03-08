@@ -232,15 +232,21 @@ impl SystemDictionary {
                 ConnectionMatrix::from_bin_file(&matrix_path)?
             }
         } else {
-            // .def 파일 시도
-            let def_path = dicdir.join("matrix.def");
-            if def_path.exists() {
-                ConnectionMatrix::from_def_file(&def_path)?
+            // 압축 파일 시도
+            let compressed_path = dicdir.join(format!("{MATRIX_FILE}.zst"));
+            if compressed_path.exists() {
+                ConnectionMatrix::from_compressed_file(&compressed_path)?
             } else {
-                return Err(DictError::Format(format!(
-                    "Matrix file not found: {}",
-                    matrix_path.display()
-                )));
+                // .def 파일 시도
+                let def_path = dicdir.join("matrix.def");
+                if def_path.exists() {
+                    ConnectionMatrix::from_def_file(&def_path)?
+                } else {
+                    return Err(DictError::Format(format!(
+                        "Matrix file not found: {}",
+                        matrix_path.display()
+                    )));
+                }
             }
         };
 
@@ -291,15 +297,21 @@ impl SystemDictionary {
         let matrix = if matrix_path.exists() {
             ConnectionMatrix::from_bin_file(&matrix_path)?
         } else {
-            // .def 파일 시도
-            let def_path = dicdir.join("matrix.def");
-            if def_path.exists() {
-                ConnectionMatrix::from_def_file(&def_path)?
+            // 압축 파일 시도
+            let compressed_path = dicdir.join(format!("{MATRIX_FILE}.zst"));
+            if compressed_path.exists() {
+                ConnectionMatrix::from_compressed_file(&compressed_path)?
             } else {
-                return Err(DictError::Format(format!(
-                    "Matrix file not found: {}",
-                    matrix_path.display()
-                )));
+                // .def 파일 시도
+                let def_path = dicdir.join("matrix.def");
+                if def_path.exists() {
+                    ConnectionMatrix::from_def_file(&def_path)?
+                } else {
+                    return Err(DictError::Format(format!(
+                        "Matrix file not found: {}",
+                        matrix_path.display()
+                    )));
+                }
             }
         };
 
