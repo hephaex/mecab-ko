@@ -853,6 +853,13 @@ impl SejongConverter {
             return vec![(surface.to_string(), pos.to_string())];
         }
 
+        // 중복 태그 처리: "JKB+JKB" 같은 경우 첫 번째 태그만 사용
+        // 이는 사전 버그로 발생하는 패턴
+        let tags = self.split_compound_tag(pos);
+        if tags.len() >= 2 && tags[0] == tags[1] {
+            return vec![(surface.to_string(), tags[0].clone())];
+        }
+
         // EP+EF (긍정지정사+어미) 특별 처리
         // "입니다" → "이/VCP + 습니다/EF", "입니까" → "이/VCP + 습니까/EF"
         if pos == "EP+EF" {
@@ -2649,6 +2656,7 @@ impl SejongConverter {
 
         // 9차 보정: "하/XSV + 아야/EC" → "하/VV + 아야/EC"
         // "준비해야" 등에서 "하다"는 VV로 분석
+        // 또한 "하/XSV + 세요/EF" → "하/VV + 세요/EF" (말씀하세요 등)
         let mut xsv_to_vv_indices: Vec<usize> = Vec::new();
 
         for i in 0..tokens.len().saturating_sub(1) {
@@ -2662,6 +2670,15 @@ impl SejongConverter {
                 && curr_pos == "XSV"
                 && next_pos == "EC"
                 && (next_surface == "아야" || next_surface == "어야" || next_surface == "야")
+            {
+                xsv_to_vv_indices.push(i);
+            }
+
+            // 하/XSV + 세요/EF → 하/VV + 세요/EF (말씀하세요 등)
+            if curr_surface == "하"
+                && curr_pos == "XSV"
+                && next_pos == "EF"
+                && (next_surface == "세요" || next_surface == "시오" || next_surface == "십시오")
             {
                 xsv_to_vv_indices.push(i);
             }
