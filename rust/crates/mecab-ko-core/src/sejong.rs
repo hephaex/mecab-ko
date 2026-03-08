@@ -1194,7 +1194,16 @@ impl SejongConverter {
             if let Some(decomp) = Self::extract_decomposition(&token.features) {
                 let morphemes = Self::parse_decomposition(&decomp);
                 if !morphemes.is_empty() {
-                    return Self::morphemes_to_sejong_tokens(&morphemes, token);
+                    // 분석결과의 POS 태그 구조가 토큰 POS와 일치하는지 검증
+                    // 예: token.pos = "VV+EP"일 때 분석결과의 POS도 "VV", "EP" 순서여야 함
+                    // 예: token.pos = "EC+VX+EC"인데 분석결과가 "게/EC+하/VX+고/EC"이면
+                    //     표면형 "고"와 맞지 않으므로 잘못된 분석결과
+                    let decomp_pos: String =
+                        morphemes.iter().map(|m| m.pos.as_str()).collect::<Vec<_>>().join("+");
+                    if decomp_pos == token.pos {
+                        return Self::morphemes_to_sejong_tokens(&morphemes, token);
+                    }
+                    // POS 구조가 일치하지 않으면 규칙 기반으로 폴백
                 }
             }
         }
