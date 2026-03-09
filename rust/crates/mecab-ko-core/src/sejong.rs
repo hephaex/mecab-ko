@@ -892,6 +892,40 @@ impl SejongConverter {
             }
         }
 
+        // VV+EF "ㅂ니다" 패턴 특별 처리
+        // "합니다" → "하/VV + ㅂ니다/EF" (합+니다 아님, 하+ㅂ니다)
+        // "갑니다" → "가/VV + ㅂ니다/EF"
+        // "옵니다" → "오/VV + ㅂ니다/EF"
+        if pos == "VV+EF" {
+            // "합니다" → "하" + "ㅂ니다"
+            if surface.ends_with("니다") && surface.chars().count() >= 3 {
+                let chars: Vec<char> = surface.chars().collect();
+                let first_char = chars[0];
+                // "합"에서 "하" 추출 (ㅂ 받침 제거)
+                if let Some(stem) = Self::remove_jongseong_bieup(first_char) {
+                    if chars.len() == 3 {
+                        return vec![
+                            (stem.to_string(), "VV".to_string()),
+                            ("ㅂ니다".to_string(), "EF".to_string()),
+                        ];
+                    }
+                }
+            }
+            // "합니까" → "하" + "ㅂ니까"
+            if surface.ends_with("니까") && surface.chars().count() >= 3 {
+                let chars: Vec<char> = surface.chars().collect();
+                let first_char = chars[0];
+                if let Some(stem) = Self::remove_jongseong_bieup(first_char) {
+                    if chars.len() == 3 {
+                        return vec![
+                            (stem.to_string(), "VV".to_string()),
+                            ("ㅂ니까".to_string(), "EF".to_string()),
+                        ];
+                    }
+                }
+            }
+        }
+
         // 축약형 처리를 먼저 시도 (해요→하+어요, 했어요→하+았+어요 등)
         // 이 처리가 일반 규칙보다 우선해야 함 (해요가 해+요로 분리되는 것 방지)
 
@@ -4083,6 +4117,26 @@ impl SejongConverter {
             if jongseong == 8 {
                 // ㄹ 받침 제거: 종성 0으로 변경
                 let new_code = code - 8;
+                char::from_u32(new_code)
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    /// 한글 음절에서 ㅂ 받침을 제거
+    /// 예: 합 → 하, 갑 → 가, 옵 → 오
+    fn remove_jongseong_bieup(ch: char) -> Option<char> {
+        let code = ch as u32;
+        // 한글 음절 범위: 0xAC00 ~ 0xD7A3
+        if (0xAC00..=0xD7A3).contains(&code) {
+            // 종성 인덱스: ㅂ = 17
+            let jongseong = (code - 0xAC00) % 28;
+            if jongseong == 17 {
+                // ㅂ 받침 제거: 종성 0으로 변경
+                let new_code = code - 17;
                 char::from_u32(new_code)
             } else {
                 None
