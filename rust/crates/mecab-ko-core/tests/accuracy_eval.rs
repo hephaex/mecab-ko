@@ -218,6 +218,314 @@ fn test_etm_error_analysis() {
     println!("\n통과: {}/{} ({:.1}%)", passed, total, passed as f64 / total as f64 * 100.0);
 }
 
+/// EF 에러 패턴 디버깅
+#[test]
+fn test_ef_error_analysis() {
+    use mecab_ko_core::sejong::SejongConverter;
+
+    // 프로젝트 루트 경로 계산
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
+        .unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or(std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH")
+        .unwrap_or_else(|_| {
+            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
+                .to_string_lossy()
+                .to_string()
+        });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path)
+        .expect("Failed to create tokenizer");
+
+    // 사용자 사전 로드
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let converter = SejongConverter::new();
+
+    // EF 관련 테스트 케이스
+    let test_cases = [
+        // 기본 종결어미
+        ("가다", "가/VV 다/EF"),
+        ("먹다", "먹/VV 다/EF"),
+        ("했다", "하/VV 았/EP 다/EF"),
+        ("갔다", "가/VV 았/EP 다/EF"),
+        // 습니다/ㅂ니다 종결
+        ("합니다", "하/VV ㅂ니다/EF"),
+        ("갑니다", "가/VV ㅂ니다/EF"),
+        ("먹습니다", "먹/VV 습니다/EF"),
+        ("있습니다", "있/VV 습니다/EF"),
+        ("했습니다", "하/VV 았/EP 습니다/EF"),
+        // 세요/요 종결
+        ("하세요", "하/VV 시/EP 어요/EF"),
+        ("가세요", "가/VV 시/EP 어요/EF"),
+        ("드세요", "들/VV 시/EP 어요/EF"),
+        // 어요/아요 종결
+        ("먹어요", "먹/VV 어요/EF"),
+        ("가요", "가/VV 아요/EF"),
+        ("해요", "하/VV 아요/EF"),
+        ("봐요", "보/VV 아요/EF"),
+        // ㄹ게요/ㄹ까요 종결
+        ("할게요", "하/VV ㄹ게요/EF"),
+        ("갈게요", "가/VV ㄹ게요/EF"),
+        ("할까요", "하/VV ㄹ까요/EF"),
+        ("볼까요", "보/VV ㄹ까요/EF"),
+        // 니/냐 의문형
+        ("하니", "하/VV 니/EF"),
+        ("가니", "가/VV 니/EF"),
+        ("먹냐", "먹/VV 냐/EF"),
+    ];
+
+    println!("\n=== EF 에러 분석 ===");
+    let mut passed = 0;
+    let total = test_cases.len();
+    for (input, expected) in test_cases {
+        let tokens = tokenizer.tokenize(input);
+        let sejong_tokens = converter.convert_tokens(&tokens);
+        let result = converter.format_sejong(&sejong_tokens);
+        let is_match = result == expected;
+        if is_match {
+            passed += 1;
+        }
+        let match_status = if is_match { "✓" } else { "✗" };
+        println!("{} \"{}\": {} (예상: {})", match_status, input, result, expected);
+    }
+    println!("\n통과: {}/{} ({:.1}%)", passed, total, passed as f64 / total as f64 * 100.0);
+}
+
+/// ETN 에러 패턴 디버깅
+#[test]
+fn test_etn_error_analysis() {
+    use mecab_ko_core::sejong::SejongConverter;
+
+    // 프로젝트 루트 경로 계산
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
+        .unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or(std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH")
+        .unwrap_or_else(|_| {
+            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
+                .to_string_lossy()
+                .to_string()
+        });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path)
+        .expect("Failed to create tokenizer");
+
+    // 사용자 사전 로드
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let converter = SejongConverter::new();
+
+    // ETN 관련 테스트 케이스 (명사형 전성어미)
+    let test_cases = [
+        // 기본 명사형어미
+        ("가기", "가/VV 기/ETN"),
+        ("먹기", "먹/VV 기/ETN"),
+        ("하기", "하/VV 기/ETN"),
+        ("보기", "보/VV 기/ETN"),
+        // 음/ㅁ 명사형어미
+        ("감", "가/VV ㅁ/ETN"),
+        ("봄", "보/VV ㅁ/ETN"),
+        ("함", "하/VV ㅁ/ETN"),
+        ("먹음", "먹/VV 음/ETN"),
+        // 복합 문맥
+        ("가기 전에", "가/VV 기/ETN 전/NNG 에/JKB"),
+        ("하기 위해", "하/VV 기/ETN 위해/NNG"),
+    ];
+
+    println!("\n=== ETN 에러 분석 ===");
+    let mut passed = 0;
+    let total = test_cases.len();
+    for (input, expected) in test_cases {
+        let tokens = tokenizer.tokenize(input);
+        let sejong_tokens = converter.convert_tokens(&tokens);
+        let result = converter.format_sejong(&sejong_tokens);
+        let is_match = result == expected;
+        if is_match {
+            passed += 1;
+        }
+        let match_status = if is_match { "✓" } else { "✗" };
+        println!("{} \"{}\": {} (예상: {})", match_status, input, result, expected);
+    }
+    println!("\n통과: {}/{} ({:.1}%)", passed, total, passed as f64 / total as f64 * 100.0);
+}
+
+/// NNG 에러 패턴 디버깅 - 틀린 사례 분석
+#[test]
+fn test_nng_error_analysis() {
+    use mecab_ko_core::evaluate::TestDataset;
+    use mecab_ko_core::sejong::SejongConverter;
+
+    // 프로젝트 루트 경로 계산
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
+        .unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or(std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH")
+        .unwrap_or_else(|_| {
+            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
+                .to_string_lossy()
+                .to_string()
+        });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path)
+        .expect("Failed to create tokenizer");
+
+    // 사용자 사전 로드
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let converter = SejongConverter::new();
+
+    let eval_path = std::env::var("MECAB_EVAL_PATH")
+        .unwrap_or_else(|_| {
+            project_root.join("data/eval/sample.tsv")
+                .to_string_lossy()
+                .to_string()
+        });
+
+    let dataset = TestDataset::from_tsv(&eval_path)
+        .expect("Failed to load test dataset");
+
+    // NNG 에러 수집
+    println!("\n=== NNG 에러 분석 (샘플 10개) ===");
+    let mut error_count = 0;
+    let max_errors = 10;
+
+    for sentence in &dataset.sentences {
+        if error_count >= max_errors {
+            break;
+        }
+
+        let tokens = tokenizer.tokenize(&sentence.text);
+        let sejong_tokens = converter.convert_tokens(&tokens);
+
+        // Gold에서 NNG 위치 찾기
+        for (i, gold) in sentence.tokens.iter().enumerate() {
+            if gold.pos == "NNG" {
+                // 해당 위치의 예측 토큰 찾기
+                let pred = if i < sejong_tokens.len() {
+                    format!("{}/{}", sejong_tokens[i].surface, sejong_tokens[i].pos)
+                } else {
+                    "MISSING".to_string()
+                };
+
+                // 불일치시 출력
+                if !pred.starts_with(&format!("{}/NNG", gold.surface)) {
+                    error_count += 1;
+                    println!("문장: {}", sentence.text);
+                    println!("  정답: {}/NNG → 예측: {}", gold.surface, pred);
+                    println!();
+                    if error_count >= max_errors {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// XPN 에러 패턴 디버깅
+#[test]
+fn test_xpn_error_analysis() {
+    use mecab_ko_core::sejong::SejongConverter;
+
+    // 프로젝트 루트 경로 계산
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
+        .unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or(std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH")
+        .unwrap_or_else(|_| {
+            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
+                .to_string_lossy()
+                .to_string()
+        });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path)
+        .expect("Failed to create tokenizer");
+
+    // 사용자 사전 로드
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let converter = SejongConverter::new();
+
+    // XPN (체언 접두사) 관련 테스트 케이스
+    let test_cases = [
+        // 신 (新)
+        ("신제품", "신/XPN 제품/NNG"),
+        ("신기술", "신/XPN 기술/NNG"),
+        // 구 (舊)
+        ("구버전", "구/XPN 버전/NNG"),
+        ("구시대", "구/XPN 시대/NNG"),
+        // 전 (前)
+        ("전회장", "전/XPN 회장/NNG"),
+        ("전대통령", "전/XPN 대통령/NNG"),
+        // 현 (現)
+        ("현정부", "현/XPN 정부/NNG"),
+        ("현대통령", "현/XPN 대통령/NNG"),
+        // 불 (不)
+        ("불합격", "불/XPN 합격/NNG"),
+    ];
+
+    println!("\n=== XPN 에러 분석 ===");
+    let mut passed = 0;
+    let total = test_cases.len();
+    for (input, expected) in test_cases {
+        let tokens = tokenizer.tokenize(input);
+        let sejong_tokens = converter.convert_tokens(&tokens);
+        let result = converter.format_sejong(&sejong_tokens);
+        let is_match = result == expected;
+        if is_match {
+            passed += 1;
+        }
+        let match_status = if is_match { "✓" } else { "✗" };
+        println!("{} \"{}\": {} (예상: {})", match_status, input, result, expected);
+    }
+    println!("\n통과: {}/{} ({:.1}%)", passed, total, passed as f64 / total as f64 * 100.0);
+}
+
 /// 특정 품사별 정확도 검증
 #[test]
 fn test_pos_accuracy_breakdown() {

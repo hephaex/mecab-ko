@@ -3868,6 +3868,68 @@ impl SejongConverter {
             tokens[idx] = SejongToken::new(&new_vv_surface, &pos, vv_start, vv_end);
             tokens[idx + 1] = SejongToken::new(&merged_ec, "EC", ec_start, ec_end);
         }
+
+        // 49차 보정: VV/VA 뒤의 "기/NNG" → "기/ETN"
+        // "먹기"에서 MeCab이 "먹/VV 기/NNG"로 분리한 경우
+        for i in 1..tokens.len() {
+            let prev_pos = tokens[i - 1].pos.clone();
+            let curr_surface = tokens[i].surface.clone();
+            let curr_pos = tokens[i].pos.clone();
+
+            // VV/VA 뒤의 "기/NNG" → "기/ETN"
+            if (prev_pos == "VV" || prev_pos == "VA" || prev_pos == "VX")
+                && curr_surface == "기"
+                && curr_pos == "NNG"
+            {
+                tokens[i].pos = "ETN".to_string();
+            }
+
+            // VV/VA 뒤의 "음/IC" 또는 "음/NNG" → "음/ETN"
+            if (prev_pos == "VV" || prev_pos == "VA" || prev_pos == "VX")
+                && curr_surface == "음"
+                && (curr_pos == "IC" || curr_pos == "NNG")
+            {
+                tokens[i].pos = "ETN".to_string();
+            }
+
+            // VV/VA 뒤의 "ㅁ/NNG" 또는 "ㅁ/IC" → "ㅁ/ETN"
+            if (prev_pos == "VV" || prev_pos == "VA" || prev_pos == "VX")
+                && curr_surface == "ㅁ"
+                && (curr_pos == "NNG" || curr_pos == "IC")
+            {
+                tokens[i].pos = "ETN".to_string();
+            }
+        }
+
+        // 50차 보정: "MM + NNG" 패턴의 MM → XPN 변환
+        // 전/현/신/구 등이 MM으로 태깅되었지만 실제로는 접두사(XPN)
+        let prefix_patterns: std::collections::HashSet<&str> = [
+            "전", "현", "신", "구", "친", "총", "부", "대",
+        ]
+        .into_iter()
+        .collect();
+
+        for i in 0..tokens.len().saturating_sub(1) {
+            let curr_surface = tokens[i].surface.clone();
+            let curr_pos = tokens[i].pos.clone();
+            let next_pos = tokens[i + 1].pos.clone();
+
+            // MM + NNG 패턴이고 접두사 후보면 XPN으로 변환
+            if curr_pos == "MM"
+                && prefix_patterns.contains(curr_surface.as_str())
+                && (next_pos == "NNG" || next_pos == "NNP")
+            {
+                tokens[i].pos = "XPN".to_string();
+            }
+
+            // NR + NNG 패턴 중 "구"(舊)는 XPN으로 변환
+            if curr_pos == "NR"
+                && curr_surface == "구"
+                && (next_pos == "NNG" || next_pos == "NNP")
+            {
+                tokens[i].pos = "XPN".to_string();
+            }
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
