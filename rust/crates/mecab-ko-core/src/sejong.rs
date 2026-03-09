@@ -1367,10 +1367,128 @@ impl SejongConverter {
         // 고빈도 어휘 강제 매핑 (문맥 무관)
         Self::apply_lexicon_overrides(&mut sejong_tokens);
 
+        // VV "세요" 패턴 분리 (가세요/VV → 가/VV + 세요/EF)
+        sejong_tokens = Self::apply_vv_seyo_splits(sejong_tokens);
+
         // 컨텍스트 기반 품사 보정
         Self::apply_context_corrections(&mut sejong_tokens);
 
         sejong_tokens
+    }
+
+    /// VV "세요" 패턴 분리
+    ///
+    /// MeCab에서 "가세요", "오세요", "하세요" 등이 VV 단일 토큰으로 분석되면
+    /// VV + 시/EP + 어요/EF로 분리합니다.
+    fn apply_vv_seyo_splits(tokens: Vec<SejongToken>) -> Vec<SejongToken> {
+        let mut result = Vec::with_capacity(tokens.len() + 10);
+        let mut i = 0;
+
+        while i < tokens.len() {
+            let token = &tokens[i];
+
+            // "가세요", "오세요" 등 VV 단일 토큰 분리
+            // 테스트 기대: 가/VV + 시/EP + 어요/EF
+            if token.pos == "VV" && token.surface.ends_with("세요") && token.surface.chars().count() >= 2 {
+                let surface = &token.surface;
+                let stem = surface.trim_end_matches("세요");
+                if !stem.is_empty() {
+                    let stem_len = stem.chars().count();
+                    result.push(SejongToken::new(
+                        stem,
+                        "VV",
+                        token.start_pos,
+                        token.start_pos + stem_len,
+                    ));
+                    result.push(SejongToken::new(
+                        "시",
+                        "EP",
+                        token.start_pos + stem_len,
+                        token.start_pos + stem_len + 1,
+                    ));
+                    result.push(SejongToken::new(
+                        "어요",
+                        "EF",
+                        token.start_pos + stem_len + 1,
+                        token.end_pos,
+                    ));
+                    i += 1;
+                    continue;
+                }
+            }
+
+            // "할게요", "갈게요" 패턴: MeCab이 "할게/VV + 어요/EF"로 분석한 경우
+            // → "하/VV + ㄹ게요/EF"로 변환
+            // 할게 = 하(어간) + ㄹ게(어미의 시작), 어요 = 어요(어미의 나머지)
+            if token.pos == "VV" && token.surface.ends_with("게") && token.surface.chars().count() >= 2 {
+                let surface = &token.surface;
+                // "할게" → 첫 글자 "할"에서 어간 "하" 추출 필요
+                // 일단 "게"를 제거하고 ㄹ 받침이 있는 글자에서 어간 추출
+                let chars: Vec<char> = surface.chars().collect();
+                if chars.len() >= 2 && chars[chars.len() - 1] == '게' {
+                    let stem_char = chars[chars.len() - 2];
+                    // "할"에서 "하" 추출 (ㄹ 받침 제거)
+                    if let Some(stem) = Self::remove_jongseong_rieul(stem_char) {
+                        // 다음 토큰이 "어요/EF"인지 확인
+                        if i + 1 < tokens.len() && tokens[i + 1].surface == "어요" && tokens[i + 1].pos == "EF" {
+                            let prefix: String = chars[..chars.len() - 2].iter().collect();
+                            let full_stem = format!("{}{}", prefix, stem);
+                            result.push(SejongToken::new(
+                                &full_stem,
+                                "VV",
+                                token.start_pos,
+                                token.start_pos + full_stem.chars().count(),
+                            ));
+                            result.push(SejongToken::new(
+                                "ㄹ게요",
+                                "EF",
+                                token.start_pos + full_stem.chars().count(),
+                                tokens[i + 1].end_pos,
+                            ));
+                            i += 2; // 다음 토큰도 처리됨
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            // "할까요", "볼까요" 패턴: MeCab이 "할까/VV + 아요/EF"로 분석한 경우
+            // → "하/VV + ㄹ까요/EF"로 변환
+            if token.pos == "VV" && token.surface.ends_with("까") && token.surface.chars().count() >= 2 {
+                let surface = &token.surface;
+                let chars: Vec<char> = surface.chars().collect();
+                if chars.len() >= 2 && chars[chars.len() - 1] == '까' {
+                    let stem_char = chars[chars.len() - 2];
+                    // "할"에서 "하" 추출 (ㄹ 받침 제거)
+                    if let Some(stem) = Self::remove_jongseong_rieul(stem_char) {
+                        // 다음 토큰이 "아요/EF"인지 확인
+                        if i + 1 < tokens.len() && tokens[i + 1].surface == "아요" && tokens[i + 1].pos == "EF" {
+                            let prefix: String = chars[..chars.len() - 2].iter().collect();
+                            let full_stem = format!("{}{}", prefix, stem);
+                            result.push(SejongToken::new(
+                                &full_stem,
+                                "VV",
+                                token.start_pos,
+                                token.start_pos + full_stem.chars().count(),
+                            ));
+                            result.push(SejongToken::new(
+                                "ㄹ까요",
+                                "EF",
+                                token.start_pos + full_stem.chars().count(),
+                                tokens[i + 1].end_pos,
+                            ));
+                            i += 2; // 다음 토큰도 처리됨
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            result.push(token.clone());
+            i += 1;
+        }
+
+        result
     }
 
     /// 고빈도 어휘 강제 품사 매핑
@@ -3929,6 +4047,15 @@ impl SejongConverter {
             {
                 tokens[i].pos = "XPN".to_string();
             }
+
+            // 51차 보정: "VV + NNG" 패턴 중 접두사 후보는 XPN으로 변환
+            // "신/VV 제품/NNG" → "신/XPN 제품/NNG" (신다 동사와 구분)
+            if curr_pos == "VV"
+                && curr_surface == "신"
+                && (next_pos == "NNG" || next_pos == "NNP")
+            {
+                tokens[i].pos = "XPN".to_string();
+            }
         }
     }
 
@@ -3942,6 +4069,26 @@ impl SejongConverter {
             (code - 0xAC00) % 28 != 0
         } else {
             false
+        }
+    }
+
+    /// 한글 음절에서 ㄹ 받침을 제거
+    /// 예: 할 → 하, 갈 → 가, 볼 → 보
+    fn remove_jongseong_rieul(ch: char) -> Option<char> {
+        let code = ch as u32;
+        // 한글 음절 범위: 0xAC00 ~ 0xD7A3
+        if (0xAC00..=0xD7A3).contains(&code) {
+            // 종성 인덱스: ㄹ = 8
+            let jongseong = (code - 0xAC00) % 28;
+            if jongseong == 8 {
+                // ㄹ 받침 제거: 종성 0으로 변경
+                let new_code = code - 8;
+                char::from_u32(new_code)
+            } else {
+                None
+            }
+        } else {
+            None
         }
     }
 
