@@ -3462,6 +3462,20 @@ impl SejongConverter {
             }
         }
 
+        // 56차 보정: ETM 표면형 유니코드 정규화
+        // 한글 자모 (U+1100~U+11FF) → 호환 자모 (U+3130~U+318F)
+        // 예: "ᆫ/ETM" → "ㄴ/ETM", "ᆯ/ETM" → "ㄹ/ETM", "ᆷ/ETM" → "ㅁ/ETM"
+        for token in tokens.iter_mut() {
+            if token.pos == "ETM" {
+                let normalized = token.surface.replace('ᆫ', "ㄴ")
+                    .replace('ᆯ', "ㄹ")
+                    .replace('ᆷ', "ㅁ");
+                if normalized != token.surface {
+                    token.surface = normalized;
+                }
+            }
+        }
+
         // 31차 보정: "ㅂ니다/EF" ↔ "습니다/EF" 조건부 정규화
         // 규칙:
         //   - "었/EP", "겠/EP" 뒤: "습니다" (먹었습니다, 하겠습니다)
