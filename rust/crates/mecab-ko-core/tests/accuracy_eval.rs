@@ -284,6 +284,9 @@ fn test_ef_error_analysis() {
         ("하니", "하/VV 니/EF"),
         ("가니", "가/VV 니/EF"),
         ("먹냐", "먹/VV 냐/EF"),
+        // 아야/어야 + 합니다 패턴 (보조동사)
+        ("해야 합니다", "하/VV 아야/EC 합니다/EF"),
+        ("가야 합니다", "가/VV 아야/EC 합니다/EF"),
     ];
 
     println!("\n=== EF 에러 분석 ===");
@@ -299,6 +302,11 @@ fn test_ef_error_analysis() {
         }
         let match_status = if is_match { "✓" } else { "✗" };
         println!("{} \"{}\": {} (예상: {})", match_status, input, result, expected);
+        // 실패시 MeCab 원본 출력
+        if !is_match {
+            let mecab_output: Vec<String> = tokens.iter().map(|t| format!("{}/{}", t.surface, t.pos)).collect();
+            println!("   MeCab 원본: {:?}", mecab_output);
+        }
     }
     println!("\n통과: {}/{} ({:.1}%)", passed, total, passed as f64 / total as f64 * 100.0);
 }

@@ -892,16 +892,12 @@ impl SejongConverter {
             }
         }
 
-        // VV+EF "ㅂ니다" 패턴 특별 처리
-        // "합니다" → "하/VV + ㅂ니다/EF" (합+니다 아님, 하+ㅂ니다)
-        // "갑니다" → "가/VV + ㅂ니다/EF"
-        // "옵니다" → "오/VV + ㅂ니다/EF"
+        // VV+EF 특별 패턴 처리
         if pos == "VV+EF" {
-            // "합니다" → "하" + "ㅂ니다"
+            // "ㅂ니다" 패턴: "합니다" → "하/VV + ㅂ니다/EF"
             if surface.ends_with("니다") && surface.chars().count() >= 3 {
                 let chars: Vec<char> = surface.chars().collect();
                 let first_char = chars[0];
-                // "합"에서 "하" 추출 (ㅂ 받침 제거)
                 if let Some(stem) = Self::remove_jongseong_bieup(first_char) {
                     if chars.len() == 3 {
                         return vec![
@@ -911,7 +907,7 @@ impl SejongConverter {
                     }
                 }
             }
-            // "합니까" → "하" + "ㅂ니까"
+            // "ㅂ니까" 패턴: "합니까" → "하/VV + ㅂ니까/EF"
             if surface.ends_with("니까") && surface.chars().count() >= 3 {
                 let chars: Vec<char> = surface.chars().collect();
                 let first_char = chars[0];
@@ -923,6 +919,64 @@ impl SejongConverter {
                         ];
                     }
                 }
+            }
+
+            // "ㄹ게요" 패턴: "할게요" → "하/VV + ㄹ게요/EF", "갈게요" → "가/VV + ㄹ게요/EF"
+            if surface.ends_with("게요") && surface.chars().count() >= 3 {
+                let chars: Vec<char> = surface.chars().collect();
+                let stem_char = chars[chars.len() - 3]; // "할게요"에서 "할"
+                if let Some(stem) = Self::remove_jongseong_rieul(stem_char) {
+                    let prefix: String = chars[..chars.len() - 3].iter().collect();
+                    let full_stem = format!("{}{}", prefix, stem);
+                    return vec![
+                        (full_stem, "VV".to_string()),
+                        ("ㄹ게요".to_string(), "EF".to_string()),
+                    ];
+                }
+            }
+
+            // "ㄹ까요" 패턴: "할까요" → "하/VV + ㄹ까요/EF", "볼까요" → "보/VV + ㄹ까요/EF"
+            if surface.ends_with("까요") && surface.chars().count() >= 3 {
+                let chars: Vec<char> = surface.chars().collect();
+                let stem_char = chars[chars.len() - 3]; // "할까요"에서 "할"
+                if let Some(stem) = Self::remove_jongseong_rieul(stem_char) {
+                    let prefix: String = chars[..chars.len() - 3].iter().collect();
+                    let full_stem = format!("{}{}", prefix, stem);
+                    return vec![
+                        (full_stem, "VV".to_string()),
+                        ("ㄹ까요".to_string(), "EF".to_string()),
+                    ];
+                }
+            }
+
+            // "ㄹ래요" 패턴: "할래요" → "하/VV + ㄹ래요/EF"
+            if surface.ends_with("래요") && surface.chars().count() >= 3 {
+                let chars: Vec<char> = surface.chars().collect();
+                let stem_char = chars[chars.len() - 3]; // "할래요"에서 "할"
+                if let Some(stem) = Self::remove_jongseong_rieul(stem_char) {
+                    let prefix: String = chars[..chars.len() - 3].iter().collect();
+                    let full_stem = format!("{}{}", prefix, stem);
+                    return vec![
+                        (full_stem, "VV".to_string()),
+                        ("ㄹ래요".to_string(), "EF".to_string()),
+                    ];
+                }
+            }
+
+            // "해요" → "하/VV + 아요/EF" (하+여요 = 해요)
+            if surface == "해요" {
+                return vec![
+                    ("하".to_string(), "VV".to_string()),
+                    ("아요".to_string(), "EF".to_string()),
+                ];
+            }
+
+            // "봐요" → "보/VV + 아요/EF" (보+아요 = 봐요)
+            if surface == "봐요" {
+                return vec![
+                    ("보".to_string(), "VV".to_string()),
+                    ("아요".to_string(), "EF".to_string()),
+                ];
             }
         }
 
@@ -4055,8 +4109,10 @@ impl SejongConverter {
 
         // 50차 보정: "MM + NNG" 패턴의 MM → XPN 변환
         // 전/현/신/구 등이 MM으로 태깅되었지만 실제로는 접두사(XPN)
+        // 53차 추가: 새, 첫, 맨, 헛, 옛, 순 (sample.tsv 기반)
         let prefix_patterns: std::collections::HashSet<&str> = [
             "전", "현", "신", "구", "친", "총", "부", "대",
+            "새", "첫", "맨", "헛", "옛", "순",
         ]
         .into_iter()
         .collect();
@@ -4090,6 +4146,62 @@ impl SejongConverter {
             {
                 tokens[i].pos = "XPN".to_string();
             }
+
+            // 53차 보정: "VA + NNG" 패턴 중 접두사 후보는 XPN으로 변환
+            // "큰/VA 집/NNG" → "큰/XPN 집/NNG"
+            // "작/VA + 은/ETM" 패턴은 제외
+            if curr_pos == "VA"
+                && (curr_surface == "큰" || curr_surface == "작")
+                && (next_pos == "NNG" || next_pos == "NNP")
+            {
+                tokens[i].pos = "XPN".to_string();
+            }
+        }
+
+        // 54차 보정: 있/VX → 있/VV 변환 (보조동사가 아닌 경우)
+        // "있/VX"가 앞에 "고/EC"가 없으면 본동사 VV로 변환
+        // 예: "시간 있/VX 어요" → "시간 있/VV 어요"
+        // 단, "가고 있/VX 다"는 보조동사이므로 유지
+        for i in 0..tokens.len() {
+            if tokens[i].surface == "있" && tokens[i].pos == "VX" {
+                // 앞 토큰이 "고/EC"인지 확인
+                let is_auxiliary = i > 0 && tokens[i - 1].surface == "고" && tokens[i - 1].pos == "EC";
+                if !is_auxiliary {
+                    tokens[i].pos = "VV".to_string();
+                }
+            }
+        }
+
+        // 55차 보정: EC 뒤의 "하/VV + ㅂ니다/EF" → "합니다/EF" 병합
+        // "해야 합니다" 패턴에서 합니다는 보조용언으로 분리하지 않음
+        // 예: "하/VV 아야/EC 하/VV ㅂ니다/EF" → "하/VV 아야/EC 합니다/EF"
+        let mut i = 0;
+        while i < tokens.len().saturating_sub(1) {
+            // "하/VV + ㅂ니다/EF" 또는 "가/VV + ㅂ니다/EF" 패턴 찾기
+            if tokens[i].pos == "VV"
+                && (tokens[i].surface == "하" || tokens[i].surface == "가" || tokens[i].surface == "오")
+                && tokens[i + 1].pos == "EF"
+                && tokens[i + 1].surface == "ㅂ니다"
+            {
+                // 앞에 EC가 있는지 확인 (i >= 1)
+                let after_ec = i >= 1 && tokens[i - 1].pos == "EC";
+                if after_ec {
+                    // 병합: "하" + "ㅂ니다" → "합니다/EF"
+                    // 한글 조합: 어간 + ㅂ 받침
+                    let stem = &tokens[i].surface;
+                    let merged = match stem.as_str() {
+                        "하" => "합니다".to_string(),
+                        "가" => "갑니다".to_string(),
+                        "오" => "옵니다".to_string(),
+                        _ => format!("{}ㅂ니다", stem), // 폴백
+                    };
+                    tokens[i].surface = merged;
+                    tokens[i].pos = "EF".to_string();
+                    tokens.remove(i + 1);
+                    continue; // 다음 반복에서 같은 i 검사
+                }
+            }
+            i += 1;
         }
     }
 
