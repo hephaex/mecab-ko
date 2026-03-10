@@ -4889,6 +4889,76 @@ impl SejongConverter {
             tokens[idx] = SejongToken::new("세요", "EF", start, end);
             tokens.remove(idx + 1);
         }
+
+        // 82차 보정: "아/EC" → "어/EC" 통일
+        // sample.tsv에서는 모음 조화와 관계없이 "어/EC"를 사용
+        // 예: "하/VV 아/EC" → "하/VV 어/EC", "위하/VV 아/EC" → "위하/VV 어/EC"
+        for token in tokens.iter_mut() {
+            if token.pos == "EC" && token.surface == "아" {
+                token.surface = "어".to_string();
+            }
+        }
+
+        // 83차 보정: VV/VA/XSV 뒤의 "어/IC" → "어/EC"
+        // "먹어 버렸다"에서 "어"가 IC(감탄사)로 태깅되는 오류 수정
+        // 동사/형용사 뒤의 "어"는 연결어미
+        for i in 1..tokens.len() {
+            if tokens[i].surface == "어"
+                && tokens[i].pos == "IC"
+                && (tokens[i - 1].pos == "VV"
+                    || tokens[i - 1].pos == "VA"
+                    || tokens[i - 1].pos == "XSV")
+            {
+                tokens[i].pos = "EC".to_string();
+            }
+        }
+
+        // 84차 보정: 명사 뒤의 "이/MM" → "이/JKS"
+        // "성장률이", "의료진이" 등에서 "이"가 관형사(MM)로 태깅되는 오류 수정
+        // 받침 있는 명사 뒤의 "이"는 주격 조사
+        for i in 1..tokens.len() {
+            if tokens[i].surface == "이"
+                && tokens[i].pos == "MM"
+                && (tokens[i - 1].pos == "NNG"
+                    || tokens[i - 1].pos == "NNP"
+                    || tokens[i - 1].pos == "NNB"
+                    || tokens[i - 1].pos == "NP"
+                    || tokens[i - 1].pos == "XSN")
+            {
+                // 이전 토큰의 마지막 글자에 받침이 있는지 확인
+                if let Some(last_char) = tokens[i - 1].surface.chars().last() {
+                    if Self::has_jongseong(last_char) {
+                        tokens[i].pos = "JKS".to_string();
+                    }
+                }
+            }
+        }
+
+        // 85차 보정: NP 뒤의 "야/IC" → "이/VCP 야/EF" 분리
+        // "뭐야", "누구야" 등에서 "야"가 감탄사로 태깅되는 오류 수정
+        let mut ya_split_indices: Vec<usize> = Vec::new();
+        for i in 1..tokens.len() {
+            if tokens[i].surface == "야"
+                && tokens[i].pos == "IC"
+                && tokens[i - 1].pos == "NP"
+            {
+                // 이전 토큰의 마지막 글자에 받침이 없으면 VCP 분리
+                if let Some(last_char) = tokens[i - 1].surface.chars().last() {
+                    if !Self::has_jongseong(last_char) {
+                        ya_split_indices.push(i);
+                    }
+                }
+            }
+        }
+
+        // 역순으로 처리하여 인덱스 변경 방지
+        for idx in ya_split_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx].end_pos;
+            // "야/IC" → "이/VCP 야/EF"
+            tokens[idx] = SejongToken::new("이", "VCP", start, start);
+            tokens.insert(idx + 1, SejongToken::new("야", "EF", start, end));
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
