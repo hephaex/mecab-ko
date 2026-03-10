@@ -454,6 +454,70 @@ fn test_xsv_error_analysis() {
     println!("\n통과: {}/{} ({:.1}%)", passed, total, passed as f64 / total as f64 * 100.0);
 }
 
+/// VCP 에러 패턴 디버깅
+#[test]
+fn test_vcp_error_analysis() {
+    use mecab_ko_core::sejong::SejongConverter;
+
+    // 프로젝트 루트 경로 계산
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
+        .unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or(std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH")
+        .unwrap_or_else(|_| {
+            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
+                .to_string_lossy()
+                .to_string()
+        });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path)
+        .expect("Failed to create tokenizer");
+
+    // 사용자 사전 로드
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let converter = SejongConverter::new();
+
+    // VCP 관련 테스트 케이스
+    let test_cases = [
+        ("학생입니다", "학생/NNG 이/VCP 습니다/EF"),
+        ("누구세요", "누구/NP 이/VCP 세요/EF"),
+        ("얼마예요", "얼마/NP 이/VCP 에요/EF"),
+        ("뭐야", "뭐/NP 이/VCP 야/EF"),
+        ("계류 중이다", "계류/NNG 중/NNB 이/VCP 다/EF"),
+        ("분석 중이다", "분석/NNG 중/NNB 이/VCP 다/EF"),
+        ("대세야", "대세/NNG 이/VCP 야/EF"),
+        ("꿀잼이야", "꿀잼/NNG 이/VCP 야/EF"),
+    ];
+
+    println!("\n=== VCP 에러 분석 ===");
+    let mut passed = 0;
+    let total = test_cases.len();
+    for (input, expected) in test_cases {
+        let tokens = tokenizer.tokenize(input);
+        let sejong_tokens = converter.convert_tokens(&tokens);
+        let result = converter.format_sejong(&sejong_tokens);
+        let is_match = result == expected;
+        if is_match {
+            passed += 1;
+        }
+        let match_status = if is_match { "✓" } else { "✗" };
+        println!("{} \"{}\": {} (예상: {})", match_status, input, result, expected);
+    }
+    println!("\n통과: {}/{} ({:.1}%)", passed, total, passed as f64 / total as f64 * 100.0);
+}
+
 /// NNG 에러 패턴 디버깅 - 틀린 사례 분석
 #[test]
 fn test_nng_error_analysis() {

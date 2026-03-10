@@ -4867,6 +4867,28 @@ impl SejongConverter {
                 }
             }
         }
+
+        // 81차 보정: VCP + 시/NNB + 어요/EF → VCP + 세요/EF
+        // "누구세요" = "누구/NP 이/VCP 세요/EF"
+        // MeCab이 "이/VCP 시/NNB 어요/EF"로 분리하는 경우 병합
+        let mut seyo_merge_indices: Vec<usize> = Vec::new();
+        for i in 2..tokens.len() {
+            if tokens[i - 2].pos == "VCP"
+                && tokens[i - 1].surface == "시"
+                && (tokens[i - 1].pos == "NNB" || tokens[i - 1].pos == "EP")
+                && tokens[i].surface == "어요"
+                && tokens[i].pos == "EF"
+            {
+                seyo_merge_indices.push(i - 1);
+            }
+        }
+
+        for idx in seyo_merge_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx + 1].end_pos;
+            tokens[idx] = SejongToken::new("세요", "EF", start, end);
+            tokens.remove(idx + 1);
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
