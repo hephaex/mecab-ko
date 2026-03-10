@@ -5131,6 +5131,36 @@ impl SejongConverter {
                 }
             }
         }
+
+        // 96차 보정: NNG + "되/VV" + EC 패턴 → "되/XSV"
+        // "완료되면" = "완료/NNG 되/XSV 면/EC"
+        // "진행되고" = "진행/NNG 되/XSV 고/EC"
+        if tokens.len() >= 3 {
+            for i in 1..tokens.len() - 1 {
+                if tokens[i].surface == "되"
+                    && tokens[i].pos == "VV"
+                    && tokens[i - 1].pos == "NNG"
+                    && tokens[i + 1].pos == "EC"
+                {
+                    tokens[i].pos = "XSV".to_string();
+                }
+            }
+        }
+
+        // 97차 보정: NNG + "하/VV" + EP 패턴 → "하/XSV"
+        // "발표했다" = "발표/NNG 하/XSV 았/EP 다/EF"
+        // "공부했으면" = "공부/NNG 하/XSV 았/EP 으면/EC"
+        if tokens.len() >= 3 {
+            for i in 1..tokens.len() - 1 {
+                if tokens[i].surface == "하"
+                    && tokens[i].pos == "VV"
+                    && tokens[i - 1].pos == "NNG"
+                    && tokens[i + 1].pos == "EP"
+                {
+                    tokens[i].pos = "XSV".to_string();
+                }
+            }
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
