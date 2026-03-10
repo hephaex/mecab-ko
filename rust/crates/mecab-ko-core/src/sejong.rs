@@ -5115,6 +5115,22 @@ impl SejongConverter {
         for idx in remove_indices.into_iter().rev() {
             tokens.remove(idx);
         }
+
+        // 95차 보정: NNG + "하/VV" + "아/어" EC 패턴 → "하/XSV"
+        // "진행하고" = "진행/NNG 하/XSV 고/EC"
+        // "분석하여" = "분석/NNG 하/XSV 어/EC"
+        // "발표하면" = "발표/NNG 하/XSV 면/EC"
+        if tokens.len() >= 3 {
+            for i in 1..tokens.len() - 1 {
+                if tokens[i].surface == "하"
+                    && tokens[i].pos == "VV"
+                    && tokens[i - 1].pos == "NNG"
+                    && tokens[i + 1].pos == "EC"
+                {
+                    tokens[i].pos = "XSV".to_string();
+                }
+            }
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
