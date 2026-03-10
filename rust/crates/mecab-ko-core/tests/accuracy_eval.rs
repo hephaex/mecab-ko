@@ -361,10 +361,83 @@ fn test_etn_error_analysis() {
         ("먹음", "먹/VV 음/ETN"),
         // 복합 문맥
         ("가기 전에", "가/VV 기/ETN 전/NNG 에/JKB"),
-        ("하기 위해", "하/VV 기/ETN 위해/NNG"),
+        ("하기 위해", "하/VV 기/ETN 위하/VV 어/EC"),
+        // sample.tsv ETN 패턴
+        ("놀이", "놀/VV 이/ETN"),
+        ("먹이", "먹/VV 이/ETN"),
+        ("잠", "자/VV ㅁ/ETN"),
+        ("꿈", "꾸/VV ㅁ/ETN"),
+        ("웃음", "웃/VV 음/ETN"),
+        ("울음", "울/VV 음/ETN"),
     ];
 
     println!("\n=== ETN 에러 분석 ===");
+    let mut passed = 0;
+    let total = test_cases.len();
+    for (input, expected) in test_cases {
+        let tokens = tokenizer.tokenize(input);
+        let sejong_tokens = converter.convert_tokens(&tokens);
+        let result = converter.format_sejong(&sejong_tokens);
+        let is_match = result == expected;
+        if is_match {
+            passed += 1;
+        }
+        let match_status = if is_match { "✓" } else { "✗" };
+        println!("{} \"{}\": {} (예상: {})", match_status, input, result, expected);
+    }
+    println!("\n통과: {}/{} ({:.1}%)", passed, total, passed as f64 / total as f64 * 100.0);
+}
+
+/// XSV 에러 패턴 디버깅
+#[test]
+fn test_xsv_error_analysis() {
+    use mecab_ko_core::sejong::SejongConverter;
+
+    // 프로젝트 루트 경로 계산
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
+        .unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or(std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH")
+        .unwrap_or_else(|_| {
+            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
+                .to_string_lossy()
+                .to_string()
+        });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path)
+        .expect("Failed to create tokenizer");
+
+    // 사용자 사전 로드
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let converter = SejongConverter::new();
+
+    // XSV 관련 테스트 케이스
+    let test_cases = [
+        // 하다 동사
+        ("축하해요", "축하/NNG 하/XSV 어요/EF"),
+        ("사랑해요", "사랑/NNG 하/XSV 어요/EF"),
+        ("발표했다", "발표/NNG 하/XSV 았/EP 다/EF"),
+        ("투자하고", "투자/NNG 하/XSV 고/EC"),
+        // 되다 동사
+        ("사용되다", "사용/NNG 되/XSV 다/EF"),
+        ("발견되다", "발견/NNG 되/XSV 다/EF"),
+        ("통과되었다", "통과/NNG 되/XSV 었/EP 다/EF"),
+        ("개선됐다", "개선/NNG 되/XSV 었/EP 다/EF"),
+    ];
+
+    println!("\n=== XSV 에러 분석 ===");
     let mut passed = 0;
     let total = test_cases.len();
     for (input, expected) in test_cases {

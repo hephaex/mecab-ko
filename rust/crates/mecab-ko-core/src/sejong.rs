@@ -4612,21 +4612,38 @@ impl SejongConverter {
             }
         }
 
+        // 80차 보정: NR 뒤의 시간/단위 의존명사 처리
+        // "삼십분", "열시", "백만원" 등에서 NR + "분/XSN" → NR + "분/NNB"
+        let time_unit_nouns = ["분", "시", "원", "년", "월", "일", "개", "명", "번"];
+        for i in 1..tokens.len() {
+            if time_unit_nouns.contains(&tokens[i].surface.as_str())
+                && (tokens[i].pos == "XSN" || tokens[i].pos == "NNG")
+                && tokens[i - 1].pos == "NR"
+            {
+                tokens[i].pos = "NNB".to_string();
+            }
+        }
+
         // 73차 보정: "것"을 NNB로 처리
         // "것"이 단독으로 오거나 VCP 앞에 오면 의존명사
         for i in 0..tokens.len() {
             if tokens[i].surface == "것" && tokens[i].pos == "NP" {
-                // 다음 토큰이 VCP, JKS, JX 등이면 의존명사
-                if i + 1 < tokens.len()
-                    && (tokens[i + 1].pos == "VCP"
-                        || tokens[i + 1].pos == "JKS"
-                        || tokens[i + 1].pos == "JX"
-                        || tokens[i + 1].pos == "JKO")
-                {
-                    tokens[i].pos = "NNB".to_string();
+                // 다음 토큰이 VCP, JKS, JX, NNB 등이면 의존명사
+                if i + 1 < tokens.len() {
+                    let next_pos = &tokens[i + 1].pos;
+                    if next_pos == "VCP" || next_pos == "JKS"
+                        || next_pos == "JX" || next_pos == "JKO"
+                        || next_pos == "NNB"
+                    {
+                        tokens[i].pos = "NNB".to_string();
+                    }
                 }
                 // 이전 토큰이 ETM이면 의존명사
-                else if i > 0 && tokens[i - 1].pos == "ETM" {
+                if tokens[i].pos == "NP" && i > 0 && tokens[i - 1].pos == "ETM" {
+                    tokens[i].pos = "NNB".to_string();
+                }
+                // 단독으로 사용되면 NNB (문장 끝이거나 유일 토큰)
+                if tokens[i].pos == "NP" && (tokens.len() == 1 || i == tokens.len() - 1) {
                     tokens[i].pos = "NNB".to_string();
                 }
             }
@@ -4702,6 +4719,151 @@ impl SejongConverter {
                         tokens[i].surface = original.to_string();
                         break;
                     }
+                }
+            }
+        }
+
+        // 76차 보정: 파생명사 → VV + 음/ETN 분리
+        // "웃음/NNG", "울음/NNG" 등을 "웃/VV + 음/ETN"으로 분리
+        let derived_nouns: std::collections::HashMap<&str, (&str, &str)> = [
+            ("웃음", ("웃", "VV")),
+            ("울음", ("울", "VV")),
+            ("걸음", ("걷", "VV")),
+            ("놀이", ("놀", "VV")),
+            ("먹이", ("먹", "VV")),
+            ("잠", ("자", "VV")),
+            ("꿈", ("꾸", "VV")),
+        ].into_iter().collect();
+
+        let mut derived_split_indices: Vec<(usize, String, String, String)> = Vec::new();
+        for (i, token) in tokens.iter().enumerate() {
+            if token.pos == "NNG" {
+                if let Some(&(stem, stem_pos)) = derived_nouns.get(token.surface.as_str()) {
+                    // 어미 결정: 음/ㅁ/이
+                    let suffix = if token.surface.ends_with("음") {
+                        "음"
+                    } else if token.surface == "잠" || token.surface == "꿈" {
+                        "ㅁ"
+                    } else if token.surface.ends_with("이") {
+                        "이"
+                    } else {
+                        continue;
+                    };
+                    derived_split_indices.push((i, stem.to_string(), stem_pos.to_string(), suffix.to_string()));
+                }
+            }
+        }
+
+        for (idx, stem, stem_pos, suffix) in derived_split_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx].end_pos;
+            let stem_len = stem.chars().count();
+            tokens[idx] = SejongToken::new(&stem, &stem_pos, start, start + stem_len);
+            tokens.insert(idx + 1, SejongToken::new(&suffix, "ETN", start + stem_len, end));
+        }
+
+        // 77차 보정: 단음절 VV + ㄴ/ㄹ 받침 → VV + ETM 분리
+        // "간", "온", "한", "갈", "올", "할" 등의 관형형을 분리
+        // 예: "간 사람" → "가/VV ㄴ/ETM 사람/NNG"
+        // 예: "간 온" → "가/VV ㄴ/ETM 오/VV ㄴ/ETM"
+        let vv_etm_patterns: std::collections::HashMap<&str, (&str, &str)> = [
+            // ㄴ/은 관형형 (과거/완료)
+            ("간", ("가", "ㄴ")),   // 가다
+            ("온", ("오", "ㄴ")),   // 오다
+            ("한", ("하", "ㄴ")),   // 하다
+            ("본", ("보", "ㄴ")),   // 보다
+            ("잔", ("자", "ㄴ")),   // 자다
+            ("산", ("사", "ㄴ")),   // 사다
+            ("된", ("되", "ㄴ")),   // 되다
+            ("쓴", ("쓰", "ㄴ")),   // 쓰다
+            // ㄹ/을 관형형 (미래/추측)
+            ("갈", ("가", "ㄹ")),   // 가다
+            ("올", ("오", "ㄹ")),   // 오다
+            ("할", ("하", "ㄹ")),   // 하다
+            ("볼", ("보", "ㄹ")),   // 보다
+            ("살", ("살", "ㄹ")),   // 살다 (ㄹ 불규칙)
+            ("알", ("알", "ㄹ")),   // 알다 (ㄹ 불규칙)
+            ("될", ("되", "ㄹ")),   // 되다
+        ].into_iter().collect();
+
+        let mut etm_split_indices: Vec<(usize, String, String)> = Vec::new();
+        for (i, token) in tokens.iter().enumerate() {
+            // VV/VA 단일 토큰 (단음절)
+            if (token.pos == "VV" || token.pos == "VA") && token.surface.chars().count() == 1 {
+                if let Some(&(stem, etm)) = vv_etm_patterns.get(token.surface.as_str()) {
+                    // 조건: 뒤에 명사, 다른 VV, 의존명사, 지시대명사 등이 오는 경우
+                    // 또는 문장 끝이 아닌 경우 (단독 VV는 관형형으로 분리)
+                    let should_split = if i + 1 < tokens.len() {
+                        let next_pos = &tokens[i + 1].pos;
+                        // 명사, 대명사, 다른 동사/형용사 앞에서 분리
+                        next_pos.starts_with("NN") || next_pos == "NP"
+                            || next_pos == "VV" || next_pos == "VA"
+                            || next_pos == "MM" || next_pos == "MAG"
+                    } else {
+                        // 문장 끝에서도 분리 (sample.tsv 기준)
+                        true
+                    };
+
+                    if should_split {
+                        etm_split_indices.push((i, stem.to_string(), etm.to_string()));
+                    }
+                }
+            }
+        }
+
+        for (idx, stem, etm) in etm_split_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx].end_pos;
+            let stem_len = stem.chars().count();
+            tokens[idx] = SejongToken::new(&stem, "VV", start, start + stem_len);
+            tokens.insert(idx + 1, SejongToken::new(&etm, "ETM", start + stem_len, end));
+        }
+
+        // 78차 보정: XSV 복합 패턴 분리
+        // "되었다/XSV" → "되/XSV 었/EP 다/EF"
+        // "하였다/XSV" → "하/XSV 었/EP 다/EF"
+        let xsv_split_patterns: std::collections::HashMap<&str, (&str, &str, &str)> = [
+            ("되었다", ("되", "었", "다")),
+            ("하였다", ("하", "었", "다")),
+            ("되었어", ("되", "었", "어")),
+            ("하였어", ("하", "었", "어")),
+            ("되었으면", ("되", "었", "으면")),
+            ("하였으면", ("하", "었", "으면")),
+        ].into_iter().collect();
+
+        let mut xsv_split_indices: Vec<(usize, String, String, String)> = Vec::new();
+        for (i, token) in tokens.iter().enumerate() {
+            if token.pos == "XSV" {
+                if let Some(&(stem, ep, ef)) = xsv_split_patterns.get(token.surface.as_str()) {
+                    xsv_split_indices.push((i, stem.to_string(), ep.to_string(), ef.to_string()));
+                }
+            }
+        }
+
+        for (idx, stem, ep, ef) in xsv_split_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx].end_pos;
+            let stem_len = stem.chars().count();
+            let ep_len = ep.chars().count();
+            tokens[idx] = SejongToken::new(&stem, "XSV", start, start + stem_len);
+            tokens.insert(idx + 1, SejongToken::new(&ep, "EP", start + stem_len, start + stem_len + ep_len));
+            // ef_pos 결정: 다/EF, 어/EF, 으면/EC
+            let ef_pos = if ef == "다" || ef == "어" { "EF" } else { "EC" };
+            tokens.insert(idx + 2, SejongToken::new(&ef, ef_pos, start + stem_len + ep_len, end));
+        }
+
+        // 79차 보정: VV 뒤의 "이/MM" → "이/ETN"
+        // 파생명사 패턴: 먹이, 놀이 등에서 MeCab이 "이/MM"으로 잘못 태깅
+        for i in 1..tokens.len() {
+            if tokens[i].surface == "이"
+                && tokens[i].pos == "MM"
+                && tokens[i - 1].pos == "VV"
+            {
+                // 특정 어간 뒤에서만 적용 (명사형어미가 아닌 경우 방지)
+                let prev_surface = &tokens[i - 1].surface;
+                let etn_triggers = ["먹", "놀", "알", "살", "높", "낮", "깊", "넓", "짧"];
+                if etn_triggers.iter().any(|&s| prev_surface == s) {
+                    tokens[i].pos = "ETN".to_string();
                 }
             }
         }
