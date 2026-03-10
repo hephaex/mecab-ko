@@ -4999,6 +4999,21 @@ impl SejongConverter {
             }
         }
 
+        // 87-2차 보정: "고/EC" 뒤의 특정 보조동사 VV → VX
+        // "읽고 싶다" = "읽/VV 고/EC 싶/VX 다/EF"
+        // "하지 않다" = "하/VV 지/EC 않/VX 다/EF"
+        // 주의: "있/VV"는 본동사로도 쓰이므로 제외
+        let go_aux_verbs = ["싶", "않"];
+        for i in 1..tokens.len() {
+            if tokens[i].pos == "VV"
+                && go_aux_verbs.contains(&tokens[i].surface.as_str())
+                && tokens[i - 1].pos == "EC"
+                && tokens[i - 1].surface == "고"
+            {
+                tokens[i].pos = "VX".to_string();
+            }
+        }
+
         // 88차 보정: NNG + "되/VV" → NNG + "되/XSV"
         // "공개됐다" = "공개/NNG 되/XSV 었/EP 다/EF"
         // "발표될" = "발표/NNG 되/XSV ㄹ/ETM"
@@ -5009,6 +5024,74 @@ impl SejongConverter {
                 && tokens[i - 1].pos == "NNG"
             {
                 tokens[i].pos = "XSV".to_string();
+            }
+        }
+
+        // 89차 보정: 문장 끝 "어요/EC" → "어요/EF"
+        // "고마워요" = "고맙/VA 어요/EF"
+        // "미안해요" = "미안/NNG 하/XSV 어요/EF"
+        // 문장의 마지막 토큰이 "어요/EC" 또는 "아요/EC"이면 EF로 변환
+        if let Some(last) = tokens.last_mut() {
+            if (last.surface == "어요" || last.surface == "아요") && last.pos == "EC" {
+                last.pos = "EF".to_string();
+            }
+        }
+
+        // 90차 보정: NNG + "하/VV" + "세요/EF" → NNG + "하/XSV" + "세요/EF"
+        // "말씀하세요" = "말씀/NNG 하/XSV 세요/EF"
+        // "확인하세요" = "확인/NNG 하/XSV 세요/EF"
+        if tokens.len() >= 3 {
+            for i in 1..tokens.len() - 1 {
+                if tokens[i].surface == "하"
+                    && tokens[i].pos == "VV"
+                    && tokens[i - 1].pos == "NNG"
+                    && tokens[i + 1].surface == "세요"
+                    && tokens[i + 1].pos == "EF"
+                {
+                    tokens[i].pos = "XSV".to_string();
+                }
+            }
+        }
+
+        // 91차 보정: 문장 끝 "는다/EC" → "는다/EF"
+        // "먹는다" = "먹/VV 는다/EF"
+        // "한다" = "하/VV ㄴ다/EF"
+        if let Some(last) = tokens.last_mut() {
+            if (last.surface == "는다" || last.surface == "ㄴ다") && last.pos == "EC" {
+                last.pos = "EF".to_string();
+            }
+        }
+
+        // 92차 보정: NNG + "하/VV" + "어요/EF" → NNG + "하/XSV" + "어요/EF"
+        // "축하해요" = "축하/NNG 하/XSV 어요/EF"
+        // "사랑해요" = "사랑/NNG 하/XSV 어요/EF"
+        // "생각해요" = "생각/NNG 하/XSV 어요/EF"
+        if tokens.len() >= 3 {
+            for i in 1..tokens.len() - 1 {
+                if tokens[i].surface == "하"
+                    && tokens[i].pos == "VV"
+                    && tokens[i - 1].pos == "NNG"
+                    && (tokens[i + 1].surface == "어요" || tokens[i + 1].surface == "아요")
+                    && tokens[i + 1].pos == "EF"
+                {
+                    tokens[i].pos = "XSV".to_string();
+                }
+            }
+        }
+
+        // 93차 보정: NNG + "하/VV" + "고/EC" + VX → NNG + "하/XSV" + "고/EC" + VX
+        // "투자하고 있다" = "투자/NNG 하/XSV 고/EC 있/VX 다/EF"
+        // "생각하고 있다" = "생각/NNG 하/XSV 고/EC 있/VX 다/EF"
+        if tokens.len() >= 4 {
+            for i in 1..tokens.len() - 2 {
+                if tokens[i].surface == "하"
+                    && tokens[i].pos == "VV"
+                    && tokens[i - 1].pos == "NNG"
+                    && tokens[i + 1].pos == "EC"
+                    && tokens[i + 2].pos == "VX"
+                {
+                    tokens[i].pos = "XSV".to_string();
+                }
             }
         }
     }
