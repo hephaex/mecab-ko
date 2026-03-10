@@ -4577,6 +4577,110 @@ impl SejongConverter {
             tokens[idx] = SejongToken::new("합니다", "EF", start, end);
             tokens.remove(idx + 1);
         }
+
+        // 71차 보정: 의존명사 "중" 처리
+        // "계류 중이다", "분석 중이다" 등에서 "중/NNG + 이/VCP" → "중/NNB + 이/VCP"
+        // 앞에 NNG/NNP가 있고 "중"이 오면 의존명사로 처리
+        for i in 1..tokens.len() {
+            if tokens[i].surface == "중"
+                && tokens[i].pos == "NNG"
+                && (tokens[i - 1].pos == "NNG" || tokens[i - 1].pos == "NNP")
+            {
+                // 뒤에 VCP(이다) 또는 JX(조사)가 오는 경우 의존명사
+                if i + 1 < tokens.len()
+                    && (tokens[i + 1].pos == "VCP"
+                        || tokens[i + 1].pos == "JX"
+                        || tokens[i + 1].pos == "JKS"
+                        || tokens[i + 1].pos == "EF")
+                {
+                    tokens[i].pos = "NNB".to_string();
+                }
+            }
+        }
+
+        // 72차 보정: ETM 뒤의 "지" 의존명사 처리
+        // "만난 지", "먹은 지" 등에서 ETM + "지/VX" → ETM + "지/NNB"
+        for i in 1..tokens.len() {
+            if tokens[i].surface == "지"
+                && (tokens[i].pos == "VX" || tokens[i].pos == "EC")
+                && tokens[i - 1].pos == "ETM"
+            {
+                tokens[i].pos = "NNB".to_string();
+            }
+        }
+
+        // 73차 보정: "것"을 NNB로 처리
+        // "것"이 단독으로 오거나 VCP 앞에 오면 의존명사
+        for i in 0..tokens.len() {
+            if tokens[i].surface == "것" && tokens[i].pos == "NP" {
+                // 다음 토큰이 VCP, JKS, JX 등이면 의존명사
+                if i + 1 < tokens.len()
+                    && (tokens[i + 1].pos == "VCP"
+                        || tokens[i + 1].pos == "JKS"
+                        || tokens[i + 1].pos == "JX"
+                        || tokens[i + 1].pos == "JKO")
+                {
+                    tokens[i].pos = "NNB".to_string();
+                }
+                // 이전 토큰이 ETM이면 의존명사
+                else if i > 0 && tokens[i - 1].pos == "ETM" {
+                    tokens[i].pos = "NNB".to_string();
+                }
+            }
+        }
+
+        // 74차 보정: 관형형 VV 분리
+        // "간/VV", "온/VV", "한/VV" 등이 명사 앞에 오면 VV + ㄴ/ETM으로 분리
+        // "갈/VV", "올/VV", "할/VV" 등이 명사 앞에 오면 VV + ㄹ/ETM으로 분리
+        let mut adnominal_splits: Vec<(usize, String, String, String)> = Vec::new();
+        for i in 0..tokens.len() {
+            if tokens[i].pos == "VV" {
+                // 다음 토큰이 명사류인지 확인
+                let next_is_noun = if i + 1 < tokens.len() {
+                    let next_pos = &tokens[i + 1].pos;
+                    next_pos == "NNG"
+                        || next_pos == "NNP"
+                        || next_pos == "NNB"
+                        || next_pos == "NP"
+                } else {
+                    false
+                };
+
+                if next_is_noun {
+                    let surface = &tokens[i].surface;
+                    // ㄴ 종성 (받침)으로 끝나는 1음절 어휘
+                    // "간" → "가/VV ㄴ/ETM"
+                    // "온" → "오/VV ㄴ/ETM"
+                    // "한" → "하/VV ㄴ/ETM"
+                    if surface == "간" {
+                        adnominal_splits.push((i, "가".to_string(), "VV".to_string(), "ㄴ".to_string()));
+                    } else if surface == "온" {
+                        adnominal_splits.push((i, "오".to_string(), "VV".to_string(), "ㄴ".to_string()));
+                    } else if surface == "한" {
+                        adnominal_splits.push((i, "하".to_string(), "VV".to_string(), "ㄴ".to_string()));
+                    }
+                    // ㄹ 종성 (받침)으로 끝나는 1음절 어휘
+                    // "갈" → "가/VV ㄹ/ETM"
+                    // "올" → "오/VV ㄹ/ETM"
+                    // "할" → "하/VV ㄹ/ETM"
+                    else if surface == "갈" {
+                        adnominal_splits.push((i, "가".to_string(), "VV".to_string(), "ㄹ".to_string()));
+                    } else if surface == "올" {
+                        adnominal_splits.push((i, "오".to_string(), "VV".to_string(), "ㄹ".to_string()));
+                    } else if surface == "할" {
+                        adnominal_splits.push((i, "하".to_string(), "VV".to_string(), "ㄹ".to_string()));
+                    }
+                }
+            }
+        }
+
+        // 역순으로 처리
+        for (idx, stem, stem_pos, ending) in adnominal_splits.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx].end_pos;
+            tokens[idx] = SejongToken::new(&stem, &stem_pos, start, end);
+            tokens.insert(idx + 1, SejongToken::new(&ending, "ETM", end, end));
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인

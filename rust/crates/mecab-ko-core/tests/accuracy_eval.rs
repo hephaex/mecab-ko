@@ -273,7 +273,7 @@ fn test_ef_error_analysis() {
         // 어요/아요 종결
         ("먹어요", "먹/VV 어요/EF"),
         ("가요", "가/VV 아요/EF"),
-        ("해요", "하/VV 아요/EF"),
+        ("해요", "하/VV 어요/EF"),  // 하+여요 = 해요, 세종 코퍼스 표준
         ("봐요", "보/VV 아요/EF"),
         // ㄹ게요/ㄹ까요 종결
         ("할게요", "하/VV ㄹ게요/EF"),
@@ -518,6 +518,75 @@ fn test_xpn_error_analysis() {
     ];
 
     println!("\n=== XPN 에러 분석 ===");
+    let mut passed = 0;
+    let total = test_cases.len();
+    for (input, expected) in test_cases {
+        let tokens = tokenizer.tokenize(input);
+        let sejong_tokens = converter.convert_tokens(&tokens);
+        let result = converter.format_sejong(&sejong_tokens);
+        let is_match = result == expected;
+        if is_match {
+            passed += 1;
+        }
+        let match_status = if is_match { "✓" } else { "✗" };
+        println!("{} \"{}\": {} (예상: {})", match_status, input, result, expected);
+    }
+    println!("\n통과: {}/{} ({:.1}%)", passed, total, passed as f64 / total as f64 * 100.0);
+}
+
+/// NNB 에러 패턴 디버깅
+#[test]
+fn test_nnb_error_analysis() {
+    use mecab_ko_core::sejong::SejongConverter;
+
+    // 프로젝트 루트 경로 계산
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
+        .unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or(std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH")
+        .unwrap_or_else(|_| {
+            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
+                .to_string_lossy()
+                .to_string()
+        });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path)
+        .expect("Failed to create tokenizer");
+
+    // 사용자 사전 로드
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let converter = SejongConverter::new();
+
+    // NNB (의존명사) 관련 테스트 케이스
+    let test_cases = [
+        // 단위 의존명사
+        ("백만원", "백만/NR 원/NNB"),
+        ("삼십분", "삼십/NR 분/NNB"),
+        ("열시", "열/NR 시/NNB"),
+        ("세시", "세/NR 시/NNB"),
+        // 일반 의존명사 단독
+        ("것 수 등", "것/NNB 수/NNB 등/NNB"),
+        ("바 데 지", "바/NNB 데/NNB 지/NNB"),
+        // 중 (의존명사)
+        ("계류 중이다", "계류/NNG 중/NNB 이/VCP 다/EF"),
+        ("분석 중이다", "분석/NNG 중/NNB 이/VCP 다/EF"),
+        // 지 (시간 경과)
+        ("만난 지", "만나/VV ㄴ/ETM 지/NNB"),
+    ];
+
+    println!("\n=== NNB 에러 분석 ===");
     let mut passed = 0;
     let total = test_cases.len();
     for (input, expected) in test_cases {
