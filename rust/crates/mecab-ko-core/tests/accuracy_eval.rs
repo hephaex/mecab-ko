@@ -267,9 +267,10 @@ fn test_ef_error_analysis() {
         ("있습니다", "있/VV 습니다/EF"),
         ("했습니다", "하/VV 았/EP 습니다/EF"),
         // 세요/요 종결
-        ("하세요", "하/VV 시/EP 어요/EF"),
-        ("가세요", "가/VV 시/EP 어요/EF"),
-        ("드세요", "들/VV 시/EP 어요/EF"),
+        // sample.tsv 기준: 세요/EF 사용 (시/EP + 어요/EF 분리하지 않음)
+        ("하세요", "하/VV 세요/EF"),
+        ("가세요", "가/VV 세요/EF"),
+        ("드세요", "들/VV 세요/EF"),
         // 어요/아요 종결
         ("먹어요", "먹/VV 어요/EF"),
         ("가요", "가/VV 아요/EF"),
@@ -515,6 +516,9 @@ fn test_xpn_error_analysis() {
         ("현대통령", "현/XPN 대통령/NNG"),
         // 불 (不)
         ("불합격", "불/XPN 합격/NNG"),
+        // sample.tsv의 XPN 패턴
+        ("순우리말", "순/XPN 우리말/NNG"),
+        ("맨손", "맨/XPN 손/NNG"),
     ];
 
     println!("\n=== XPN 에러 분석 ===");
@@ -584,6 +588,9 @@ fn test_nnb_error_analysis() {
         ("분석 중이다", "분석/NNG 중/NNB 이/VCP 다/EF"),
         // 지 (시간 경과)
         ("만난 지", "만나/VV ㄴ/ETM 지/NNB"),
+        // VV/EF 관련 테스트 (sample.tsv 기준: 세요/EF 사용)
+        ("오세요", "오/VV 세요/EF"),
+        ("말씀하세요", "말씀/NNG 하/XSV 세요/EF"),
     ];
 
     println!("\n=== NNB 에러 분석 ===");

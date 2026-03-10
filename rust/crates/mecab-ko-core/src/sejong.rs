@@ -1491,7 +1491,7 @@ impl SejongConverter {
     /// VV "세요" 패턴 분리
     ///
     /// MeCab에서 "가세요", "오세요", "하세요" 등이 VV 단일 토큰으로 분석되면
-    /// VV + 시/EP + 어요/EF로 분리합니다.
+    /// VV + 세요/EF로 분리합니다. (sample.tsv 형식 준수)
     fn apply_vv_seyo_splits(tokens: Vec<SejongToken>) -> Vec<SejongToken> {
         let mut result = Vec::with_capacity(tokens.len() + 10);
         let mut i = 0;
@@ -1500,7 +1500,7 @@ impl SejongConverter {
             let token = &tokens[i];
 
             // "가세요", "오세요" 등 VV 단일 토큰 분리
-            // 테스트 기대: 가/VV + 시/EP + 어요/EF
+            // sample.tsv 기준: 가/VV + 세요/EF (시/EP + 어요/EF가 아닌 세요/EF 사용)
             if token.pos == "VV" && token.surface.ends_with("세요") && token.surface.chars().count() >= 2 {
                 let surface = &token.surface;
                 let stem = surface.trim_end_matches("세요");
@@ -1513,15 +1513,9 @@ impl SejongConverter {
                         token.start_pos + stem_len,
                     ));
                     result.push(SejongToken::new(
-                        "시",
-                        "EP",
-                        token.start_pos + stem_len,
-                        token.start_pos + stem_len + 1,
-                    ));
-                    result.push(SejongToken::new(
-                        "어요",
+                        "세요",
                         "EF",
-                        token.start_pos + stem_len + 1,
+                        token.start_pos + stem_len,
                         token.end_pos,
                     ));
                     i += 1;
@@ -4339,6 +4333,15 @@ impl SejongConverter {
             ("큰집", ("큰", "XPN", "집")),
             ("큰아버지", ("큰", "XPN", "아버지")),
             ("큰어머니", ("큰", "XPN", "어머니")),
+            // 순/XPN 접두사 패턴
+            ("순우리말", ("순", "XPN", "우리말")),
+            ("순이익", ("순", "XPN", "이익")),
+            // 옛/XPN 접두사 패턴
+            ("옛날", ("옛", "XPN", "날")),
+            ("옛사람", ("옛", "XPN", "사람")),
+            // 헛/XPN 접두사 패턴
+            ("헛소리", ("헛", "XPN", "소리")),
+            ("헛수고", ("헛", "XPN", "수고")),
         ].into_iter().collect();
 
         let mut compound_split_indices: Vec<(usize, String, String, String)> = Vec::new();
@@ -4680,6 +4683,27 @@ impl SejongConverter {
             let end = tokens[idx].end_pos;
             tokens[idx] = SejongToken::new(&stem, &stem_pos, start, end);
             tokens.insert(idx + 1, SejongToken::new(&ending, "ETM", end, end));
+        }
+
+        // 75차 보정: ㄹ 탈락 동사 기본형 복원 (VV + 세요/EF 패턴)
+        // "드/VV + 세요/EF" → "들/VV + 세요/EF" (들다 → 드세요)
+        for i in 0..tokens.len().saturating_sub(1) {
+            if tokens[i].pos == "VV"
+                && tokens[i + 1].surface == "세요"
+                && tokens[i + 1].pos == "EF"
+            {
+                // ㄹ 탈락 동사 패턴
+                let rieul_verbs = [
+                    ("드", "들"),  // 들다 → 드세요
+                    ("아", "알"),  // 알다 → 아세요
+                ];
+                for (dropped, original) in rieul_verbs {
+                    if tokens[i].surface == dropped {
+                        tokens[i].surface = original.to_string();
+                        break;
+                    }
+                }
+            }
         }
     }
 
