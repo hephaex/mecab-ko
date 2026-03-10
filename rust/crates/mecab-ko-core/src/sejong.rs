@@ -5094,6 +5094,27 @@ impl SejongConverter {
                 }
             }
         }
+
+        // 94차 보정: NNG + "이/NP" + "이/VCP" → NNG + "이/VCP" (중복 이 제거)
+        // "꿀잼이야"가 "꿀잼/NNG 이/NP 이/VCP 야/EF"로 분석될 때
+        // → "꿀잼/NNG 이/VCP 야/EF"로 수정
+        let mut remove_indices: Vec<usize> = Vec::new();
+        if tokens.len() >= 3 {
+            for i in 1..tokens.len() - 1 {
+                if tokens[i].surface == "이"
+                    && tokens[i].pos == "NP"
+                    && tokens[i + 1].surface == "이"
+                    && tokens[i + 1].pos == "VCP"
+                    && tokens[i - 1].pos == "NNG"
+                {
+                    remove_indices.push(i);
+                }
+            }
+        }
+        // 역순으로 제거
+        for idx in remove_indices.into_iter().rev() {
+            tokens.remove(idx);
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
