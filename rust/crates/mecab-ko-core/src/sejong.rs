@@ -5161,6 +5161,94 @@ impl SejongConverter {
                 }
             }
         }
+
+        // 98차 보정: 문장 끝 XSV + "어요/아요" EC → EF
+        // "미안해요" = "미안/NNG 하/XSV 어요/EF" (not EC)
+        // "심심해요" = "심심/NNG 하/XSV 어요/EF" (not EC)
+        if tokens.len() >= 2 {
+            let last_idx = tokens.len() - 1;
+            let prev_idx = tokens.len() - 2;
+            let should_change = (tokens[last_idx].surface == "어요"
+                || tokens[last_idx].surface == "아요")
+                && tokens[last_idx].pos == "EC"
+                && tokens[prev_idx].pos == "XSV";
+            if should_change {
+                tokens[last_idx].pos = "EF".to_string();
+            }
+        }
+
+        // 99차 보정: 문장 끝 VV/VA + "어요/아요" → EF
+        // "재미있어요" = "재미/NNG 있/VV 어요/EF"
+        // "맛없어요" = "맛/NNG 없/VA 어요/EF"
+        // "만나요" = "만나/VV 아요/EF"
+        if tokens.len() >= 2 {
+            let last_idx = tokens.len() - 1;
+            let prev_idx = tokens.len() - 2;
+            let should_change = (tokens[last_idx].surface == "어요"
+                || tokens[last_idx].surface == "아요")
+                && tokens[last_idx].pos == "EC"
+                && (tokens[prev_idx].pos == "VV" || tokens[prev_idx].pos == "VA");
+            if should_change {
+                tokens[last_idx].pos = "EF".to_string();
+            }
+        }
+
+        // 100차 보정: "ㄴ다/EC" 또는 "는다/EC" + "하다" 패턴 → EF
+        // "가자고 한다" = "가/VV 자/EC 고/EC 하/VV ㄴ다/EF"
+        // 문장 끝에서 "ㄴ다" "는다" 앞에 "하/VV"가 오면 종결어미로
+        if tokens.len() >= 2 {
+            let last_idx = tokens.len() - 1;
+            if (tokens[last_idx].surface == "ㄴ다" || tokens[last_idx].surface == "는다")
+                && tokens[last_idx].pos == "EC"
+            {
+                // 앞에 "하/VV"가 있으면 EF로 변환
+                if tokens[last_idx - 1].surface == "하" && tokens[last_idx - 1].pos == "VV" {
+                    tokens[last_idx].pos = "EF".to_string();
+                }
+            }
+        }
+
+        // 101차 보정: 인용형 "다고/EC" 패턴
+        // "가자고 한다" → "자고/EC" (not "자/EF")
+        // "예쁘다고 한다" → "다고/EC"
+        // 문장 끝이 아닌 중간에 "자고", "다고" 등이 나오면 EC 유지
+        // (이미 89차에서 문장 끝 어요/EC → EF 처리됨)
+
+        // 102차 보정: NNG + "하/VV" + "고/EC + 있/VV" → NNG + "하/XSV" + "고/EC + 있/VX"
+        // "진행하고 있다" = "진행/NNG 하/XSV 고/EC 있/VX"
+        if tokens.len() >= 4 {
+            for i in 1..tokens.len() - 2 {
+                if tokens[i].surface == "하"
+                    && tokens[i].pos == "VV"
+                    && tokens[i - 1].pos == "NNG"
+                    && tokens[i + 1].surface == "고"
+                    && tokens[i + 1].pos == "EC"
+                    && tokens[i + 2].surface == "있"
+                    && tokens[i + 2].pos == "VV"
+                {
+                    tokens[i].pos = "XSV".to_string();
+                    tokens[i + 2].pos = "VX".to_string();
+                }
+            }
+        }
+
+        // 103차 보정: 명사 + "되/VV" + "고/EC + 있/VV" → "되/XSV" + "있/VX"
+        // "완료되고 있다" = "완료/NNG 되/XSV 고/EC 있/VX"
+        if tokens.len() >= 4 {
+            for i in 1..tokens.len() - 2 {
+                if tokens[i].surface == "되"
+                    && tokens[i].pos == "VV"
+                    && tokens[i - 1].pos == "NNG"
+                    && tokens[i + 1].surface == "고"
+                    && tokens[i + 1].pos == "EC"
+                    && tokens[i + 2].surface == "있"
+                    && tokens[i + 2].pos == "VV"
+                {
+                    tokens[i].pos = "XSV".to_string();
+                    tokens[i + 2].pos = "VX".to_string();
+                }
+            }
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
