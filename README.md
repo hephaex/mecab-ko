@@ -189,6 +189,21 @@ let tokens = cache.get_or_insert(key, || {
 println!("캐시 히트율: {:.1}%", cache.stats().hit_rate() * 100.0);
 ```
 
+## 저장소 구조
+
+```
+mecab-ko/
+├── rust/               # Rust 소스 코드 (메인)
+│   └── crates/         # Rust 크레이트들
+├── data/               # 사전 데이터
+├── docs/               # 문서
+│   ├── examples/       # 예제 코드
+│   └── project/        # 프로젝트 계획/진행
+├── scripts/            # 빌드/유틸리티 스크립트
+├── legacy/             # 레거시 C++ 코드
+└── .github/            # CI/CD 설정
+```
+
 ## 크레이트 구조
 
 | 크레이트 | 설명 | 버전 |
@@ -241,7 +256,7 @@ mecab evaluate --input test.tsv --dicdir ./dict-output --sejong
 | 토큰화 속도 | ~150K 단어/초 | ~238K 단어/초 ✅ |
 | 콜드 스타트 | < 200ms | 0.13ms ✅ |
 | 메모리 사용량 | < 150MB | ~150MB ✅ |
-| Token Accuracy | 50%+ | 16.8% (개선 중) |
+| Token Accuracy | 80%+ | 81.0% ✅ |
 
 ## 품사 태그 (세종 코퍼스)
 
@@ -262,7 +277,7 @@ mecab evaluate --input test.tsv --dicdir ./dict-output --sejong
 | EC | 연결 어미 | Connective ending |
 | ETM | 관형형 어미 | Adnominal ending |
 
-전체 품사 태그 목록은 [세종 품사 태그셋](docs/SEJONG_POS_TAGS.md)을 참조하세요.
+전체 품사 태그 목록은 [품사 태그 매핑](docs/pos-tag-mapping.md)을 참조하세요.
 
 ## 빌드 방법
 
@@ -327,7 +342,7 @@ cargo run -p mecab-ko-dict-builder -- build \
 
 ## 기여하기
 
-기여를 환영합니다! [CONTRIBUTING.md](CONTRIBUTING.md)를 참조해 주세요.
+기여를 환영합니다! [CONTRIBUTING.md](docs/CONTRIBUTING.md)를 참조해 주세요.
 
 ```bash
 # 개발 워크플로우
