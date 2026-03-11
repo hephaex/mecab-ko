@@ -27,3 +27,7 @@ target/
 # OS
 .DS_Store
 Thumbs.db
+
+# MeCab dictionary build outputs
+mecab-ko-dic/
+.rustup/
