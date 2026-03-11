@@ -1,4 +1,5 @@
 CLAUDE.md
+.claude/
 
 # Large dictionary data files (use Git LFS or download separately)
 data/dict-output/
