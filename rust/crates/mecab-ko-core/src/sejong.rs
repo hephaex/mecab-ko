@@ -5249,6 +5249,180 @@ impl SejongConverter {
                 }
             }
         }
+
+        // 104차 보정: VV + 어/아/EC + 보조동사VV → VV + EC + VX
+        // 보조동사: 주다, 보다, 버리다, 내다, 두다, 놓다
+        // "추천해 준" = VV + 어/EC + 주/VX
+        // "해 보았다" = VV + 어/EC + 보/VX
+        // "먹어 버렸다" = VV + 어/EC + 버리/VX
+        let auxiliary_verbs: std::collections::HashSet<&str> = [
+            "주", "보", "버리", "내", "두", "놓", "오", "가",
+            "드리", "달", "빠지", "치우", "대",
+        ].into_iter().collect();
+
+        if tokens.len() >= 3 {
+            for i in 0..tokens.len() - 2 {
+                let curr_pos = &tokens[i].pos;
+                let next_surface = &tokens[i + 1].surface;
+                let next_pos = &tokens[i + 1].pos;
+                let aux_surface = &tokens[i + 2].surface;
+                let aux_pos = &tokens[i + 2].pos;
+
+                // VV/VA/XSV + 어/아/EC + 보조동사VV → VX로 변환
+                if (curr_pos == "VV" || curr_pos == "VA" || curr_pos == "XSV")
+                    && next_pos == "EC"
+                    && (next_surface == "어" || next_surface == "아" || next_surface == "여")
+                    && aux_pos == "VV"
+                    && auxiliary_verbs.contains(aux_surface.as_str())
+                {
+                    tokens[i + 2].pos = "VX".to_string();
+                }
+            }
+        }
+
+        // 105차 보정: "고/EC + 있/VV" 패턴에서 있/VV → 있/VX
+        // "하고 있다", "가고 있다" 등 진행형 표현
+        if tokens.len() >= 2 {
+            for i in 0..tokens.len() - 1 {
+                let curr_surface = &tokens[i].surface;
+                let curr_pos = &tokens[i].pos;
+                let next_surface = &tokens[i + 1].surface;
+                let next_pos = &tokens[i + 1].pos;
+
+                if curr_surface == "고"
+                    && curr_pos == "EC"
+                    && next_surface == "있"
+                    && next_pos == "VV"
+                {
+                    tokens[i + 1].pos = "VX".to_string();
+                }
+            }
+        }
+
+        // 106차 보정: "지/EC + 않/VV" → "지/EC + 않/VX"
+        // "하지 않다" = 지/EC + 않/VX
+        if tokens.len() >= 2 {
+            for i in 0..tokens.len() - 1 {
+                let curr_surface = &tokens[i].surface;
+                let curr_pos = &tokens[i].pos;
+                let next_surface = &tokens[i + 1].surface;
+                let next_pos = &tokens[i + 1].pos;
+
+                if curr_surface == "지"
+                    && curr_pos == "EC"
+                    && next_surface == "않"
+                    && next_pos == "VV"
+                {
+                    tokens[i + 1].pos = "VX".to_string();
+                }
+            }
+        }
+
+        // 107차 보정: "고/EC + 싶/VV" → "고/EC + 싶/VX"
+        // "보고 싶다" = 고/EC + 싶/VX
+        if tokens.len() >= 2 {
+            for i in 0..tokens.len() - 1 {
+                let curr_surface = &tokens[i].surface;
+                let curr_pos = &tokens[i].pos;
+                let next_surface = &tokens[i + 1].surface;
+                let next_pos = &tokens[i + 1].pos;
+
+                if curr_surface == "고"
+                    && curr_pos == "EC"
+                    && next_surface == "싶"
+                    && (next_pos == "VV" || next_pos == "VA")
+                {
+                    tokens[i + 1].pos = "VX".to_string();
+                }
+            }
+        }
+
+        // 108차 보정: 인용형 연결어미 분리
+        // "가자고 한다" = 가/VV 자고/EC 하/VV ㄴ다/EF
+        // "예쁘다고 한다" = 예쁘/VA 다고/EC 하/VV ㄴ다/EF
+        // "학생이라고 한다" = 학생/NNG 이/VCP 라고/EC 하/VV ㄴ다/EF
+        // 패턴: "자/EF + 고/EC" → "자고/EC" 병합
+        let mut quote_ec_merge_indices: Vec<usize> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(1) {
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+            let next_surface = &tokens[i + 1].surface;
+            let next_pos = &tokens[i + 1].pos;
+
+            // "자/EF + 고/EC" → "자고/EC" (청유형 인용)
+            // "다/EF + 고/EC" → "다고/EC" (평서형 인용)
+            // "라/EF + 고/EC" → "라고/EC" (명령형/서술형 인용)
+            if (curr_surface == "자" || curr_surface == "다" || curr_surface == "라" || curr_surface == "냐" || curr_surface == "냐고")
+                && curr_pos == "EF"
+                && next_surface == "고"
+                && next_pos == "EC"
+            {
+                quote_ec_merge_indices.push(i);
+            }
+        }
+
+        for idx in quote_ec_merge_indices.into_iter().rev() {
+            let merged_surface = format!(
+                "{}{}",
+                tokens[idx].surface,
+                tokens[idx + 1].surface
+            );
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx + 1].end_pos;
+            tokens[idx] = SejongToken::new(&merged_surface, "EC", start, end);
+            tokens.remove(idx + 1);
+        }
+
+        // 109차 보정: "ㄹ까/EF" → "ㄹ까/EC" when followed by "하다"
+        // "갈까 하다" = 가/VV ㄹ까/EC 하/VV 다/EF
+        let mut ef_to_ec_indices: Vec<usize> = Vec::new();
+        if tokens.len() >= 2 {
+            for i in 0..tokens.len() - 1 {
+                let curr_surface = tokens[i].surface.clone();
+                let curr_pos = tokens[i].pos.clone();
+                let next_surface = tokens[i + 1].surface.clone();
+
+                // "ㄹ까/EF + 하/VV" → "ㄹ까/EC"
+                if curr_surface == "ㄹ까"
+                    && curr_pos == "EF"
+                    && next_surface == "하"
+                {
+                    ef_to_ec_indices.push(i);
+                }
+
+                // "ㄹ지/EF + 모르/VV" → "ㄹ지/EC"
+                if curr_surface == "ㄹ지"
+                    && curr_pos == "EF"
+                    && next_surface == "모르"
+                {
+                    ef_to_ec_indices.push(i);
+                }
+            }
+        }
+        for idx in ef_to_ec_indices {
+            tokens[idx].pos = "EC".to_string();
+        }
+
+        // 110차 보정: "게/NNB" → "게/EC" (동사 뒤에서 연결어미)
+        // "오게" = 오/VV 게/EC
+        // "가게" = 가/VV 게/EC (단, "가게/NNG"도 있으므로 주의)
+        let mut ge_ec_indices: Vec<usize> = Vec::new();
+        for i in 1..tokens.len() {
+            let prev_pos = tokens[i - 1].pos.clone();
+            let curr_surface = tokens[i].surface.clone();
+            let curr_pos = tokens[i].pos.clone();
+
+            // VV/VA 뒤의 "게/NNB"는 EC
+            if (prev_pos == "VV" || prev_pos == "VA" || prev_pos == "VX")
+                && curr_surface == "게"
+                && curr_pos == "NNB"
+            {
+                ge_ec_indices.push(i);
+            }
+        }
+        for idx in ge_ec_indices {
+            tokens[idx].pos = "EC".to_string();
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
