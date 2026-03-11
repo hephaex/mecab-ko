@@ -429,6 +429,86 @@ pub fn evaluate_tokens(
     (true_positives, false_positives, false_negatives, pos_match)
 }
 
+/// Greedy alignment 기반 토큰 평가
+///
+/// 순서를 고려하되, 토큰 갯수 차이가 있어도 최선의 매칭을 시도합니다.
+/// 예를 들어 gold와 pred의 토큰 갯수가 다르면, 건너뛰면서 매칭을 시도합니다.
+///
+/// # Arguments
+///
+/// * `gold_tokens` - 정답 토큰 리스트
+/// * `pred_tokens` - 예측 토큰 리스트
+///
+/// # Returns
+///
+/// (`true_positives`, `false_positives`, `false_negatives`, `pos_match`)
+#[must_use]
+pub fn evaluate_tokens_aligned(
+    gold_tokens: &[GoldToken],
+    pred_tokens: &[Token],
+) -> (usize, usize, usize, usize) {
+    let mut true_positives = 0;
+    let mut pos_match = 0;
+
+    let mut gold_idx = 0;
+    let mut pred_idx = 0;
+
+    while gold_idx < gold_tokens.len() && pred_idx < pred_tokens.len() {
+        let gold = &gold_tokens[gold_idx];
+        let pred = &pred_tokens[pred_idx];
+
+        if gold.surface == pred.surface {
+            // Surface가 일치하면 매칭
+            pos_match += 1;
+            if gold.pos == pred.pos {
+                true_positives += 1;
+            }
+            gold_idx += 1;
+            pred_idx += 1;
+        } else {
+            // Surface가 불일치하면 다음 pred에서 현재 gold를 찾아봄
+            let mut found = false;
+
+            // pred에서 최대 3개 앞까지 탐색
+            for look_ahead in 1..=3 {
+                if pred_idx + look_ahead < pred_tokens.len()
+                    && pred_tokens[pred_idx + look_ahead].surface == gold.surface
+                {
+                    // 중간 pred 토큰들은 false positive로 처리
+                    pred_idx += look_ahead;
+                    found = true;
+                    break;
+                }
+            }
+
+            if !found {
+                // gold에서 최대 3개 앞까지 탐색
+                for look_ahead in 1..=3 {
+                    if gold_idx + look_ahead < gold_tokens.len()
+                        && gold_tokens[gold_idx + look_ahead].surface == pred.surface
+                    {
+                        // 중간 gold 토큰들은 false negative로 처리
+                        gold_idx += look_ahead;
+                        found = true;
+                        break;
+                    }
+                }
+            }
+
+            if !found {
+                // 매칭 실패 - 둘 다 한 칸씩 전진
+                gold_idx += 1;
+                pred_idx += 1;
+            }
+        }
+    }
+
+    let false_positives = pred_tokens.len().saturating_sub(true_positives);
+    let false_negatives = gold_tokens.len().saturating_sub(true_positives);
+
+    (true_positives, false_positives, false_negatives, pos_match)
+}
+
 /// 데이터셋 평가
 ///
 /// # Arguments
@@ -573,7 +653,8 @@ pub fn evaluate_dataset_sejong(
         result.total_gold_tokens += gold_sentence.tokens.len();
         result.total_pred_tokens += converted_pred.len();
 
-        let (tp, fp, fn_, _pos_match) = evaluate_tokens(&gold_sentence.tokens, &converted_pred);
+        let (tp, fp, fn_, _pos_match) =
+            evaluate_tokens_aligned(&gold_sentence.tokens, &converted_pred);
 
         result.true_positives += tp;
         result.false_positives += fp;
