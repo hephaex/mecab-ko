@@ -1140,6 +1140,13 @@ impl SejongConverter {
             }
         }
 
+        // 143차: VV+EC "는다" 특수 처리 (평서형 종결어미)
+        // MeCab이 "는다"를 VV+EC로 태그하지만 실제로는 종결어미
+        // "는다/VV+EC" → "는다/EF" (단일 토큰 유지)
+        if pos == "VV+EC" && surface == "는다" {
+            return vec![("는다".to_string(), "EF".to_string())];
+        }
+
         // VV+EF 특별 패턴 처리
         if pos == "VV+EF" {
             // "ㅂ니다" 패턴: "합니다" → "하/VV + ㅂ니다/EF"
@@ -1648,8 +1655,12 @@ impl SejongConverter {
     /// 4. 그대로 반환 (단순 태그인 경우)
     #[must_use]
     pub fn convert_token(&self, token: &Token) -> Vec<SejongToken> {
+        // 143차: "는다/VV+EC"는 사전 분석결과가 잘못됨 (늘/VV+ㄴ다/EC)
+        // 규칙 기반으로 직접 처리: "는다/VV+EC" → "는다/EF"
+        let skip_decomposition = token.surface == "는다" && token.pos == "VV+EC";
+
         // 1. 분석결과 컬럼 활용 시도
-        if self.use_decomposition && !token.features.is_empty() {
+        if self.use_decomposition && !token.features.is_empty() && !skip_decomposition {
             if let Some(decomp) = Self::extract_decomposition(&token.features) {
                 let morphemes = Self::parse_decomposition(&decomp);
                 if !morphemes.is_empty() {
@@ -5537,12 +5548,13 @@ impl SejongConverter {
         // 86차 보정: "ㄴ/ETM + 다/EF" → "ㄴ다/EF", "는/ETM + 다/EF" → "는다/EF" 병합
         // "간다" = "가/VV ㄴ다/EF", "먹는다" = "먹/VV 는다/EF"
         // sample.tsv 형식에 맞춰 현재형 종결어미를 단일 토큰으로 처리
+        // 143차: "다/NNG"도 문장 끝이면 EF로 처리 (MeCab이 "다"를 NNG로 분석하는 경우)
         let mut nda_merge_indices: Vec<usize> = Vec::new();
         for i in 1..tokens.len() {
             if (tokens[i - 1].surface == "ㄴ" || tokens[i - 1].surface == "는")
                 && tokens[i - 1].pos == "ETM"
                 && tokens[i].surface == "다"
-                && tokens[i].pos == "EF"
+                && (tokens[i].pos == "EF" || (tokens[i].pos == "NNG" && i == tokens.len() - 1))
             {
                 nda_merge_indices.push(i - 1);
             }
