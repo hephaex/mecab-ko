@@ -90,7 +90,7 @@ impl GoldToken {
         }
 
         Ok(Self {
-            surface: parts[0].to_string(),
+            surface: SejongConverter::normalize_jamo(parts[0]),
             pos: parts[1].to_string(),
         })
     }
@@ -636,7 +636,7 @@ pub fn evaluate_dataset_sejong(
         let converted_pred: Vec<Token> = sejong_tokens
             .iter()
             .map(|st| Token {
-                surface: st.surface.clone(),
+                surface: SejongConverter::normalize_jamo(&st.surface),
                 pos: st.pos.clone(),
                 start_pos: st.start_pos,
                 end_pos: st.end_pos,

@@ -6271,12 +6271,56 @@ impl SejongConverter {
         }
     }
 
-    /// 세종 형식 문자열로 변환
+    /// 한글 자모 정규화: 종성 자모(U+11xx)를 호환 자모(U+31xx)로 변환
+    /// 124차 보정: MeCab 출력의 종성 자모를 세종 코퍼스 형식(호환 자모)으로 통일
+    #[must_use]
+    pub fn normalize_jamo(text: &str) -> String {
+        // 종성 자모 (U+11A8-U+11C2) → 호환 자모 (U+3131-U+314E) 매핑
+        let jongseong_to_compat: [(char, char); 27] = [
+            ('ᆨ', 'ㄱ'), // U+11A8 → U+3131
+            ('ᆩ', 'ㄲ'), // U+11A9 → U+3132
+            ('ᆪ', 'ㄳ'), // U+11AA → U+3133
+            ('ᆫ', 'ㄴ'), // U+11AB → U+3134
+            ('ᆬ', 'ㄵ'), // U+11AC → U+3135
+            ('ᆭ', 'ㄶ'), // U+11AD → U+3136
+            ('ᆮ', 'ㄷ'), // U+11AE → U+3137
+            ('ᆯ', 'ㄹ'), // U+11AF → U+3139
+            ('ᆰ', 'ㄺ'), // U+11B0 → U+313A
+            ('ᆱ', 'ㄻ'), // U+11B1 → U+313B
+            ('ᆲ', 'ㄼ'), // U+11B2 → U+313C
+            ('ᆳ', 'ㄽ'), // U+11B3 → U+313D
+            ('ᆴ', 'ㄾ'), // U+11B4 → U+313E
+            ('ᆵ', 'ㄿ'), // U+11B5 → U+313F
+            ('ᆶ', 'ㅀ'), // U+11B6 → U+3140
+            ('ᆷ', 'ㅁ'), // U+11B7 → U+3141
+            ('ᆸ', 'ㅂ'), // U+11B8 → U+3142
+            ('ᆹ', 'ㅄ'), // U+11B9 → U+3144
+            ('ᆺ', 'ㅅ'), // U+11BA → U+3145
+            ('ᆻ', 'ㅆ'), // U+11BB → U+3146
+            ('ᆼ', 'ㅇ'), // U+11BC → U+3147
+            ('ᆽ', 'ㅈ'), // U+11BD → U+3148
+            ('ᆾ', 'ㅊ'), // U+11BE → U+314A
+            ('ᆿ', 'ㅋ'), // U+11BF → U+314B
+            ('ᇀ', 'ㅌ'), // U+11C0 → U+314C
+            ('ᇁ', 'ㅍ'), // U+11C1 → U+314D
+            ('ᇂ', 'ㅎ'), // U+11C2 → U+314E
+        ];
+
+        let map: std::collections::HashMap<char, char> = jongseong_to_compat.into_iter().collect();
+        text.chars()
+            .map(|c| *map.get(&c).unwrap_or(&c))
+            .collect()
+    }
+
+    /// 세종 형식 문자열로 변환 (자모 정규화 포함)
     #[must_use]
     pub fn format_sejong(&self, tokens: &[SejongToken]) -> String {
         tokens
             .iter()
-            .map(SejongToken::to_sejong_format)
+            .map(|t| {
+                let normalized_surface = Self::normalize_jamo(&t.surface);
+                format!("{}/{}", normalized_surface, t.pos)
+            })
             .collect::<Vec<_>>()
             .join(" ")
     }
