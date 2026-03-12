@@ -5581,6 +5581,65 @@ impl SejongConverter {
         for idx in ef_to_ec_final {
             tokens[idx].pos = "EC".to_string();
         }
+
+        // 115차 보정: "보이/NNG + 이/VCP + 고/EC" → "보이/VV + 고/EC"
+        // MeCab이 "보이고"를 NNG+VCP+EC로 분석하는 문제 수정
+        // "보이고 있다" = "보이/VV 고/EC 있/VX"
+        // 패턴: NNG + "이/VCP" + "고/EC" → NNG를 VV로 변환하고 VCP 삭제
+        // 동사 어간 "보이", "들이", "붙이" 등
+        let verb_stems_with_i: std::collections::HashSet<&str> = [
+            "보이", "들이", "붙이", "놓이", "쓰이", "덮이", "갈이", "꺾이",
+        ].into_iter().collect();
+
+        // VV 변환 및 VCP 삭제할 인덱스 수집
+        let mut vv_convert_and_vcp_delete: Vec<(usize, usize)> = Vec::new(); // (NNG idx, VCP idx)
+        for i in 0..tokens.len().saturating_sub(2) {
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+            let next_surface = &tokens[i + 1].surface;
+            let next_pos = &tokens[i + 1].pos;
+            let next2_pos = &tokens[i + 2].pos;
+
+            // NNG + "이/VCP" + EC 패턴
+            if curr_pos == "NNG"
+                && verb_stems_with_i.contains(curr_surface.as_str())
+                && next_surface == "이"
+                && next_pos == "VCP"
+                && next2_pos == "EC"
+            {
+                vv_convert_and_vcp_delete.push((i, i + 1));
+            }
+        }
+
+        // 역순으로 처리 (인덱스 변화 방지)
+        for (nng_idx, vcp_idx) in vv_convert_and_vcp_delete.into_iter().rev() {
+            tokens[nng_idx].pos = "VV".to_string();
+            tokens.remove(vcp_idx);
+        }
+
+        // 116차 보정: "준/VV+ETM" → "주/VX + ㄴ/ETM"
+        // "해 준 식당"에서 "준/VV+ETM"을 "주/VX + ㄴ/ETM"으로 분리
+        // 앞에 "어/EC" 또는 "아/EC"가 있는 경우만
+        let mut jun_split_indices: Vec<usize> = Vec::new();
+        for i in 1..tokens.len() {
+            let prev_pos = &tokens[i - 1].pos;
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+
+            // EC 뒤의 "준"이 VV+ETM 또는 VV로 분석된 경우 VX+ETM으로 변환
+            if prev_pos == "EC"
+                && curr_surface == "준"
+                && (curr_pos == "VV" || curr_pos.starts_with("VV+"))
+            {
+                jun_split_indices.push(i);
+            }
+        }
+        for idx in jun_split_indices.into_iter().rev() {
+            // "준/VV+ETM" → "주/VX" + "ㄴ/ETM"
+            tokens[idx].surface = "주".to_string();
+            tokens[idx].pos = "VX".to_string();
+            // ETM은 이미 분리되어 있거나 다음 토큰으로 처리됨
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
