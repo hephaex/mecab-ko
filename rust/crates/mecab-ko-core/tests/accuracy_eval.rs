@@ -1282,3 +1282,67 @@ fn test_pos_accuracy_breakdown() {
         }
     }
 }
+
+/// VX 패턴 디버깅 - 세부 분석
+#[test]
+fn test_vx_pattern_debug() {
+    use mecab_ko_core::sejong::SejongConverter;
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
+        .unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or(std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH")
+        .unwrap_or_else(|_| {
+            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
+                .to_string_lossy()
+                .to_string()
+        });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path)
+        .expect("Failed to create tokenizer");
+
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let converter = SejongConverter::new();
+
+    // VX 관련 테스트 케이스
+    let test_cases = [
+        // -고 있다 패턴
+        ("보이고 있다", "보이/VV 고/EC 있/VX 다/EF"),
+        ("다하고 있다", "다하/VV 고/EC 있/VX 다/EF"),
+        ("살고 있어", "살/VV 고/EC 있/VX 어/EF"),
+        ("진행하고 있다", "진행/NNG 하/XSV 고/EC 있/VX 다/EF"),
+        // -해 주다 패턴
+        ("해주세요", "하/VV 어/EC 주/VX 세요/EF"),
+        ("추천해 준", "추천/NNG 하/XSV 어/EC 주/VX ㄴ/ETM"),
+        ("해주셨다", "하/VV 어/EC 주/VX 시/EP 었/EP 다/EF"),
+    ];
+
+    println!("\n=== VX 패턴 디버깅 ===");
+    for (input, expected) in test_cases {
+        let tokens = tokenizer.tokenize(input);
+        let mecab_output: Vec<String> = tokens.iter().map(|t| format!("{}/{}", t.surface, t.pos)).collect();
+
+        let sejong_tokens = converter.convert_tokens(&tokens);
+        let result = converter.format_sejong(&sejong_tokens);
+
+        let is_match = result == expected;
+        let match_status = if is_match { "✓" } else { "✗" };
+        println!("{} \"{}\"", match_status, input);
+        println!("   MeCab:  {:?}", mecab_output);
+        println!("   Sejong: {}", result);
+        println!("   예상:   {}", expected);
+        println!();
+    }
+}
