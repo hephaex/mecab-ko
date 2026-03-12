@@ -6392,11 +6392,16 @@ impl SejongConverter {
 
         // 132차 보정: 청유형 "~자" NNG 분리
         // "가자/NNG" → "가/VV + 자/EF"
-        // 2글자 NNG가 "자"로 끝나고 앞 글자가 받침 없는 동사 어간인 경우
-        let imperative_verbs: std::collections::HashSet<&str> =
-            ["가", "오", "보", "사", "자", "두", "주", "타", "서", "나"]
-                .into_iter()
-                .collect();
+        // 2글자 NNG가 "자"로 끝나고 앞 글자가 동사 어간인 경우
+        // 134차: 받침 있는 동사 어간 추가 (먹, 읽, 잡, 걷, 듣, 짓 등)
+        let imperative_verbs: std::collections::HashSet<&str> = [
+            // 받침 없는 동사 어간
+            "가", "오", "보", "사", "자", "두", "주", "타", "서", "나",
+            // 받침 있는 동사 어간 (134차)
+            "먹", "읽", "잡", "걷", "듣", "짓", "넣", "씻", "입", "웃",
+        ]
+        .into_iter()
+        .collect();
 
         let mut split_imperative_indices: Vec<(usize, String)> = Vec::new();
         for i in 0..tokens.len() {
