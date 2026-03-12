@@ -6350,6 +6350,45 @@ impl SejongConverter {
             tokens[idx].pos = "VV".to_string();
             tokens.insert(idx + 1, SejongToken::new("니", "EF", start, end));
         }
+
+        // 131차 보정: 의문사 포함 NNP 분리
+        // "뭐하니/NNP" → "뭐/NP 하/VV 니/EF"
+        // MeCab이 띄어쓰기 무시하고 붙여서 NNP로 분석한 경우
+        let mut split_compound_indices: Vec<(usize, String, String, String)> = Vec::new();
+        for i in 0..tokens.len() {
+            let surface = &tokens[i].surface;
+            let pos = &tokens[i].pos;
+
+            if pos == "NNP" && surface.ends_with("니") && surface.chars().count() >= 3 {
+                // 의문사로 시작하는지 확인
+                for qword in &["뭐", "뭘", "언제", "어디", "누가", "누구"] {
+                    if surface.starts_with(qword) {
+                        // qword.chars().count()로 글자 수 기준으로 skip
+                        let qword_char_count = qword.chars().count();
+                        let rest: String = surface.chars().skip(qword_char_count).collect();
+                        if rest.ends_with("니") && rest.chars().count() >= 2 {
+                            let verb_stem: String =
+                                rest.chars().take(rest.chars().count() - 1).collect();
+                            split_compound_indices
+                                .push((i, qword.to_string(), verb_stem, "니".to_string()));
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        for (idx, qword, verb_stem, ending) in split_compound_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx].end_pos;
+            // 원본 토큰을 의문사로 변경
+            tokens[idx].surface = qword;
+            tokens[idx].pos = "NP".to_string();
+            // 동사 어간 삽입
+            tokens.insert(idx + 1, SejongToken::new(&verb_stem, "VV", start, end));
+            // 어미 삽입
+            tokens.insert(idx + 2, SejongToken::new(&ending, "EF", start, end));
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
