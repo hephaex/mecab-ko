@@ -6418,6 +6418,51 @@ impl SejongConverter {
             tokens[idx].pos = "VV".to_string();
             tokens.insert(idx + 1, SejongToken::new("자", "EF", start, end));
         }
+
+        // 133차 보정: 동사 기본형 NNG → VV + 다/EF
+        // "하다/NNG" → "하/VV + 다/EF"
+        // 단독으로 나오는 동사 기본형 (주의: 명사 "하다"와 구분 필요)
+        let verb_base_forms: std::collections::HashSet<&str> =
+            ["하다", "가다", "오다", "보다", "사다", "주다", "타다", "서다", "나다"]
+                .into_iter()
+                .collect();
+
+        let mut split_verb_base_indices: Vec<usize> = Vec::new();
+        for i in 0..tokens.len() {
+            let surface = &tokens[i].surface;
+            let pos = &tokens[i].pos;
+
+            // NNG로 분석된 동사 기본형이면서 단독으로 쓰인 경우
+            // (다음 토큰이 없거나 다른 동사 기본형이 이어지는 경우)
+            if pos == "NNG" && verb_base_forms.contains(surface.as_str()) {
+                let is_standalone = if i + 1 < tokens.len() {
+                    // 다음 토큰이 동사/형용사 관련 태그가 아닌 경우
+                    let next_pos = &tokens[i + 1].pos;
+                    !next_pos.starts_with("VV")
+                        && !next_pos.starts_with("VA")
+                        && !next_pos.starts_with("EC")
+                        && !next_pos.starts_with("EF")
+                        && !next_pos.starts_with("EP")
+                } else {
+                    true
+                };
+
+                if is_standalone {
+                    split_verb_base_indices.push(i);
+                }
+            }
+        }
+
+        for idx in split_verb_base_indices.into_iter().rev() {
+            let surface = tokens[idx].surface.clone();
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx].end_pos;
+            // 어간 추출 ("~다"에서 "다" 제거)
+            let stem: String = surface.chars().take(surface.chars().count() - 1).collect();
+            tokens[idx].surface = stem;
+            tokens[idx].pos = "VV".to_string();
+            tokens.insert(idx + 1, SejongToken::new("다", "EF", start, end));
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
