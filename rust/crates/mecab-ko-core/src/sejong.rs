@@ -1283,6 +1283,26 @@ impl SejongConverter {
             }
         }
 
+        // 종성 자음 어미 처리 (VV+ETM, VA+ETM에서 ㄹ, ㄴ 받침)
+        // 예: "올/VV+ETM" → "오/VV + ㄹ/ETM", "간/VV+ETM" → "가/VV + ㄴ/ETM"
+        if (pos == "VV+ETM" || pos == "VA+ETM") && surface.chars().count() == 1 {
+            let ch = surface.chars().next().unwrap();
+            // ㄹ 받침 처리
+            if let Some(stem_char) = Self::remove_jongseong_rieul(ch) {
+                return vec![
+                    (stem_char.to_string(), if pos.starts_with("VV") { "VV".to_string() } else { "VA".to_string() }),
+                    ("ㄹ".to_string(), "ETM".to_string()),
+                ];
+            }
+            // ㄴ 받침 처리
+            if let Some(stem_char) = Self::remove_jongseong_nieun(ch) {
+                return vec![
+                    (stem_char.to_string(), if pos.starts_with("VV") { "VV".to_string() } else { "VA".to_string() }),
+                    ("ㄴ".to_string(), "ETM".to_string()),
+                ];
+            }
+        }
+
         // 규칙이 적용되지 않으면 태그만 분리
         let tags = self.split_compound_tag(pos);
         if tags.len() > 1 {
@@ -2366,6 +2386,47 @@ impl SejongConverter {
         let mut i = 0;
         while i < tokens.len() {
             let mut merged = false;
+
+            // 우선 패턴 A: "오/VV + ㄹ/ETM + 하/VV + 아|어/EC" → "올해/NNG" (시간 명사 병합)
+            // MeCab이 "올해"를 동사 활용형으로 잘못 분리하는 문제 수정
+            // "아/EC" 또는 "어/EC" 모두 처리 (하+아 = 해)
+            if i + 3 < tokens.len()
+                && tokens[i].surface == "오"
+                && tokens[i].pos == "VV"
+                && tokens[i + 1].surface == "ㄹ"
+                && tokens[i + 1].pos == "ETM"
+                && tokens[i + 2].surface == "하"
+                && tokens[i + 2].pos == "VV"
+                && (tokens[i + 3].surface == "어" || tokens[i + 3].surface == "아")
+                && tokens[i + 3].pos == "EC"
+            {
+                let start = tokens[i].start_pos;
+                let end = tokens[i + 3].end_pos;
+                tokens[i] = SejongToken::new("올해", "NNG", start, end);
+                tokens.remove(i + 3);
+                tokens.remove(i + 2);
+                tokens.remove(i + 1);
+                merged = true;
+            }
+
+            // 우선 패턴 B: "사/VV + ㄴ/ETM + 책/NNG" → "산책/NNG" (명사 병합)
+            // MeCab이 "산책"을 동사 활용형+명사로 잘못 분리하는 문제 수정
+            if !merged
+                && i + 2 < tokens.len()
+                && tokens[i].surface == "사"
+                && tokens[i].pos == "VV"
+                && tokens[i + 1].surface == "ㄴ"
+                && tokens[i + 1].pos == "ETM"
+                && tokens[i + 2].surface == "책"
+                && tokens[i + 2].pos == "NNG"
+            {
+                let start = tokens[i].start_pos;
+                let end = tokens[i + 2].end_pos;
+                tokens[i] = SejongToken::new("산책", "NNG", start, end);
+                tokens.remove(i + 2);
+                tokens.remove(i + 1);
+                merged = true;
+            }
 
             // 패턴 1: "친/VV + ᆫ/ETM + 구와/NNG" → "친구/NNG + 와/JC"
             // (친구와가 치/VV+ᆫ/ETM+구와/NNG로 분석되는 문제 수정)
@@ -6704,6 +6765,26 @@ impl SejongConverter {
             if jongseong == 8 {
                 // ㄹ 받침 제거: 종성 0으로 변경
                 let new_code = code - 8;
+                char::from_u32(new_code)
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    /// 한글 음절에서 ㄴ 받침을 제거
+    /// 예: 간 → 가, 산 → 사, 온 → 오
+    fn remove_jongseong_nieun(ch: char) -> Option<char> {
+        let code = ch as u32;
+        // 한글 음절 범위: 0xAC00 ~ 0xD7A3
+        if (0xAC00..=0xD7A3).contains(&code) {
+            // 종성 인덱스: ㄴ = 4
+            let jongseong = (code - 0xAC00) % 28;
+            if jongseong == 4 {
+                // ㄴ 받침 제거: 종성 0으로 변경
+                let new_code = code - 4;
                 char::from_u32(new_code)
             } else {
                 None

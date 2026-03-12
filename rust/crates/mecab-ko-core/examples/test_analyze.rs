@@ -36,6 +36,7 @@ fn main() {
         }
 
         let sejong_tokens = converter.convert_tokens(&tokens);
+
         let sejong_str = converter.format_sejong(&sejong_tokens);
 
         let matches = gold == sejong_str;
