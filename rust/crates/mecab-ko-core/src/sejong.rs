@@ -6525,6 +6525,49 @@ impl SejongConverter {
             tokens[idx + 1].start_pos = start;
             tokens[idx + 1].end_pos = end;
         }
+
+        // 137차 보정: "안가/VV", "못가/VV" → "안/MAG + 가/VV", "못/MAG + 가/VV"
+        // MeCab이 "안 가요", "못 가요"를 "안가/VV + 아요/EF"로 분석하는 경우
+        let neg_adverbs: std::collections::HashSet<&str> = ["안", "못"].into_iter().collect();
+        let mut split_neg_indices: Vec<(usize, String, String)> = Vec::new();
+
+        for i in 0..tokens.len() {
+            let surface = &tokens[i].surface;
+            let pos = &tokens[i].pos;
+
+            // 2글자 VV가 "안" 또는 "못"으로 시작하는 경우
+            if pos == "VV" && surface.chars().count() == 2 {
+                let first_char: String = surface.chars().take(1).collect();
+                if neg_adverbs.contains(first_char.as_str()) {
+                    let verb_stem: String = surface.chars().skip(1).collect();
+                    split_neg_indices.push((i, first_char, verb_stem));
+                }
+            }
+        }
+
+        // 역순으로 처리 (인덱스 변경 방지)
+        for (idx, adv, stem) in split_neg_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx].end_pos;
+
+            // 원래 토큰을 부사로 변경
+            tokens[idx].surface = adv;
+            tokens[idx].pos = "MAG".to_string();
+            tokens[idx].end_pos = start; // 부사는 첫 글자만
+
+            // 동사 어간 토큰 삽입
+            tokens.insert(
+                idx + 1,
+                SejongToken {
+                    surface: stem.clone(),
+                    pos: "VV".to_string(),
+                    start_pos: start,
+                    end_pos: end,
+                    original_surface: Some(stem),
+                    original_pos: Some("VV".to_string()),
+                },
+            );
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
