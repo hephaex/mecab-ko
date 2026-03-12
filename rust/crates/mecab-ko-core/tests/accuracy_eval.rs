@@ -710,7 +710,7 @@ fn test_nnb_error_analysis() {
 
     let converter = SejongConverter::new();
 
-    // NNB (의존명사) 관련 테스트 케이스
+    // NNB (의존명사) 관련 테스트 케이스 (sample.tsv 전체)
     let test_cases = [
         // 단위 의존명사
         ("백만원", "백만/NR 원/NNB"),
@@ -720,11 +720,16 @@ fn test_nnb_error_analysis() {
         // 일반 의존명사 단독
         ("것 수 등", "것/NNB 수/NNB 등/NNB"),
         ("바 데 지", "바/NNB 데/NNB 지/NNB"),
+        ("만큼 뿐 채", "만큼/NNB 뿐/NNB 채/NNB"),
+        ("듯 양 체", "듯/NNB 양/NNB 체/NNB"),
+        ("대로 따라", "대로/NNB 따라/NNB"),
         // 중 (의존명사)
         ("계류 중이다", "계류/NNG 중/NNB 이/VCP 다/EF"),
         ("분석 중이다", "분석/NNG 중/NNB 이/VCP 다/EF"),
         // 지 (시간 경과)
         ("만난 지", "만나/VV ㄴ/ETM 지/NNB"),
+        // 년 (의존명사)
+        ("십 년", "십/NR 년/NNB"),
         // VV/EF 관련 테스트 (sample.tsv 기준: 세요/EF 사용)
         ("오세요", "오/VV 세요/EF"),
         ("말씀하세요", "말씀/NNG 하/XSV 세요/EF"),

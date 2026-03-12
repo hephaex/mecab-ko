@@ -2089,8 +2089,9 @@ impl SejongConverter {
 
         // 강제 매핑이 필요한 품사 집합 (잘못 인식되는 품사들)
         // 주의: EP(선어말어미)는 제외 - "시/EP"(존칭)가 "시/NNB"(시간)로 덮어쓰이는 것 방지
+        // JX, MM 추가: 의존명사가 조사/관형사로 오분석되는 경우 보정 (뿐/JX→NNB, 양/MM→NNB)
         let overridable_poses: std::collections::HashSet<&str> =
-            ["EF", "EC", "VV", "VA", "NNG", "NNP", "IC", "MAG"].into_iter().collect();
+            ["EF", "EC", "VV", "VA", "NNG", "NNP", "IC", "MAG", "JX", "MM"].into_iter().collect();
 
         for token in tokens.iter_mut() {
             // 오버라이드 대상 품사인 경우에만 적용
