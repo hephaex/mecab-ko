@@ -1,0 +1,252 @@
+[
+  {
+    "input": "안녕하세요",
+    "expected_morphs": ["안녕", "하", "세요"],
+    "expected_pos": [["안녕", "NNG"], ["하", "XSV"], ["세요", "EP+EF"]]
+  },
+  {
+    "input": "감사합니다",
+    "expected_morphs": ["감사", "하", "ㅂ니다"],
+    "expected_pos": [["감사", "NNG"], ["하", "XSV"], ["ㅂ니다", "EF"]]
+  },
+  {
+    "input": "반갑습니다",
+    "expected_morphs": ["반갑", "습니다"],
+    "expected_pos": [["반갑", "VA"], ["습니다", "EF"]]
+  },
+  {
+    "input": "좋은 아침이에요",
+    "expected_morphs": ["좋", "은", "아침", "이", "에요"],
+    "expected_pos": [["좋", "VA"], ["은", "ETM"], ["아침", "NNG"], ["이", "VCP"], ["에요", "EF"]]
+  },
+  {
+    "input": "오늘 날씨가 좋습니다",
+    "expected_morphs": ["오늘", "날씨", "가", "좋", "습니다"],
+    "expected_pos": [["오늘", "NNG"], ["날씨", "NNG"], ["가", "JKS"], ["좋", "VA"], ["습니다", "EF"]]
+  },
+  {
+    "input": "밥 먹었어요?",
+    "expected_morphs": ["밥", "먹", "었", "어요", "?"],
+    "expected_pos": [["밥", "NNG"], ["먹", "VV"], ["었", "EP"], ["어요", "EF"], ["?", "SF"]]
+  },
+  {
+    "input": "어디 가세요?",
+    "expected_morphs": ["어디", "가", "세요", "?"],
+    "expected_pos": [["어디", "NP"], ["가", "VV"], ["세요", "EP+EF"], ["?", "SF"]]
+  },
+  {
+    "input": "저는 학생입니다",
+    "expected_morphs": ["저", "는", "학생", "이", "ㅂ니다"],
+    "expected_pos": [["저", "NP"], ["는", "JX"], ["학생", "NNG"], ["이", "VCP"], ["ㅂ니다", "EF"]]
+  },
+  {
+    "input": "이름이 뭐예요?",
+    "expected_morphs": ["이름", "이", "뭐", "예요", "?"],
+    "expected_pos": [["이름", "NNG"], ["이", "JKS"], ["뭐", "NP"], ["예요", "EF"], ["?", "SF"]]
+  },
+  {
+    "input": "만나서 반가워요",
+    "expected_morphs": ["만나", "서", "반갑", "어요"],
+    "expected_pos": [["만나", "VV"], ["서", "EC"], ["반갑", "VA"], ["어요", "EF"]]
+  },
+  {
+    "input": "내일 봐요",
+    "expected_morphs": ["내일", "보", "아요"],
+    "expected_pos": [["내일", "NNG"], ["보", "VV"], ["아요", "EF"]]
+  },
+  {
+    "input": "잘 자요",
+    "expected_morphs": ["잘", "자", "아요"],
+    "expected_pos": [["잘", "MAG"], ["자", "VV"], ["아요", "EF"]]
+  },
+  {
+    "input": "다녀오겠습니다",
+    "expected_morphs": ["다녀오", "겠", "습니다"],
+    "expected_pos": [["다녀오", "VV"], ["겠", "EP"], ["습니다", "EF"]]
+  },
+  {
+    "input": "수고하셨습니다",
+    "expected_morphs": ["수고", "하", "시", "었", "습니다"],
+    "expected_pos": [["수고", "NNG"], ["하", "XSV"], ["시", "EP"], ["었", "EP"], ["습니다", "EF"]]
+  },
+  {
+    "input": "죄송합니다",
+    "expected_morphs": ["죄송", "하", "ㅂ니다"],
+    "expected_pos": [["죄송", "NNG"], ["하", "XSV"], ["ㅂ니다", "EF"]]
+  },
+  {
+    "input": "괜찮아요",
+    "expected_morphs": ["괜찮", "아요"],
+    "expected_pos": [["괜찮", "VA"], ["아요", "EF"]]
+  },
+  {
+    "input": "알겠습니다",
+    "expected_morphs": ["알", "겠", "습니다"],
+    "expected_pos": [["알", "VV"], ["겠", "EP"], ["습니다", "EF"]]
+  },
+  {
+    "input": "네 맞아요",
+    "expected_morphs": ["네", "맞", "아요"],
+    "expected_pos": [["네", "IC"], ["맞", "VV"], ["아요", "EF"]]
+  },
+  {
+    "input": "아니요 틀려요",
+    "expected_morphs": ["아니요", "틀리", "어요"],
+    "expected_pos": [["아니요", "IC"], ["틀리", "VV"], ["어요", "EF"]]
+  },
+  {
+    "input": "조금만 기다려 주세요",
+    "expected_morphs": ["조금", "만", "기다리", "어", "주", "세요"],
+    "expected_pos": [["조금", "NNG"], ["만", "JX"], ["기다리", "VV"], ["어", "EC"], ["주", "VX"], ["세요", "EP+EF"]]
+  },
+  {
+    "input": "커피 한 잔 주세요",
+    "expected_morphs": ["커피", "한", "잔", "주", "세요"],
+    "expected_pos": [["커피", "NNG"], ["한", "MM"], ["잔", "NNB"], ["주", "VV"], ["세요", "EP+EF"]]
+  },
+  {
+    "input": "얼마예요?",
+    "expected_morphs": ["얼마", "예요", "?"],
+    "expected_pos": [["얼마", "NP"], ["예요", "EF"], ["?", "SF"]]
+  },
+  {
+    "input": "여기 앉아도 돼요?",
+    "expected_morphs": ["여기", "앉", "아도", "되", "어요", "?"],
+    "expected_pos": [["여기", "NP"], ["앉", "VV"], ["아도", "EC"], ["되", "VV"], ["어요", "EF"], ["?", "SF"]]
+  },
+  {
+    "input": "화장실이 어디예요?",
+    "expected_morphs": ["화장실", "이", "어디", "예요", "?"],
+    "expected_pos": [["화장실", "NNG"], ["이", "JKS"], ["어디", "NP"], ["예요", "EF"], ["?", "SF"]]
+  },
+  {
+    "input": "오늘 뭐 해요?",
+    "expected_morphs": ["오늘", "뭐", "하", "아요", "?"],
+    "expected_pos": [["오늘", "NNG"], ["뭐", "NP"], ["하", "VV"], ["아요", "EF"], ["?", "SF"]]
+  },
+  {
+    "input": "집에 가고 싶어요",
+    "expected_morphs": ["집", "에", "가", "고", "싶", "어요"],
+    "expected_pos": [["집", "NNG"], ["에", "JKB"], ["가", "VV"], ["고", "EC"], ["싶", "VX"], ["어요", "EF"]]
+  },
+  {
+    "input": "배고파요",
+    "expected_morphs": ["배고프", "아요"],
+    "expected_pos": [["배고프", "VA"], ["아요", "EF"]]
+  },
+  {
+    "input": "피곤해요",
+    "expected_morphs": ["피곤", "하", "아요"],
+    "expected_pos": [["피곤", "NNG"], ["하", "XSV"], ["아요", "EF"]]
+  },
+  {
+    "input": "기분이 좋아요",
+    "expected_morphs": ["기분", "이", "좋", "아요"],
+    "expected_pos": [["기분", "NNG"], ["이", "JKS"], ["좋", "VA"], ["아요", "EF"]]
+  },
+  {
+    "input": "정말요?",
+    "expected_morphs": ["정말", "요", "?"],
+    "expected_pos": [["정말", "MAG"], ["요", "JX"], ["?", "SF"]]
+  },
+  {
+    "input": "그래요",
+    "expected_morphs": ["그렇", "어요"],
+    "expected_pos": [["그렇", "VA"], ["어요", "EF"]]
+  },
+  {
+    "input": "좋아요",
+    "expected_morphs": ["좋", "아요"],
+    "expected_pos": [["좋", "VA"], ["아요", "EF"]]
+  },
+  {
+    "input": "싫어요",
+    "expected_morphs": ["싫", "어요"],
+    "expected_pos": [["싫", "VA"], ["어요", "EF"]]
+  },
+  {
+    "input": "모르겠어요",
+    "expected_morphs": ["모르", "겠", "어요"],
+    "expected_pos": [["모르", "VV"], ["겠", "EP"], ["어요", "EF"]]
+  },
+  {
+    "input": "알았어요",
+    "expected_morphs": ["알", "았", "어요"],
+    "expected_pos": [["알", "VV"], ["았", "EP"], ["어요", "EF"]]
+  },
+  {
+    "input": "이거 뭐예요?",
+    "expected_morphs": ["이거", "뭐", "예요", "?"],
+    "expected_pos": [["이거", "NP"], ["뭐", "NP"], ["예요", "EF"], ["?", "SF"]]
+  },
+  {
+    "input": "저거 주세요",
+    "expected_morphs": ["저거", "주", "세요"],
+    "expected_pos": [["저거", "NP"], ["주", "VV"], ["세요", "EP+EF"]]
+  },
+  {
+    "input": "맛있어요",
+    "expected_morphs": ["맛있", "어요"],
+    "expected_pos": [["맛있", "VA"], ["어요", "EF"]]
+  },
+  {
+    "input": "맛없어요",
+    "expected_morphs": ["맛없", "어요"],
+    "expected_pos": [["맛없", "VA"], ["어요", "EF"]]
+  },
+  {
+    "input": "예뻐요",
+    "expected_morphs": ["예쁘", "어요"],
+    "expected_pos": [["예쁘", "VA"], ["어요", "EF"]]
+  },
+  {
+    "input": "멋있어요",
+    "expected_morphs": ["멋있", "어요"],
+    "expected_pos": [["멋있", "VA"], ["어요", "EF"]]
+  },
+  {
+    "input": "재미있어요",
+    "expected_morphs": ["재미있", "어요"],
+    "expected_pos": [["재미있", "VA"], ["어요", "EF"]]
+  },
+  {
+    "input": "어려워요",
+    "expected_morphs": ["어렵", "어요"],
+    "expected_pos": [["어렵", "VA"], ["어요", "EF"]]
+  },
+  {
+    "input": "쉬워요",
+    "expected_morphs": ["쉽", "어요"],
+    "expected_pos": [["쉽", "VA"], ["어요", "EF"]]
+  },
+  {
+    "input": "빨라요",
+    "expected_morphs": ["빠르", "아요"],
+    "expected_pos": [["빠르", "VA"], ["아요", "EF"]]
+  },
+  {
+    "input": "느려요",
+    "expected_morphs": ["느리", "어요"],
+    "expected_pos": [["느리", "VA"], ["어요", "EF"]]
+  },
+  {
+    "input": "시간이 없어요",
+    "expected_morphs": ["시간", "이", "없", "어요"],
+    "expected_pos": [["시간", "NNG"], ["이", "JKS"], ["없", "VA"], ["어요", "EF"]]
+  },
+  {
+    "input": "도움이 필요해요",
+    "expected_morphs": ["도움", "이", "필요", "하", "아요"],
+    "expected_pos": [["도움", "NNG"], ["이", "JKS"], ["필요", "NNG"], ["하", "XSV"], ["아요", "EF"]]
+  },
+  {
+    "input": "전화해 주세요",
+    "expected_morphs": ["전화", "하", "어", "주", "세요"],
+    "expected_pos": [["전화", "NNG"], ["하", "XSV"], ["어", "EC"], ["주", "VX"], ["세요", "EP+EF"]]
+  },
+  {
+    "input": "다시 한번 말씀해 주세요",
+    "expected_morphs": ["다시", "한번", "말씀", "하", "어", "주", "세요"],
+    "expected_pos": [["다시", "MAG"], ["한번", "NNG"], ["말씀", "NNG"], ["하", "XSV"], ["어", "EC"], ["주", "VX"], ["세요", "EP+EF"]]
+  }
+]

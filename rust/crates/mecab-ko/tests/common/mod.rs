@@ -159,13 +159,9 @@ pub fn get_fixtures_path() -> PathBuf {
 
 /// Get path to golden tests directory
 pub fn get_golden_path() -> PathBuf {
-    // CARGO_MANIFEST_DIR = /home/mare/mecab-ko/rust/crates/mecab-ko
-    // Golden tests are in /home/mare/mecab-ko/tests/golden
+    // CARGO_MANIFEST_DIR = mecab-ko/rust/crates/mecab-ko
+    // Golden tests are in mecab-ko/rust/crates/mecab-ko/tests/golden
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .parent() // crates
-        .and_then(|p| p.parent()) // rust
-        .and_then(|p| p.parent()) // mecab-ko
-        .expect("Failed to get project root directory")
         .join("tests")
         .join("golden")
 }
