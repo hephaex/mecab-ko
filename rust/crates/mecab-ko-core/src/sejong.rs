@@ -3537,9 +3537,11 @@ impl SejongConverter {
             }
         }
 
-        // 32차 보정: 피동 동사 분리 "VV" → "VV + 리/VX"
+        // 32차 보정: 피동 동사 분리 "VV" → "VV + 리/이/VX"
         // "들리/VV + 다/EF" → "들/VV + 리/VX + 다/EF"
+        // "보이/VV + 다/EF" → "보/VV + 이/VX + 다/EF"
         let passive_verbs: std::collections::HashMap<&str, (&str, &str)> = [
+            // -리- 피동
             ("들리", ("들", "리")),
             ("열리", ("열", "리")),
             ("걸리", ("걸", "리")),
@@ -3550,6 +3552,23 @@ impl SejongConverter {
             ("풀리", ("풀", "리")),
             ("팔리", ("팔", "리")),
             ("불리", ("불", "리")),
+            // -이- 피동
+            ("보이", ("보", "이")),
+            ("쓰이", ("쓰", "이")),
+            ("덮이", ("덮", "이")),
+            ("놓이", ("놓", "이")),
+            ("쌓이", ("쌓", "이")),
+            ("먹이", ("먹", "이")),
+            // -히- 피동
+            ("잡히", ("잡", "히")),
+            ("읽히", ("읽", "히")),
+            ("막히", ("막", "히")),
+            ("묻히", ("묻", "히")),
+            ("닫히", ("닫", "히")),
+            ("꽂히", ("꽂", "히")),
+            // -기- 피동
+            ("안기", ("안", "기")),
+            ("쫓기", ("쫓", "기")),
         ]
         .into_iter()
         .collect();
@@ -5422,6 +5441,95 @@ impl SejongConverter {
         }
         for idx in ge_ec_indices {
             tokens[idx].pos = "EC".to_string();
+        }
+
+        // 111차 보정: NNG로 오분석된 "가고/보고/하고" 등을 VV+EC로 분리
+        // "가고 있다" = "가고/NNG 있/VA" → "가/VV 고/EC 있/VX"
+        let vv_ec_patterns: std::collections::HashMap<&str, (&str, &str)> = [
+            // "VV어간 + 고" 패턴
+            ("가고", ("가", "VV")),
+            ("오고", ("오", "VV")),
+            ("보고", ("보", "VV")),
+            ("하고", ("하", "VV")),
+            ("되고", ("되", "VV")),
+            ("먹고", ("먹", "VV")),
+            ("읽고", ("읽", "VV")),
+            ("쓰고", ("쓰", "VV")),
+            ("주고", ("주", "VV")),
+            ("사고", ("사", "VV")),
+            ("자고", ("자", "VV")),
+            ("나고", ("나", "VV")),
+            ("서고", ("서", "VV")),
+            ("살고", ("살", "VV")),
+            ("알고", ("알", "VV")),
+            ("듣고", ("듣", "VV")),
+            ("걷고", ("걷", "VV")),
+            ("만나고", ("만나", "VV")),
+            ("기다리고", ("기다리", "VV")),
+        ].into_iter().collect();
+
+        let mut vv_ec_splits: Vec<(usize, String, String)> = Vec::new();
+        for i in 0..tokens.len() {
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+
+            // NNG로 분석된 경우에만 VV+EC로 분리
+            if curr_pos == "NNG" {
+                if let Some((stem, pos)) = vv_ec_patterns.get(curr_surface.as_str()) {
+                    // 다음 토큰이 VX 또는 VV+EF인 경우만 분리 (있다, 싶다 등)
+                    if i + 1 < tokens.len() {
+                        let next_surface = &tokens[i + 1].surface;
+                        let next_pos = &tokens[i + 1].pos;
+                        if next_surface == "있" || next_surface == "싶" || next_surface == "없"
+                            || next_pos == "VX" || next_pos == "VA" || next_pos == "VV"
+                            || next_pos == "NNP" // "싶어요/NNP" 같은 오분석
+                        {
+                            vv_ec_splits.push((i, stem.to_string(), pos.to_string()));
+                        }
+                    }
+                }
+            }
+        }
+
+        // 뒤에서부터 처리하여 인덱스 밀림 방지
+        for (idx, stem, pos) in vv_ec_splits.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx].end_pos;
+            let mid = start + stem.len();
+
+            // 원래 토큰을 VV 어간으로 변환
+            tokens[idx] = SejongToken::new(&stem, &pos, start, mid);
+            // "고/EC" 토큰 삽입
+            tokens.insert(idx + 1, SejongToken::new("고", "EC", mid, end));
+
+            // 다음 토큰의 "있/VA" → "있/VX" 변환
+            if idx + 2 < tokens.len() {
+                if tokens[idx + 2].surface == "있" && tokens[idx + 2].pos == "VA" {
+                    tokens[idx + 2].pos = "VX".to_string();
+                }
+            }
+        }
+
+        // 112차 보정: "보고 싶어요" 패턴에서 "싶어요/NNP" 분리
+        // "보고/NNG 싶어요/NNP" → "보/VV 고/EC 싶/VX 어요/EF"
+        let mut nnp_vx_ef_splits: Vec<usize> = Vec::new();
+        for i in 0..tokens.len() {
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+
+            // "싶어요/NNP"를 VX+EF로 분리
+            if curr_pos == "NNP" && curr_surface == "싶어요" {
+                nnp_vx_ef_splits.push(i);
+            }
+        }
+
+        for idx in nnp_vx_ef_splits.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx].end_pos;
+            let mid = start + "싶".len();
+
+            tokens[idx] = SejongToken::new("싶", "VX", start, mid);
+            tokens.insert(idx + 1, SejongToken::new("어요", "EF", mid, end));
         }
     }
 
