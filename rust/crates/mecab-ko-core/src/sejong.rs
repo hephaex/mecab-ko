@@ -6046,17 +6046,24 @@ impl SejongConverter {
 
         // 114차 보정: "으면서/EF" → "으면서/EC" (문장 중간 연결어미)
         // "먹으면서 갔다"에서 "먹/VV 으면서/EC"
+        // 128차 확장: "아서/EF", "어서/EF" 등 추가
         let mut ef_to_ec_final: Vec<usize> = Vec::new();
         for i in 0..tokens.len() {
             let curr_surface = &tokens[i].surface;
             let curr_pos = &tokens[i].pos;
 
-            // "면서" 계열이 EF로 분석된 경우 EC로 변환
+            // "면서", "아서", "어서" 계열이 EF로 분석된 경우 EC로 변환
             if curr_pos == "EF"
                 && (curr_surface == "으면서"
                     || curr_surface == "면서"
                     || curr_surface == "으며"
-                    || curr_surface == "며")
+                    || curr_surface == "며"
+                    || curr_surface == "아서"  // 128차 추가
+                    || curr_surface == "어서"  // 128차 추가
+                    || curr_surface == "니까"  // 128차 추가
+                    || curr_surface == "으니까"  // 128차 추가
+                    || curr_surface == "니"  // 128차 추가
+                    || curr_surface == "으니")  // 128차 추가
             {
                 // 마지막 토큰이 아닌 경우만 EC로 변환
                 if i + 1 < tokens.len() {
@@ -6261,6 +6268,7 @@ impl SejongConverter {
             tokens[idx].pos = "VA".to_string();
             tokens.insert(idx + 1, SejongToken::new("다", "EF", start, end));
         }
+
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
