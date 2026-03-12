@@ -2236,7 +2236,10 @@ fn run_evaluate(
                 let sejong_tokens = conv.convert_tokens(&raw_tokens);
                 sejong_tokens
                     .iter()
-                    .map(|t| format!("{}/{}", t.surface, t.pos))
+                    .map(|t| {
+                        let normalized = SejongConverter::normalize_jamo(&t.surface);
+                        format!("{}/{}", normalized, t.pos)
+                    })
                     .collect::<Vec<_>>()
                     .join(" ")
             } else {
@@ -2245,11 +2248,12 @@ fn run_evaluate(
 
             // Check if sentence matches using the same logic as evaluate function
             let matches = if converter.is_some() {
-                // For sejong mode, compare with converted tokens
+                // For sejong mode, compare with converted tokens (with jamo normalization)
                 let sejong_tokens = converter.as_ref().unwrap().convert_tokens(&raw_tokens);
                 gold_sentence.tokens.len() == sejong_tokens.len()
                     && gold_sentence.tokens.iter().zip(&sejong_tokens).all(|(g, p)| {
-                        g.surface == p.surface && g.pos == p.pos
+                        let normalized_surface = SejongConverter::normalize_jamo(&p.surface);
+                        g.surface == normalized_surface && g.pos == p.pos
                     })
             } else {
                 gold_sentence.tokens.len() == raw_tokens.len()
