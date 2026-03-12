@@ -6761,6 +6761,8 @@ impl SejongConverter {
         // 139차 보정: 독립 VX → VV 변환
         // "하/VV + 니까/EC + 보/VX" 패턴에서 보/VX → 보/VV
         // 조건: VX 앞에 EC가 있고, VX가 1글자 동사인 경우
+        // 145차: 단, "어/EC" 또는 "아/EC" 뒤의 보조동사는 유지
+        // "해 보았다" = "하/VV 어/EC 보/VX 았/EP 다/EF"
         let independent_vx: std::collections::HashSet<&str> =
             ["보", "하", "가", "오"].into_iter().collect();
 
@@ -6771,7 +6773,11 @@ impl SejongConverter {
             // VX가 1글자이고 앞에 EC가 있는 경우
             if pos == "VX" && independent_vx.contains(surface.as_str()) {
                 if i > 0 && tokens[i - 1].pos == "EC" {
-                    tokens[i].pos = "VV".to_string();
+                    // "어/EC" 또는 "아/EC" 뒤의 보조동사는 VX 유지 (보조 용언 구문)
+                    let prev_surface = &tokens[i - 1].surface;
+                    if prev_surface != "어" && prev_surface != "아" {
+                        tokens[i].pos = "VV".to_string();
+                    }
                 }
             }
         }
