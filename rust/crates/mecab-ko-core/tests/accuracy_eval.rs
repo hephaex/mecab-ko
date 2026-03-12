@@ -1502,3 +1502,95 @@ fn test_ef_error_cases_detailed() {
     }
     println!("통과: {}/{} ({:.1}%)", passed, total, passed as f64 / total as f64 * 100.0);
 }
+
+/// VCP 에러 패턴 sample.tsv에서 분석
+#[test]
+fn test_vcp_sample_errors() {
+    use mecab_ko_core::evaluate::TestDataset;
+    use mecab_ko_core::sejong::SejongConverter;
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
+        .unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or(std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH")
+        .unwrap_or_else(|_| {
+            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
+                .to_string_lossy()
+                .to_string()
+        });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path)
+        .expect("Failed to create tokenizer");
+
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let converter = SejongConverter::new();
+
+    let eval_path = std::env::var("MECAB_EVAL_PATH")
+        .unwrap_or_else(|_| {
+            project_root.join("data/eval/sample.tsv")
+                .to_string_lossy()
+                .to_string()
+        });
+
+    let dataset = TestDataset::from_tsv(&eval_path)
+        .expect("Failed to load test dataset");
+
+    println!("\n=== VCP 에러 분석 (sample.tsv) ===");
+    let mut error_count = 0;
+    let max_errors = 30;
+
+    for sentence in &dataset.sentences {
+        if error_count >= max_errors {
+            break;
+        }
+
+        let tokens = tokenizer.tokenize(&sentence.text);
+        let sejong_tokens = converter.convert_tokens(&tokens);
+
+        for (i, gold) in sentence.tokens.iter().enumerate() {
+            if gold.pos == "VCP" {
+                let pred = if i < sejong_tokens.len() {
+                    format!("{}/{}", sejong_tokens[i].surface, sejong_tokens[i].pos)
+                } else {
+                    "MISSING".to_string()
+                };
+
+                if !pred.ends_with("/VCP") {
+                    error_count += 1;
+                    println!("문장: {}", sentence.text);
+                    println!("  정답: {}/VCP → 예측: {}", gold.surface, pred);
+
+                    // 전체 예측 결과 출력
+                    let pred_all: Vec<String> = sejong_tokens.iter()
+                        .map(|t| format!("{}/{}", t.surface, t.pos))
+                        .collect();
+                    println!("  예측 전체: {}", pred_all.join(" "));
+
+                    // 정답 전체 출력
+                    let gold_all: Vec<String> = sentence.tokens.iter()
+                        .map(|t| format!("{}/{}", t.surface, t.pos))
+                        .collect();
+                    println!("  정답 전체: {}", gold_all.join(" "));
+                    println!();
+
+                    if error_count >= max_errors {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    println!("VCP 오류 총 {}개 발견", error_count);
+}

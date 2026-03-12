@@ -5663,6 +5663,38 @@ impl SejongConverter {
             tokens[idx].pos = "VX".to_string();
             // ETM은 이미 분리되어 있거나 다음 토큰으로 처리됨
         }
+
+        // 119차 보정: NNG + "다/NNG" → NNG + "이/VCP + 다/EF"
+        // "레게노다"에서 "레게노/NNG 다/NNG" → "레게노/NNG 이/VCP 다/EF"
+        // 신조어+이다 패턴 보정
+        let mut vcp_insert_indices: Vec<usize> = Vec::new();
+        for i in 1..tokens.len() {
+            let prev_pos = &tokens[i - 1].pos;
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+
+            // NNG + "다/NNG" 패턴 → VCP 삽입 필요
+            if (prev_pos == "NNG" || prev_pos == "NNP")
+                && curr_surface == "다"
+                && curr_pos == "NNG"
+            {
+                // 이전 토큰의 마지막 글자 확인 (받침 있으면 이/VCP, 없으면 다/EF만)
+                let prev_surface = &tokens[i - 1].surface;
+                if let Some(last_char) = prev_surface.chars().last() {
+                    // 받침 없는 경우만 VCP 삽입 (레게노, 존맛탱 등)
+                    // 받침 있는 경우는 다른 패턴일 수 있음
+                    if !Self::has_jongseong(last_char) {
+                        vcp_insert_indices.push(i);
+                    }
+                }
+            }
+        }
+        for idx in vcp_insert_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            // "다/NNG" → "이/VCP" + "다/EF"
+            tokens[idx] = SejongToken::new("다", "EF", start, start);
+            tokens.insert(idx, SejongToken::new("이", "VCP", start, start));
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
