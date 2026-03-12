@@ -6484,6 +6484,47 @@ impl SejongConverter {
                 }
             }
         }
+
+        // 136차 보정: "~세/VV + 아요/EF" → "VV + 세요/EF"
+        // "오세요"가 세종 변환 후 "오세/VV + 아요/EF"로 되는 경우
+        // 동사 어간 + 세 → 동사 어간 + 세요/EF
+        let mut fix_seyo_indices: Vec<(usize, String)> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(1) {
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+            let next_surface = &tokens[i + 1].surface;
+            let next_pos = &tokens[i + 1].pos;
+
+            // ~세/VV + 아요/EF 패턴 (세종 변환 후)
+            if curr_pos == "VV"
+                && curr_surface.ends_with("세")
+                && curr_surface.chars().count() >= 2
+                && next_surface == "아요"
+                && next_pos == "EF"
+            {
+                // 동사 어간 추출 (세 제거)
+                let stem: String = curr_surface
+                    .chars()
+                    .take(curr_surface.chars().count() - 1)
+                    .collect();
+                fix_seyo_indices.push((i, stem));
+            }
+        }
+
+        for (idx, stem) in fix_seyo_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = if idx + 1 < tokens.len() {
+                tokens[idx + 1].end_pos
+            } else {
+                tokens[idx].end_pos
+            };
+            // 동사 어간으로 변경
+            tokens[idx].surface = stem;
+            // 아요를 세요로 변경
+            tokens[idx + 1].surface = "세요".to_string();
+            tokens[idx + 1].start_pos = start;
+            tokens[idx + 1].end_pos = end;
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
