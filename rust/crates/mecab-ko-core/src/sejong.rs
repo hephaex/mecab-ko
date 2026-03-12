@@ -2428,6 +2428,25 @@ impl SejongConverter {
                 merged = true;
             }
 
+            // 우선 패턴 C: "순/NNG + 우리/NP + 말/NNG" → "순/XPN + 우리말/NNG"
+            // MeCab이 "순우리말"을 잘못 분리하는 문제 수정
+            if !merged
+                && i + 2 < tokens.len()
+                && tokens[i].surface == "순"
+                && tokens[i].pos == "NNG"
+                && tokens[i + 1].surface == "우리"
+                && tokens[i + 1].pos == "NP"
+                && tokens[i + 2].surface == "말"
+                && tokens[i + 2].pos == "NNG"
+            {
+                let start = tokens[i].start_pos;
+                let end = tokens[i + 2].end_pos;
+                tokens[i] = SejongToken::new("순", "XPN", start, start + 1);
+                tokens[i + 1] = SejongToken::new("우리말", "NNG", start + 1, end);
+                tokens.remove(i + 2);
+                merged = true;
+            }
+
             // 패턴 1: "친/VV + ᆫ/ETM + 구와/NNG" → "친구/NNG + 와/JC"
             // (친구와가 치/VV+ᆫ/ETM+구와/NNG로 분석되는 문제 수정)
             if i + 2 < tokens.len()
