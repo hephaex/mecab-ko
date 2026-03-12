@@ -9,14 +9,24 @@ fn main() {
     let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
     let converter = SejongConverter::new();
 
-    // EC 패턴 테스트
+    // 사용자 사전 로드 테스트
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = mecab_ko_dict::UserDictionary::new();
+        if user_dict.load_from_csv(&user_dict_path).is_ok() {
+            tokenizer.set_user_dict(user_dict);
+            println!("Loaded user dictionary\n");
+        }
+    }
+
+    // 토큰 경계 테스트
     let test_cases = vec![
-        ("빠르면", "빠르/VA 면/EC"),
-        ("다르면", "다르/VA 면/EC"),
-        ("모르면", "모르/VV 면/EC"),
+        ("올해", "올해/NNG"),
+        ("내년", "내년/NNG"),
+        ("산책을 했어요", "산책/NNG 을/JKO 하/VV 았/EP 어요/EF"),
     ];
 
-    println!("=== EC 패턴 테스트 ===\n");
+    println!("=== 토큰 경계 테스트 ===\n");
 
     for (text, gold) in test_cases {
         let tokens = tokenizer.tokenize(text);
