@@ -6225,6 +6225,42 @@ impl SejongConverter {
                 last.pos = "EF".to_string();
             }
         }
+
+        // 127차 보정: 형용사 기본형 NNP → VA + 다/EF
+        // "크다/NNP" → "크/VA 다/EF"
+        // "예쁘다/NNP" → "예쁘/VA 다/EF"
+        // MeCab이 형용사 기본형을 NNP로 잘못 분석하는 경우
+        let adjective_stems: std::collections::HashSet<&str> = [
+            "크", "작", "예쁘", "귀엽", "멋지", "아름답", "못생기",
+            "높", "낮", "길", "짧", "넓", "좁", "두껍", "얇",
+            "무겁", "가볍", "빠르", "느리", "밝", "어두",
+            "덥", "춥", "시원하", "따뜻하", "뜨겁", "차갑",
+        ]
+        .into_iter()
+        .collect();
+
+        let mut nnp_to_va_split: Vec<usize> = Vec::new();
+        for (i, token) in tokens.iter().enumerate() {
+            if token.pos == "NNP" && token.surface.ends_with("다") {
+                // "다"를 제거하고 어간 확인
+                let stem: String = token.surface.chars().take(token.surface.chars().count() - 1).collect();
+                if adjective_stems.contains(stem.as_str()) {
+                    nnp_to_va_split.push(i);
+                }
+            }
+        }
+
+        for idx in nnp_to_va_split.into_iter().rev() {
+            let surface = &tokens[idx].surface;
+            let stem: String = surface.chars().take(surface.chars().count() - 1).collect();
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx].end_pos;
+
+            // NNP → VA + 다/EF
+            tokens[idx].surface = stem;
+            tokens[idx].pos = "VA".to_string();
+            tokens.insert(idx + 1, SejongToken::new("다", "EF", start, end));
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
