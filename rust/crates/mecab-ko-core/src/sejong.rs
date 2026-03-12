@@ -337,6 +337,12 @@ impl SejongConverter {
             vec!["VCP".to_string(), "EF".to_string()],
         );
 
+        // EP+EP (존칭+과거 복합) - "셨" = "시/EP + 었/EP"
+        self.tag_map.insert(
+            "EP+EP".to_string(),
+            vec!["EP".to_string(), "EP".to_string()],
+        );
+
         // 체언 + 격조사
         self.tag_map.insert(
             "NNG+JKS".to_string(),
@@ -853,10 +859,25 @@ impl SejongConverter {
             return vec![(surface.to_string(), pos.to_string())];
         }
 
+        // EP+EP (존칭+과거 복합) 특별 처리
+        // "셨" → "시/EP + 었/EP", "셨어" → "시/EP + 었/EP + 어/EF" 아님
+        // EP+EP는 단일 형태소 "셨"을 두 개의 EP로 분리
+        if pos == "EP+EP" {
+            // "셨" = "시(존칭)" + "었(과거)"
+            if surface == "셨" {
+                return vec![
+                    ("시".to_string(), "EP".to_string()),
+                    ("었".to_string(), "EP".to_string()),
+                ];
+            }
+            // "았" 계열도 처리 (필요시)
+            // 일반적으로 EP+EP는 위 케이스만 해당
+        }
+
         // 중복 태그 처리: "JKB+JKB" 같은 경우 첫 번째 태그만 사용
-        // 이는 사전 버그로 발생하는 패턴
+        // 이는 사전 버그로 발생하는 패턴 (EP+EP 제외)
         let tags = self.split_compound_tag(pos);
-        if tags.len() >= 2 && tags[0] == tags[1] {
+        if tags.len() >= 2 && tags[0] == tags[1] && pos != "EP+EP" {
             return vec![(surface.to_string(), tags[0].clone())];
         }
 
@@ -2067,8 +2088,9 @@ impl SejongConverter {
         .collect();
 
         // 강제 매핑이 필요한 품사 집합 (잘못 인식되는 품사들)
+        // 주의: EP(선어말어미)는 제외 - "시/EP"(존칭)가 "시/NNB"(시간)로 덮어쓰이는 것 방지
         let overridable_poses: std::collections::HashSet<&str> =
-            ["EF", "EC", "EP", "VV", "VA", "NNG", "NNP", "IC", "MAG"].into_iter().collect();
+            ["EF", "EC", "VV", "VA", "NNG", "NNP", "IC", "MAG"].into_iter().collect();
 
         for token in tokens.iter_mut() {
             // 오버라이드 대상 품사인 경우에만 적용

@@ -1346,3 +1346,85 @@ fn test_vx_pattern_debug() {
         println!();
     }
 }
+
+/// EP 에러 패턴 디버깅
+#[test]
+fn test_ep_error_analysis() {
+    use mecab_ko_core::sejong::SejongConverter;
+
+    // 프로젝트 루트 경로 계산
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
+        .unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or(std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH")
+        .unwrap_or_else(|_| {
+            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
+                .to_string_lossy()
+                .to_string()
+        });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path)
+        .expect("Failed to create tokenizer");
+
+    // 사용자 사전 로드
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let converter = SejongConverter::new();
+
+    // EP 관련 테스트 케이스 (sample.tsv 기반)
+    let test_cases = [
+        // 과거 시제
+        ("갔다", "가/VV 았/EP 다/EF"),
+        ("먹었습니다", "먹/VV 었/EP 습니다/EF"),
+        ("만났어요", "만나/VV 았/EP 어요/EF"),
+        ("봤다", "보/VV 았/EP 다/EF"),
+        ("했다", "하/VV 았/EP 다/EF"),
+        ("왔다", "오/VV 았/EP 다/EF"),
+        // 추측/의지
+        ("가겠다", "가/VV 겠/EP 다/EF"),
+        ("먹겠다", "먹/VV 겠/EP 다/EF"),
+        ("하겠습니다", "하/VV 겠/EP 습니다/EF"),
+        // 존칭
+        ("오셨습니다", "오/VV 시/EP 었/EP 습니다/EF"),
+        ("드시겠어요", "드/VV 시/EP 겠/EP 어요/EF"),
+        ("계십니다", "계/VV 시/EP ㅂ니다/EF"),
+        // 보조용언 + EP
+        ("먹어 버렸다", "먹/VV 어/EC 버리/VX 었/EP 다/EF"),
+        ("해 보았다", "하/VV 어/EC 보/VX 았/EP 다/EF"),
+        ("해주셨다", "하/VV 어/EC 주/VX 시/EP 었/EP 다/EF"),
+    ];
+
+    println!("\n=== EP 에러 분석 ===");
+    let mut passed = 0;
+    let total = test_cases.len();
+    for (input, expected) in test_cases {
+        let tokens = tokenizer.tokenize(input);
+        let mecab_output: Vec<String> = tokens.iter().map(|t| format!("{}/{}", t.surface, t.pos)).collect();
+
+        let sejong_tokens = converter.convert_tokens(&tokens);
+        let result = converter.format_sejong(&sejong_tokens);
+
+        let is_match = result == expected;
+        if is_match {
+            passed += 1;
+        }
+        let match_status = if is_match { "✓" } else { "✗" };
+        println!("{} \"{}\"", match_status, input);
+        println!("   MeCab:  {:?}", mecab_output);
+        println!("   Sejong: {}", result);
+        println!("   예상:   {}", expected);
+        println!();
+    }
+    println!("통과: {}/{} ({:.1}%)", passed, total, passed as f64 / total as f64 * 100.0);
+}
