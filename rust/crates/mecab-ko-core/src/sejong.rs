@@ -6468,6 +6468,22 @@ impl SejongConverter {
             tokens[idx].pos = "VV".to_string();
             tokens.insert(idx + 1, SejongToken::new("다", "EF", start, end));
         }
+
+        // 135차 보정: 동사 기본형 뒤 XSV → VV
+        // "하다 했다"에서 두 번째 "하/XSV" → "하/VV"
+        // 다/EF 바로 뒤에 오는 하/XSV는 독립 동사로 변환
+        for i in 1..tokens.len() {
+            if i >= 2 {
+                let prev_pos = &tokens[i - 1].pos;
+                let curr_surface = &tokens[i].surface;
+                let curr_pos = &tokens[i].pos;
+
+                // 이전 토큰이 다/EF이고 현재 토큰이 하/XSV인 경우
+                if prev_pos == "EF" && curr_surface == "하" && curr_pos == "XSV" {
+                    tokens[i].pos = "VV".to_string();
+                }
+            }
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
