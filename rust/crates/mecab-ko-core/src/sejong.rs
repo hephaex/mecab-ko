@@ -6269,6 +6269,22 @@ impl SejongConverter {
             tokens.insert(idx + 1, SejongToken::new("다", "EF", start, end));
         }
 
+        // 129차 보정: 일반명사가 NNP로 분석된 경우 NNG로 변환
+        // "인공지능/NNP" → "인공지능/NNG"
+        // MeCab이 일반명사를 고유명사로 잘못 분석하는 경우
+        let common_nouns: std::collections::HashSet<&str> = [
+            "인공지능", "머신러닝", "딥러닝", "빅데이터", "클라우드",
+            "인터넷", "컴퓨터", "소프트웨어", "하드웨어", "프로그램",
+            "알고리즘", "데이터베이스", "네트워크", "서버", "클라이언트",
+        ]
+        .into_iter()
+        .collect();
+
+        for token in tokens.iter_mut() {
+            if token.pos == "NNP" && common_nouns.contains(token.surface.as_str()) {
+                token.pos = "NNG".to_string();
+            }
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
