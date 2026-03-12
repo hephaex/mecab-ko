@@ -5695,6 +5695,37 @@ impl SejongConverter {
             tokens[idx] = SejongToken::new("다", "EF", start, start);
             tokens.insert(idx, SejongToken::new("이", "VCP", start, start));
         }
+
+        // 120차 보정: NNG + "이/VCP + 오/EC" → VV + "아요/EF" (문장 끝에서)
+        // "만나요"에서 "만나/NNG 이/VCP 오/EC" → "만나/VV 아요/EF"
+        // MeCab이 "요/VCP+EC"를 분리하면 "이/VCP + 오/EC"가 됨
+        // 받침 없는 NNG + 이/VCP + 오/EC 패턴
+        if tokens.len() >= 3 {
+            let last_idx = tokens.len() - 1;
+            let mid_idx = tokens.len() - 2;
+            let nng_idx = tokens.len() - 3;
+
+            // 마지막이 "오/EC", 중간이 "이/VCP", 첫번째가 NNG인 경우
+            if tokens[last_idx].surface == "오"
+                && tokens[last_idx].pos == "EC"
+                && tokens[mid_idx].surface == "이"
+                && tokens[mid_idx].pos == "VCP"
+                && tokens[nng_idx].pos == "NNG"
+            {
+                // NNG의 마지막 글자 확인
+                if let Some(last_char) = tokens[nng_idx].surface.chars().last() {
+                    // 받침 없는 경우 (만나, 보다 등)
+                    if !Self::has_jongseong(last_char) {
+                        // NNG → VV, 이/VCP + 오/EC → 아요/EF
+                        tokens[nng_idx].pos = "VV".to_string();
+                        let start = tokens[mid_idx].start_pos;
+                        let end = tokens[last_idx].end_pos;
+                        tokens[mid_idx] = SejongToken::new("아요", "EF", start, end);
+                        tokens.remove(last_idx);
+                    }
+                }
+            }
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
