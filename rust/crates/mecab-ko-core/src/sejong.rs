@@ -5746,11 +5746,12 @@ impl SejongConverter {
             }
         }
 
-        // 104차 보정: VV + 어/아/EC + 보조동사VV → VV + EC + VX
+        // 104차 보정: VV + 어/아/EC|EF + 보조동사VV → VV + EC + VX
         // 보조동사: 주다, 보다, 버리다, 내다, 두다, 놓다
         // "추천해 준" = VV + 어/EC + 주/VX
         // "해 보았다" = VV + 어/EC + 보/VX
         // "먹어 버렸다" = VV + 어/EC + 버리/VX
+        // 126차 확장: EF도 EC로 변환 (MeCab이 잘못 EF로 분석하는 경우)
         let auxiliary_verbs: std::collections::HashSet<&str> = [
             "주", "보", "버리", "내", "두", "놓", "오", "가", "드리", "달", "빠지", "치우", "대",
         ]
@@ -5765,13 +5766,14 @@ impl SejongConverter {
                 let aux_surface = &tokens[i + 2].surface;
                 let aux_pos = &tokens[i + 2].pos;
 
-                // VV/VA/XSV + 어/아/EC + 보조동사VV → VX로 변환
+                // VV/VA/XSV + 어/아/EC|EF + 보조동사VV → EC + VX로 변환
                 if (curr_pos == "VV" || curr_pos == "VA" || curr_pos == "XSV")
-                    && next_pos == "EC"
+                    && (next_pos == "EC" || next_pos == "EF")
                     && (next_surface == "어" || next_surface == "아" || next_surface == "여")
                     && aux_pos == "VV"
                     && auxiliary_verbs.contains(aux_surface.as_str())
                 {
+                    tokens[i + 1].pos = "EC".to_string(); // 126차: EF→EC
                     tokens[i + 2].pos = "VX".to_string();
                 }
             }
@@ -6064,6 +6066,23 @@ impl SejongConverter {
         }
         for idx in ef_to_ec_final {
             tokens[idx].pos = "EC".to_string();
+        }
+
+        // 126차 보정: "어/EF" + VX → "어/EC" + VX
+        // "먹어 버렸다"에서 "먹/VV 어/EF 버리/VX" → "먹/VV 어/EC 버리/VX"
+        // 보조용언(VX) 앞의 연결어미는 EC여야 함
+        for i in 0..tokens.len().saturating_sub(1) {
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+            let next_pos = &tokens[i + 1].pos;
+
+            // "어/아/여" + VX 패턴
+            if curr_pos == "EF"
+                && (curr_surface == "어" || curr_surface == "아" || curr_surface == "여")
+                && next_pos == "VX"
+            {
+                tokens[i].pos = "EC".to_string();
+            }
         }
 
         // 115차 보정: "보이/NNG + 이/VCP + 고/EC" → "보이/VV + 고/EC"
