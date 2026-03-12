@@ -9,14 +9,14 @@ fn main() {
     let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
     let converter = SejongConverter::new();
 
-    // VV/XSV 패턴 테스트
+    // EC 패턴 테스트
     let test_cases = vec![
-        ("하니까 보니까", "하/VV 니까/EC 보/VV 니까/EC"),
-        ("말씀하세요", "말씀/NNG 하/VV 세요/EF"),
-        ("먹으면 가면", "먹/VV 으면/EC 가/VV 면/EC"),
+        ("빠르면", "빠르/VA 면/EC"),
+        ("다르면", "다르/VA 면/EC"),
+        ("모르면", "모르/VV 면/EC"),
     ];
 
-    println!("=== VV/XSV 패턴 테스트 ===\n");
+    println!("=== EC 패턴 테스트 ===\n");
 
     for (text, gold) in test_cases {
         let tokens = tokenizer.tokenize(text);

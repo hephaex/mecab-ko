@@ -6658,15 +6658,19 @@ impl SejongConverter {
         }
 
         // 140차 보정: 시/EP 제거 (잘못 분리된 경우)
-        // "니까" 분리 시 "시/EP"가 삽입되는 경우 제거
+        // "니까", "면" 분리 시 "시/EP"가 삽입되는 경우 제거
+        let ec_after_si: std::collections::HashSet<&str> =
+            ["니까", "면", "니", "으니까", "으면", "으니"].into_iter().collect();
+
         let mut remove_si_indices: Vec<usize> = Vec::new();
         for i in 0..tokens.len().saturating_sub(1) {
             let curr_surface = &tokens[i].surface;
             let curr_pos = &tokens[i].pos;
             let next_surface = &tokens[i + 1].surface;
 
-            // 시/EP + 니까/EC 패턴 → 니까/EC만 유지
-            if curr_surface == "시" && curr_pos == "EP" && next_surface == "니까" {
+            // 시/EP + EC(니까, 면 등) 패턴 → EC만 유지
+            if curr_surface == "시" && curr_pos == "EP" && ec_after_si.contains(next_surface.as_str())
+            {
                 remove_si_indices.push(i);
             }
         }
