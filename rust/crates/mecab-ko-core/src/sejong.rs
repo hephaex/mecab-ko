@@ -6285,6 +6285,71 @@ impl SejongConverter {
                 token.pos = "NNG".to_string();
             }
         }
+
+        // 130차 보정: 의문사 + 가/JKS + 니/NP → 의문사 + VV + 니/EF
+        // "어디 가니"에서 "어디/NP 가/JKS 니/NP" → "어디/NP 가/VV 니/EF"
+        // MeCab이 의문형 종결어미 "니"를 NP로 잘못 분석하는 경우
+        let question_words: std::collections::HashSet<&str> =
+            ["어디", "뭐", "언제", "누구", "왜", "어떻게", "무엇", "어느"]
+                .into_iter()
+                .collect();
+
+        if tokens.len() >= 3 {
+            for i in 0..tokens.len() - 2 {
+                let first_surface = &tokens[i].surface;
+                let first_pos = &tokens[i].pos;
+                let second_surface = &tokens[i + 1].surface;
+                let second_pos = &tokens[i + 1].pos;
+                let third_surface = &tokens[i + 2].surface;
+                let third_pos = &tokens[i + 2].pos;
+
+                // 의문사 + 가/JKS + 니/NP 패턴
+                if first_pos == "NP"
+                    && question_words.contains(first_surface.as_str())
+                    && second_surface == "가"
+                    && second_pos == "JKS"
+                    && third_surface == "니"
+                    && third_pos == "NP"
+                {
+                    tokens[i + 1].pos = "VV".to_string();
+                    tokens[i + 2].pos = "EF".to_string();
+                }
+            }
+        }
+
+        // 130차 보정 추가: 의문사 + 동사니/NNG → 의문사 + VV + 니/EF
+        // "언제 오니"에서 "언제/NP 오니/NNG" → "언제/NP 오/VV 니/EF"
+        let mut split_indices: Vec<(usize, String)> = Vec::new();
+        if tokens.len() >= 2 {
+            for i in 0..tokens.len() - 1 {
+                let first_surface = &tokens[i].surface;
+                let first_pos = &tokens[i].pos;
+                let second_surface = &tokens[i + 1].surface;
+                let second_pos = &tokens[i + 1].pos;
+
+                // 의문사 뒤에 "~니" 형태의 NNG가 오는 경우
+                if first_pos == "NP"
+                    && question_words.contains(first_surface.as_str())
+                    && (second_pos == "NNG" || second_pos == "NNP")
+                    && second_surface.ends_with("니")
+                    && second_surface.chars().count() >= 2
+                {
+                    let stem: String = second_surface
+                        .chars()
+                        .take(second_surface.chars().count() - 1)
+                        .collect();
+                    split_indices.push((i + 1, stem));
+                }
+            }
+        }
+
+        for (idx, stem) in split_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx].end_pos;
+            tokens[idx].surface = stem;
+            tokens[idx].pos = "VV".to_string();
+            tokens.insert(idx + 1, SejongToken::new("니", "EF", start, end));
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
