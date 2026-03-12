@@ -222,10 +222,14 @@ impl SejongConverter {
     #[allow(clippy::too_many_lines)]
     fn init_tag_map(&mut self) {
         // 동사 + 어미
-        self.tag_map
-            .insert("VV+EF".to_string(), vec!["VV".to_string(), "EF".to_string()]);
-        self.tag_map
-            .insert("VV+EC".to_string(), vec!["VV".to_string(), "EC".to_string()]);
+        self.tag_map.insert(
+            "VV+EF".to_string(),
+            vec!["VV".to_string(), "EF".to_string()],
+        );
+        self.tag_map.insert(
+            "VV+EC".to_string(),
+            vec!["VV".to_string(), "EC".to_string()],
+        );
         self.tag_map.insert(
             "VV+ETM".to_string(),
             vec!["VV".to_string(), "ETM".to_string()],
@@ -234,8 +238,10 @@ impl SejongConverter {
             "VV+ETN".to_string(),
             vec!["VV".to_string(), "ETN".to_string()],
         );
-        self.tag_map
-            .insert("VV+EP".to_string(), vec!["VV".to_string(), "EP".to_string()]);
+        self.tag_map.insert(
+            "VV+EP".to_string(),
+            vec!["VV".to_string(), "EP".to_string()],
+        );
         self.tag_map.insert(
             "VV+EP+EF".to_string(),
             vec!["VV".to_string(), "EP".to_string(), "EF".to_string()],
@@ -256,26 +262,36 @@ impl SejongConverter {
         );
 
         // 형용사 + 어미
-        self.tag_map
-            .insert("VA+EF".to_string(), vec!["VA".to_string(), "EF".to_string()]);
-        self.tag_map
-            .insert("VA+EC".to_string(), vec!["VA".to_string(), "EC".to_string()]);
+        self.tag_map.insert(
+            "VA+EF".to_string(),
+            vec!["VA".to_string(), "EF".to_string()],
+        );
+        self.tag_map.insert(
+            "VA+EC".to_string(),
+            vec!["VA".to_string(), "EC".to_string()],
+        );
         self.tag_map.insert(
             "VA+ETM".to_string(),
             vec!["VA".to_string(), "ETM".to_string()],
         );
-        self.tag_map
-            .insert("VA+EP".to_string(), vec!["VA".to_string(), "EP".to_string()]);
+        self.tag_map.insert(
+            "VA+EP".to_string(),
+            vec!["VA".to_string(), "EP".to_string()],
+        );
         self.tag_map.insert(
             "VA+EP+EF".to_string(),
             vec!["VA".to_string(), "EP".to_string(), "EF".to_string()],
         );
 
         // 선어말어미 단독 (EP)
-        self.tag_map
-            .insert("VV+EP".to_string(), vec!["VV".to_string(), "EP".to_string()]);
-        self.tag_map
-            .insert("VA+EP".to_string(), vec!["VA".to_string(), "EP".to_string()]);
+        self.tag_map.insert(
+            "VV+EP".to_string(),
+            vec!["VV".to_string(), "EP".to_string()],
+        );
+        self.tag_map.insert(
+            "VA+EP".to_string(),
+            vec!["VA".to_string(), "EP".to_string()],
+        );
 
         // 선어말어미 + 연결어미 (EP+EC)
         self.tag_map.insert(
@@ -304,12 +320,18 @@ impl SejongConverter {
         );
 
         // 보조용언 + 어미
-        self.tag_map
-            .insert("VX+EF".to_string(), vec!["VX".to_string(), "EF".to_string()]);
-        self.tag_map
-            .insert("VX+EC".to_string(), vec!["VX".to_string(), "EC".to_string()]);
-        self.tag_map
-            .insert("VX+EP".to_string(), vec!["VX".to_string(), "EP".to_string()]);
+        self.tag_map.insert(
+            "VX+EF".to_string(),
+            vec!["VX".to_string(), "EF".to_string()],
+        );
+        self.tag_map.insert(
+            "VX+EC".to_string(),
+            vec!["VX".to_string(), "EC".to_string()],
+        );
+        self.tag_map.insert(
+            "VX+EP".to_string(),
+            vec!["VX".to_string(), "EP".to_string()],
+        );
         self.tag_map.insert(
             "VX+EP+EF".to_string(),
             vec!["VX".to_string(), "EP".to_string(), "EF".to_string()],
@@ -416,7 +438,6 @@ impl SejongConverter {
             "NNG+JC".to_string(),
             vec!["NNG".to_string(), "JC".to_string()],
         );
-
     }
 
     /// 어미 분리 규칙 초기화
@@ -427,22 +448,50 @@ impl SejongConverter {
             "VV+EF",
             vec![
                 // 격식체 종결어미
-                "습니다", "ㅂ니다", "습니까", "ㅂ니까", // 합쇼체
-                "는다", "ㄴ다", "는가", "ㄴ가", "냐", "니", // 해라체
-                "오", "소", // 하오체
-                "네", "세", "게", // 하게체
+                "습니다",
+                "ㅂ니다",
+                "습니까",
+                "ㅂ니까", // 합쇼체
+                "는다",
+                "ㄴ다",
+                "는가",
+                "ㄴ가",
+                "냐",
+                "니", // 해라체
+                "오",
+                "소", // 하오체
+                "네",
+                "세",
+                "게", // 하게체
                 // 비격식체 종결어미
-                "어요", "아요", "요", // 해요체
-                "어", "아", // 해체
+                "어요",
+                "아요",
+                "요", // 해요체
+                "어",
+                "아", // 해체
                 // 기타 종결어미
-                "지", "죠", "죠", // 추측/확인
-                "군", "구나", "구먼", // 감탄
-                "래", "려", "자", // 청유
-                "마", "거라", "너라", // 명령
-                "랴", "리", // 의문
+                "지",
+                "죠",
+                "죠", // 추측/확인
+                "군",
+                "구나",
+                "구먼", // 감탄
+                "래",
+                "려",
+                "자", // 청유
+                "마",
+                "거라",
+                "너라", // 명령
+                "랴",
+                "리", // 의문
                 "다", // 기본 종결
                 // 미래/의지 종결어미
-                "ㄹ게요", "ㄹ게", "ㄹ래요", "ㄹ래", "ㄹ까요", "ㄹ까",
+                "ㄹ게요",
+                "ㄹ게",
+                "ㄹ래요",
+                "ㄹ래",
+                "ㄹ까요",
+                "ㄹ까",
             ],
             vec!["VV", "EF"],
         ));
@@ -451,11 +500,23 @@ impl SejongConverter {
             "VA+EF",
             vec![
                 // 격식체
-                "습니다", "ㅂ니다", "습니까", "ㅂ니까",
+                "습니다",
+                "ㅂ니다",
+                "습니까",
+                "ㅂ니까",
                 // 비격식체
-                "다", "어요", "아요", "요", "어", "아",
+                "다",
+                "어요",
+                "아요",
+                "요",
+                "어",
+                "아",
                 // 기타
-                "지", "죠", "네", "군", "구나",
+                "지",
+                "죠",
+                "네",
+                "군",
+                "구나",
             ],
             vec!["VA", "EF"],
         ));
@@ -465,13 +526,24 @@ impl SejongConverter {
             "XSV+EF",
             vec![
                 // 격식체
-                "습니다", "ㅂ니다", "습니까", "ㅂ니까",
+                "습니다",
+                "ㅂ니다",
+                "습니까",
+                "ㅂ니까",
                 // 비격식체
-                "다", "어요", "아요", "요", "어", "아",
+                "다",
+                "어요",
+                "아요",
+                "요",
+                "어",
+                "아",
                 // 축약형
-                "ㄴ다", "ㅆ다",
+                "ㄴ다",
+                "ㅆ다",
                 // 기타
-                "지", "죠", "네",
+                "지",
+                "죠",
+                "네",
             ],
             vec!["XSV", "EF"],
         ));
@@ -480,8 +552,17 @@ impl SejongConverter {
         self.ending_rules.push(EndingRule::new(
             "XSV+EC",
             vec![
-                "고", "면", "으면", "서", "어서", "아서",
-                "면서", "으면서", "니까", "으니까", "지만",
+                "고",
+                "면",
+                "으면",
+                "서",
+                "어서",
+                "아서",
+                "면서",
+                "으면서",
+                "니까",
+                "으니까",
+                "지만",
             ],
             vec!["XSV", "EC"],
         ));
@@ -491,13 +572,24 @@ impl SejongConverter {
             "VX+EF",
             vec![
                 // 격식체
-                "습니다", "ㅂ니다", "습니까", "ㅂ니까",
+                "습니다",
+                "ㅂ니다",
+                "습니까",
+                "ㅂ니까",
                 // 비격식체
-                "어요", "아요", "요", "어", "아", "다",
+                "어요",
+                "아요",
+                "요",
+                "어",
+                "아",
+                "다",
                 // 축약형
-                "ㄴ다", "ㅆ다",
+                "ㄴ다",
+                "ㅆ다",
                 // 기타
-                "지", "죠", "네",
+                "지",
+                "죠",
+                "네",
             ],
             vec!["VX", "EF"],
         ));
@@ -506,9 +598,7 @@ impl SejongConverter {
         // "입니다" → "이/VCP + 습니다/EF"
         self.ending_rules.push(EndingRule::new(
             "EP+EF",
-            vec![
-                "입니다", "입니까",
-            ],
+            vec!["입니다", "입니까"],
             vec!["VCP", "EF"],
         ));
 
@@ -527,8 +617,17 @@ impl SejongConverter {
         self.ending_rules.push(EndingRule::new(
             "VX+EC",
             vec![
-                "고", "면", "으면", "서", "어서", "아서",
-                "면서", "으면서", "니까", "으니까", "지만",
+                "고",
+                "면",
+                "으면",
+                "서",
+                "어서",
+                "아서",
+                "면서",
+                "으면서",
+                "니까",
+                "으니까",
+                "지만",
             ],
             vec!["VX", "EC"],
         ));
@@ -539,14 +638,46 @@ impl SejongConverter {
             "VV+EC",
             vec![
                 // 긴 패턴 우선 (복합 연결어미)
-                "고나서", "자마자", "으면서", "으니까", "더라도", "으므로",
+                "고나서",
+                "자마자",
+                "으면서",
+                "으니까",
+                "더라도",
+                "으므로",
                 // 3글자 연결어미
-                "어서", "아서", "면서", "든지", "든가", "기에", "길래",
-                "거든", "다면", "어도", "아도", "도록", "듯이", "데도",
+                "어서",
+                "아서",
+                "면서",
+                "든지",
+                "든가",
+                "기에",
+                "길래",
+                "거든",
+                "다면",
+                "어도",
+                "아도",
+                "도록",
+                "듯이",
+                "데도",
                 // 2글자 연결어미
-                "니까", "므로", "지만", "거나", "다가", "더니", "ㄴ데", "는데",
+                "니까",
+                "므로",
+                "지만",
+                "거나",
+                "다가",
+                "더니",
+                "ㄴ데",
+                "는데",
                 // 1글자 연결어미 (마지막에 배치)
-                "고", "며", "나", "니", "면", "서", "자", "게", "듯",
+                "고",
+                "며",
+                "나",
+                "니",
+                "면",
+                "서",
+                "자",
+                "게",
+                "듯",
             ],
             vec!["VV", "EC"],
         ));
@@ -556,13 +687,34 @@ impl SejongConverter {
             "VA+EC",
             vec![
                 // 긴 패턴 우선
-                "더라도", "으면서", "으니까",
+                "더라도",
+                "으면서",
+                "으니까",
                 // 3글자 연결어미
-                "어서", "아서", "면서", "어도", "아도", "도록",
+                "어서",
+                "아서",
+                "면서",
+                "어도",
+                "아도",
+                "도록",
                 // 2글자 연결어미
-                "니까", "므로", "지만", "거나", "거든", "다면", "ㄴ데", "는데", "더니",
+                "니까",
+                "므로",
+                "지만",
+                "거나",
+                "거든",
+                "다면",
+                "ㄴ데",
+                "는데",
+                "더니",
                 // 1글자 연결어미 (마지막)
-                "고", "며", "나", "니", "면", "서", "게",
+                "고",
+                "며",
+                "나",
+                "니",
+                "면",
+                "서",
+                "게",
             ],
             vec!["VA", "EC"],
         ));
@@ -571,10 +723,10 @@ impl SejongConverter {
         self.ending_rules.push(EndingRule::new(
             "VV+ETM",
             vec![
-                "는",  // 현재 관형형 (먹는)
+                "는", // 현재 관형형 (먹는)
                 "ㄴ", "은", // 과거 관형형 (먹은)
                 "ㄹ", "을", // 미래 관형형 (먹을)
-                "던",  // 회상 관형형 (먹던)
+                "던", // 회상 관형형 (먹던)
             ],
             vec!["VV", "ETM"],
         ));
@@ -584,7 +736,7 @@ impl SejongConverter {
             vec![
                 "ㄴ", "은", // 현재 관형형 (좋은, 큰)
                 "ㄹ", "을", // 미래 관형형 (좋을)
-                "던",  // 회상 관형형 (좋던)
+                "던", // 회상 관형형 (좋던)
             ],
             vec!["VA", "ETM"],
         ));
@@ -593,7 +745,7 @@ impl SejongConverter {
         self.ending_rules.push(EndingRule::new(
             "VV+ETN",
             vec![
-                "기",  // 명사형 (먹기)
+                "기", // 명사형 (먹기)
                 "ㅁ", "음", // 명사형 (먹음)
             ],
             vec!["VV", "ETN"],
@@ -602,7 +754,7 @@ impl SejongConverter {
         self.ending_rules.push(EndingRule::new(
             "VA+ETN",
             vec![
-                "기",  // 명사형 (좋기)
+                "기", // 명사형 (좋기)
                 "ㅁ", "음", // 명사형 (좋음)
             ],
             vec!["VA", "ETN"],
@@ -615,7 +767,7 @@ impl SejongConverter {
                 "었", "았", "였", // 과거 시제
                 "겠", // 추측/의지
                 "시", "으시", // 높임
-                "더", // 회상
+                "더",   // 회상
             ],
             vec!["VV", "EP"],
         ));
@@ -633,9 +785,7 @@ impl SejongConverter {
         // 존칭+과거 복합형 (VV+EP+EP+EF): 오시었습니다 → 오 + 시 + 었 + 습니다
         self.ending_rules.push(EndingRule::new(
             "VV+EP+EP+EF",
-            vec![
-                "셨습니다", "셨습니까", "셨어요", "셨어", "셨다",
-            ],
+            vec!["셨습니다", "셨습니까", "셨어요", "셨어", "셨다"],
             vec!["VV", "EP", "EP", "EF"],
         ));
 
@@ -645,23 +795,51 @@ impl SejongConverter {
             "VV+EP+EF",
             vec![
                 // 긴 패턴 우선 (5글자 이상)
-                "으셨습니다", "으셨습니까", "으셨어요",
+                "으셨습니다",
+                "으셨습니까",
+                "으셨어요",
                 // 4글자 패턴
-                "었습니다", "았습니다", "였습니다",
-                "었습니까", "았습니까", "였습니까",
-                "겠습니다", "셨습니다",
+                "었습니다",
+                "았습니다",
+                "였습니다",
+                "었습니까",
+                "았습니까",
+                "였습니까",
+                "겠습니다",
+                "셨습니다",
                 // 3글자 패턴
-                "었어요", "았어요", "였어요",
-                "었어", "았어", "였어",
-                "었다", "았다", "였다",
-                "었니", "았니", "였니",
-                "었지", "았지", "였지",
-                "었나", "았나", "였나",
-                "겠어요", "겠다", "겠지", "겠어",
-                "셨어요", "셨다", "셨어",
-                "시네요", "으시네요",
+                "었어요",
+                "았어요",
+                "였어요",
+                "었어",
+                "았어",
+                "였어",
+                "었다",
+                "았다",
+                "였다",
+                "었니",
+                "았니",
+                "였니",
+                "었지",
+                "았지",
+                "였지",
+                "었나",
+                "았나",
+                "였나",
+                "겠어요",
+                "겠다",
+                "겠지",
+                "겠어",
+                "셨어요",
+                "셨다",
+                "셨어",
+                "시네요",
+                "으시네요",
                 // 2글자 패턴
-                "더라", "더군", "더니", "던데",
+                "더라",
+                "더군",
+                "더니",
+                "던데",
             ],
             vec!["VV", "EP", "EF"],
         ));
@@ -670,17 +848,35 @@ impl SejongConverter {
             "VA+EP+EF",
             vec![
                 // 과거 + 격식체
-                "었습니다", "았습니다", "였습니다",
-                "었습니까", "았습니까", "였습니까",
+                "었습니다",
+                "았습니다",
+                "였습니다",
+                "었습니까",
+                "았습니까",
+                "였습니까",
                 // 과거 + 비격식체
-                "었어요", "았어요", "였어요",
-                "었어", "았어", "였어",
-                "었다", "았다", "였다",
-                "었지", "았지", "였지",
+                "었어요",
+                "았어요",
+                "였어요",
+                "었어",
+                "았어",
+                "였어",
+                "었다",
+                "았다",
+                "였다",
+                "었지",
+                "았지",
+                "였지",
                 // 추측
-                "겠습니다", "겠어요", "겠다", "겠지",
+                "겠습니다",
+                "겠어요",
+                "겠다",
+                "겠지",
                 // 높임
-                "시네요", "으시네요", "셨어요", "셨다",
+                "시네요",
+                "으시네요",
+                "셨어요",
+                "셨다",
             ],
             vec!["VA", "EP", "EF"],
         ));
@@ -690,14 +886,28 @@ impl SejongConverter {
             "VV+EP+EC",
             vec![
                 // 과거 + 연결
-                "었고", "았고", "였고",
-                "었는데", "았는데", "였는데",
-                "었지만", "았지만", "였지만",
-                "었으면", "았으면", "였으면",
-                "었어도", "았어도", "였어도",
-                "었으니", "았으니", "였으니",
+                "었고",
+                "았고",
+                "였고",
+                "었는데",
+                "았는데",
+                "였는데",
+                "었지만",
+                "았지만",
+                "였지만",
+                "었으면",
+                "았으면",
+                "였으면",
+                "었어도",
+                "았어도",
+                "였어도",
+                "었으니",
+                "았으니",
+                "였으니",
                 // 추측 + 연결
-                "겠고", "겠는데", "겠지만",
+                "겠고",
+                "겠는데",
+                "겠지만",
             ],
             vec!["VV", "EP", "EC"],
         ));
@@ -705,10 +915,18 @@ impl SejongConverter {
         self.ending_rules.push(EndingRule::new(
             "VA+EP+EC",
             vec![
-                "었고", "았고", "였고",
-                "었는데", "았는데", "였는데",
-                "었지만", "았지만", "였지만",
-                "었으면", "았으면", "였으면",
+                "었고",
+                "았고",
+                "였고",
+                "었는데",
+                "았는데",
+                "였는데",
+                "었지만",
+                "았지만",
+                "였지만",
+                "었으면",
+                "았으면",
+                "였으면",
             ],
             vec!["VA", "EP", "EC"],
         ));
@@ -762,31 +980,34 @@ impl SejongConverter {
         // 부사격조사 (JKB)
         self.ending_rules.push(EndingRule::new(
             "NNG+JKB",
-            vec!["에", "에서", "에게", "로", "으로", "한테", "보다", "처럼", "같이", "까지", "부터", "와", "과"],
+            vec![
+                "에", "에서", "에게", "로", "으로", "한테", "보다", "처럼", "같이", "까지", "부터",
+                "와", "과",
+            ],
             vec!["NNG", "JKB"],
         ));
         self.ending_rules.push(EndingRule::new(
             "NNP+JKB",
-            vec!["에", "에서", "에게", "로", "으로", "한테", "보다", "처럼", "같이", "까지", "부터", "와", "과"],
+            vec![
+                "에", "에서", "에게", "로", "으로", "한테", "보다", "처럼", "같이", "까지", "부터",
+                "와", "과",
+            ],
             vec!["NNP", "JKB"],
         ));
         self.ending_rules.push(EndingRule::new(
             "NP+JKB",
-            vec!["에", "에서", "에게", "로", "으로", "한테", "보다", "처럼", "같이", "까지", "부터", "와", "과"],
+            vec![
+                "에", "에서", "에게", "로", "으로", "한테", "보다", "처럼", "같이", "까지", "부터",
+                "와", "과",
+            ],
             vec!["NP", "JKB"],
         ));
 
         // 관형격조사 (JKG)
-        self.ending_rules.push(EndingRule::new(
-            "NNG+JKG",
-            vec!["의"],
-            vec!["NNG", "JKG"],
-        ));
-        self.ending_rules.push(EndingRule::new(
-            "NNP+JKG",
-            vec!["의"],
-            vec!["NNP", "JKG"],
-        ));
+        self.ending_rules
+            .push(EndingRule::new("NNG+JKG", vec!["의"], vec!["NNG", "JKG"]));
+        self.ending_rules
+            .push(EndingRule::new("NNP+JKG", vec!["의"], vec!["NNP", "JKG"]));
 
         // 호격조사 (JKV)
         self.ending_rules.push(EndingRule::new(
@@ -803,17 +1024,23 @@ impl SejongConverter {
         // 보조사 (JX)
         self.ending_rules.push(EndingRule::new(
             "NNG+JX",
-            vec!["은", "는", "도", "만", "까지", "부터", "마저", "조차", "라도", "밖에", "요"],
+            vec![
+                "은", "는", "도", "만", "까지", "부터", "마저", "조차", "라도", "밖에", "요",
+            ],
             vec!["NNG", "JX"],
         ));
         self.ending_rules.push(EndingRule::new(
             "NNP+JX",
-            vec!["은", "는", "도", "만", "까지", "부터", "마저", "조차", "라도", "밖에", "요"],
+            vec![
+                "은", "는", "도", "만", "까지", "부터", "마저", "조차", "라도", "밖에", "요",
+            ],
             vec!["NNP", "JX"],
         ));
         self.ending_rules.push(EndingRule::new(
             "NP+JX",
-            vec!["은", "는", "도", "만", "까지", "부터", "마저", "조차", "라도", "밖에", "요"],
+            vec![
+                "은", "는", "도", "만", "까지", "부터", "마저", "조차", "라도", "밖에", "요",
+            ],
             vec!["NP", "JX"],
         ));
 
@@ -1143,7 +1370,7 @@ impl SejongConverter {
                     let full_stem = format!("{prefix}{stem}");
 
                     // suffix = 어미
-                    let suffix: String = chars[i+1..].iter().collect();
+                    let suffix: String = chars[i + 1..].iter().collect();
                     if !suffix.is_empty() {
                         // EF 패턴 확인
                         for ef in &ef_patterns {
@@ -1189,9 +1416,9 @@ impl SejongConverter {
         // 축약형 패턴: (축약된 1음절, 원래 어간, 연결되는 어미 접두사)
         // 해요 = 하+어요, 해 = 하+어, 했다 = 하+았+다 (이건 3태그라 위에서 처리)
         let contracted_patterns = [
-            ("해", "하", "어"),  // 하+어 → 해
-            ("돼", "되", "어"),  // 되+어 → 돼
-            ("봬", "뵈", "어"),  // 뵈+어 → 봬
+            ("해", "하", "어"), // 하+어 → 해
+            ("돼", "되", "어"), // 되+어 → 돼
+            ("봬", "뵈", "어"), // 뵈+어 → 봬
         ];
 
         let chars: Vec<char> = surface.chars().collect();
@@ -1229,13 +1456,13 @@ impl SejongConverter {
         // VV+EF로 분석되지만 실제로는 VV+EP+EF여야 함
         // 봤다 → 보/VV + 았/EP + 다/EF
         let past_contracted_patterns = [
-            ("봤", "보", "았"),  // 보+았 → 봤
-            ("갔", "가", "았"),  // 가+았 → 갔
-            ("왔", "오", "았"),  // 오+았 → 왔
-            ("샀", "사", "았"),  // 사+았 → 샀
-            ("잤", "자", "았"),  // 자+았 → 잤
-            ("됐", "되", "었"),  // 되+었 → 됐
-            ("했", "하", "았"),  // 하+았 → 했
+            ("봤", "보", "았"), // 보+았 → 봤
+            ("갔", "가", "았"), // 가+았 → 갔
+            ("왔", "오", "았"), // 오+았 → 왔
+            ("샀", "사", "았"), // 사+았 → 샀
+            ("잤", "자", "았"), // 자+았 → 잤
+            ("됐", "되", "었"), // 되+었 → 됐
+            ("했", "하", "았"), // 하+았 → 했
         ];
 
         for (contracted, stem, prefinal) in &past_contracted_patterns {
@@ -1254,11 +1481,7 @@ impl SejongConverter {
     }
 
     /// 분리된 형태소 생성 (어간 + 어미들)
-    fn create_split_morphemes(
-        stem: &str,
-        ending: &str,
-        tags: &[String],
-    ) -> Vec<(String, String)> {
+    fn create_split_morphemes(stem: &str, ending: &str, tags: &[String]) -> Vec<(String, String)> {
         let mut result = Vec::new();
 
         if tags.len() == 2 {
@@ -1329,8 +1552,12 @@ impl SejongConverter {
         // 복합 선어말어미 패턴 (긴 것부터 먼저 매칭)
         // 시제 + 높임: 으셨, 셨, 으시었, 시었
         let compound_prefinal_patterns = [
-            "으셨", "셨", "으시었", "시었", // 높임 + 과거
-            "으시겠", "시겠", // 높임 + 추측
+            "으셨",
+            "셨",
+            "으시었",
+            "시었", // 높임 + 과거
+            "으시겠",
+            "시겠", // 높임 + 추측
         ];
 
         for pattern in &compound_prefinal_patterns {
@@ -1410,8 +1637,11 @@ impl SejongConverter {
                     // 예: token.pos = "VV+EP"일 때 분석결과의 POS도 "VV", "EP" 순서여야 함
                     // 예: token.pos = "EC+VX+EC"인데 분석결과가 "게/EC+하/VX+고/EC"이면
                     //     표면형 "고"와 맞지 않으므로 잘못된 분석결과
-                    let decomp_pos: String =
-                        morphemes.iter().map(|m| m.pos.as_str()).collect::<Vec<_>>().join("+");
+                    let decomp_pos: String = morphemes
+                        .iter()
+                        .map(|m| m.pos.as_str())
+                        .collect::<Vec<_>>()
+                        .join("+");
                     if decomp_pos == token.pos {
                         return Self::morphemes_to_sejong_tokens(&morphemes, token);
                     }
@@ -1486,10 +1716,8 @@ impl SejongConverter {
     /// 토큰 목록을 세종 형식으로 변환
     #[must_use]
     pub fn convert_tokens(&self, tokens: &[Token]) -> Vec<SejongToken> {
-        let mut sejong_tokens: Vec<SejongToken> = tokens
-            .iter()
-            .flat_map(|t| self.convert_token(t))
-            .collect();
+        let mut sejong_tokens: Vec<SejongToken> =
+            tokens.iter().flat_map(|t| self.convert_token(t)).collect();
 
         // 잘못된 분해 패턴 보정 (갔다오/VV + ㄴ/ETM → 갔/VV + 다/EF)
         Self::apply_decomposition_corrections(&mut sejong_tokens);
@@ -1522,7 +1750,10 @@ impl SejongConverter {
 
             // "가세요", "오세요" 등 VV 단일 토큰 분리
             // sample.tsv 기준: 가/VV + 세요/EF (시/EP + 어요/EF가 아닌 세요/EF 사용)
-            if token.pos == "VV" && token.surface.ends_with("세요") && token.surface.chars().count() >= 2 {
+            if token.pos == "VV"
+                && token.surface.ends_with("세요")
+                && token.surface.chars().count() >= 2
+            {
                 let surface = &token.surface;
                 let stem = surface.trim_end_matches("세요");
                 if !stem.is_empty() {
@@ -1547,7 +1778,10 @@ impl SejongConverter {
             // "할게요", "갈게요" 패턴: MeCab이 "할게/VV + 어요/EF"로 분석한 경우
             // → "하/VV + ㄹ게요/EF"로 변환
             // 할게 = 하(어간) + ㄹ게(어미의 시작), 어요 = 어요(어미의 나머지)
-            if token.pos == "VV" && token.surface.ends_with("게") && token.surface.chars().count() >= 2 {
+            if token.pos == "VV"
+                && token.surface.ends_with("게")
+                && token.surface.chars().count() >= 2
+            {
                 let surface = &token.surface;
                 // "할게" → 첫 글자 "할"에서 어간 "하" 추출 필요
                 // 일단 "게"를 제거하고 ㄹ 받침이 있는 글자에서 어간 추출
@@ -1557,7 +1791,10 @@ impl SejongConverter {
                     // "할"에서 "하" 추출 (ㄹ 받침 제거)
                     if let Some(stem) = Self::remove_jongseong_rieul(stem_char) {
                         // 다음 토큰이 "어요/EF"인지 확인
-                        if i + 1 < tokens.len() && tokens[i + 1].surface == "어요" && tokens[i + 1].pos == "EF" {
+                        if i + 1 < tokens.len()
+                            && tokens[i + 1].surface == "어요"
+                            && tokens[i + 1].pos == "EF"
+                        {
                             let prefix: String = chars[..chars.len() - 2].iter().collect();
                             let full_stem = format!("{}{}", prefix, stem);
                             result.push(SejongToken::new(
@@ -1581,7 +1818,10 @@ impl SejongConverter {
 
             // "할까요", "볼까요" 패턴: MeCab이 "할까/VV + 아요/EF"로 분석한 경우
             // → "하/VV + ㄹ까요/EF"로 변환
-            if token.pos == "VV" && token.surface.ends_with("까") && token.surface.chars().count() >= 2 {
+            if token.pos == "VV"
+                && token.surface.ends_with("까")
+                && token.surface.chars().count() >= 2
+            {
                 let surface = &token.surface;
                 let chars: Vec<char> = surface.chars().collect();
                 if chars.len() >= 2 && chars[chars.len() - 1] == '까' {
@@ -1589,7 +1829,10 @@ impl SejongConverter {
                     // "할"에서 "하" 추출 (ㄹ 받침 제거)
                     if let Some(stem) = Self::remove_jongseong_rieul(stem_char) {
                         // 다음 토큰이 "아요/EF"인지 확인
-                        if i + 1 < tokens.len() && tokens[i + 1].surface == "아요" && tokens[i + 1].pos == "EF" {
+                        if i + 1 < tokens.len()
+                            && tokens[i + 1].surface == "아요"
+                            && tokens[i + 1].pos == "EF"
+                        {
                             let prefix: String = chars[..chars.len() - 2].iter().collect();
                             let full_stem = format!("{}{}", prefix, stem);
                             result.push(SejongToken::new(
@@ -1635,7 +1878,7 @@ impl SejongConverter {
             ("이것", "NP"),
             ("저것", "NP"),
             ("무엇", "NP"),
-            ("뭐", "NP"),  // 무엇의 준말
+            ("뭐", "NP"), // 무엇의 준말
             ("누구", "NP"),
             ("자기", "NP"),
             ("자신", "NP"),
@@ -2090,8 +2333,11 @@ impl SejongConverter {
         // 강제 매핑이 필요한 품사 집합 (잘못 인식되는 품사들)
         // 주의: EP(선어말어미)는 제외 - "시/EP"(존칭)가 "시/NNB"(시간)로 덮어쓰이는 것 방지
         // JX, MM 추가: 의존명사가 조사/관형사로 오분석되는 경우 보정 (뿐/JX→NNB, 양/MM→NNB)
-        let overridable_poses: std::collections::HashSet<&str> =
-            ["EF", "EC", "VV", "VA", "NNG", "NNP", "IC", "MAG", "JX", "MM"].into_iter().collect();
+        let overridable_poses: std::collections::HashSet<&str> = [
+            "EF", "EC", "VV", "VA", "NNG", "NNP", "IC", "MAG", "JX", "MM",
+        ]
+        .into_iter()
+        .collect();
 
         for token in tokens.iter_mut() {
             // 오버라이드 대상 품사인 경우에만 적용
@@ -2489,10 +2735,7 @@ impl SejongConverter {
             // 패턴 27: "Xㄹ/VV + 까요/EF" → "X/VV + ㄹ까요/EF" (ㄹ 이동)
             // "올까요" → "오/VV + ㄹ까요/EF", "볼까요" → "보/VV + ㄹ까요/EF" 등
             // ㄹ-final verb stems where ㄹ should be part of the ending
-            if !merged
-                && i + 1 < tokens.len()
-                && tokens[i].pos == "VV"
-                && tokens[i + 1].pos == "EF"
+            if !merged && i + 1 < tokens.len() && tokens[i].pos == "VV" && tokens[i + 1].pos == "EF"
             {
                 let surface = &tokens[i].surface;
                 let next_surface = &tokens[i + 1].surface;
@@ -2559,14 +2802,24 @@ impl SejongConverter {
             let mut matched = false;
 
             // 패턴 1: X오/VV + ㄴ/ETM → X/VV + 다/EF
-            if i + 1 < tokens.len() && tokens[i].pos == "VV" && tokens[i + 1].surface == "ㄴ" && tokens[i + 1].pos == "ETM" {
+            if i + 1 < tokens.len()
+                && tokens[i].pos == "VV"
+                && tokens[i + 1].surface == "ㄴ"
+                && tokens[i + 1].pos == "ETM"
+            {
                 for &(wrong_stem, correct_stem, stem_pos) in verb_patterns {
                     if tokens[i].surface == wrong_stem {
                         let start = tokens[i].start_pos;
                         let end = tokens[i + 1].end_pos;
 
-                        tokens[i] = SejongToken::new(correct_stem, stem_pos, start, start + correct_stem.chars().count());
-                        tokens[i + 1] = SejongToken::new("다", "EF", start + correct_stem.chars().count(), end);
+                        tokens[i] = SejongToken::new(
+                            correct_stem,
+                            stem_pos,
+                            start,
+                            start + correct_stem.chars().count(),
+                        );
+                        tokens[i + 1] =
+                            SejongToken::new("다", "EF", start + correct_stem.chars().count(), end);
 
                         matched = true;
                         break;
@@ -2576,10 +2829,13 @@ impl SejongConverter {
 
             // 패턴 2: X/VA + 은/ETM + 다/EF → X/VA + 다/EF
             // (형용사 관형형 + 종결어미 패턴 보정)
-            if !matched && i + 2 < tokens.len()
+            if !matched
+                && i + 2 < tokens.len()
                 && tokens[i].pos == "VA"
-                && tokens[i + 1].surface == "은" && tokens[i + 1].pos == "ETM"
-                && tokens[i + 2].surface == "다" && tokens[i + 2].pos == "EF"
+                && tokens[i + 1].surface == "은"
+                && tokens[i + 1].pos == "ETM"
+                && tokens[i + 2].surface == "다"
+                && tokens[i + 2].pos == "EF"
             {
                 // VA 어간 유지, 은/ETM 제거, 다/EF를 VA 바로 뒤로 이동
                 let start = tokens[i].start_pos;
@@ -2662,8 +2918,11 @@ impl SejongConverter {
         let mut corrections: Vec<(usize, String)> = Vec::new();
 
         // 의문대명사 집합 (이 뒤의 VV는 조사가 아님)
-        let interrogatives: std::collections::HashSet<&str> =
-            ["어디", "언제", "뭐", "무엇", "누구", "어느", "어떤", "왜", "어찌"].into_iter().collect();
+        let interrogatives: std::collections::HashSet<&str> = [
+            "어디", "언제", "뭐", "무엇", "누구", "어느", "어떤", "왜", "어찌",
+        ]
+        .into_iter()
+        .collect();
 
         for i in 1..tokens.len() {
             let prev_surface = &tokens[i - 1].surface;
@@ -2678,7 +2937,14 @@ impl SejongConverter {
             // JKB: "께서" 등이 부사격조사로 잘못 태그되는 경우 → JKS로 보정
             // NNG: "의" 등이 명사로 잘못 태그되는 경우 → JKG로 보정
             if noun_poses.contains(prev_pos.as_str())
-                && (curr_pos == "EF" || curr_pos == "EC" || curr_pos == "ETN" || curr_pos == "EP" || curr_pos == "VV" || curr_pos == "VA" || curr_pos == "JKB" || curr_pos == "NNG")
+                && (curr_pos == "EF"
+                    || curr_pos == "EC"
+                    || curr_pos == "ETN"
+                    || curr_pos == "EP"
+                    || curr_pos == "VV"
+                    || curr_pos == "VA"
+                    || curr_pos == "JKB"
+                    || curr_pos == "NNG")
             {
                 // 다음 토큰이 EP(선어말어미)인 경우 동사의 일부이므로 조사로 보정하지 않음
                 // 예: 학교/NNG 가/VV 았/EP 다/EF -> "가"는 동사 "가다"의 어간
@@ -2696,7 +2962,8 @@ impl SejongConverter {
                 // "께서"는 항상 주격조사 (동사 어간이 될 수 없음)
                 let is_definite_particle = curr_surface == "께서";
 
-                if is_definite_particle || (!next_is_ep && !next_is_ending && !prev_is_interrogative)
+                if is_definite_particle
+                    || (!next_is_ep && !next_is_ending && !prev_is_interrogative)
                 {
                     if let Some(&correct_pos) = particle_map.get(curr_surface.as_str()) {
                         corrections.push((i, correct_pos.to_string()));
@@ -2750,11 +3017,11 @@ impl SejongConverter {
         // 패턴: NNG + 하/했/해/되/됐 → NNG + XSV
         // 주의: NP(대명사) 뒤에는 적용하지 않음 (예: "뭐 하니"에서 "하"는 VV)
         let xsv_patterns: HashMap<&str, bool> = [
-            ("하", true),   // 하다
-            ("해", true),   // 해요 (하+어)
-            ("했", true),   // 했다 (하+았)
-            ("되", true),   // 되다
-            ("됐", true),   // 됐다 (되+었)
+            ("하", true), // 하다
+            ("해", true), // 해요 (하+어)
+            ("했", true), // 했다 (하+았)
+            ("되", true), // 되다
+            ("됐", true), // 됐다 (되+었)
         ]
         .into_iter()
         .collect();
@@ -2773,9 +3040,10 @@ impl SejongConverter {
             // 일반명사 뒤의 VV/EF를 XSV로 보정 (대명사 NP 제외)
             if xsv_trigger_poses.contains(prev_pos.as_str())
                 && (curr_pos == "VV" || curr_pos == "EF" || curr_pos == "VA")
-                && xsv_patterns.contains_key(curr_surface.as_str()) {
-                    xsv_corrections.push((i, "XSV".to_string()));
-                }
+                && xsv_patterns.contains_key(curr_surface.as_str())
+            {
+                xsv_corrections.push((i, "XSV".to_string()));
+            }
         }
 
         // XSV 보정 적용
@@ -2894,8 +3162,10 @@ impl SejongConverter {
             let next_pos = &tokens[i + 1].pos;
 
             // 합니/VV + 다/EF → 합니다/EF
-            if curr_surface == "합니" && curr_pos == "VV"
-                && next_surface == "다" && next_pos == "EF"
+            if curr_surface == "합니"
+                && curr_pos == "VV"
+                && next_surface == "다"
+                && next_pos == "EF"
             {
                 merge_indices.push(i);
             }
@@ -3002,8 +3272,7 @@ impl SejongConverter {
             let next_pos = &tokens[i + 1].pos;
 
             // 지/NNB + 않/VX → 지/EC + 않/VX
-            if curr_surface == "지" && curr_pos == "NNB"
-                && next_surface == "않" && next_pos == "VX"
+            if curr_surface == "지" && curr_pos == "NNB" && next_surface == "않" && next_pos == "VX"
             {
                 nnb_to_ec_indices.push(i);
             }
@@ -3017,10 +3286,12 @@ impl SejongConverter {
         // 가다, 먹다, 오다, 보다, 하다 등 기본형을 분리
         // 주의: 단독 사용 시만 분리 (문장 내에서는 어간+어미로 분석됨)
         let base_verbs: std::collections::HashSet<&str> = [
-            "가다", "오다", "보다", "먹다", "되다", "주다", "받다",
-            "쓰다", "읽다", "듣다", "말다", "살다", "죽다", "자다", "일다",
-            "앉다", "서다", "놓다", "두다", "치다", "잡다", "놀다", "울다",
-        ].into_iter().collect();
+            "가다", "오다", "보다", "먹다", "되다", "주다", "받다", "쓰다", "읽다", "듣다", "말다",
+            "살다", "죽다", "자다", "일다", "앉다", "서다", "놓다", "두다", "치다", "잡다", "놀다",
+            "울다",
+        ]
+        .into_iter()
+        .collect();
 
         // "하다"는 별도 처리 (XSV인 경우만 VV로 변환 후 분리)
 
@@ -3057,8 +3328,7 @@ impl SejongConverter {
             let next_pos = &tokens[i + 1].pos;
 
             // 하/XSV + 다/EF → 하/VV + 다/EF
-            if curr_surface == "하" && curr_pos == "XSV"
-                && next_surface == "다" && next_pos == "EF"
+            if curr_surface == "하" && curr_pos == "XSV" && next_surface == "다" && next_pos == "EF"
             {
                 xsv_da_to_vv_indices.push(i);
             }
@@ -3096,7 +3366,10 @@ impl SejongConverter {
                     let end = tokens[idx].end_pos;
                     let stem_len = stem.chars().count();
                     tokens[idx] = SejongToken::new(stem, "VV", start, start + stem_len);
-                    tokens.insert(idx + 1, SejongToken::new("기", "ETN", start + stem_len, end));
+                    tokens.insert(
+                        idx + 1,
+                        SejongToken::new("기", "ETN", start + stem_len, end),
+                    );
                 }
             }
         }
@@ -3134,7 +3407,9 @@ impl SejongConverter {
         // 17차 보정: "X의/NNG" → "X/NP + 의/JKG" 분리
         // "나의", "우리의" 등 대명사+관형격조사 패턴 분리
         let possessive_pronouns: std::collections::HashSet<&str> =
-            ["나의", "너의", "우리의", "저의", "그의", "그녀의"].into_iter().collect();
+            ["나의", "너의", "우리의", "저의", "그의", "그녀의"]
+                .into_iter()
+                .collect();
 
         let mut possessive_split_indices: Vec<usize> = Vec::new();
 
@@ -3153,7 +3428,10 @@ impl SejongConverter {
                     let end = tokens[idx].end_pos;
                     let stem_len = stem.chars().count();
                     tokens[idx] = SejongToken::new(stem, "NP", start, start + stem_len);
-                    tokens.insert(idx + 1, SejongToken::new("의", "JKG", start + stem_len, end));
+                    tokens.insert(
+                        idx + 1,
+                        SejongToken::new("의", "JKG", start + stem_len, end),
+                    );
                 }
             }
         }
@@ -3186,7 +3464,10 @@ impl SejongConverter {
                     let end = tokens[idx].end_pos;
                     let rest_owned = rest.to_string();
                     tokens[idx] = SejongToken::new("의", "JKG", start, start + 1);
-                    tokens.insert(idx + 1, SejongToken::new(&rest_owned, "NNG", start + 1, end));
+                    tokens.insert(
+                        idx + 1,
+                        SejongToken::new(&rest_owned, "NNG", start + 1, end),
+                    );
                 }
             }
         }
@@ -3328,7 +3609,10 @@ impl SejongConverter {
             let end = tokens[idx].end_pos;
             let stem_len = stem.chars().count();
             tokens[idx] = SejongToken::new(&stem, "VV", start, start + stem_len);
-            tokens.insert(idx + 1, SejongToken::new("기", "ETN", start + stem_len, end));
+            tokens.insert(
+                idx + 1,
+                SejongToken::new("기", "ETN", start + stem_len, end),
+            );
         }
 
         // 25차 보정: "X하/VV" → "X/NNG + 하/VV" 분리 (명사 + 하다 동사)
@@ -3392,7 +3676,10 @@ impl SejongConverter {
             tokens[idx] = SejongToken::new("고나서", "EC", start, end);
             tokens.remove(idx + 1);
             // 다음 토큰 "어/EC"도 제거 (있을 경우)
-            if idx + 1 < tokens.len() && tokens[idx + 1].surface == "어" && tokens[idx + 1].pos == "EC" {
+            if idx + 1 < tokens.len()
+                && tokens[idx + 1].surface == "어"
+                && tokens[idx + 1].pos == "EC"
+            {
                 tokens.remove(idx + 1);
             }
         }
@@ -3400,15 +3687,25 @@ impl SejongConverter {
         // 27차 보정: 존칭 "-시-" 선어말어미 보정
         // "드시/VV" → "드/VV + 시/EP", "오시/VV" → "오/VV + 시/EP"
         let honorific_verbs: std::collections::HashSet<&str> = [
-            "드시", "오시", "가시", "주시", "보시", "하시",
-            "잡수시", "계시", "나오시", "들어오시",
+            "드시",
+            "오시",
+            "가시",
+            "주시",
+            "보시",
+            "하시",
+            "잡수시",
+            "계시",
+            "나오시",
+            "들어오시",
         ]
         .into_iter()
         .collect();
 
         let mut honorific_split_indices: Vec<usize> = Vec::new();
         for (i, token) in tokens.iter().enumerate() {
-            if (token.pos == "VV" || token.pos == "VA") && honorific_verbs.contains(token.surface.as_str()) {
+            if (token.pos == "VV" || token.pos == "VA")
+                && honorific_verbs.contains(token.surface.as_str())
+            {
                 honorific_split_indices.push(i);
             }
         }
@@ -3466,8 +3763,22 @@ impl SejongConverter {
         // 29차 보정: "전/NNG + 에/EF" → "전/NNG + 에/JKB"
         // 시간/장소 명사 뒤의 "에"는 부사격 조사(JKB)여야 함
         let time_place_nouns: std::collections::HashSet<&str> = [
-            "전", "후", "동안", "사이", "때", "곳", "집", "학교", "회사",
-            "시작", "끝", "처음", "마지막", "오늘", "내일", "어제",
+            "전",
+            "후",
+            "동안",
+            "사이",
+            "때",
+            "곳",
+            "집",
+            "학교",
+            "회사",
+            "시작",
+            "끝",
+            "처음",
+            "마지막",
+            "오늘",
+            "내일",
+            "어제",
         ]
         .into_iter()
         .collect();
@@ -3508,7 +3819,9 @@ impl SejongConverter {
         // 예: "ᆫ/ETM" → "ㄴ/ETM", "ᆯ/ETM" → "ㄹ/ETM", "ᆷ/ETM" → "ㅁ/ETM"
         for token in tokens.iter_mut() {
             if token.pos == "ETM" {
-                let normalized = token.surface.replace('ᆫ', "ㄴ")
+                let normalized = token
+                    .surface
+                    .replace('ᆫ', "ㄴ")
                     .replace('ᆯ', "ㄹ")
                     .replace('ᆷ', "ㅁ");
                 if normalized != token.surface {
@@ -3529,8 +3842,16 @@ impl SejongConverter {
             }
 
             let surface = tokens[i].surface.clone();
-            let prev_surface = if i > 0 { tokens[i - 1].surface.clone() } else { String::new() };
-            let prev_pos = if i > 0 { tokens[i - 1].pos.clone() } else { String::new() };
+            let prev_surface = if i > 0 {
+                tokens[i - 1].surface.clone()
+            } else {
+                String::new()
+            };
+            let prev_pos = if i > 0 {
+                tokens[i - 1].pos.clone()
+            } else {
+                String::new()
+            };
 
             // 종결어미 "ㅂ니다/습니다" 정규화
             let is_bnida = surface == "ㅂ니다" || surface == "ᄇ니다";
@@ -3540,7 +3861,11 @@ impl SejongConverter {
                 // "시/EP" 뒤에서는 "ㅂ니다" 유지
                 // "었/EP", "겠/EP" 뒤에서는 "습니다"로 변환
                 // "이/VCP" 뒤에서는 "습니다"로 변환
-                let use_seupnida = (prev_pos == "EP" && (prev_surface == "었" || prev_surface == "겠" || prev_surface == "았" || prev_surface == "였"))
+                let use_seupnida = (prev_pos == "EP"
+                    && (prev_surface == "었"
+                        || prev_surface == "겠"
+                        || prev_surface == "았"
+                        || prev_surface == "였"))
                     || prev_pos == "VCP";
 
                 if use_seupnida {
@@ -3611,7 +3936,10 @@ impl SejongConverter {
                 let stem_len = stem.chars().count();
 
                 tokens[idx] = SejongToken::new(stem, "VV", start, start + stem_len);
-                tokens.insert(idx + 1, SejongToken::new(suffix, "VX", start + stem_len, end));
+                tokens.insert(
+                    idx + 1,
+                    SejongToken::new(suffix, "VX", start + stem_len, end),
+                );
             }
         }
 
@@ -3623,10 +3951,7 @@ impl SejongConverter {
             let next_pos = tokens[i + 1].pos.clone();
 
             // VV 뒤에 "시/NNB"가 오고, 그 다음에 EP나 EF가 오면 EP로 보정
-            if curr_pos == "VV"
-                && next_surface == "시"
-                && next_pos == "NNB"
-            {
+            if curr_pos == "VV" && next_surface == "시" && next_pos == "NNB" {
                 // 다음에 EP, EF, EC가 오는지 확인 (존칭 어미 패턴)
                 let is_honorific_context = if i + 2 < tokens.len() {
                     let following_pos = &tokens[i + 2].pos;
@@ -3688,7 +4013,10 @@ impl SejongConverter {
                 let stem_len = stem.chars().count();
 
                 tokens[idx] = SejongToken::new(stem, "VV", start, start + stem_len);
-                tokens.insert(idx + 1, SejongToken::new(suffix, "VX", start + stem_len, end));
+                tokens.insert(
+                    idx + 1,
+                    SejongToken::new(suffix, "VX", start + stem_len, end),
+                );
             }
         }
 
@@ -3746,8 +4074,8 @@ impl SejongConverter {
             let pos = &tokens[i].pos;
 
             // 마지막 토큰이거나, 다음 토큰이 없는 경우
-            let is_final = i == tokens.len() - 1
-                || (i + 1 < tokens.len() && tokens[i + 1].pos == "SF");
+            let is_final =
+                i == tokens.len() - 1 || (i + 1 < tokens.len() && tokens[i + 1].pos == "SF");
 
             if is_final && pos == "EC" && surface == "아요" {
                 // 이전 토큰이 XSV, VV, VA인지 확인
@@ -3799,10 +4127,7 @@ impl SejongConverter {
             let next_pos = &tokens[i + 1].pos;
 
             // NNG + "하고/JC" + VX 패턴
-            if prev_pos == "NNG"
-                && curr_surface == "하고"
-                && curr_pos == "JC"
-                && next_pos == "VX"
+            if prev_pos == "NNG" && curr_surface == "하고" && curr_pos == "JC" && next_pos == "VX"
             {
                 hago_split_indices.push(i);
             }
@@ -3857,8 +4182,7 @@ impl SejongConverter {
 
         let mut mm_split_indices: Vec<usize> = Vec::new();
         for i in 0..tokens.len() {
-            if tokens[i].pos == "MM" && mm_split_patterns.contains_key(tokens[i].surface.as_str())
-            {
+            if tokens[i].pos == "MM" && mm_split_patterns.contains_key(tokens[i].surface.as_str()) {
                 mm_split_indices.push(i);
             }
         }
@@ -3871,7 +4195,10 @@ impl SejongConverter {
                 let stem_len = stem.chars().count();
 
                 tokens[idx] = SejongToken::new(stem, "VV", start, start + stem_len);
-                tokens.insert(idx + 1, SejongToken::new(ending, "ETM", start + stem_len, end));
+                tokens.insert(
+                    idx + 1,
+                    SejongToken::new(ending, "ETM", start + stem_len, end),
+                );
             }
         }
 
@@ -3977,10 +4304,7 @@ impl SejongConverter {
             let next_pos = tokens[i + 1].pos.clone();
 
             // "하/IC + 지/VX" → "하/VV + 지/EC"
-            if curr_surface == "하"
-                && curr_pos == "IC"
-                && next_surface == "지"
-                && next_pos == "VX"
+            if curr_surface == "하" && curr_pos == "IC" && next_surface == "지" && next_pos == "VX"
             {
                 tokens[i].pos = "VV".to_string();
                 tokens[i + 1].pos = "EC".to_string();
@@ -3996,10 +4320,7 @@ impl SejongConverter {
             let curr_pos = &tokens[i].pos;
 
             // JKS 뒤의 "있/VX"는 본동사 (회의가 있다)
-            if prev_pos == "JKS"
-                && curr_surface == "있"
-                && curr_pos == "VX"
-            {
+            if prev_pos == "JKS" && curr_surface == "있" && curr_pos == "VX" {
                 tokens[i].pos = "VV".to_string();
             }
         }
@@ -4011,10 +4332,33 @@ impl SejongConverter {
         //     분리 후: "가/VV" + "아/EC" + "면서/EC" (잘못된 분리)
         //     보정 후: "가/VV" + "면서/EC"
         let ec_endings = [
-            "면서", "아서", "어서", "니까", "으니까", "지만", "거나", "더니",
-            "고나서", "자마자", "더라도", "으므로", "든지", "든가", "기에",
-            "길래", "거든", "다면", "어도", "아도", "도록", "듯이", "데도",
-            "므로", "다가", "는데", "ㄴ데",
+            "면서",
+            "아서",
+            "어서",
+            "니까",
+            "으니까",
+            "지만",
+            "거나",
+            "더니",
+            "고나서",
+            "자마자",
+            "더라도",
+            "으므로",
+            "든지",
+            "든가",
+            "기에",
+            "길래",
+            "거든",
+            "다면",
+            "어도",
+            "아도",
+            "도록",
+            "듯이",
+            "데도",
+            "므로",
+            "다가",
+            "는데",
+            "ㄴ데",
         ];
         let mut ec_merge_indices: Vec<usize> = Vec::new();
         for i in 0..tokens.len().saturating_sub(1) {
@@ -4055,11 +4399,7 @@ impl SejongConverter {
             }
         }
         for idx in ic_ec_merge_indices.into_iter().rev() {
-            let merged_surface = format!(
-                "{}{}",
-                tokens[idx].surface,
-                tokens[idx + 1].surface
-            );
+            let merged_surface = format!("{}{}", tokens[idx].surface, tokens[idx + 1].surface);
             let start = tokens[idx].start_pos;
             let end = tokens[idx + 1].end_pos;
             tokens[idx] = SejongToken::new(&merged_surface, "EC", start, end);
@@ -4069,9 +4409,28 @@ impl SejongConverter {
         // 47차 보정: "으/EF + 면서/EC" → "으면서/EC"
         // "갔으면서"에서 "으"가 EF로 분리된 경우
         let ec_endings_long = [
-            "면서", "니까", "으니까", "지만", "거나", "더니", "자마자",
-            "더라도", "으므로", "든지", "든가", "기에", "길래", "거든",
-            "다면", "어도", "아도", "도록", "듯이", "데도", "므로", "다가",
+            "면서",
+            "니까",
+            "으니까",
+            "지만",
+            "거나",
+            "더니",
+            "자마자",
+            "더라도",
+            "으므로",
+            "든지",
+            "든가",
+            "기에",
+            "길래",
+            "거든",
+            "다면",
+            "어도",
+            "아도",
+            "도록",
+            "듯이",
+            "데도",
+            "므로",
+            "다가",
         ];
         let mut ef_ec_merge_indices: Vec<usize> = Vec::new();
         for i in 0..tokens.len().saturating_sub(1) {
@@ -4090,11 +4449,7 @@ impl SejongConverter {
             }
         }
         for idx in ef_ec_merge_indices.into_iter().rev() {
-            let merged_surface = format!(
-                "{}{}",
-                tokens[idx].surface,
-                tokens[idx + 1].surface
-            );
+            let merged_surface = format!("{}{}", tokens[idx].surface, tokens[idx + 1].surface);
             let start = tokens[idx].start_pos;
             let end = tokens[idx + 1].end_pos;
             tokens[idx] = SejongToken::new(&merged_surface, "EC", start, end);
@@ -4105,7 +4460,9 @@ impl SejongConverter {
         // "먹으면"에서 "먹으/VV + 면/EC" → "먹/VV + 으면/EC"
         // 단, VV 어간이 받침이 있는 경우에만 적용 (예: 먹, 읽, 잡 등)
         // 받침 없는 어간 (가, 오, 보 등)은 "으"가 붙지 않음
-        let ec_short = ["면", "니", "니까", "서", "지만", "도", "거나", "다가", "더니"];
+        let ec_short = [
+            "면", "니", "니까", "서", "지만", "도", "거나", "다가", "더니",
+        ];
         let mut linking_ec_indices: Vec<usize> = Vec::new();
         for i in 0..tokens.len().saturating_sub(1) {
             let curr_surface = &tokens[i].surface;
@@ -4136,7 +4493,10 @@ impl SejongConverter {
         for idx in linking_ec_indices.into_iter().rev() {
             let curr_surface = &tokens[idx].surface;
             let last_char = curr_surface.chars().last().unwrap_or(' ');
-            let new_vv_surface: String = curr_surface.chars().take(curr_surface.chars().count() - 1).collect();
+            let new_vv_surface: String = curr_surface
+                .chars()
+                .take(curr_surface.chars().count() - 1)
+                .collect();
             let merged_ec = format!("{}{}", last_char, tokens[idx + 1].surface);
 
             let vv_start = tokens[idx].start_pos;
@@ -4185,8 +4545,7 @@ impl SejongConverter {
         // 전/현/신/구 등이 MM으로 태깅되었지만 실제로는 접두사(XPN)
         // 53차 추가: 새, 첫, 맨, 헛, 옛, 순 (sample.tsv 기반)
         let prefix_patterns: std::collections::HashSet<&str> = [
-            "전", "현", "신", "구", "친", "총", "부", "대",
-            "새", "첫", "맨", "헛", "옛", "순",
+            "전", "현", "신", "구", "친", "총", "부", "대", "새", "첫", "맨", "헛", "옛", "순",
         ]
         .into_iter()
         .collect();
@@ -4205,18 +4564,14 @@ impl SejongConverter {
             }
 
             // NR + NNG 패턴 중 "구"(舊)는 XPN으로 변환
-            if curr_pos == "NR"
-                && curr_surface == "구"
-                && (next_pos == "NNG" || next_pos == "NNP")
+            if curr_pos == "NR" && curr_surface == "구" && (next_pos == "NNG" || next_pos == "NNP")
             {
                 tokens[i].pos = "XPN".to_string();
             }
 
             // 51차 보정: "VV + NNG" 패턴 중 접두사 후보는 XPN으로 변환
             // "신/VV 제품/NNG" → "신/XPN 제품/NNG" (신다 동사와 구분)
-            if curr_pos == "VV"
-                && curr_surface == "신"
-                && (next_pos == "NNG" || next_pos == "NNP")
+            if curr_pos == "VV" && curr_surface == "신" && (next_pos == "NNG" || next_pos == "NNP")
             {
                 tokens[i].pos = "XPN".to_string();
             }
@@ -4239,7 +4594,8 @@ impl SejongConverter {
         for i in 0..tokens.len() {
             if tokens[i].surface == "있" && tokens[i].pos == "VX" {
                 // 앞 토큰이 "고/EC"인지 확인
-                let is_auxiliary = i > 0 && tokens[i - 1].surface == "고" && tokens[i - 1].pos == "EC";
+                let is_auxiliary =
+                    i > 0 && tokens[i - 1].surface == "고" && tokens[i - 1].pos == "EC";
                 if !is_auxiliary {
                     tokens[i].pos = "VV".to_string();
                 }
@@ -4253,7 +4609,9 @@ impl SejongConverter {
         while i < tokens.len().saturating_sub(1) {
             // "하/VV + ㅂ니다/EF" 또는 "가/VV + ㅂ니다/EF" 패턴 찾기
             if tokens[i].pos == "VV"
-                && (tokens[i].surface == "하" || tokens[i].surface == "가" || tokens[i].surface == "오")
+                && (tokens[i].surface == "하"
+                    || tokens[i].surface == "가"
+                    || tokens[i].surface == "오")
                 && tokens[i + 1].pos == "EF"
                 && tokens[i + 1].surface == "ㅂ니다"
             {
@@ -4282,14 +4640,16 @@ impl SejongConverter {
         // 단독 사용 시 동사 어간+명사형어미로 분리
         // 단, 앞에 NNG이 오면 복합명사로 처리하지 않음
         let nominalized_verbs: std::collections::HashMap<&str, &str> = [
-            ("감", "가"),  // 감 → 가/VV + ㅁ/ETN
-            ("봄", "보"),  // 봄 → 보/VV + ㅁ/ETN (계절 "봄"은 문맥으로 구분)
-            ("함", "하"),  // 함 → 하/VV + ㅁ/ETN
-            ("섬", "서"),  // 섬 → 서/VV + ㅁ/ETN (섬(島)은 문맥으로 구분)
-            ("삶", "살"),  // 삶 → 살/VV + ㅁ/ETN
-            ("앎", "알"),  // 앎 → 알/VV + ㅁ/ETN
+            ("감", "가"),   // 감 → 가/VV + ㅁ/ETN
+            ("봄", "보"),   // 봄 → 보/VV + ㅁ/ETN (계절 "봄"은 문맥으로 구분)
+            ("함", "하"),   // 함 → 하/VV + ㅁ/ETN
+            ("섬", "서"),   // 섬 → 서/VV + ㅁ/ETN (섬(島)은 문맥으로 구분)
+            ("삶", "살"),   // 삶 → 살/VV + ㅁ/ETN
+            ("앎", "알"),   // 앎 → 알/VV + ㅁ/ETN
             ("죽음", "죽"), // 죽음 → 죽/VV + 음/ETN
-        ].into_iter().collect();
+        ]
+        .into_iter()
+        .collect();
 
         let mut nominalized_split_indices: Vec<(usize, String)> = Vec::new();
         for (i, token) in tokens.iter().enumerate() {
@@ -4299,7 +4659,9 @@ impl SejongConverter {
                 let prev_is_nng = i > 0 && tokens[i - 1].pos == "NNG";
                 // 뒤에 조사가 오면 명사형어미로 분리
                 let next_is_particle = i + 1 < tokens.len()
-                    && (tokens[i + 1].pos.starts_with("JK") || tokens[i + 1].pos == "JX" || tokens[i + 1].pos == "JC");
+                    && (tokens[i + 1].pos.starts_with("JK")
+                        || tokens[i + 1].pos == "JX"
+                        || tokens[i + 1].pos == "JC");
                 // 단독 사용이거나 조사가 따라오면 분리
                 if !prev_is_nng && (next_is_particle || i + 1 >= tokens.len()) {
                     if let Some(&stem) = nominalized_verbs.get(token.surface.as_str()) {
@@ -4316,23 +4678,32 @@ impl SejongConverter {
             let stem_len = stem.chars().count();
 
             // "ㅁ"으로 끝나는 단음절 vs "음"으로 끝나는 다음절 구분
-            let etm_surface = if surface.ends_with("음") { "음" } else { "ㅁ" };
+            let etm_surface = if surface.ends_with("음") {
+                "음"
+            } else {
+                "ㅁ"
+            };
 
             tokens[idx] = SejongToken::new(&stem, "VV", start, start + stem_len);
-            tokens.insert(idx + 1, SejongToken::new(etm_surface, "ETN", start + stem_len, end));
+            tokens.insert(
+                idx + 1,
+                SejongToken::new(etm_surface, "ETN", start + stem_len, end),
+            );
         }
 
         // 58차 보정: "갈/VV + 기/ETN" → "가/VV + 기/ETN" (ㄹ 탈락 동사)
         // "가기", "오기" 등에서 어간이 ㄹ로 끝나면 ㄹ 탈락 처리
         // 단, 이미 "가/VV" 등으로 올바르게 분리된 경우는 건너뜀
         let rieul_drop_verbs: std::collections::HashMap<&str, &str> = [
-            ("갈", "가"),  // 갈기 → 가기
-            ("올", "오"),  // 올기 → 오기
-            ("볼", "보"),  // 볼기 → 보기 (실제로는 "볼 기회" 등 다른 패턴)
-            ("할", "하"),  // 할기 → 하기
-            ("살", "사"),  // 살기 → 사기 (사다의 명사형)
-            ("알", "아"),  // 알기 → 아기 (아는 것) - 주의: 아기(baby)와 구분
-        ].into_iter().collect();
+            ("갈", "가"), // 갈기 → 가기
+            ("올", "오"), // 올기 → 오기
+            ("볼", "보"), // 볼기 → 보기 (실제로는 "볼 기회" 등 다른 패턴)
+            ("할", "하"), // 할기 → 하기
+            ("살", "사"), // 살기 → 사기 (사다의 명사형)
+            ("알", "아"), // 알기 → 아기 (아는 것) - 주의: 아기(baby)와 구분
+        ]
+        .into_iter()
+        .collect();
 
         for i in 0..tokens.len().saturating_sub(1) {
             let curr_surface = tokens[i].surface.clone();
@@ -4363,7 +4734,7 @@ impl SejongConverter {
             // 새/XPN 접두사 패턴
             ("새해", ("새", "XPN", "해")),
             ("새봄", ("새", "XPN", "봄")),
-            ("새벽", ("새", "XPN", "벽")),  // 새벽은 단일어지만 형태상 분리
+            ("새벽", ("새", "XPN", "벽")), // 새벽은 단일어지만 형태상 분리
             ("새집", ("새", "XPN", "집")),
             ("새옷", ("새", "XPN", "옷")),
             // 첫/XPN 접두사 패턴
@@ -4384,13 +4755,22 @@ impl SejongConverter {
             // 헛/XPN 접두사 패턴
             ("헛소리", ("헛", "XPN", "소리")),
             ("헛수고", ("헛", "XPN", "수고")),
-        ].into_iter().collect();
+        ]
+        .into_iter()
+        .collect();
 
         let mut compound_split_indices: Vec<(usize, String, String, String)> = Vec::new();
         for (i, token) in tokens.iter().enumerate() {
             if token.pos == "NNG" {
-                if let Some(&(prefix, prefix_pos, suffix)) = compound_prefix_patterns.get(token.surface.as_str()) {
-                    compound_split_indices.push((i, prefix.to_string(), prefix_pos.to_string(), suffix.to_string()));
+                if let Some(&(prefix, prefix_pos, suffix)) =
+                    compound_prefix_patterns.get(token.surface.as_str())
+                {
+                    compound_split_indices.push((
+                        i,
+                        prefix.to_string(),
+                        prefix_pos.to_string(),
+                        suffix.to_string(),
+                    ));
                 }
             }
         }
@@ -4401,16 +4781,21 @@ impl SejongConverter {
             let prefix_len = prefix.chars().count();
 
             tokens[idx] = SejongToken::new(&prefix, &prefix_pos, start, start + prefix_len);
-            tokens.insert(idx + 1, SejongToken::new(&suffix, "NNG", start + prefix_len, end));
+            tokens.insert(
+                idx + 1,
+                SejongToken::new(&suffix, "NNG", start + prefix_len, end),
+            );
         }
 
         // 60차 보정: NNB(의존명사) 패턴 보정
         // "것/NNG", "수/NNG", "데/NNG" 등 → NNB로 변환 (관형형 뒤에서)
         // 관형형어미(ETM) 뒤의 형식명사는 NNB
         let dependent_nouns: std::collections::HashSet<&str> = [
-            "것", "거", "수", "데", "때", "뿐", "줄", "척", "체", "만큼", "대로",
-            "지", "채", "김", "듯", "바", "양", "적", "리", "이", "분",
-        ].into_iter().collect();
+            "것", "거", "수", "데", "때", "뿐", "줄", "척", "체", "만큼", "대로", "지", "채", "김",
+            "듯", "바", "양", "적", "리", "이", "분",
+        ]
+        .into_iter()
+        .collect();
 
         for i in 1..tokens.len() {
             let prev_pos = tokens[i - 1].pos.clone();
@@ -4418,7 +4803,10 @@ impl SejongConverter {
             let curr_pos = tokens[i].pos.clone();
 
             // ETM 뒤의 NNG가 의존명사 목록에 있으면 NNB로 변환
-            if prev_pos == "ETM" && curr_pos == "NNG" && dependent_nouns.contains(curr_surface.as_str()) {
+            if prev_pos == "ETM"
+                && curr_pos == "NNG"
+                && dependent_nouns.contains(curr_surface.as_str())
+            {
                 tokens[i].pos = "NNB".to_string();
             }
 
@@ -4426,7 +4814,10 @@ impl SejongConverter {
             // "할 수 있다"에서 "수"는 NNB
             if (prev_pos == "VV" || prev_pos == "VA" || prev_pos == "VX")
                 && curr_pos == "NNG"
-                && (curr_surface == "수" || curr_surface == "것" || curr_surface == "줄" || curr_surface == "뿐")
+                && (curr_surface == "수"
+                    || curr_surface == "것"
+                    || curr_surface == "줄"
+                    || curr_surface == "뿐")
             {
                 tokens[i].pos = "NNB".to_string();
             }
@@ -4436,10 +4827,12 @@ impl SejongConverter {
         // "가야 합니다" 패턴에서 "가야"는 명사가 아니라 동사+어미
         let aya_patterns: std::collections::HashMap<&str, &str> = [
             ("가야", "가"),
-            ("와야", "오"),  // 오+아야 → 와야
-            ("봐야", "보"),  // 보+아야 → 봐야
+            ("와야", "오"), // 오+아야 → 와야
+            ("봐야", "보"), // 보+아야 → 봐야
             ("해야", "하"),
-        ].into_iter().collect();
+        ]
+        .into_iter()
+        .collect();
 
         let mut aya_split_indices: Vec<(usize, String)> = Vec::new();
         for i in 0..tokens.len().saturating_sub(1) {
@@ -4464,16 +4857,19 @@ impl SejongConverter {
             let stem_len = stem.chars().count();
 
             tokens[idx] = SejongToken::new(&stem, "VV", start, start + stem_len);
-            tokens.insert(idx + 1, SejongToken::new("아야", "EC", start + stem_len, end));
+            tokens.insert(
+                idx + 1,
+                SejongToken::new("아야", "EC", start + stem_len, end),
+            );
         }
 
         // 62차 보정: 잘못 분리된 복합명사 병합
         // "올/VV + 해/NNG" → "올해/NNG"
         // "내/NP + 년/NNG" → "내년/NNG"
         let compound_noun_merges: Vec<(&str, &str, &str, &str, &str)> = vec![
-            ("올", "VV", "해", "NNG", "올해"),   // 올해
-            ("내", "NP", "년", "NNG", "내년"),   // 내년
-            ("작", "VA", "년", "NNG", "작년"),   // 작년
+            ("올", "VV", "해", "NNG", "올해"), // 올해
+            ("내", "NP", "년", "NNG", "내년"), // 내년
+            ("작", "VA", "년", "NNG", "작년"), // 작년
         ];
 
         let mut compound_merge_indices: Vec<(usize, String)> = Vec::new();
@@ -4484,8 +4880,7 @@ impl SejongConverter {
             let next_pos = &tokens[i + 1].pos;
 
             for (s1, p1, s2, p2, merged) in &compound_noun_merges {
-                if curr_surface == *s1 && curr_pos == *p1
-                    && next_surface == *s2 && next_pos == *p2
+                if curr_surface == *s1 && curr_pos == *p1 && next_surface == *s2 && next_pos == *p2
                 {
                     compound_merge_indices.push((i, (*merged).to_string()));
                     break;
@@ -4518,8 +4913,10 @@ impl SejongConverter {
         // "드세요", "드시다" 등에서 기본형은 "들다"
         // EP가 "시"인 경우에만 적용 (존칭 선어말어미)
         let rieul_irregular_verbs: std::collections::HashMap<&str, &str> = [
-            ("드", "들"),   // 들다 → 드시다, 드세요
-        ].into_iter().collect();
+            ("드", "들"), // 들다 → 드시다, 드세요
+        ]
+        .into_iter()
+        .collect();
 
         for i in 0..tokens.len().saturating_sub(1) {
             let curr_surface = &tokens[i].surface;
@@ -4555,8 +4952,10 @@ impl SejongConverter {
             let next_pos = &tokens[i + 1].pos;
 
             for (base, suffix, merged) in &honorific_nouns {
-                if curr_surface == *base && curr_pos == "NNG"
-                    && next_surface == *suffix && next_pos == "XSN"
+                if curr_surface == *base
+                    && curr_pos == "NNG"
+                    && next_surface == *suffix
+                    && next_pos == "XSN"
                 {
                     honorific_merge_indices.push((i, (*merged).to_string()));
                     break;
@@ -4609,8 +5008,10 @@ impl SejongConverter {
             // EC 다음에 "하/XSV + ㅂ니다/EF" 패턴
             if i > 0
                 && tokens[i - 1].pos == "EC"
-                && tokens[i].surface == "하" && tokens[i].pos == "XSV"
-                && tokens[i + 1].surface == "ㅂ니다" && tokens[i + 1].pos == "EF"
+                && tokens[i].surface == "하"
+                && tokens[i].pos == "XSV"
+                && tokens[i + 1].surface == "ㅂ니다"
+                && tokens[i + 1].pos == "EF"
             {
                 hapnida_merge_indices.push(i);
             }
@@ -4673,8 +5074,10 @@ impl SejongConverter {
                 // 다음 토큰이 VCP, JKS, JX, NNB 등이면 의존명사
                 if i + 1 < tokens.len() {
                     let next_pos = &tokens[i + 1].pos;
-                    if next_pos == "VCP" || next_pos == "JKS"
-                        || next_pos == "JX" || next_pos == "JKO"
+                    if next_pos == "VCP"
+                        || next_pos == "JKS"
+                        || next_pos == "JX"
+                        || next_pos == "JKO"
                         || next_pos == "NNB"
                     {
                         tokens[i].pos = "NNB".to_string();
@@ -4700,10 +5103,7 @@ impl SejongConverter {
                 // 다음 토큰이 명사류인지 확인
                 let next_is_noun = if i + 1 < tokens.len() {
                     let next_pos = &tokens[i + 1].pos;
-                    next_pos == "NNG"
-                        || next_pos == "NNP"
-                        || next_pos == "NNB"
-                        || next_pos == "NP"
+                    next_pos == "NNG" || next_pos == "NNP" || next_pos == "NNB" || next_pos == "NP"
                 } else {
                     false
                 };
@@ -4715,22 +5115,52 @@ impl SejongConverter {
                     // "온" → "오/VV ㄴ/ETM"
                     // "한" → "하/VV ㄴ/ETM"
                     if surface == "간" {
-                        adnominal_splits.push((i, "가".to_string(), "VV".to_string(), "ㄴ".to_string()));
+                        adnominal_splits.push((
+                            i,
+                            "가".to_string(),
+                            "VV".to_string(),
+                            "ㄴ".to_string(),
+                        ));
                     } else if surface == "온" {
-                        adnominal_splits.push((i, "오".to_string(), "VV".to_string(), "ㄴ".to_string()));
+                        adnominal_splits.push((
+                            i,
+                            "오".to_string(),
+                            "VV".to_string(),
+                            "ㄴ".to_string(),
+                        ));
                     } else if surface == "한" {
-                        adnominal_splits.push((i, "하".to_string(), "VV".to_string(), "ㄴ".to_string()));
+                        adnominal_splits.push((
+                            i,
+                            "하".to_string(),
+                            "VV".to_string(),
+                            "ㄴ".to_string(),
+                        ));
                     }
                     // ㄹ 종성 (받침)으로 끝나는 1음절 어휘
                     // "갈" → "가/VV ㄹ/ETM"
                     // "올" → "오/VV ㄹ/ETM"
                     // "할" → "하/VV ㄹ/ETM"
                     else if surface == "갈" {
-                        adnominal_splits.push((i, "가".to_string(), "VV".to_string(), "ㄹ".to_string()));
+                        adnominal_splits.push((
+                            i,
+                            "가".to_string(),
+                            "VV".to_string(),
+                            "ㄹ".to_string(),
+                        ));
                     } else if surface == "올" {
-                        adnominal_splits.push((i, "오".to_string(), "VV".to_string(), "ㄹ".to_string()));
+                        adnominal_splits.push((
+                            i,
+                            "오".to_string(),
+                            "VV".to_string(),
+                            "ㄹ".to_string(),
+                        ));
                     } else if surface == "할" {
-                        adnominal_splits.push((i, "하".to_string(), "VV".to_string(), "ㄹ".to_string()));
+                        adnominal_splits.push((
+                            i,
+                            "하".to_string(),
+                            "VV".to_string(),
+                            "ㄹ".to_string(),
+                        ));
                     }
                 }
             }
@@ -4747,14 +5177,12 @@ impl SejongConverter {
         // 75차 보정: ㄹ 탈락 동사 기본형 복원 (VV + 세요/EF 패턴)
         // "드/VV + 세요/EF" → "들/VV + 세요/EF" (들다 → 드세요)
         for i in 0..tokens.len().saturating_sub(1) {
-            if tokens[i].pos == "VV"
-                && tokens[i + 1].surface == "세요"
-                && tokens[i + 1].pos == "EF"
+            if tokens[i].pos == "VV" && tokens[i + 1].surface == "세요" && tokens[i + 1].pos == "EF"
             {
                 // ㄹ 탈락 동사 패턴
                 let rieul_verbs = [
-                    ("드", "들"),  // 들다 → 드세요
-                    ("아", "알"),  // 알다 → 아세요
+                    ("드", "들"), // 들다 → 드세요
+                    ("아", "알"), // 알다 → 아세요
                 ];
                 for (dropped, original) in rieul_verbs {
                     if tokens[i].surface == dropped {
@@ -4775,7 +5203,9 @@ impl SejongConverter {
             ("먹이", ("먹", "VV")),
             ("잠", ("자", "VV")),
             ("꿈", ("꾸", "VV")),
-        ].into_iter().collect();
+        ]
+        .into_iter()
+        .collect();
 
         let mut derived_split_indices: Vec<(usize, String, String, String)> = Vec::new();
         for (i, token) in tokens.iter().enumerate() {
@@ -4791,7 +5221,12 @@ impl SejongConverter {
                     } else {
                         continue;
                     };
-                    derived_split_indices.push((i, stem.to_string(), stem_pos.to_string(), suffix.to_string()));
+                    derived_split_indices.push((
+                        i,
+                        stem.to_string(),
+                        stem_pos.to_string(),
+                        suffix.to_string(),
+                    ));
                 }
             }
         }
@@ -4801,7 +5236,10 @@ impl SejongConverter {
             let end = tokens[idx].end_pos;
             let stem_len = stem.chars().count();
             tokens[idx] = SejongToken::new(&stem, &stem_pos, start, start + stem_len);
-            tokens.insert(idx + 1, SejongToken::new(&suffix, "ETN", start + stem_len, end));
+            tokens.insert(
+                idx + 1,
+                SejongToken::new(&suffix, "ETN", start + stem_len, end),
+            );
         }
 
         // 77차 보정: 단음절 VV + ㄴ/ㄹ 받침 → VV + ETM 분리
@@ -4810,23 +5248,25 @@ impl SejongConverter {
         // 예: "간 온" → "가/VV ㄴ/ETM 오/VV ㄴ/ETM"
         let vv_etm_patterns: std::collections::HashMap<&str, (&str, &str)> = [
             // ㄴ/은 관형형 (과거/완료)
-            ("간", ("가", "ㄴ")),   // 가다
-            ("온", ("오", "ㄴ")),   // 오다
-            ("한", ("하", "ㄴ")),   // 하다
-            ("본", ("보", "ㄴ")),   // 보다
-            ("잔", ("자", "ㄴ")),   // 자다
-            ("산", ("사", "ㄴ")),   // 사다
-            ("된", ("되", "ㄴ")),   // 되다
-            ("쓴", ("쓰", "ㄴ")),   // 쓰다
+            ("간", ("가", "ㄴ")), // 가다
+            ("온", ("오", "ㄴ")), // 오다
+            ("한", ("하", "ㄴ")), // 하다
+            ("본", ("보", "ㄴ")), // 보다
+            ("잔", ("자", "ㄴ")), // 자다
+            ("산", ("사", "ㄴ")), // 사다
+            ("된", ("되", "ㄴ")), // 되다
+            ("쓴", ("쓰", "ㄴ")), // 쓰다
             // ㄹ/을 관형형 (미래/추측)
-            ("갈", ("가", "ㄹ")),   // 가다
-            ("올", ("오", "ㄹ")),   // 오다
-            ("할", ("하", "ㄹ")),   // 하다
-            ("볼", ("보", "ㄹ")),   // 보다
-            ("살", ("살", "ㄹ")),   // 살다 (ㄹ 불규칙)
-            ("알", ("알", "ㄹ")),   // 알다 (ㄹ 불규칙)
-            ("될", ("되", "ㄹ")),   // 되다
-        ].into_iter().collect();
+            ("갈", ("가", "ㄹ")), // 가다
+            ("올", ("오", "ㄹ")), // 오다
+            ("할", ("하", "ㄹ")), // 하다
+            ("볼", ("보", "ㄹ")), // 보다
+            ("살", ("살", "ㄹ")), // 살다 (ㄹ 불규칙)
+            ("알", ("알", "ㄹ")), // 알다 (ㄹ 불규칙)
+            ("될", ("되", "ㄹ")), // 되다
+        ]
+        .into_iter()
+        .collect();
 
         let mut etm_split_indices: Vec<(usize, String, String)> = Vec::new();
         for (i, token) in tokens.iter().enumerate() {
@@ -4838,9 +5278,12 @@ impl SejongConverter {
                     let should_split = if i + 1 < tokens.len() {
                         let next_pos = &tokens[i + 1].pos;
                         // 명사, 대명사, 다른 동사/형용사 앞에서 분리
-                        next_pos.starts_with("NN") || next_pos == "NP"
-                            || next_pos == "VV" || next_pos == "VA"
-                            || next_pos == "MM" || next_pos == "MAG"
+                        next_pos.starts_with("NN")
+                            || next_pos == "NP"
+                            || next_pos == "VV"
+                            || next_pos == "VA"
+                            || next_pos == "MM"
+                            || next_pos == "MAG"
                     } else {
                         // 문장 끝에서도 분리 (sample.tsv 기준)
                         true
@@ -4858,7 +5301,10 @@ impl SejongConverter {
             let end = tokens[idx].end_pos;
             let stem_len = stem.chars().count();
             tokens[idx] = SejongToken::new(&stem, "VV", start, start + stem_len);
-            tokens.insert(idx + 1, SejongToken::new(&etm, "ETM", start + stem_len, end));
+            tokens.insert(
+                idx + 1,
+                SejongToken::new(&etm, "ETM", start + stem_len, end),
+            );
         }
 
         // 78차 보정: XSV 복합 패턴 분리
@@ -4871,7 +5317,9 @@ impl SejongConverter {
             ("하였어", ("하", "었", "어")),
             ("되었으면", ("되", "었", "으면")),
             ("하였으면", ("하", "었", "으면")),
-        ].into_iter().collect();
+        ]
+        .into_iter()
+        .collect();
 
         let mut xsv_split_indices: Vec<(usize, String, String, String)> = Vec::new();
         for (i, token) in tokens.iter().enumerate() {
@@ -4888,19 +5336,26 @@ impl SejongConverter {
             let stem_len = stem.chars().count();
             let ep_len = ep.chars().count();
             tokens[idx] = SejongToken::new(&stem, "XSV", start, start + stem_len);
-            tokens.insert(idx + 1, SejongToken::new(&ep, "EP", start + stem_len, start + stem_len + ep_len));
+            tokens.insert(
+                idx + 1,
+                SejongToken::new(&ep, "EP", start + stem_len, start + stem_len + ep_len),
+            );
             // ef_pos 결정: 다/EF, 어/EF, 으면/EC
-            let ef_pos = if ef == "다" || ef == "어" { "EF" } else { "EC" };
-            tokens.insert(idx + 2, SejongToken::new(&ef, ef_pos, start + stem_len + ep_len, end));
+            let ef_pos = if ef == "다" || ef == "어" {
+                "EF"
+            } else {
+                "EC"
+            };
+            tokens.insert(
+                idx + 2,
+                SejongToken::new(&ef, ef_pos, start + stem_len + ep_len, end),
+            );
         }
 
         // 79차 보정: VV 뒤의 "이/MM" → "이/ETN"
         // 파생명사 패턴: 먹이, 놀이 등에서 MeCab이 "이/MM"으로 잘못 태깅
         for i in 1..tokens.len() {
-            if tokens[i].surface == "이"
-                && tokens[i].pos == "MM"
-                && tokens[i - 1].pos == "VV"
-            {
+            if tokens[i].surface == "이" && tokens[i].pos == "MM" && tokens[i - 1].pos == "VV" {
                 // 특정 어간 뒤에서만 적용 (명사형어미가 아닌 경우 방지)
                 let prev_surface = &tokens[i - 1].surface;
                 let etn_triggers = ["먹", "놀", "알", "살", "높", "낮", "깊", "넓", "짧"];
@@ -4980,10 +5435,7 @@ impl SejongConverter {
         // "뭐야", "누구야" 등에서 "야"가 감탄사로 태깅되는 오류 수정
         let mut ya_split_indices: Vec<usize> = Vec::new();
         for i in 1..tokens.len() {
-            if tokens[i].surface == "야"
-                && tokens[i].pos == "IC"
-                && tokens[i - 1].pos == "NP"
-            {
+            if tokens[i].surface == "야" && tokens[i].pos == "IC" && tokens[i - 1].pos == "NP" {
                 // 이전 토큰의 마지막 글자에 받침이 없으면 VCP 분리
                 if let Some(last_char) = tokens[i - 1].surface.chars().last() {
                     if !Self::has_jongseong(last_char) {
@@ -5061,10 +5513,7 @@ impl SejongConverter {
         // "발표될" = "발표/NNG 되/XSV ㄹ/ETM"
         // 주의: "하/VV" → "하/XSV"는 VV 정확도를 떨어뜨리므로 적용하지 않음
         for i in 1..tokens.len() {
-            if tokens[i].surface == "되"
-                && tokens[i].pos == "VV"
-                && tokens[i - 1].pos == "NNG"
-            {
+            if tokens[i].surface == "되" && tokens[i].pos == "VV" && tokens[i - 1].pos == "NNG" {
                 tokens[i].pos = "XSV".to_string();
             }
         }
@@ -5098,8 +5547,11 @@ impl SejongConverter {
         // 91차 보정: 문장 끝 "는다/EC" → "는다/EF"
         // "먹는다" = "먹/VV 는다/EF"
         // "한다" = "하/VV ㄴ다/EF"
+        // 121차: ᆫ다 (U+11AB jongseong) 추가
         if let Some(last) = tokens.last_mut() {
-            if (last.surface == "는다" || last.surface == "ㄴ다") && last.pos == "EC" {
+            if (last.surface == "는다" || last.surface == "ㄴ다" || last.surface == "ᆫ다")
+                && last.pos == "EC"
+            {
                 last.pos = "EF".to_string();
             }
         }
@@ -5298,9 +5750,10 @@ impl SejongConverter {
         // "해 보았다" = VV + 어/EC + 보/VX
         // "먹어 버렸다" = VV + 어/EC + 버리/VX
         let auxiliary_verbs: std::collections::HashSet<&str> = [
-            "주", "보", "버리", "내", "두", "놓", "오", "가",
-            "드리", "달", "빠지", "치우", "대",
-        ].into_iter().collect();
+            "주", "보", "버리", "내", "두", "놓", "오", "가", "드리", "달", "빠지", "치우", "대",
+        ]
+        .into_iter()
+        .collect();
 
         if tokens.len() >= 3 {
             for i in 0..tokens.len() - 2 {
@@ -5394,7 +5847,11 @@ impl SejongConverter {
             // "자/EF + 고/EC" → "자고/EC" (청유형 인용)
             // "다/EF + 고/EC" → "다고/EC" (평서형 인용)
             // "라/EF + 고/EC" → "라고/EC" (명령형/서술형 인용)
-            if (curr_surface == "자" || curr_surface == "다" || curr_surface == "라" || curr_surface == "냐" || curr_surface == "냐고")
+            if (curr_surface == "자"
+                || curr_surface == "다"
+                || curr_surface == "라"
+                || curr_surface == "냐"
+                || curr_surface == "냐고")
                 && curr_pos == "EF"
                 && next_surface == "고"
                 && next_pos == "EC"
@@ -5404,11 +5861,7 @@ impl SejongConverter {
         }
 
         for idx in quote_ec_merge_indices.into_iter().rev() {
-            let merged_surface = format!(
-                "{}{}",
-                tokens[idx].surface,
-                tokens[idx + 1].surface
-            );
+            let merged_surface = format!("{}{}", tokens[idx].surface, tokens[idx + 1].surface);
             let start = tokens[idx].start_pos;
             let end = tokens[idx + 1].end_pos;
             tokens[idx] = SejongToken::new(&merged_surface, "EC", start, end);
@@ -5425,18 +5878,12 @@ impl SejongConverter {
                 let next_surface = tokens[i + 1].surface.clone();
 
                 // "ㄹ까/EF + 하/VV" → "ㄹ까/EC"
-                if curr_surface == "ㄹ까"
-                    && curr_pos == "EF"
-                    && next_surface == "하"
-                {
+                if curr_surface == "ㄹ까" && curr_pos == "EF" && next_surface == "하" {
                     ef_to_ec_indices.push(i);
                 }
 
                 // "ㄹ지/EF + 모르/VV" → "ㄹ지/EC"
-                if curr_surface == "ㄹ지"
-                    && curr_pos == "EF"
-                    && next_surface == "모르"
-                {
+                if curr_surface == "ㄹ지" && curr_pos == "EF" && next_surface == "모르" {
                     ef_to_ec_indices.push(i);
                 }
             }
@@ -5489,7 +5936,9 @@ impl SejongConverter {
             ("걷고", ("걷", "VV")),
             ("만나고", ("만나", "VV")),
             ("기다리고", ("기다리", "VV")),
-        ].into_iter().collect();
+        ]
+        .into_iter()
+        .collect();
 
         let mut vv_ec_splits: Vec<(usize, String, String)> = Vec::new();
         for i in 0..tokens.len() {
@@ -5503,9 +5952,14 @@ impl SejongConverter {
                     if i + 1 < tokens.len() {
                         let next_surface = &tokens[i + 1].surface;
                         let next_pos = &tokens[i + 1].pos;
-                        if next_surface == "있" || next_surface == "싶" || next_surface == "없"
-                            || next_pos == "VX" || next_pos == "VA" || next_pos == "VV"
-                            || next_pos == "NNP" // "싶어요/NNP" 같은 오분석
+                        if next_surface == "있"
+                            || next_surface == "싶"
+                            || next_surface == "없"
+                            || next_pos == "VX"
+                            || next_pos == "VA"
+                            || next_pos == "VV"
+                            || next_pos == "NNP"
+                        // "싶어요/NNP" 같은 오분석
                         {
                             vv_ec_splits.push((i, stem.to_string(), pos.to_string()));
                         }
@@ -5566,9 +6020,12 @@ impl SejongConverter {
                 let t2 = &tokens[i + 2];
 
                 // "고/EC + 나/NP + 서/JKB" → "고나서/EC"
-                if t0.surface == "고" && t0.pos == "EC"
-                    && t1.surface == "나" && (t1.pos == "NP" || t1.pos == "VV")
-                    && t2.surface == "서" && (t2.pos == "JKB" || t2.pos == "EC")
+                if t0.surface == "고"
+                    && t0.pos == "EC"
+                    && t1.surface == "나"
+                    && (t1.pos == "NP" || t1.pos == "VV")
+                    && t2.surface == "서"
+                    && (t2.pos == "JKB" || t2.pos == "EC")
                 {
                     compound_ec_merges.push((i, "고나서".to_string()));
                 }
@@ -5592,8 +6049,10 @@ impl SejongConverter {
 
             // "면서" 계열이 EF로 분석된 경우 EC로 변환
             if curr_pos == "EF"
-                && (curr_surface == "으면서" || curr_surface == "면서"
-                    || curr_surface == "으며" || curr_surface == "며")
+                && (curr_surface == "으면서"
+                    || curr_surface == "면서"
+                    || curr_surface == "으며"
+                    || curr_surface == "며")
             {
                 // 마지막 토큰이 아닌 경우만 EC로 변환
                 if i + 1 < tokens.len() {
@@ -5612,7 +6071,9 @@ impl SejongConverter {
         // 동사 어간 "보이", "들이", "붙이" 등
         let verb_stems_with_i: std::collections::HashSet<&str> = [
             "보이", "들이", "붙이", "놓이", "쓰이", "덮이", "갈이", "꺾이",
-        ].into_iter().collect();
+        ]
+        .into_iter()
+        .collect();
 
         // VV 변환 및 VCP 삭제할 인덱스 수집
         let mut vv_convert_and_vcp_delete: Vec<(usize, usize)> = Vec::new(); // (NNG idx, VCP idx)
@@ -5674,9 +6135,7 @@ impl SejongConverter {
             let curr_pos = &tokens[i].pos;
 
             // NNG + "다/NNG" 패턴 → VCP 삽입 필요
-            if (prev_pos == "NNG" || prev_pos == "NNP")
-                && curr_surface == "다"
-                && curr_pos == "NNG"
+            if (prev_pos == "NNG" || prev_pos == "NNP") && curr_surface == "다" && curr_pos == "NNG"
             {
                 // 이전 토큰의 마지막 글자 확인 (받침 있으면 이/VCP, 없으면 다/EF만)
                 let prev_surface = &tokens[i - 1].surface;
@@ -5724,6 +6183,16 @@ impl SejongConverter {
                         tokens.remove(last_idx);
                     }
                 }
+            }
+        }
+
+        // 122차 보정: 문장 끝 "ᆯ래요/EC" → "ᆯ래요/EF"
+        // "할래요" = "하/VV ᆯ래요/EF" (not EC)
+        // "갈래요" = "가/VV ᆯ래요/EF"
+        // Note: ᆯ (U+11AF) is jongseong rieul, vs ㄹ (U+3139)
+        if let Some(last) = tokens.last_mut() {
+            if (last.surface == "ᆯ래요" || last.surface == "ㄹ래요") && last.pos == "EC" {
+                last.pos = "EF".to_string();
             }
         }
     }
@@ -5789,7 +6258,10 @@ impl SejongConverter {
             // 모음 인덱스 = ((code - 0xAC00) / 28) % 21
             let vowel_idx = ((code - 0xAC00) / 28) % 21;
             // 모음: ㅏ ㅐ ㅑ ㅒ ㅓ ㅔ ㅕ ㅖ ㅗ ㅘ ㅙ ㅚ ㅛ ㅜ ㅝ ㅞ ㅟ ㅠ ㅡ ㅢ ㅣ
-            let vowels = ['ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 'ㅗ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ', 'ㅡ', 'ㅢ', 'ㅣ'];
+            let vowels = [
+                'ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 'ㅗ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ',
+                'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ', 'ㅡ', 'ㅢ', 'ㅣ',
+            ];
             vowels[vowel_idx as usize]
         } else {
             // 한글 자모 범위인 경우 그대로 반환
@@ -5848,18 +6320,12 @@ mod tests {
     fn test_split_compound_tag() {
         let converter = SejongConverter::new();
 
-        assert_eq!(
-            converter.split_compound_tag("VV+EF"),
-            vec!["VV", "EF"]
-        );
+        assert_eq!(converter.split_compound_tag("VV+EF"), vec!["VV", "EF"]);
         assert_eq!(
             converter.split_compound_tag("VV+EP+EF"),
             vec!["VV", "EP", "EF"]
         );
-        assert_eq!(
-            converter.split_compound_tag("NNG"),
-            vec!["NNG"]
-        );
+        assert_eq!(converter.split_compound_tag("NNG"), vec!["NNG"]);
     }
 
     #[test]
