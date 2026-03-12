@@ -6568,6 +6568,76 @@ impl SejongConverter {
                 },
             );
         }
+
+        // 138차 보정: 인용문 패턴 수정
+        // 패턴 1: "~자/EF + 이/VCP + 고/EC" → "~자고/EC" (VCP 제거, EF→EC, 고 병합)
+        // 패턴 2: "~다/EF + 고하/VV" → "~다고/EC + 하/VV" (고하 분리)
+        let mut quote_fix_indices: Vec<(usize, String, bool)> = Vec::new(); // (idx, new_surface, remove_next)
+
+        for i in 0..tokens.len().saturating_sub(2) {
+            let curr_surface = tokens[i].surface.clone();
+            let curr_pos = &tokens[i].pos;
+            let next_surface = &tokens[i + 1].surface;
+            let next_pos = &tokens[i + 1].pos;
+
+            // 패턴 1: ~자/EF + 이/VCP + 고/EC → 자고/EC
+            if curr_pos == "EF"
+                && curr_surface == "자"
+                && next_surface == "이"
+                && next_pos == "VCP"
+            {
+                if i + 2 < tokens.len()
+                    && tokens[i + 2].surface == "고"
+                    && tokens[i + 2].pos == "EC"
+                {
+                    quote_fix_indices.push((i, "자고".to_string(), true));
+                }
+            }
+
+            // 패턴 2: ~다/EF + 고하/VV → 다고/EC + 하/VV
+            if curr_pos == "EF" && curr_surface == "다" && next_surface == "고하" && next_pos == "VV"
+            {
+                // 이 경우 다/EF를 다고/EC로 변경하고, 고하/VV를 하/VV로 변경
+                // 별도 처리 필요
+            }
+        }
+
+        // 패턴 1 적용: 역순 처리
+        for (idx, new_surface, remove_next) in quote_fix_indices.into_iter().rev() {
+            tokens[idx].surface = new_surface;
+            tokens[idx].pos = "EC".to_string();
+
+            if remove_next {
+                // 이/VCP와 고/EC 제거 (2개)
+                if idx + 2 < tokens.len() {
+                    tokens.remove(idx + 2); // 고/EC 제거
+                }
+                if idx + 1 < tokens.len() {
+                    tokens.remove(idx + 1); // 이/VCP 제거
+                }
+            }
+        }
+
+        // 패턴 3: 고하/VV → 고/EC + 하/VV 분리 (세종 변환 후)
+        let mut split_goha_indices: Vec<usize> = Vec::new();
+        for i in 0..tokens.len() {
+            if tokens[i].surface == "고하" && tokens[i].pos == "VV" {
+                // 앞에 다/EF가 있는지 확인
+                if i > 0 && tokens[i - 1].surface == "다" && tokens[i - 1].pos == "EF" {
+                    split_goha_indices.push(i);
+                }
+            }
+        }
+
+        for idx in split_goha_indices.into_iter().rev() {
+            // 앞의 다/EF를 다고/EC로 변경
+            if idx > 0 {
+                tokens[idx - 1].surface = "다고".to_string();
+                tokens[idx - 1].pos = "EC".to_string();
+            }
+            // 고하/VV를 하/VV로 변경
+            tokens[idx].surface = "하".to_string();
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
