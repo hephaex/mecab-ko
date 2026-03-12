@@ -2350,6 +2350,17 @@ impl SejongConverter {
             ("머리", "NNG"),
             ("얼굴", "NNG"),
             ("가슴", "NNG"),
+            // ===== 일반명사 (NNG) - 뉴스/전문 용어 (144차) =====
+            ("미세먼지", "NNG"),
+            ("경제", "NNG"),
+            ("정치", "NNG"),
+            ("사회", "NNG"),
+            ("문화", "NNG"),
+            ("환경", "NNG"),
+            ("교육", "NNG"),
+            ("과학", "NNG"),
+            ("기술", "NNG"),
+            ("의료", "NNG"),
             // ===== 형용사 (VA) - 자주 잘못 인식되는 것 =====
             ("덥", "VA"),
             ("춥", "VA"),
@@ -2455,6 +2466,22 @@ impl SejongConverter {
                 tokens[i] = SejongToken::new("순", "XPN", start, start + 1);
                 tokens[i + 1] = SejongToken::new("우리말", "NNG", start + 1, end);
                 tokens.remove(i + 2);
+                merged = true;
+            }
+
+            // 144차: "주/VX + 가가/NNG" → "주가/NNG + 가/JKS"
+            // (주가가가 주/VX+가가/NNG로 분석되는 문제 수정)
+            if !merged
+                && i + 1 < tokens.len()
+                && tokens[i].surface == "주"
+                && tokens[i].pos == "VX"
+                && tokens[i + 1].surface == "가가"
+                && tokens[i + 1].pos == "NNG"
+            {
+                let start = tokens[i].start_pos;
+                let end = tokens[i + 1].end_pos;
+                tokens[i] = SejongToken::new("주가", "NNG", start, start + 2);
+                tokens[i + 1] = SejongToken::new("가", "JKS", start + 2, end);
                 merged = true;
             }
 
