@@ -5544,15 +5544,17 @@ impl SejongConverter {
             }
         }
 
-        // 91차 보정: 문장 끝 "는다/EC" → "는다/EF"
+        // 91차 보정: "는다/EC" → "는다/EF"
         // "먹는다" = "먹/VV 는다/EF"
         // "한다" = "하/VV ㄴ다/EF"
         // 121차: ᆫ다 (U+11AB jongseong) 추가
-        if let Some(last) = tokens.last_mut() {
-            if (last.surface == "는다" || last.surface == "ㄴ다" || last.surface == "ᆫ다")
-                && last.pos == "EC"
+        // 123차: 모든 ㄴ다/는다 적용 (문장 끝뿐만 아니라 문장 중간도)
+        //        ㄴ다는 항상 평서형 종결어미이므로 EC가 아닌 EF
+        for token in tokens.iter_mut() {
+            if (token.surface == "는다" || token.surface == "ㄴ다" || token.surface == "ᆫ다")
+                && token.pos == "EC"
             {
-                last.pos = "EF".to_string();
+                token.pos = "EF".to_string();
             }
         }
 
