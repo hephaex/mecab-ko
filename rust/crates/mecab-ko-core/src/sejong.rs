@@ -6638,6 +6638,42 @@ impl SejongConverter {
             // 고하/VV를 하/VV로 변경
             tokens[idx].surface = "하".to_string();
         }
+
+        // 139차 보정: 독립 VX → VV 변환
+        // "하/VV + 니까/EC + 보/VX" 패턴에서 보/VX → 보/VV
+        // 조건: VX 앞에 EC가 있고, VX가 1글자 동사인 경우
+        let independent_vx: std::collections::HashSet<&str> =
+            ["보", "하", "가", "오"].into_iter().collect();
+
+        for i in 0..tokens.len() {
+            let surface = &tokens[i].surface;
+            let pos = &tokens[i].pos;
+
+            // VX가 1글자이고 앞에 EC가 있는 경우
+            if pos == "VX" && independent_vx.contains(surface.as_str()) {
+                if i > 0 && tokens[i - 1].pos == "EC" {
+                    tokens[i].pos = "VV".to_string();
+                }
+            }
+        }
+
+        // 140차 보정: 시/EP 제거 (잘못 분리된 경우)
+        // "니까" 분리 시 "시/EP"가 삽입되는 경우 제거
+        let mut remove_si_indices: Vec<usize> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(1) {
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+            let next_surface = &tokens[i + 1].surface;
+
+            // 시/EP + 니까/EC 패턴 → 니까/EC만 유지
+            if curr_surface == "시" && curr_pos == "EP" && next_surface == "니까" {
+                remove_si_indices.push(i);
+            }
+        }
+
+        for idx in remove_si_indices.into_iter().rev() {
+            tokens.remove(idx);
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
