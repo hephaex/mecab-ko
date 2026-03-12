@@ -6389,6 +6389,35 @@ impl SejongConverter {
             // 어미 삽입
             tokens.insert(idx + 2, SejongToken::new(&ending, "EF", start, end));
         }
+
+        // 132차 보정: 청유형 "~자" NNG 분리
+        // "가자/NNG" → "가/VV + 자/EF"
+        // 2글자 NNG가 "자"로 끝나고 앞 글자가 받침 없는 동사 어간인 경우
+        let imperative_verbs: std::collections::HashSet<&str> =
+            ["가", "오", "보", "사", "자", "두", "주", "타", "서", "나"]
+                .into_iter()
+                .collect();
+
+        let mut split_imperative_indices: Vec<(usize, String)> = Vec::new();
+        for i in 0..tokens.len() {
+            let surface = &tokens[i].surface;
+            let pos = &tokens[i].pos;
+
+            if pos == "NNG" && surface.ends_with("자") && surface.chars().count() == 2 {
+                let stem: String = surface.chars().take(1).collect();
+                if imperative_verbs.contains(stem.as_str()) {
+                    split_imperative_indices.push((i, stem));
+                }
+            }
+        }
+
+        for (idx, stem) in split_imperative_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx].end_pos;
+            tokens[idx].surface = stem;
+            tokens[idx].pos = "VV".to_string();
+            tokens.insert(idx + 1, SejongToken::new("자", "EF", start, end));
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
