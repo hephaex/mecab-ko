@@ -5531,6 +5531,56 @@ impl SejongConverter {
             tokens[idx] = SejongToken::new("싶", "VX", start, mid);
             tokens.insert(idx + 1, SejongToken::new("어요", "EF", mid, end));
         }
+
+        // 113차 보정: 복합 연결어미 병합
+        // "고/EC + 나/NP + 서/JKB" → "고나서/EC"
+        // "면/EC + 서/JKB" → "면서/EC"
+        let mut compound_ec_merges: Vec<(usize, String)> = Vec::new();
+        if tokens.len() >= 3 {
+            for i in 0..tokens.len() - 2 {
+                let t0 = &tokens[i];
+                let t1 = &tokens[i + 1];
+                let t2 = &tokens[i + 2];
+
+                // "고/EC + 나/NP + 서/JKB" → "고나서/EC"
+                if t0.surface == "고" && t0.pos == "EC"
+                    && t1.surface == "나" && (t1.pos == "NP" || t1.pos == "VV")
+                    && t2.surface == "서" && (t2.pos == "JKB" || t2.pos == "EC")
+                {
+                    compound_ec_merges.push((i, "고나서".to_string()));
+                }
+            }
+        }
+
+        for (idx, merged) in compound_ec_merges.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx + 2].end_pos;
+            tokens[idx] = SejongToken::new(&merged, "EC", start, end);
+            tokens.remove(idx + 2);
+            tokens.remove(idx + 1);
+        }
+
+        // 114차 보정: "으면서/EF" → "으면서/EC" (문장 중간 연결어미)
+        // "먹으면서 갔다"에서 "먹/VV 으면서/EC"
+        let mut ef_to_ec_final: Vec<usize> = Vec::new();
+        for i in 0..tokens.len() {
+            let curr_surface = &tokens[i].surface;
+            let curr_pos = &tokens[i].pos;
+
+            // "면서" 계열이 EF로 분석된 경우 EC로 변환
+            if curr_pos == "EF"
+                && (curr_surface == "으면서" || curr_surface == "면서"
+                    || curr_surface == "으며" || curr_surface == "며")
+            {
+                // 마지막 토큰이 아닌 경우만 EC로 변환
+                if i + 1 < tokens.len() {
+                    ef_to_ec_final.push(i);
+                }
+            }
+        }
+        for idx in ef_to_ec_final {
+            tokens[idx].pos = "EC".to_string();
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
