@@ -6197,6 +6197,15 @@ impl SejongConverter {
                 last.pos = "EF".to_string();
             }
         }
+
+        // 125차 보정: 문장 끝 "ㄹ까요/EC" → "ㄹ까요/EF"
+        // "올까요" = "오/VV ㄹ까요/EF" (not EC)
+        // "할까요" = "하/VV ㄹ까요/EF"
+        if let Some(last) = tokens.last_mut() {
+            if (last.surface == "ᆯ까요" || last.surface == "ㄹ까요") && last.pos == "EC" {
+                last.pos = "EF".to_string();
+            }
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
