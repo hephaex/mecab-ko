@@ -5627,6 +5627,21 @@ impl SejongConverter {
             tokens.insert(idx + 1, SejongToken::new("야", "EF", start, end));
         }
 
+        // 171차 보정: NNG + "이/NP" + "네/XSN" → NNG + "이/VCP" + "네/EF"
+        // "노잼이네"가 "노잼/NNG 이/NP 네/XSN"으로 분석될 때
+        // → "노잼/NNG 이/VCP 네/EF"로 수정
+        for i in 1..tokens.len().saturating_sub(1) {
+            if tokens[i].surface == "이"
+                && tokens[i].pos == "NP"
+                && tokens[i - 1].pos == "NNG"
+                && tokens[i + 1].surface == "네"
+                && tokens[i + 1].pos == "XSN"
+            {
+                tokens[i].pos = "VCP".to_string();
+                tokens[i + 1].pos = "EF".to_string();
+            }
+        }
+
         // 86차 보정: "ㄴ/ETM + 다/EF" → "ㄴ다/EF", "는/ETM + 다/EF" → "는다/EF" 병합
         // "간다" = "가/VV ㄴ다/EF", "먹는다" = "먹/VV 는다/EF"
         // sample.tsv 형식에 맞춰 현재형 종결어미를 단일 토큰으로 처리

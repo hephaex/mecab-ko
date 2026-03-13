@@ -21,9 +21,10 @@ fn main() {
 
     // 디버깅 케이스 - sample.tsv에서 실패하는 케이스 분석
     let debug_cases = [
-        // sample.tsv 에러 케이스 분석
-        ("국민 여론조사 결과가 공개됐다", "국민/NNG 여론/NNG 조사/NNG 결과/NNG 가/JKS 공개/NNG 되/XSV 었/EP 다/EF"),
-        ("딥러닝 모델의 정확도가 향상됐다", "딥러닝/NNG 모델/NNG 의/JKG 정확/NNG 도/XSN 가/JKS 향상/NNG 되/XSV 었/EP 다/EF"),
+        // 신조어/외래어 테스트
+        ("존맛탱이야", "존맛탱/NNG 이/VCP 야/EF"),
+        ("노잼이네", "노잼/NNG 이/VCP 네/EF"),
+        ("MBTI가 뭐예요", "MBTI/SL 가/JKS 뭐/NP 이/VCP 에요/EF"),
     ];
 
     for (text, expected) in debug_cases {
