@@ -7171,7 +7171,11 @@ impl SejongConverter {
         // 158차 보정: 합성 형용사 VA 병합
         // "NNG + 있/VV" → "NNG있/VA", "NNG + 없/VX" → "NNG없/VA"
         // 세종 태깅: "재미있다" = "재미있/VA + 다/EF"
-        let compound_va_nouns = ["재미", "맛", "멋", "값", "뜻", "힘"];
+        let compound_va_nouns = [
+            "재미", "맛", "멋", "값", "뜻", "힘", // 기본
+            "흥미", "의미", "가치", "효과", "보람", // 추가
+            "관심", "정", "맥", "볼", // 추가 (관심있다, 정없다 등)
+        ];
         let mut va_merge_indices: Vec<(usize, String)> = Vec::new();
         for i in 0..tokens.len().saturating_sub(1) {
             if compound_va_nouns.contains(&tokens[i].surface.as_str())
@@ -7208,6 +7212,27 @@ impl SejongConverter {
 
         for idx in spurious_etm_indices.into_iter().rev() {
             tokens.remove(idx);
+        }
+
+        // 160차 보정: "VV + 어디/NP + 서/JKB" → "VV + 어서/EC"
+        // MeCab이 "어서"를 "어디+서"로 잘못 분석하는 버그
+        let mut eoseo_fix_indices: Vec<usize> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(2) {
+            if tokens[i].pos == "VV"
+                && tokens[i + 1].surface == "어디"
+                && tokens[i + 1].pos == "NP"
+                && tokens[i + 2].surface == "서"
+                && tokens[i + 2].pos == "JKB"
+            {
+                eoseo_fix_indices.push(i + 1);
+            }
+        }
+
+        for idx in eoseo_fix_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx + 1].end_pos;
+            tokens[idx] = SejongToken::new("어서", "EC", start, end);
+            tokens.remove(idx + 1);
         }
     }
 
