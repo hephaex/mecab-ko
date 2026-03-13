@@ -7155,6 +7155,60 @@ impl SejongConverter {
                 token.pos = "NP".to_string();
             }
         }
+
+        // 157차 보정: EP 표면형 정규화
+        // "ㅓㅆ/EP" → "었/EP", "ㅏㅆ/EP" → "았/EP"
+        for token in tokens.iter_mut() {
+            if token.pos == "EP" {
+                if token.surface == "ㅓㅆ" {
+                    token.surface = "었".to_string();
+                } else if token.surface == "ㅏㅆ" {
+                    token.surface = "았".to_string();
+                }
+            }
+        }
+
+        // 158차 보정: 합성 형용사 VA 병합
+        // "NNG + 있/VV" → "NNG있/VA", "NNG + 없/VX" → "NNG없/VA"
+        // 세종 태깅: "재미있다" = "재미있/VA + 다/EF"
+        let compound_va_nouns = ["재미", "맛", "멋", "값", "뜻", "힘"];
+        let mut va_merge_indices: Vec<(usize, String)> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(1) {
+            if compound_va_nouns.contains(&tokens[i].surface.as_str())
+                && tokens[i].pos == "NNG"
+                && (tokens[i + 1].surface == "있" || tokens[i + 1].surface == "없")
+                && (tokens[i + 1].pos == "VV" || tokens[i + 1].pos == "VX")
+            {
+                let merged = format!("{}{}", tokens[i].surface, tokens[i + 1].surface);
+                va_merge_indices.push((i, merged));
+            }
+        }
+
+        for (idx, merged) in va_merge_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx + 1].end_pos;
+            tokens[idx] = SejongToken::new(&merged, "VA", start, end);
+            tokens.remove(idx + 1);
+        }
+
+        // 159차 보정: "VA + ㄹ/ETM + EF" 잘못된 ETM 제거
+        // "힘들어요" = "힘들/VA 어요/EF" (not "힘들/VA ㄹ/ETM 어요/EF")
+        // VA+ETM 분해에서 잘못 삽입된 ETM 제거
+        let mut spurious_etm_indices: Vec<usize> = Vec::new();
+        for i in 1..tokens.len().saturating_sub(1) {
+            if tokens[i].surface == "ㄹ"
+                && tokens[i].pos == "ETM"
+                && tokens[i - 1].pos == "VA"
+                && tokens[i + 1].pos == "EF"
+            {
+                // VA 다음에 바로 EF가 오면 ㄹ/ETM은 잘못 삽입된 것
+                spurious_etm_indices.push(i);
+            }
+        }
+
+        for idx in spurious_etm_indices.into_iter().rev() {
+            tokens.remove(idx);
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인

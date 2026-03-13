@@ -21,14 +21,11 @@ fn main() {
 
     // 디버깅 케이스
     let debug_cases = [
-        // NNB 패턴
-        ("따라", "따라/NNB"),  // 현재: 따르/VV 어/EC
-        ("채", "채/NNB"),  // 현재: 채/VV 어/EC
-        // 숫자 패턴
-        ("일 이 삼", "일/SN 이/SN 삼/SN"),  // 현재: 일/NR
-        // 접두사 패턴
-        ("큰집", "큰/XPN 집/NNG"),  // 현재: 크/VA ㄴ/ETM 집/NNG
-        ("맨발", "맨/XPN 발/NNG"),  // 현재: 맨발/NNG
+        // VA 합성어 패턴 (재미있/VA, 맛없/VA)
+        ("재미있어요", "재미있/VA 어요/EF"),  // 현재: 재미/NNG 있/VV 어요/EF
+        ("맛없어요", "맛없/VA 어요/EF"),  // 현재: 맛/NNG 없/VX 어요/EF
+        ("멋있다", "멋있/VA 다/EF"),  // 현재: 멋/NNG 있/VV 다/EF
+        ("힘들어요", "힘들/VA 어요/EF"),  // 현재: 힘/NNG 들/VV 어요/EF
     ];
 
     for (text, expected) in debug_cases {
