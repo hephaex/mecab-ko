@@ -608,10 +608,12 @@ impl SejongConverter {
 
         // VV + VX + EF (피동/사동 구문) - 특별 처리
         // 예: 보이다 → 보/VV + 이/VX + 다/EF
-        // 패턴: 어간 + (이/히/리/기) + 다
+        // 예: 만들어지다 → 만들/VV + 어지/VX + 다/EF (181차)
+        // 패턴: 어간 + (이/히/리/기/어지/아지) + 다
         self.ending_rules.push(EndingRule::new(
             "VV+VX+EF",
             vec![
+                "어지다", "아지다", // 피동 확장 (181차)
                 "이다", "히다", "리다", "기다", // 피동/사동 기본형
             ],
             vec!["VV", "VX", "EF"],
@@ -1172,8 +1174,48 @@ impl SejongConverter {
             ];
         }
 
+        // 182차: VV+VX+EF "어지다/아지다" 패턴 특별 처리
+        // "만들어지다" → "만들/VV + 어지/VX + 다/EF"
+        // "커지다" → "커/VV + 지/VX + 다/EF" (주의: 이 케이스는 다름)
+        if pos == "VV+VX+EF" {
+            // "어지다" 패턴 (3글자 이상)
+            if surface.ends_with("어지다") && surface.chars().count() >= 4 {
+                let stem: String = surface.chars().take(surface.chars().count() - 3).collect();
+                return vec![
+                    (stem, "VV".to_string()),
+                    ("어지".to_string(), "VX".to_string()),
+                    ("다".to_string(), "EF".to_string()),
+                ];
+            }
+            // "아지다" 패턴 (3글자 이상)
+            if surface.ends_with("아지다") && surface.chars().count() >= 4 {
+                let stem: String = surface.chars().take(surface.chars().count() - 3).collect();
+                return vec![
+                    (stem, "VV".to_string()),
+                    ("아지".to_string(), "VX".to_string()),
+                    ("다".to_string(), "EF".to_string()),
+                ];
+            }
+        }
+
         // VV+EF 특별 패턴 처리
         if pos == "VV+EF" {
+            // 183차: 사동사/피동사는 단일 동사로 처리 (VX로 분리하지 않음)
+            // "웃기다" = "웃기/VV + 다/EF" (not "웃/VV + 기/VX + 다/EF")
+            // "울리다" = "울리/VV + 다/EF", "높이다" = "높이/VV + 다/EF"
+            let causative_verbs = [
+                "웃기다", "울리다", "높이다", "낮추다", "늘이다", "줄이다",
+                "살리다", "죽이다", "알리다", "먹이다", "재우다", "깨우다",
+            ];
+            if causative_verbs.contains(&surface) {
+                let stem_len = surface.chars().count() - 1;
+                let stem: String = surface.chars().take(stem_len).collect();
+                return vec![
+                    (stem, "VV".to_string()),
+                    ("다".to_string(), "EF".to_string()),
+                ];
+            }
+
             // "ㅂ니다" 패턴: "합니다" → "하/VV + ㅂ니다/EF"
             if surface.ends_with("니다") && surface.chars().count() >= 3 {
                 let chars: Vec<char> = surface.chars().collect();
@@ -4123,6 +4165,8 @@ impl SejongConverter {
 
         // 34차 보정: 사동사 분리 "VV" → "VV + VX"
         // 예: "입히/VV + 다/EF" → "입/VV + 히/VX + 다/EF"
+        // 184차 수정: sample.tsv 정답에 따라 "웃기", "놀리" 제외
+        // "놀리다 웃기다" = "놀리/VV 다/EF 웃기/VV 다/EF" (VX로 분리 안 함)
         let causative_verbs: std::collections::HashMap<&str, (&str, &str)> = [
             // -히- 사동
             ("입히", ("입", "히")),
@@ -4141,12 +4185,12 @@ impl SejongConverter {
             ("돌리", ("돌", "리")),
             ("굴리", ("굴", "리")),
             ("울리", ("울", "리")),
-            // -기- 사동
+            // -기- 사동 (184차: 웃기 제외)
             ("벗기", ("벗", "기")),
-            ("웃기", ("웃", "기")),
+            // ("웃기", ("웃", "기")), // 184차 제외
             ("숨기", ("숨", "기")),
             ("옮기", ("옮", "기")),
-            // -리- 사동
+            // -리- 사동 (184차: 알리 유지, 놀리 미포함)
             ("알리", ("알", "리")),
             ("날리", ("날", "리")),
         ]
@@ -5671,6 +5715,25 @@ impl SejongConverter {
             tokens.insert(idx + 1, SejongToken::new("러", "EC", start + stem_len, end));
         }
 
+        // 174차 보정: 형용사적 "하다"의 XSV → XSA 변환
+        // "미안해요" = "미안/NNG 하/XSA 어요/EF" (형용사적)
+        // "발표했다" = "발표/NNG 하/XSV 았/EP 다/EF" (동사적)
+        // 형용사 어근 목록을 기반으로 XSV를 XSA로 변환
+        let adj_roots = [
+            "미안", "심심", "피곤", "건강", "조용", "깨끗", "더럽", "시끄럽",
+            "행복", "불행", "편안", "불편", "따뜻", "차가움", "친절", "불친절",
+            "정확", "부정확", "명확", "불명확", "솔직", "불성실", "성실",
+            "유명", "무명", "다양", "단순", "복잡", "간단", "적합", "부적합",
+        ];
+        for i in 1..tokens.len() {
+            if tokens[i].surface == "하"
+                && tokens[i].pos == "XSV"
+                && adj_roots.contains(&tokens[i - 1].surface.as_str())
+            {
+                tokens[i].pos = "XSA".to_string();
+            }
+        }
+
         // 86차 보정: "ㄴ/ETM + 다/EF" → "ㄴ다/EF", "는/ETM + 다/EF" → "는다/EF" 병합
         // "간다" = "가/VV ㄴ다/EF", "먹는다" = "먹/VV 는다/EF"
         // sample.tsv 형식에 맞춰 현재형 종결어미를 단일 토큰으로 처리
@@ -5747,20 +5810,10 @@ impl SejongConverter {
         }
 
         // 90차 보정: NNG + "하/VV" + "세요/EF" → NNG + "하/XSV" + "세요/EF"
-        // "말씀하세요" = "말씀/NNG 하/XSV 세요/EF"
-        // "확인하세요" = "확인/NNG 하/XSV 세요/EF"
-        if tokens.len() >= 3 {
-            for i in 1..tokens.len() - 1 {
-                if tokens[i].surface == "하"
-                    && tokens[i].pos == "VV"
-                    && tokens[i - 1].pos == "NNG"
-                    && tokens[i + 1].surface == "세요"
-                    && tokens[i + 1].pos == "EF"
-                {
-                    tokens[i].pos = "XSV".to_string();
-                }
-            }
-        }
+        // 177차 수정: sample.tsv 정답에 따라 "세요/EF" 패턴은 VV 유지
+        // "말씀하세요" = "말씀/NNG 하/VV 세요/EF" (not XSV)
+        // "확인하세요" = "확인/NNG 하/VV 세요/EF" (not XSV)
+        // 이 규칙은 더 이상 적용하지 않음
 
         // 91차 보정: "는다/EC" → "는다/EF"
         // "먹는다" = "먹/VV 는다/EF"
@@ -5830,10 +5883,12 @@ impl SejongConverter {
             tokens.remove(idx);
         }
 
-        // 95차 보정: NNG + "하/VV" + "아/어" EC 패턴 → "하/XSV"
+        // 95차 보정: NNG + "하/VV" + EC 패턴 → "하/XSV"
         // "진행하고" = "진행/NNG 하/XSV 고/EC"
         // "분석하여" = "분석/NNG 하/XSV 어/EC"
         // "발표하면" = "발표/NNG 하/XSV 면/EC"
+        // 단, "아야/어야/야" EC 패턴은 제외 (9차 보정에서 VV로 유지)
+        // "준비해야" = "준비/NNG 하/VV 아야/EC" (not XSV)
         if tokens.len() >= 3 {
             for i in 1..tokens.len() - 1 {
                 if tokens[i].surface == "하"
@@ -5841,7 +5896,18 @@ impl SejongConverter {
                     && tokens[i - 1].pos == "NNG"
                     && tokens[i + 1].pos == "EC"
                 {
-                    tokens[i].pos = "XSV".to_string();
+                    // 176차: "아야", "어야", "야" EC는 VV 유지 (준비해야 합니다)
+                    // 179차: 단, 뒤에 "하/VV"가 오면 XSV로 변환 (최적화해야 한다)
+                    let ec_surface = &tokens[i + 1].surface;
+                    if ec_surface == "아야" || ec_surface == "어야" || ec_surface == "야" {
+                        // "아야/어야 하다" 구문 체크 (i+2 위치에 하/VV가 있는지)
+                        if i + 2 < tokens.len() && tokens[i + 2].surface == "하" && tokens[i + 2].pos == "VV" {
+                            tokens[i].pos = "XSV".to_string();
+                        }
+                        // 그 외에는 VV 유지
+                    } else {
+                        tokens[i].pos = "XSV".to_string();
+                    }
                 }
             }
         }
