@@ -3120,6 +3120,28 @@ impl SejongConverter {
             }
         }
 
+        // 194차: "따라/NNB + 서/VV + 어/EC" → "따라서/MAG" 병합
+        // "그래서 따라서" = "그래서/MAJ 따라서/MAG"
+        let mut i = 0;
+        while i + 2 < tokens.len() {
+            if tokens[i].surface == "따라"
+                && tokens[i].pos == "NNB"
+                && tokens[i + 1].surface == "서"
+                && tokens[i + 1].pos == "VV"
+                && tokens[i + 2].surface == "어"
+                && tokens[i + 2].pos == "EC"
+            {
+                tokens[i].surface = "따라서".to_string();
+                tokens[i].pos = "MAG".to_string();
+                tokens[i].end_pos = tokens[i + 2].end_pos;
+                tokens.remove(i + 2);
+                tokens.remove(i + 1);
+                i += 1;
+                continue;
+            }
+            i += 1;
+        }
+
         // 191차: NNG 뒤의 "아/IC" → "아/JX" 변환
         // "야 얘들아" = "야/IC 얘들/NNG 아/JX"
         // 명사 뒤의 "아"는 호격이 아닌 보조사 (sample.tsv 기준)
@@ -3144,6 +3166,158 @@ impl SejongConverter {
                 tokens[i].surface = "가지".to_string();
                 tokens[i].end_pos = tokens[i + 1].end_pos;
                 tokens.remove(i + 1);
+                i += 2;
+                continue;
+            }
+            i += 1;
+        }
+
+        // 196차: XPN 복합어 분리
+        // "맨손/NNG" → "맨/XPN 손/NNG"
+        // "맨발/NNG" → "맨/XPN 발/NNG"
+        let xpn_compounds: std::collections::HashMap<&str, (&str, &str)> = [
+            ("맨손", ("맨", "손")),
+            ("맨발", ("맨", "발")),
+            ("맨몸", ("맨", "몸")),
+            ("맨땅", ("맨", "땅")),
+        ]
+        .into_iter()
+        .collect();
+
+        // 200차: "밤낮/NNG" → "밤/NNG 낮/NNG" 분리
+        // "밤 낮" = "밤/NNG 낮/NNG"
+        let nng_splits: std::collections::HashMap<&str, (&str, &str)> =
+            [("밤낮", ("밤", "낮"))].into_iter().collect();
+
+        let mut i = 0;
+        while i < tokens.len() {
+            if tokens[i].pos == "NNG" {
+                if let Some((first, second)) = nng_splits.get(tokens[i].surface.as_str()) {
+                    let start = tokens[i].start_pos;
+                    let end = tokens[i].end_pos;
+                    let first_len = first.chars().count();
+                    tokens[i] = SejongToken::new(first, "NNG", start, start + first_len);
+                    tokens.insert(
+                        i + 1,
+                        SejongToken::new(second, "NNG", start + first_len, end),
+                    );
+                    i += 2;
+                    continue;
+                }
+            }
+            i += 1;
+        }
+
+        // 201차: "선생님/NNG" → "선생/NNG 님/XSN" 분리
+        // XSN 접미사 분리
+        let xsn_compounds: std::collections::HashMap<&str, (&str, &str)> = [
+            ("선생님", ("선생", "님")),
+            ("사장님", ("사장", "님")),
+            ("부장님", ("부장", "님")),
+            ("과장님", ("과장", "님")),
+            ("어머님", ("어머", "님")),
+            ("아버님", ("아버", "님")),
+        ]
+        .into_iter()
+        .collect();
+
+        let mut i = 0;
+        while i < tokens.len() {
+            if tokens[i].pos == "NNG" {
+                if let Some((noun, suffix)) = xsn_compounds.get(tokens[i].surface.as_str()) {
+                    let start = tokens[i].start_pos;
+                    let end = tokens[i].end_pos;
+                    let noun_len = noun.chars().count();
+                    tokens[i] = SejongToken::new(noun, "NNG", start, start + noun_len);
+                    tokens.insert(
+                        i + 1,
+                        SejongToken::new(suffix, "XSN", start + noun_len, end),
+                    );
+                    i += 2;
+                    continue;
+                }
+            }
+            i += 1;
+        }
+
+        let mut i = 0;
+        while i < tokens.len() {
+            if tokens[i].pos == "NNG" {
+                if let Some((prefix, noun)) = xpn_compounds.get(tokens[i].surface.as_str()) {
+                    let start = tokens[i].start_pos;
+                    let end = tokens[i].end_pos;
+                    let prefix_len = prefix.chars().count();
+                    tokens[i] = SejongToken::new(prefix, "XPN", start, start + prefix_len);
+                    tokens.insert(
+                        i + 1,
+                        SejongToken::new(noun, "NNG", start + prefix_len, end),
+                    );
+                    i += 2;
+                    continue;
+                }
+            }
+            i += 1;
+        }
+
+        // 197차: "작은집" 복합 접두사 분리
+        // "작은집/NNG" or "작/VA 은/ETM 집/NNG" → "작/XPN 은/XPN 집/NNG"
+        // 단, MeCab이 "작/VA 은/ETM 집/NNG"로 분석하면 ETM→XPN 변환
+        for i in 0..tokens.len().saturating_sub(1) {
+            if tokens[i].surface == "작"
+                && tokens[i].pos == "VA"
+                && tokens[i + 1].surface == "은"
+                && tokens[i + 1].pos == "ETM"
+            {
+                // 다음이 "집"인 경우 접두사로 변환
+                if i + 2 < tokens.len() && tokens[i + 2].surface == "집" {
+                    tokens[i].pos = "XPN".to_string();
+                    tokens[i + 1].pos = "XPN".to_string();
+                }
+            }
+        }
+
+        // 198차: "높이/NNG" → "높/VA 이/EC" 분리
+        // "높이 낮이" = "높/VA 이/EC 낮/VA 이/EC"
+        // 형용사 부사형 분리
+        let va_ec_words: std::collections::HashMap<&str, &str> = [
+            ("높이", "높"),
+            ("낮이", "낮"),
+            ("깊이", "깊"),
+            ("넓이", "넓"),
+        ]
+        .into_iter()
+        .collect();
+
+        // 199차: VA 어간 목록 (낮/NNG + 이/JKS 패턴용)
+        let va_stems: std::collections::HashSet<&str> =
+            ["높", "낮", "깊", "넓"].into_iter().collect();
+
+        let mut i = 0;
+        while i < tokens.len() {
+            // 패턴 1: "높이/NNG" 단일 토큰
+            if tokens[i].pos == "NNG" {
+                if let Some(&stem) = va_ec_words.get(tokens[i].surface.as_str()) {
+                    let start = tokens[i].start_pos;
+                    let end = tokens[i].end_pos;
+                    let stem_len = stem.chars().count();
+                    tokens[i] = SejongToken::new(stem, "VA", start, start + stem_len);
+                    tokens.insert(
+                        i + 1,
+                        SejongToken::new("이", "EC", start + stem_len, end),
+                    );
+                    i += 2;
+                    continue;
+                }
+            }
+            // 패턴 2: "낮/NNG + 이/JKS" 두 토큰
+            if i + 1 < tokens.len()
+                && tokens[i].pos == "NNG"
+                && va_stems.contains(tokens[i].surface.as_str())
+                && tokens[i + 1].surface == "이"
+                && tokens[i + 1].pos == "JKS"
+            {
+                tokens[i].pos = "VA".to_string();
+                tokens[i + 1].pos = "EC".to_string();
                 i += 2;
                 continue;
             }
@@ -4971,8 +5145,13 @@ impl SejongConverter {
                     && (tokens[i + 1].pos.starts_with("JK")
                         || tokens[i + 1].pos == "JX"
                         || tokens[i + 1].pos == "JC");
-                // 단독 사용이거나 조사가 따라오면 분리
-                if !prev_is_nng && (next_is_particle || i + 1 >= tokens.len()) {
+                // 195차: 뒤에 같은 명사형 동사가 오면 연속 명사형 (함 봄 = 하/VV ㅁ/ETN 보/VV ㅁ/ETN)
+                let next_is_nominalized = i + 1 < tokens.len()
+                    && tokens[i + 1].pos == "NNG"
+                    && nominalized_verbs.contains_key(tokens[i + 1].surface.as_str());
+                // 단독 사용, 조사가 따라오거나, 연속 명사형이면 분리
+                if !prev_is_nng && (next_is_particle || i + 1 >= tokens.len() || next_is_nominalized)
+                {
                     if let Some(&stem) = nominalized_verbs.get(token.surface.as_str()) {
                         nominalized_split_indices.push((i, stem.to_string()));
                     }
