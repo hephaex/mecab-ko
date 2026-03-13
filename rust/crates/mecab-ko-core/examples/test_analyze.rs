@@ -21,11 +21,9 @@ fn main() {
 
     // 디버깅 케이스 - sample.tsv에서 실패하는 케이스 분석
     let debug_cases = [
-        // EP 64% 오류 분석
-        ("맛있겠다", "맛있/VA 겠/EP 다/EF"),
-        ("알겠어요", "알/VV 겠/EP 어요/EF"),
-        ("모르겠어요", "모르/VV 겠/EP 어요/EF"),
-        ("피곤해서 일찍 자야겠다", "피곤/NNG 하/XSA 아서/EC 일찍/MAG 자/VV 아야겠/EP 다/EF"),
+        // sample.tsv 에러 케이스 분석
+        ("국민 여론조사 결과가 공개됐다", "국민/NNG 여론/NNG 조사/NNG 결과/NNG 가/JKS 공개/NNG 되/XSV 었/EP 다/EF"),
+        ("딥러닝 모델의 정확도가 향상됐다", "딥러닝/NNG 모델/NNG 의/JKG 정확/NNG 도/XSN 가/JKS 향상/NNG 되/XSV 었/EP 다/EF"),
     ];
 
     for (text, expected) in debug_cases {
