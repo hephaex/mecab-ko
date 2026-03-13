@@ -21,10 +21,10 @@ fn main() {
 
     // 디버깅 케이스 - sample.tsv에서 실패하는 케이스 분석
     let debug_cases = [
-        // EC "러" 패턴 분석
-        ("영화 보러 갈래", "영화/NNG 보/VV 러/EC 가/VV ㄹ래/EF"),
-        ("놀러 가자", "놀/VV 러/EC 가/VV 자/EF"),
-        ("먹으러 가요", "먹/VV 으러/EC 가/VV 아요/EF"),
+        // EC 오류 패턴 분석
+        ("가지고 오다", "가지/VV 고/EC 오/VV 다/EF"),
+        ("가며 오며", "가/VV 며/EC 오/VV 며/EC"),
+        ("갈까 한다", "가/VV ㄹ까/EC 하/VV ㄴ다/EF"),
     ];
 
     for (text, expected) in debug_cases {
