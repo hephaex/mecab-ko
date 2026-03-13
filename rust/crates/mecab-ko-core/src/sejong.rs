@@ -6803,6 +6803,91 @@ impl SejongConverter {
         for idx in remove_si_indices.into_iter().rev() {
             tokens.remove(idx);
         }
+
+        // 146차 보정: "또/MAG + 하/VV + ㄴ/ETM" → "또한/MAG" 병합
+        // MeCab이 "또한"을 "또/MAG + 한/VV+ETM"으로 분리
+        let mut ddohan_indices: Vec<usize> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(2) {
+            if tokens[i].surface == "또"
+                && tokens[i].pos == "MAG"
+                && tokens[i + 1].surface == "하"
+                && tokens[i + 1].pos == "VV"
+                && tokens[i + 2].surface == "ㄴ"
+                && tokens[i + 2].pos == "ETM"
+            {
+                ddohan_indices.push(i);
+            }
+        }
+
+        for idx in ddohan_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx + 2].end_pos;
+            tokens[idx] = SejongToken::new("또한", "MAG", start, end);
+            tokens.remove(idx + 2);
+            tokens.remove(idx + 1);
+        }
+
+        // 146차 보정: "한/VV + ㄴ/ETM + 국.../NNG" → "한국/NNP + ..." 복원
+        // MeCab이 "한국"을 "한/VV+ETM + 국/NNG"으로 분리
+        let hanguk_patterns: [(&str, &str); 4] = [
+            ("국", "NNG"),
+            ("국의", "NNG"),
+            ("국어", "NNG"),
+            ("국인", "NNG"),
+        ];
+
+        let mut hanguk_merge_indices: Vec<(usize, String)> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(2) {
+            if tokens[i].surface == "하"
+                && tokens[i].pos == "VV"
+                && tokens[i + 1].surface == "ㄴ"
+                && tokens[i + 1].pos == "ETM"
+            {
+                for (suffix, pos) in &hanguk_patterns {
+                    if tokens[i + 2].surface == *suffix && tokens[i + 2].pos == *pos {
+                        // "국의" → "한국" + "의", "국" → "한국"
+                        if *suffix == "국의" {
+                            hanguk_merge_indices.push((i, "국의".to_string()));
+                        } else {
+                            hanguk_merge_indices.push((i, suffix.to_string()));
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        for (idx, suffix) in hanguk_merge_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            if suffix == "국의" {
+                // "한국" + "의/JKG"로 분리
+                let end = tokens[idx + 2].end_pos;
+                tokens[idx] = SejongToken::new("한국", "NNP", start, start + 2);
+                tokens[idx + 1] = SejongToken::new("의", "JKG", start + 2, end);
+                tokens.remove(idx + 2);
+            } else {
+                // "한국" 복원
+                let end = tokens[idx + 2].end_pos;
+                let merged_surface = format!("한{}", suffix);
+                tokens[idx] = SejongToken::new(&merged_surface, "NNP", start, end);
+                tokens.remove(idx + 2);
+                tokens.remove(idx + 1);
+            }
+        }
+
+        // 146차 보정: "VV + 자/NNG" (문장 끝) → "VV + 자/EF"
+        // 청유형 종결어미: "먹자", "가자" 등
+        let n = tokens.len();
+        if n >= 2 {
+            let is_sentence_end = true; // 단독 문장으로 가정
+            if is_sentence_end
+                && tokens[n - 1].surface == "자"
+                && tokens[n - 1].pos == "NNG"
+                && tokens[n - 2].pos == "VV"
+            {
+                tokens[n - 1].pos = "EF".to_string();
+            }
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
