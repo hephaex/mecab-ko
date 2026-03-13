@@ -7234,6 +7234,20 @@ impl SejongConverter {
             tokens[idx] = SejongToken::new("어서", "EC", start, end);
             tokens.remove(idx + 1);
         }
+
+        // 161차 보정: 문장 끝 "ㅏ/EC" → "아/EF", "ㅓ/EC" → "어/EF"
+        // VX 뒤의 축약 모음을 정규화하고 EC → EF 변환
+        if let Some(last) = tokens.last_mut() {
+            if last.pos == "EC" {
+                if last.surface == "ㅏ" {
+                    last.surface = "아".to_string();
+                    last.pos = "EF".to_string();
+                } else if last.surface == "ㅓ" {
+                    last.surface = "어".to_string();
+                    last.pos = "EF".to_string();
+                }
+            }
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
