@@ -6888,6 +6888,48 @@ impl SejongConverter {
                 tokens[n - 1].pos = "EF".to_string();
             }
         }
+
+        // 147차 보정: "아버/NNP + 지/VX" → "아버지/NNG"
+        // "어머/... + 니/..." → "어머니/NNG"
+        // MeCab이 "아버지"를 잘못 분리하는 경우
+        let mut family_merge_indices: Vec<(usize, String)> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(1) {
+            // "아버 + 지" 패턴
+            if tokens[i].surface == "아버"
+                && tokens[i].pos == "NNP"
+                && tokens[i + 1].surface == "지"
+                && tokens[i + 1].pos == "VX"
+            {
+                family_merge_indices.push((i, "아버지".to_string()));
+            }
+        }
+
+        for (idx, merged) in family_merge_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx + 1].end_pos;
+            tokens[idx] = SejongToken::new(&merged, "NNG", start, end);
+            tokens.remove(idx + 1);
+        }
+
+        // 147차 보정: "어머/IC + 나/NP" → "어머나/IC"
+        // MeCab이 "어머나"를 잘못 분리하는 경우
+        let mut ic_merge_indices: Vec<usize> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(1) {
+            if tokens[i].surface == "어머"
+                && tokens[i].pos == "IC"
+                && tokens[i + 1].surface == "나"
+                && tokens[i + 1].pos == "NP"
+            {
+                ic_merge_indices.push(i);
+            }
+        }
+
+        for idx in ic_merge_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx + 1].end_pos;
+            tokens[idx] = SejongToken::new("어머나", "IC", start, end);
+            tokens.remove(idx + 1);
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
