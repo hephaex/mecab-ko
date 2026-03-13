@@ -5642,6 +5642,35 @@ impl SejongConverter {
             }
         }
 
+        // 172차 보정: "-러" 목적 연결어미 분리
+        // MeCab이 "보러", "놀러" 등을 JKB/NNP로 잘못 분석하는 경우
+        // VV+EF 패턴("갈래", "가자", "가요") 앞의 "-러" 표면형을 VV+EC로 분리
+        let mut reo_split_indices: Vec<(usize, String)> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(1) {
+            let surface = &tokens[i].surface;
+            let pos = &tokens[i].pos;
+            let next_pos = &tokens[i + 1].pos;
+
+            // "-러"로 끝나고 JKB/NNP이면서 다음이 VV+EF 또는 VV
+            if surface.ends_with("러")
+                && surface.chars().count() >= 2
+                && (pos == "JKB" || pos == "NNP")
+                && (next_pos == "VV+EF" || next_pos == "VV")
+            {
+                let stem: String = surface.chars().take(surface.chars().count() - 1).collect();
+                reo_split_indices.push((i, stem));
+            }
+        }
+
+        for (idx, stem) in reo_split_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx].end_pos;
+            let stem_len = stem.chars().count();
+            // "보러/JKB" → "보/VV 러/EC"
+            tokens[idx] = SejongToken::new(&stem, "VV", start, start + stem_len);
+            tokens.insert(idx + 1, SejongToken::new("러", "EC", start + stem_len, end));
+        }
+
         // 86차 보정: "ㄴ/ETM + 다/EF" → "ㄴ다/EF", "는/ETM + 다/EF" → "는다/EF" 병합
         // "간다" = "가/VV ㄴ다/EF", "먹는다" = "먹/VV 는다/EF"
         // sample.tsv 형식에 맞춰 현재형 종결어미를 단일 토큰으로 처리

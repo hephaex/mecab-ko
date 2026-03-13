@@ -21,10 +21,10 @@ fn main() {
 
     // 디버깅 케이스 - sample.tsv에서 실패하는 케이스 분석
     let debug_cases = [
-        // 신조어/외래어 테스트
-        ("존맛탱이야", "존맛탱/NNG 이/VCP 야/EF"),
-        ("노잼이네", "노잼/NNG 이/VCP 네/EF"),
-        ("MBTI가 뭐예요", "MBTI/SL 가/JKS 뭐/NP 이/VCP 에요/EF"),
+        // EC "러" 패턴 분석
+        ("영화 보러 갈래", "영화/NNG 보/VV 러/EC 가/VV ㄹ래/EF"),
+        ("놀러 가자", "놀/VV 러/EC 가/VV 자/EF"),
+        ("먹으러 가요", "먹/VV 으러/EC 가/VV 아요/EF"),
     ];
 
     for (text, expected) in debug_cases {
