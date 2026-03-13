@@ -6960,6 +6960,48 @@ impl SejongConverter {
                 tokens[idx + 1].pos = "VV".to_string();
             }
         }
+
+        // 149차 보정: "VCP + 시/EP + 라고/EC" → "VCP + 라고/EC" (잘못된 EP 제거)
+        // "학생이라고" = "학생/NNG 이/VCP 라고/EC" (시/EP 불필요)
+        let mut remove_si_ep_indices: Vec<usize> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(2) {
+            if tokens[i].pos == "VCP"
+                && tokens[i + 1].surface == "시"
+                && tokens[i + 1].pos == "EP"
+                && tokens[i + 2].surface == "라고"
+                && tokens[i + 2].pos == "EC"
+            {
+                remove_si_ep_indices.push(i + 1);
+            }
+        }
+
+        for idx in remove_si_ep_indices.into_iter().rev() {
+            tokens.remove(idx);
+        }
+
+        // 149차 보정: "ㄴ/ETM + 다/NNG" (문장 중간) → "ㄴ다/EF"
+        // "간다 온다" = "가/VV ㄴ다/EF 오/VV ㄴ다/EF"
+        // 조건: 다음 토큰이 VV인 경우 (문장 중간)
+        let mut nda_merge_indices: Vec<usize> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(2) {
+            if (tokens[i].surface == "ㄴ" || tokens[i].surface == "는")
+                && tokens[i].pos == "ETM"
+                && tokens[i + 1].surface == "다"
+                && tokens[i + 1].pos == "NNG"
+                && i + 2 < tokens.len()
+                && (tokens[i + 2].pos == "VV" || tokens[i + 2].pos == "VA")
+            {
+                nda_merge_indices.push(i);
+            }
+        }
+
+        for idx in nda_merge_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx + 1].end_pos;
+            let merged_surface = format!("{}다", tokens[idx].surface);
+            tokens[idx] = SejongToken::new(&merged_surface, "EF", start, end);
+            tokens.remove(idx + 1);
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
