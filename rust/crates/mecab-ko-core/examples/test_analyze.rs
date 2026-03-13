@@ -21,12 +21,12 @@ fn main() {
 
     // 디버깅 케이스
     let debug_cases = [
-        // NNG+NNG 복합명사 병합
-        ("서울 시청", "서울/NNP 시청/NNG"),
-        ("한국 음식", "한국/NNP 음식/NNG"),
-        // 선어말어미 EP 패턴
-        ("했습니다", "하/VV 았/EP 습니다/EF"),
-        ("갔었다", "가/VV 았/EP 었/EP 다/EF"),
+        // EC 65% - 낮은 정확도 패턴
+        ("회의가 있으니까", "회의/NNG 가/JKS 있/VV 으니까/EC"),
+        ("준비해야", "준비/NNG 하/XSV 아야/EC"),
+        // EP 64% - 낮은 정확도 패턴
+        ("먹었으면서", "먹/VV 었/EP 으면서/EC"),
+        ("했으면서", "하/VV 았/EP 으면서/EC"),
     ];
 
     for (text, expected) in debug_cases {
