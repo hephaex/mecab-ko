@@ -6930,6 +6930,36 @@ impl SejongConverter {
             tokens[idx] = SejongToken::new("어머나", "IC", start, end);
             tokens.remove(idx + 1);
         }
+
+        // 148차 보정: "EF + 고/NNG + 하/XSV" → "EC + 하/VV" 인용문 패턴
+        // "가자고 한다" = "가/VV 자고/EC 하/VV ㄴ다/EF"
+        // "예쁘다고 한다" = "예쁘/VA 다고/EC 하/VV ㄴ다/EF"
+        // 패턴: (EF + 고/NNG + 하/XSV) → (EC 병합 + 하/VV)
+        let mut quote_fix_indices: Vec<usize> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(2) {
+            if tokens[i].pos == "EF"
+                && tokens[i + 1].surface == "고"
+                && tokens[i + 1].pos == "NNG"
+                && tokens[i + 2].surface == "하"
+                && tokens[i + 2].pos == "XSV"
+            {
+                quote_fix_indices.push(i);
+            }
+        }
+
+        for idx in quote_fix_indices.into_iter().rev() {
+            // EF + 고 → EC 병합
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx + 1].end_pos;
+            let merged_surface = format!("{}고", tokens[idx].surface);
+            tokens[idx] = SejongToken::new(&merged_surface, "EC", start, end);
+            tokens.remove(idx + 1);
+            // 다음 하/XSV → 하/VV (인덱스 조정 후)
+            if idx + 1 < tokens.len() && tokens[idx + 1].surface == "하" && tokens[idx + 1].pos == "XSV"
+            {
+                tokens[idx + 1].pos = "VV".to_string();
+            }
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
