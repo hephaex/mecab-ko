@@ -7017,6 +7017,49 @@ impl SejongConverter {
             tokens[idx] = SejongToken::new(&merged_surface, "EF", start, end);
             tokens.remove(idx + 1);
         }
+
+        // 152차: "큰/VA+ETM + 집/NNG" → "큰/XPN + 집/NNG"
+        // 관형사형 어미가 붙은 형용사가 접두사처럼 사용될 때
+        let xpn_prefixes: std::collections::HashSet<&str> =
+            ["큰", "작은", "새", "헌", "젊은", "늙은"].into_iter().collect();
+
+        for i in 0..tokens.len().saturating_sub(1) {
+            if xpn_prefixes.contains(tokens[i].surface.as_str())
+                && (tokens[i].pos == "VA" || tokens[i].pos == "ETM")
+                && tokens[i + 1].pos == "NNG"
+            {
+                // "큰/VA" 또는 "ㄴ/ETM" 이후 "집/NNG" → XPN + NNG
+                // VA+ETM 분리된 경우 (크/VA + ㄴ/ETM) → 큰/XPN으로 병합 필요
+            }
+        }
+
+        // VA+ETM 분리 후 재병합이 필요한 패턴: "크/VA + ㄴ/ETM + 집/NNG" → "큰/XPN + 집/NNG"
+        let mut xpn_merge_indices: Vec<(usize, String)> = Vec::new();
+        let xpn_stem_map: std::collections::HashMap<&str, &str> = [
+            ("크", "큰"),
+            ("작", "작은"),
+        ]
+        .into_iter()
+        .collect();
+
+        for i in 0..tokens.len().saturating_sub(2) {
+            if tokens[i].pos == "VA"
+                && tokens[i + 1].surface == "ㄴ"
+                && tokens[i + 1].pos == "ETM"
+                && tokens[i + 2].pos == "NNG"
+            {
+                if let Some(merged) = xpn_stem_map.get(tokens[i].surface.as_str()) {
+                    xpn_merge_indices.push((i, merged.to_string()));
+                }
+            }
+        }
+
+        for (idx, merged) in xpn_merge_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx + 1].end_pos;
+            tokens[idx] = SejongToken::new(&merged, "XPN", start, end);
+            tokens.remove(idx + 1);
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
