@@ -7060,6 +7060,101 @@ impl SejongConverter {
             tokens[idx] = SejongToken::new(&merged, "XPN", start, end);
             tokens.remove(idx + 1);
         }
+
+        // 153차 보정: 의존명사 NNB 패턴 수정
+        // "채/VV + 어/EC" → "채/NNB" (눈을 감은 채로, 그 채로)
+        // "대/NNG + 로/JKB" → "대로/NNB" (있는 대로, 원하는 대로)
+        // "따르/VV + 어/EC" → "따라/NNB" (결과에 따라, 상황에 따라)
+        let mut nnb_fix_indices: Vec<(usize, &str)> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(1) {
+            // "채/VV + 어/EC" → "채/NNB"
+            if tokens[i].surface == "채"
+                && tokens[i].pos == "VV"
+                && tokens[i + 1].surface == "어"
+                && tokens[i + 1].pos == "EC"
+            {
+                nnb_fix_indices.push((i, "채"));
+            }
+            // "대/NNG + 로/JKB" → "대로/NNB"
+            if tokens[i].surface == "대"
+                && tokens[i].pos == "NNG"
+                && tokens[i + 1].surface == "로"
+                && tokens[i + 1].pos == "JKB"
+            {
+                nnb_fix_indices.push((i, "대로"));
+            }
+            // "따르/VV + 어/EC" → "따라/NNB"
+            if tokens[i].surface == "따르"
+                && tokens[i].pos == "VV"
+                && tokens[i + 1].surface == "어"
+                && tokens[i + 1].pos == "EC"
+            {
+                // 문맥 확인: 앞에 ETM이 있으면 의존명사
+                if i > 0 && tokens[i - 1].pos == "ETM" {
+                    nnb_fix_indices.push((i, "따라"));
+                }
+            }
+        }
+
+        for (idx, surface) in nnb_fix_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx + 1].end_pos;
+            tokens[idx] = SejongToken::new(surface, "NNB", start, end);
+            tokens.remove(idx + 1);
+        }
+
+        // 154차 보정: 문장 끝 "다/NNG" → "다/EF"
+        // "먹다", "가다" 등 동사 원형의 "다"가 NNG로 분석될 때
+        // 문장 끝이거나 앞에 VV/VA/VX가 있으면 EF로 변환
+        if let Some(last) = tokens.last_mut() {
+            if last.surface == "다" && last.pos == "NNG" {
+                // 문장 마지막 "다" → EF
+                last.pos = "EF".to_string();
+            }
+        }
+
+        // 문장 중간의 "VV/VA/VX + 다/NNG" → "VV/VA/VX + 다/EF"
+        for i in 1..tokens.len() {
+            if tokens[i].surface == "다"
+                && tokens[i].pos == "NNG"
+                && (tokens[i - 1].pos == "VV"
+                    || tokens[i - 1].pos == "VA"
+                    || tokens[i - 1].pos == "VX")
+            {
+                tokens[i].pos = "EF".to_string();
+            }
+        }
+
+        // 155차 보정: XSV/EP 뒤의 "다/NNG" → "다/EF"
+        // "발표했다", "개선됐다" 등 XSV+EP+다 패턴
+        for i in 1..tokens.len() {
+            if tokens[i].surface == "다"
+                && tokens[i].pos == "NNG"
+                && (tokens[i - 1].pos == "XSV" || tokens[i - 1].pos == "EP")
+            {
+                tokens[i].pos = "EF".to_string();
+            }
+        }
+
+        // VCP 뒤의 "다/NNG" → "다/EF" (이다)
+        for i in 1..tokens.len() {
+            if tokens[i].surface == "다"
+                && tokens[i].pos == "NNG"
+                && tokens[i - 1].pos == "VCP"
+            {
+                tokens[i].pos = "EF".to_string();
+            }
+        }
+
+        // 156차 보정: 의문대명사 NP 변환
+        // "얼마/NNG + 이/VCP" → "얼마/NP + 이/VCP"
+        // "뭐", "무엇", "누구", "어디", "언제", "어느" 등
+        let question_pronouns = ["얼마", "뭐", "무엇", "누구", "어디", "언제", "어느", "왜", "어떻게"];
+        for token in tokens.iter_mut() {
+            if token.pos == "NNG" && question_pronouns.contains(&token.surface.as_str()) {
+                token.pos = "NP".to_string();
+            }
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
