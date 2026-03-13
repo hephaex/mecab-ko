@@ -218,6 +218,10 @@ impl SejongConverter {
         None
     }
 
+    // 166차: is_compound_token 함수 제거
+    // 복합어 분리는 세종 코퍼스 표준에 맞게 선별적으로 적용 필요
+    // 현재는 복합어를 분리하지 않음
+
     /// 품사 태그 매핑 테이블 초기화
     #[allow(clippy::too_many_lines)]
     fn init_tag_map(&mut self) {
@@ -1673,6 +1677,10 @@ impl SejongConverter {
         // 143차: "는다/VV+EC"는 사전 분석결과가 잘못됨 (늘/VV+ㄴ다/EC)
         // 규칙 기반으로 직접 처리: "는다/VV+EC" → "는다/EF"
         let skip_decomposition = token.surface == "는다" && token.pos == "VV+EC";
+
+        // 166차: Compound 분리 보류
+        // 일부 복합어(밤낮)는 분리해야 하지만 대부분(인공지능, 서울특별시)은 분리하면 안 됨
+        // 세종 코퍼스 표준에 따라 선별적 적용 필요 - 현재는 비활성화
 
         // 1. 분석결과 컬럼 활용 시도
         if self.use_decomposition && !token.features.is_empty() && !skip_decomposition {
