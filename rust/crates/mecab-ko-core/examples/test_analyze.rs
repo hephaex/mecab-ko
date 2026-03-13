@@ -21,12 +21,13 @@ fn main() {
 
     // 디버깅 케이스
     let debug_cases = [
-        // EC 65% - 낮은 정확도 패턴
-        ("회의가 있으니까", "회의/NNG 가/JKS 있/VV 으니까/EC"),
-        ("준비해야", "준비/NNG 하/XSV 아야/EC"),
         // EP 64% - 낮은 정확도 패턴
-        ("먹었으면서", "먹/VV 었/EP 으면서/EC"),
-        ("했으면서", "하/VV 았/EP 으면서/EC"),
+        ("선생님께서 오셨습니다", "선생님/NNG 께서/JKS 오/VV 시/EP 었/EP 습니다/EF"),
+        ("드시겠어요", "드/VV 시/EP 겠/EP 어요/EF"),
+        ("계십니다", "계/VV 시/EP ㅂ니다/EF"),
+        ("피곤해서 일찍 자야겠다", "피곤/NNG 하/XSA 아서/EC 일찍/MAG 자/VV 아야겠/EP 다/EF"),
+        // VCP 63% - 낮은 정확도 패턴
+        ("얼마예요", "얼마/NP 이/VCP 에요/EF"),
     ];
 
     for (text, expected) in debug_cases {

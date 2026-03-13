@@ -5042,28 +5042,9 @@ impl SejongConverter {
 
         // 64차 보정: 제거됨 - 부작용이 있어서 XSV + EF 병합 대신 테스트 케이스 수정 필요
 
-        // 65차 보정: "드/VV + 시/EP" → "들/VV + 시/EP" (ㄹ 탈락 불규칙 복원)
-        // "드세요", "드시다" 등에서 기본형은 "들다"
-        // EP가 "시"인 경우에만 적용 (존칭 선어말어미)
-        let rieul_irregular_verbs: std::collections::HashMap<&str, &str> = [
-            ("드", "들"), // 들다 → 드시다, 드세요
-        ]
-        .into_iter()
-        .collect();
-
-        for i in 0..tokens.len().saturating_sub(1) {
-            let curr_surface = &tokens[i].surface;
-            let curr_pos = &tokens[i].pos;
-            let next_surface = &tokens[i + 1].surface;
-            let next_pos = &tokens[i + 1].pos;
-
-            // VV + 시/EP 패턴 (존칭에서만 ㄹ 탈락 복원)
-            if curr_pos == "VV" && next_pos == "EP" && next_surface == "시" {
-                if let Some(&stem) = rieul_irregular_verbs.get(curr_surface.as_str()) {
-                    tokens[i].surface = stem.to_string();
-                }
-            }
-        }
+        // 65차 보정: 제거됨
+        // 세종 코퍼스 표준은 "드/VV 시/EP" (ㄹ 탈락형 그대로 유지)
+        // "들/VV"로 복원하면 오히려 정답과 불일치
 
         // 66차 보정: 제거됨 - 테스트 데이터에서 "세요"는 단일 EF로 분석됨
 
@@ -7247,6 +7228,43 @@ impl SejongConverter {
                     last.pos = "EF".to_string();
                 }
             }
+        }
+
+        // 163차 보정: EF 축약 모음 정규화
+        // "ㅔ요/EF" → "에요/EF", "ㅐ요/EF" → "애요/EF"
+        for token in tokens.iter_mut() {
+            if token.pos == "EF" {
+                match token.surface.as_str() {
+                    "ㅔ요" => token.surface = "에요".to_string(),
+                    "ㅐ요" => token.surface = "애요".to_string(),
+                    "ㅔ" => token.surface = "에".to_string(),
+                    "ㅐ" => token.surface = "애".to_string(),
+                    _ => {}
+                }
+            }
+        }
+
+        // 164차 보정: NR 수사 병합
+        // "삼/NR + 십/NR" → "삼십/NR", "이/NR + 백/NR" → "이백/NR"
+        // 십/백/천/만 앞의 수사를 병합
+        let mut idx = 0;
+        while idx + 1 < tokens.len() {
+            if tokens[idx].pos == "NR" && tokens[idx + 1].pos == "NR" {
+                let second = tokens[idx + 1].surface.as_str();
+                // 십, 백, 천, 만 뒤에 올 수 있는 1자리 수사
+                if ["십", "백", "천", "만"].contains(&second) {
+                    let first = tokens[idx].surface.clone();
+                    // 일, 이, 삼, 사, 오, 육, 칠, 팔, 구 등 1자리 수사
+                    if ["일", "이", "삼", "사", "오", "육", "칠", "팔", "구"].contains(&first.as_str())
+                    {
+                        // 병합
+                        tokens[idx].surface = format!("{}{}", first, second);
+                        tokens.remove(idx + 1);
+                        continue;
+                    }
+                }
+            }
+            idx += 1;
         }
     }
 
