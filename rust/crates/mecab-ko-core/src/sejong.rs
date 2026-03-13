@@ -5092,6 +5092,27 @@ impl SejongConverter {
             tokens.remove(idx + 1);
         }
 
+        // 167차 보정: NNG + "적/XSN" → NNG 병합
+        // "성공/NNG + 적/XSN" → "성공적/NNG"
+        // "적극/NNG + 적/XSN" → "적극적/NNG"
+        let mut jeok_merge_indices: Vec<usize> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(1) {
+            if tokens[i].pos == "NNG"
+                && tokens[i + 1].pos == "XSN"
+                && tokens[i + 1].surface == "적"
+            {
+                jeok_merge_indices.push(i);
+            }
+        }
+
+        for idx in jeok_merge_indices.into_iter().rev() {
+            let merged = format!("{}적", tokens[idx].surface);
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx + 1].end_pos;
+            tokens[idx] = SejongToken::new(&merged, "NNG", start, end);
+            tokens.remove(idx + 1);
+        }
+
         // 68차 보정: "시었/EP" → "시/EP + 었/EP" 분리
         // "오셨습니다"에서 "시었"이 하나의 EP로 분석되면 분리
         let mut sieot_split_indices: Vec<usize> = Vec::new();
