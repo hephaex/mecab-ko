@@ -5113,6 +5113,22 @@ impl SejongConverter {
             tokens.remove(idx + 1);
         }
 
+        // 168차 보정: "의/JKB" → "의/JKG" (관형격 조사)
+        // MeCab이 "의"를 JKB로 분석하지만 세종 표준은 JKG
+        // NNG/NNP/NP/XSN 뒤의 "의"는 관형격 조사
+        for i in 0..tokens.len().saturating_sub(1) {
+            let prev_pos = &tokens[i].pos;
+            if (prev_pos == "NNG"
+                || prev_pos == "NNP"
+                || prev_pos == "NP"
+                || prev_pos == "XSN")
+                && tokens[i + 1].pos == "JKB"
+                && tokens[i + 1].surface == "의"
+            {
+                tokens[i + 1].pos = "JKG".to_string();
+            }
+        }
+
         // 68차 보정: "시었/EP" → "시/EP + 었/EP" 분리
         // "오셨습니다"에서 "시었"이 하나의 EP로 분석되면 분리
         let mut sieot_split_indices: Vec<usize> = Vec::new();

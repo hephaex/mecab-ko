@@ -21,13 +21,10 @@ fn main() {
 
     // 디버깅 케이스 - sample.tsv에서 실패하는 케이스 분석
     let debug_cases = [
-        // 167차 테스트
-        ("성공적으로", "성공적/NNG 으로/JKB"),
-        ("적극적인", "적극적/NNG 이/VCP ㄴ/ETM"),
-        // EP 64% - 분석
-        ("선거 결과가 발표될 예정입니다", "선거/NNG 결과/NNG 가/JKS 발표/NNG 되/XSV ㄹ/ETM 예정/NNG 이/VCP 습니다/EF"),
-        // XSV 67%
-        ("개발에 투자하고", "개발/NNG 에/JKB 투자/NNG 하/XSV 고/EC"),
+        // JKG 테스트
+        ("나의 친구", "나/NP 의/JKG 친구/NNG"),
+        ("학교의 운동장", "학교/NNG 의/JKG 운동장/NNG"),
+        ("주민들의", "주민/NNG 들/XSN 의/JKG"),
     ];
 
     for (text, expected) in debug_cases {
