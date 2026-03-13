@@ -21,14 +21,12 @@ fn main() {
 
     // 디버깅 케이스
     let debug_cases = [
-        ("또한", "또한/MAG"),  // 현재: 또/MAG 하/VV ㄴ/ETM
-        ("한국의 수도", "한국/NNP 의/JKG 수도/NNG"),  // 현재: 하/VV ㄴ/ETM 국의/NNG
-        ("아버지", "아버지/NNG"),  // 현재: 아버/NNP 지/VX
-        ("간다", "가/VV ㄴ다/EF"),  // 현재: 가/VV ㄴ/ETM 다/NNG
-        ("먹자", "먹/VV 자/EF"),  // 현재: 먹/VV 자/NNG
-        ("가지고", "가지/VV 고/EC"),  // 현재: 가/VV 어/EC 지/VX 고/MM
-        ("하지만", "하/VV 지만/EC"),  // 현재: 하지만/MAJ
-        ("가지만", "가/VV 지만/EC"),  // 현재: 가지/NNG 만/JX
+        // 문제 패턴 분석
+        ("가며 오며", "가/VV 며/EC 오/VV 며/EC"),  // 현재: 갈/VV 시/EP 며/EC
+        ("가게 오게", "가/VV 게/EC 오/VV 게/EC"),  // 현재: 가게/NNG
+        ("대로", "대로/NNB"),  // 현재: 대/NNG 로/JKB
+        ("따라", "따라/NNB"),  // 현재: 따르/VV 어/EC
+        ("와요", "오/VV 아요/EF"),  // 현재: 와/VV 어요/EF
     ];
 
     for (text, expected) in debug_cases {

@@ -1147,6 +1147,13 @@ impl SejongConverter {
             return vec![("는다".to_string(), "EF".to_string())];
         }
 
+        // 150차: EP+EC "며" 특수 처리
+        // MeCab이 "며"를 EP+EC (시/EP + 며/EC)로 분석하지만 실제로는 연결어미만 사용
+        // "며/EP+EC" → "며/EC" (시/EP 제거)
+        if pos == "EP+EC" && surface == "며" {
+            return vec![("며".to_string(), "EC".to_string())];
+        }
+
         // VV+EF 특별 패턴 처리
         if pos == "VV+EF" {
             // "ㅂ니다" 패턴: "합니다" → "하/VV + ㅂ니다/EF"
