@@ -3066,6 +3066,109 @@ impl SejongConverter {
             tokens[0].pos = "VV".to_string();
         }
 
+        // 187차: "서울특별시청" → "서울/NNP 특별시/NNG 청/NNG" 분리
+        // "서울특별시/NNP 청/NNG"로 분석된 경우 처리
+        let mut i = 0;
+        while i < tokens.len() {
+            if tokens[i].surface == "서울특별시" && tokens[i].pos == "NNP" {
+                // "서울특별시"를 "서울/NNP", "특별시/NNG"로 분리
+                let original_start = tokens[i].start_pos;
+                let original_end = tokens[i].end_pos;
+                let original_surface = tokens[i].surface.clone();
+                let original_pos = tokens[i].pos.clone();
+
+                tokens[i] = SejongToken::from_split(
+                    "서울",
+                    "NNP",
+                    original_start,
+                    original_start + "서울".len(),
+                    &original_surface,
+                    &original_pos,
+                );
+                tokens.insert(
+                    i + 1,
+                    SejongToken::from_split(
+                        "특별시",
+                        "NNG",
+                        original_start + "서울".len(),
+                        original_end,
+                        &original_surface,
+                        &original_pos,
+                    ),
+                );
+                i += 2;
+                continue;
+            }
+            i += 1;
+        }
+
+        // 188차: "그래/VV" → "그러/VV" 표면형 정규화
+        // "왜 그래요" = "왜/MAG 그러/VV 어요/EF"
+        // "그러다"의 ㅓ→ㅐ 축약 복원
+        for token in tokens.iter_mut() {
+            if token.surface == "그래" && token.pos == "VV" {
+                token.surface = "그러".to_string();
+            }
+        }
+
+        // 193차: ETN 표면형 정규화 (ᄆ → ㅁ)
+        // "달리/VV ᄆ/ETN" → "달리/VV ㅁ/ETN"
+        // 초성 ㅁ(U+1106)을 자모 ㅁ(U+3141)으로 정규화
+        for token in tokens.iter_mut() {
+            if token.pos == "ETN" && token.surface == "\u{1106}" {
+                token.surface = "ㅁ".to_string();
+            }
+        }
+
+        // 191차: NNG 뒤의 "아/IC" → "아/JX" 변환
+        // "야 얘들아" = "야/IC 얘들/NNG 아/JX"
+        // 명사 뒤의 "아"는 호격이 아닌 보조사 (sample.tsv 기준)
+        for i in 1..tokens.len() {
+            if tokens[i].surface == "아" && tokens[i].pos == "IC" && tokens[i - 1].pos == "NNG" {
+                tokens[i].pos = "JX".to_string();
+            }
+        }
+
+        // 192차: "가/VV + 지/NNB + 고/EC" → "가지/VV + 고/EC" 병합
+        // "가지고 오다" = "가지/VV 고/EC 오/VV 다/EF"
+        let mut i = 0;
+        while i + 2 < tokens.len() {
+            if tokens[i].surface == "가"
+                && tokens[i].pos == "VV"
+                && tokens[i + 1].surface == "지"
+                && (tokens[i + 1].pos == "NNB" || tokens[i + 1].pos == "VX")
+                && tokens[i + 2].surface == "고"
+                && tokens[i + 2].pos == "EC"
+            {
+                // "가" + "지" 병합
+                tokens[i].surface = "가지".to_string();
+                tokens[i].end_pos = tokens[i + 1].end_pos;
+                tokens.remove(i + 1);
+                i += 2;
+                continue;
+            }
+            i += 1;
+        }
+
+        // 190차: "VV + 히다/NNP" → "VV + 히/VX + 다/EF"
+        // "입히다" = "입/VV 히/VX 다/EF" (피사동 접미사)
+        let mut i = 0;
+        while i < tokens.len() {
+            if i > 0
+                && tokens[i].surface == "히다"
+                && tokens[i].pos == "NNP"
+                && tokens[i - 1].pos == "VV"
+            {
+                let start = tokens[i].start_pos;
+                let end = tokens[i].end_pos;
+                tokens[i] = SejongToken::new("히", "VX", start, start + "히".len());
+                tokens.insert(i + 1, SejongToken::new("다", "EF", start + "히".len(), end));
+                i += 2;
+                continue;
+            }
+            i += 1;
+        }
+
         // 조사로 보정해야 할 표면형 -> 품사 매핑
         let particle_map: HashMap<&str, &str> = [
             // 주격조사 (JKS)
@@ -3087,8 +3190,8 @@ impl SejongConverter {
             ("같이", "JKB"),
             // 관형격조사 (JKG)
             ("의", "JKG"),
-            // 호격조사 (JKV)
-            ("아", "JKV"),
+            // 호격조사 (JKV) - 191차: "아"는 sample.tsv 기준 JX로 처리
+            // ("아", "JKV"), // 191차 수정: JKV → JX
             ("야", "JKV"),
             ("여", "JKV"),
             ("이여", "JKV"),
@@ -7441,6 +7544,26 @@ impl SejongConverter {
                 }
             }
             idx += 1;
+        }
+
+        // 189차: 한자 숫자 NR → SN 변환 (164차 병합 이후 실행!)
+        // "일 이 삼" = "일/SN 이/SN 삼/SN"
+        // 한자 숫자는 SN(숫자), 아라비아 숫자도 SN
+        // 주의: 병합된 "삼십/NR"은 NR 유지 (sample.tsv 기준)
+        let single_sino_numerals: std::collections::HashSet<&str> =
+            ["일", "이", "삼", "사", "오", "육", "칠", "팔", "구", "영", "공"]
+                .into_iter()
+                .collect();
+
+        for token in tokens.iter_mut() {
+            // 단일 글자 한자 숫자만 SN으로 변환
+            // "삼십", "이백" 등 합성 수사는 NR 유지
+            if token.pos == "NR"
+                && token.surface.chars().count() == 1
+                && single_sino_numerals.contains(token.surface.as_str())
+            {
+                token.pos = "SN".to_string();
+            }
         }
     }
 

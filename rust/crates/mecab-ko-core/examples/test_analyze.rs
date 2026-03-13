@@ -14,10 +14,17 @@ fn main() {
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = mecab_ko_dict::UserDictionary::new();
-        if user_dict.load_from_csv(&user_dict_path).is_ok() {
-            tokenizer.set_user_dict(user_dict);
-            println!("Loaded user dictionary\n");
+        match user_dict.load_from_csv(&user_dict_path) {
+            Ok(_) => {
+                tokenizer.set_user_dict(user_dict);
+                println!("Loaded user dictionary\n");
+            }
+            Err(e) => {
+                eprintln!("Failed to load user dictionary: {}", e);
+            }
         }
+    } else {
+        eprintln!("User dictionary not found: {:?}", user_dict_path);
     }
 
     // sample.tsv 평가
