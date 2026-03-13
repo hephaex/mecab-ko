@@ -1158,6 +1158,20 @@ impl SejongConverter {
             return vec![("며".to_string(), "EC".to_string())];
         }
 
+        // 169차: VV+EC+EP+EF "-야겠다" 패턴 분리
+        // MeCab이 분해 정보 없이 복합 품사로 출력하는 경우
+        // 예: "자야겠다/VV+EC+EP+EF" → "자/VV 아야겠/EP 다/EF"
+        // "자야겠다" = 4글자 ("자" + "야겠다"), "가야겠다" = 4글자
+        if pos == "VV+EC+EP+EF" && surface.ends_with("야겠다") && surface.chars().count() >= 4 {
+            let stem_len = surface.chars().count() - 3; // "야겠다"에서 "야겠" 제외 (어간 + 다)
+            let stem: String = surface.chars().take(stem_len).collect();
+            return vec![
+                (stem, "VV".to_string()),
+                ("아야겠".to_string(), "EP".to_string()),
+                ("다".to_string(), "EF".to_string()),
+            ];
+        }
+
         // VV+EF 특별 패턴 처리
         if pos == "VV+EF" {
             // "ㅂ니다" 패턴: "합니다" → "하/VV + ㅂ니다/EF"

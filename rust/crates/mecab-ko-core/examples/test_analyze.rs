@@ -21,10 +21,11 @@ fn main() {
 
     // 디버깅 케이스 - sample.tsv에서 실패하는 케이스 분석
     let debug_cases = [
-        // JKG 테스트
-        ("나의 친구", "나/NP 의/JKG 친구/NNG"),
-        ("학교의 운동장", "학교/NNG 의/JKG 운동장/NNG"),
-        ("주민들의", "주민/NNG 들/XSN 의/JKG"),
+        // EP 64% 오류 분석
+        ("맛있겠다", "맛있/VA 겠/EP 다/EF"),
+        ("알겠어요", "알/VV 겠/EP 어요/EF"),
+        ("모르겠어요", "모르/VV 겠/EP 어요/EF"),
+        ("피곤해서 일찍 자야겠다", "피곤/NNG 하/XSA 아서/EC 일찍/MAG 자/VV 아야겠/EP 다/EF"),
     ];
 
     for (text, expected) in debug_cases {
