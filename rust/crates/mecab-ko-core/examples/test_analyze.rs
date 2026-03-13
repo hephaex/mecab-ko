@@ -21,14 +21,13 @@ fn main() {
 
     // 디버깅 케이스 - sample.tsv에서 실패하는 케이스 분석
     let debug_cases = [
-        // 인터넷 패턴 테스트 (166차)
-        ("컴퓨터 인터넷", "컴퓨터/NNG 인터넷/NNG"),
-        // EP 64% - XSV 뒤 EP
-        ("증가하면서", "증가/NNG 하/XSV 면서/EC"),
-        ("진행되고", "진행/NNG 되/XSV 고/EC"),
-        // VCP 63% - 지정사
-        ("예정입니다", "예정/NNG 이/VCP 습니다/EF"),
+        // 167차 테스트
         ("성공적으로", "성공적/NNG 으로/JKB"),
+        ("적극적인", "적극적/NNG 이/VCP ㄴ/ETM"),
+        // EP 64% - 분석
+        ("선거 결과가 발표될 예정입니다", "선거/NNG 결과/NNG 가/JKS 발표/NNG 되/XSV ㄹ/ETM 예정/NNG 이/VCP 습니다/EF"),
+        // XSV 67%
+        ("개발에 투자하고", "개발/NNG 에/JKB 투자/NNG 하/XSV 고/EC"),
     ];
 
     for (text, expected) in debug_cases {
