@@ -1241,6 +1241,14 @@ impl SejongConverter {
                 ];
             }
 
+            // 151차: "와요" → "오/VV + 아요/EF" (오+아요 = 와요)
+            if surface == "와요" {
+                return vec![
+                    ("오".to_string(), "VV".to_string()),
+                    ("아요".to_string(), "EF".to_string()),
+                ];
+            }
+
             // "해" → "하/VV + 어/EF" (하+여 = 해, 세종 코퍼스 표준)
             if surface == "해" {
                 return vec![
