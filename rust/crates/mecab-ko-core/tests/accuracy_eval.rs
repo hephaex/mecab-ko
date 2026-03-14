@@ -1902,6 +1902,13 @@ fn test_specific_sentence_debug() {
         ("기온이 영하로 떨어질 전망입니다", "기온/NNG 이/JKS 영하/NNG 로/JKB 떨어지/VV ㄹ/ETM 전망/NNG 이/VCP 습니다/EF"),
         // "진행하고" 오류 분석
         ("협력하여 진행하고 있다", "협력/NNG 하/XSV 어/EC 진행/NNG 하/XSV 고/EC 있/VX 다/EF"),
+        // ㅂ불규칙 동사 분석
+        ("줍다 주워 주우면", "줍/VV 다/EF 줍/VV 어/EF 줍/VV 으면/EC"),
+        // ㅂ불규칙 형용사 분석
+        ("덥다 더워 더우면", "덥/VA 다/EF 덥/VA 어/EF 덥/VA 으면/EC"),
+        ("어렵다 어려워", "어렵/VA 다/EF 어렵/VA 어/EF"),
+        // 단어 나열에서 각 어절의 마지막은 EF
+        ("먹다 먹어", "먹/VV 다/EF 먹/VV 어/EF"),
     ];
 
     println!("\n=== 특정 문장 디버그 분석 ===");
@@ -1915,7 +1922,11 @@ fn test_specific_sentence_debug() {
         println!("  결과: {}", result);
         println!("  MeCab 원본:");
         for tok in &tokens {
-            println!("    {} / {} | {}", tok.surface, tok.pos, tok.features);
+            println!("    {} / {} [{}-{}] | {}", tok.surface, tok.pos, tok.start_pos, tok.end_pos, tok.features);
+        }
+        println!("  Sejong 변환:");
+        for tok in &sejong_tokens {
+            println!("    {} / {} [{}-{}]", tok.surface, tok.pos, tok.start_pos, tok.end_pos);
         }
     }
 }

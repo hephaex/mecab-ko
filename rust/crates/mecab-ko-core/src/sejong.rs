@@ -5810,6 +5810,45 @@ impl SejongConverter {
             tokens.remove(idx + 1);
         }
 
+        // 237차 보정: 어절 끝 "어/EC" → "어/EF", "아/EC" → "아/EF"
+        // "덥다 더워 더우면"에서 "더워"가 개별 어절이므로 "어/EF"여야 함
+        // 어절 경계: 분해된 토큰의 original_surface가 다음 토큰과 다르면 어절 끝
+        for i in 0..tokens.len() {
+            let surface = &tokens[i].surface;
+            let pos = &tokens[i].pos;
+
+            // "어/EC" 또는 "아/EC" 패턴
+            if pos == "EC" && (surface == "어" || surface == "아") {
+                // 이전 토큰이 VV/VA/VX인지 확인 (활용형)
+                let prev_is_verb = i > 0
+                    && (tokens[i - 1].pos == "VV"
+                        || tokens[i - 1].pos == "VA"
+                        || tokens[i - 1].pos == "VX");
+
+                if prev_is_verb {
+                    // 마지막 토큰인 경우
+                    let is_last = i + 1 >= tokens.len();
+
+                    // 분해된 토큰인 경우, 다음 토큰이 같은 원본에서 분해되었는지 확인
+                    let is_eojeol_final = if is_last {
+                        true
+                    } else {
+                        // 현재 토큰의 original_surface와 다음 토큰의 original_surface 비교
+                        // 둘 다 Some이고 같으면 같은 어절, 다르면 어절 끝
+                        match (&tokens[i].original_surface, &tokens[i + 1].original_surface) {
+                            (Some(curr_orig), Some(next_orig)) => curr_orig != next_orig,
+                            (Some(_), None) => true,  // 다음은 분해 안 됨 = 어절 끝
+                            (None, _) => false,       // 현재가 분해 안 됨 = 이 규칙 적용 안 함
+                        }
+                    };
+
+                    if is_eojeol_final {
+                        tokens[i].pos = "EF".to_string();
+                    }
+                }
+            }
+        }
+
         // 167차 보정: NNG + "적/XSN" → NNG 병합
         // "성공/NNG + 적/XSN" → "성공적/NNG"
         // "적극/NNG + 적/XSN" → "적극적/NNG"
