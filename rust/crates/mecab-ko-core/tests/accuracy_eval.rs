@@ -1917,6 +1917,8 @@ fn test_specific_sentence_debug() {
         ("이르다 일러 이르면", "이르/VV 다/EF 이르/VV 어/EF 이르/VV 면/EC"),
         // ㅎ불규칙 "노랗다" 분석
         ("노랗다 노래 노랗으면", "노랗/VA 다/EF 노랗/VA 아/EF 노랗/VA 으면/EC"),
+        // "있으며" 패턴 (VX + 으며/EC)
+        ("진행하고 있으며", "진행/NNG 하/XSV 고/EC 있/VX 으며/EC"),
     ];
 
     println!("\n=== 특정 문장 디버그 분석 ===");

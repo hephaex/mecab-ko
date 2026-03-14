@@ -5984,6 +5984,26 @@ impl SejongConverter {
             tokens.insert(idx + 1, SejongToken::new("아", "EF", start + 2, end));
         }
 
+        // 244차 보정: "있/VX + 안/MAG + 으며/EC" → "있/VX + 으며/EC"
+        // MeCab이 "있으며"에서 "으며"를 "안/VV + 으며/EC"로 분석
+        // VX 뒤에 "안/MAG"이 오고 그 뒤에 "으며/EC"가 오면 "안" 제거
+        let mut an_remove_indices: Vec<usize> = Vec::new();
+        for i in 1..tokens.len().saturating_sub(1) {
+            if tokens[i].surface == "안" && tokens[i].pos == "MAG" {
+                // 앞에 VX가 있고, 뒤에 "으며/EC"가 있으면
+                if tokens[i - 1].pos == "VX"
+                    && tokens[i + 1].surface == "으며"
+                    && tokens[i + 1].pos == "EC"
+                {
+                    an_remove_indices.push(i);
+                }
+            }
+        }
+
+        for idx in an_remove_indices.into_iter().rev() {
+            tokens.remove(idx);
+        }
+
         // 167차 보정: NNG + "적/XSN" → NNG 병합
         // "성공/NNG + 적/XSN" → "성공적/NNG"
         // "적극/NNG + 적/XSN" → "적극적/NNG"
