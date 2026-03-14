@@ -1781,3 +1781,66 @@ fn test_xsv_debug_sentences() {
         println!("  일치: {}", if is_match { "✓" } else { "✗" });
     }
 }
+
+/// ㅎ불규칙 형용사 "으면/EC" 테스트
+#[test]
+fn test_h_irregular_adjective_ec() {
+    use mecab_ko_core::sejong::SejongConverter;
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
+        .unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or(std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH")
+        .unwrap_or_else(|_| {
+            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
+                .to_string_lossy()
+                .to_string()
+        });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path)
+        .expect("Failed to create tokenizer");
+
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let converter = SejongConverter::new();
+
+    // ㅎ불규칙 형용사 테스트
+    let test_cases = [
+        // sample.tsv 기준
+        ("하얗다 하얘 하얗으면", "하얗/VA 다/EF 하얗/VA 아/EF 하얗/VA 으면/EC"),
+        ("까맣다 까매 까맣으면", "까맣/VA 다/EF 까맣/VA 아/EF 까맣/VA 으면/EC"),
+        ("노랗다 노래 노랗으면", "노랗/VA 다/EF 노랗/VA 아/EF 노랗/VA 으면/EC"),
+        // 단일 어절
+        ("하얗으면", "하얗/VA 으면/EC"),
+        ("까맣으면", "까맣/VA 으면/EC"),
+    ];
+
+    println!("\n=== ㅎ불규칙 형용사 EC 분석 ===");
+    for (input, expected) in test_cases {
+        let tokens = tokenizer.tokenize(input);
+        let sejong_tokens = converter.convert_tokens(&tokens);
+        let result = converter.format_sejong(&sejong_tokens);
+
+        println!("\n문장: {}", input);
+        println!("  예상: {}", expected);
+        println!("  결과: {}", result);
+        println!("  MeCab 원본:");
+        for tok in &tokens {
+            println!("    {} / {} | {}", tok.surface, tok.pos, tok.features);
+        }
+
+        let is_match = result == expected;
+        println!("  일치: {}", if is_match { "✓" } else { "✗" });
+    }
+}

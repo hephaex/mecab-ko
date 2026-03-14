@@ -6168,6 +6168,28 @@ impl SejongConverter {
             i += 1;
         }
 
+        // 217차 보정: "으면/EF" → "으면/EC" (VA 뒤 연결어미)
+        // sample.tsv 기준: "하얗으면" → "하얗/VA 으면/EC"
+        // MeCab이 "으면"을 EF로 분석하지만 실제로는 연결어미(EC)
+        for i in 1..tokens.len() {
+            if tokens[i].surface == "으면" && tokens[i].pos == "EF" {
+                // 앞에 VA/VV가 있으면 EC로 변환
+                if tokens[i - 1].pos == "VA" || tokens[i - 1].pos == "VV" {
+                    tokens[i].pos = "EC".to_string();
+                }
+            }
+        }
+
+        // 218차 보정: "는데/EF" → "는데/EC" (문장 중간 연결어미)
+        // sample.tsv 기준: "나왔는데 막상" → "나오/VV 았/EP 는데/EC 막상/MAG"
+        // 문장 끝이 아니면 연결어미로 처리
+        for i in 0..tokens.len().saturating_sub(1) {
+            if tokens[i].surface == "는데" && tokens[i].pos == "EF" {
+                // 문장 끝이 아니면 EC로 변환
+                tokens[i].pos = "EC".to_string();
+            }
+        }
+
         // 86차 보정: "ㄴ/ETM + 다/EF" → "ㄴ다/EF", "는/ETM + 다/EF" → "는다/EF" 병합
         // "간다" = "가/VV ㄴ다/EF", "먹는다" = "먹/VV 는다/EF"
         // sample.tsv 형식에 맞춰 현재형 종결어미를 단일 토큰으로 처리
