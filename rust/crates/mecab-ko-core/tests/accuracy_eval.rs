@@ -1470,7 +1470,8 @@ fn test_ef_error_cases_detailed() {
     // EF 오류 케이스 (sample.tsv 기반)
     let test_cases = [
         ("목말라요", "목마르/VA 아요/EF"),
-        ("심심해요", "심심/NNG 하/XSV 어요/EF"),
+        // sample.tsv 기준: 심심하/VA 어요/EF
+        ("심심해요", "심심하/VA 어요/EF"),
         ("재미있어요", "재미있/VA 어요/EF"),
         ("맛없어요", "맛없/VA 어요/EF"),
         ("만나요", "만나/VV 아요/EF"),

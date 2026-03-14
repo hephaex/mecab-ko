@@ -6208,6 +6208,27 @@ impl SejongConverter {
             }
         }
 
+        // 226차: "목/NNG + 마르/VV" → "목마르/VA" 병합
+        // sample.tsv 기준: "목말라요" → "목마르/VA 아요/EF"
+        // MeCab이 "목/NNG + 말라요/VV+EC"로 분석하는 경우 병합
+        {
+            let mut i = 0;
+            while i + 1 < tokens.len() {
+                if tokens[i].surface == "목"
+                    && tokens[i].pos == "NNG"
+                    && tokens[i + 1].surface.starts_with("마르")
+                    && tokens[i + 1].pos == "VV"
+                {
+                    let merged_surface = format!("목{}", tokens[i + 1].surface);
+                    let start = tokens[i].start_pos;
+                    let end = tokens[i + 1].end_pos;
+                    tokens[i] = SejongToken::new(&merged_surface, "VA", start, end);
+                    tokens.remove(i + 1);
+                }
+                i += 1;
+            }
+        }
+
         // 215차: 형용사 어근 + 하 → VA 병합
         // sample.tsv 기준: "미안해요" → "미안하/VA 어요/EF"
         // "미안/NNG 하/XSA" → "미안하/VA"로 병합
