@@ -2889,16 +2889,28 @@ impl SejongConverter {
 
             // 패턴 24: "X지/VV" → "X/VV + 지/EC" (부정 연결어미 분리)
             // 하지, 먹지, 가지 등
+            // 233차 수정: "-지다" 동사는 분리하지 않음 (떨어지다, 커지다 등)
             if !merged && tokens[i].pos == "VV" && tokens[i].surface.ends_with("지") {
                 let surface = &tokens[i].surface;
-                if let Some(stem) = surface.strip_suffix("지") {
-                    if !stem.is_empty() {
-                        let start = tokens[i].start_pos;
-                        let end = tokens[i].end_pos;
-                        let stem_len = stem.chars().count();
-                        tokens[i] = SejongToken::new(stem, "VV", start, start + stem_len);
-                        tokens.insert(i + 1, SejongToken::new("지", "EC", start + stem_len, end));
-                        merged = true;
+                // "-지다" 형태의 동사는 분리하지 않음 (233차)
+                let jida_verbs = [
+                    "떨어지", "커지", "작아지", "나아지", "없어지", "생기", "죽이",
+                    "붙이", "늘이", "줄이", "높이", "낮추", "밝히", "넓히", "깊이",
+                    "걸리", "팔리", "열리", "닫히", "막히", "뚫리", "풀리", "묶이",
+                    "잡히", "쫓기", "밀리", "끌리", "불리", "실리", "읽히", "안기",
+                ];
+                let is_jida_verb = jida_verbs.iter().any(|v| *v == surface.as_str());
+
+                if !is_jida_verb {
+                    if let Some(stem) = surface.strip_suffix("지") {
+                        if !stem.is_empty() {
+                            let start = tokens[i].start_pos;
+                            let end = tokens[i].end_pos;
+                            let stem_len = stem.chars().count();
+                            tokens[i] = SejongToken::new(stem, "VV", start, start + stem_len);
+                            tokens.insert(i + 1, SejongToken::new("지", "EC", start + stem_len, end));
+                            merged = true;
+                        }
                     }
                 }
             }
