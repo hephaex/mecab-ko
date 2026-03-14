@@ -1673,3 +1673,81 @@ fn test_vv_sample_errors() {
     }
     println!("VV 오류 총 {}개 발견", error_count);
 }
+
+/// Sprint 41: XSV 오류 문장 상세 분석
+#[test]
+fn test_xsv_debug_sentences() {
+    use mecab_ko_core::sejong::SejongConverter;
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
+        .unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or(std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH")
+        .unwrap_or_else(|_| {
+            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
+                .to_string_lossy()
+                .to_string()
+        });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path)
+        .expect("Failed to create tokenizer");
+
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+        println!("Loaded user dictionary: {:?}", user_dict_path);
+    }
+
+    let converter = SejongConverter::new();
+
+    // XSV 오류 문장들
+    let test_cases = [
+        (
+            "수출이 증가하면서 무역수지가 개선됐다",
+            "수출/NNG 이/JKS 증가/NNG 하/XSV 면서/EC 무역수지/NNG 가/JKS 개선/NNG 되/XSV 었/EP 다/EF"
+        ),
+        (
+            "국민 여론조사 결과가 공개됐다",
+            "국민/NNG 여론조사/NNG 결과/NNG 가/JKS 공개/NNG 되/XSV 었/EP 다/EF"
+        ),
+        (
+            "시민단체가 성명을 발표했다",
+            "시민단체/NNG 가/JKS 성명/NNG 을/JKO 발표/NNG 하/XSV 았/EP 다/EF"
+        ),
+        // 205차: VV 유지 케이스
+        (
+            "크리에이터 되고 싶어",
+            "크리에이터/NNG 되/VV 고/EC 싶/VX 어/EF"
+        ),
+    ];
+
+    println!("\n=== XSV 오류 문장 상세 분석 ===");
+    for (input, expected) in test_cases {
+        let tokens = tokenizer.tokenize(input);
+        let sejong_tokens = converter.convert_tokens(&tokens);
+        let result = converter.format_sejong(&sejong_tokens);
+
+        println!("\n문장: {}", input);
+        println!("  예상: {}", expected);
+        println!("  결과: {}", result);
+        println!("  MeCab 원본:");
+        for tok in &tokens {
+            println!("    {} / {}", tok.surface, tok.pos);
+        }
+        println!("  Sejong 변환 후:");
+        for tok in &sejong_tokens {
+            println!("    {} / {}", tok.surface, tok.pos);
+        }
+
+        let is_match = result == expected;
+        println!("  일치: {}", if is_match { "✓" } else { "✗" });
+    }
+}
