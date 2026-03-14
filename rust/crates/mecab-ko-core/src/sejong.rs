@@ -5752,9 +5752,30 @@ impl SejongConverter {
             tokens.remove(idx + 1);
         }
 
-        // 234차 보정: 외래어(SL) 뒤 "가/VV" → "가/JKS"
+        // 234차 보정: 외래어(SL) 뒤 "가/VV + (아|어)/EC" → "가/JKS"
         // sample.tsv 기준: "MBTI가 뭐예요" → "MBTI/SL 가/JKS 뭐/NP 이/VCP 에요/EF"
-        // MeCab이 "MBTI가"를 "MBTI/SL 가/VV"로 분석하는 오류 수정
+        // MeCab이 "MBTI가"를 "가/VV+EC" → "가/VV + 아/EC"로 분리하는 오류 수정
+        // "가/VV + (아|어)/EC" 패턴을 "가/JKS"로 병합
+        let mut sl_ga_merge_indices: Vec<usize> = Vec::new();
+        for i in 1..tokens.len().saturating_sub(1) {
+            if tokens[i].surface == "가"
+                && tokens[i].pos == "VV"
+                && tokens[i - 1].pos == "SL"
+                && (tokens[i + 1].surface == "어" || tokens[i + 1].surface == "아")
+                && tokens[i + 1].pos == "EC"
+            {
+                sl_ga_merge_indices.push(i);
+            }
+        }
+
+        for idx in sl_ga_merge_indices.into_iter().rev() {
+            // "가/VV + (아|어)/EC" → "가/JKS"로 교체
+            tokens[idx].pos = "JKS".to_string();
+            tokens.remove(idx + 1); // "(아|어)/EC" 제거
+        }
+
+        // 234-2차 보정: 외래어(SL) 뒤 단독 "가/VV" → "가/JKS"
+        // 위의 병합 패턴 외에 단독 "가/VV"도 처리
         for i in 1..tokens.len() {
             if tokens[i].surface == "가"
                 && tokens[i].pos == "VV"
@@ -7274,6 +7295,32 @@ impl SejongConverter {
                     }
                 }
             }
+        }
+
+        // 235차 보정: NP + "예/VV" + "아요/EF" → NP + "이/VCP" + "에요/EF"
+        // sample.tsv 기준: "뭐예요" → "뭐/NP 이/VCP 에요/EF"
+        // MeCab이 "예/NNG + 요/VCP+EC"로 분석하여 "예/VV 아요/EF"로 분리되는 오류 수정
+        let mut np_yeyo_indices: Vec<usize> = Vec::new();
+        for i in 1..tokens.len().saturating_sub(1) {
+            if tokens[i - 1].pos == "NP"
+                && tokens[i].surface == "예"
+                && tokens[i].pos == "VV"
+                && tokens[i + 1].surface == "아요"
+                && tokens[i + 1].pos == "EF"
+            {
+                np_yeyo_indices.push(i);
+            }
+        }
+
+        for idx in np_yeyo_indices.into_iter().rev() {
+            // "예/VV + 아요/EF" → "이/VCP + 에요/EF"로 교체
+            let start1 = tokens[idx].start_pos;
+            let end1 = tokens[idx].end_pos;
+            tokens[idx] = SejongToken::new("이", "VCP", start1, end1);
+
+            let start2 = tokens[idx + 1].start_pos;
+            let end2 = tokens[idx + 1].end_pos;
+            tokens[idx + 1] = SejongToken::new("에요", "EF", start2, end2);
         }
 
         // 122차 보정: 문장 끝 "ᆯ래요/EC" → "ᆯ래요/EF"
