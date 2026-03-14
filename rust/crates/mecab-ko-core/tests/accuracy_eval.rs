@@ -1886,6 +1886,8 @@ fn test_specific_sentence_debug() {
         ("말함 쓰임", "말하/VV ㅁ/ETN 쓰/VV 임/ETN"),
         // NNG 오류 디버깅
         ("선생님 할머님", "선생님/NNG 할머님/NNG"),
+        // 목말라요 디버깅
+        ("목말라요", "목마르/VA 아요/EF"),
     ];
 
     println!("\n=== 특정 문장 디버그 분석 ===");

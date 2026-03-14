@@ -4729,8 +4729,9 @@ impl SejongConverter {
             }
         }
 
-        // 36차 보정: 문장 끝 "아요/EC" → "어요/EF"
+        // 36차 보정: 문장 끝 "아요/EC" → "아요/EF" (POS만 변경, surface 유지)
         // XSV나 VV 뒤의 "아요/EC"는 종결어미(EF)
+        // 227차 수정: "아요" surface를 "어요"로 바꾸지 않음 (sample.tsv: "목마르/VA 아요/EF")
         for i in 0..tokens.len() {
             let surface = &tokens[i].surface;
             let pos = &tokens[i].pos;
@@ -4749,7 +4750,7 @@ impl SejongConverter {
                 };
 
                 if prev_is_verb {
-                    tokens[i].surface = "어요".to_string();
+                    // 227차 수정: surface는 "아요" 유지, POS만 EF로 변경
                     tokens[i].pos = "EF".to_string();
                 }
             }
