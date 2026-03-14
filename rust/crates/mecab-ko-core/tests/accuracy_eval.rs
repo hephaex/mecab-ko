@@ -1896,6 +1896,8 @@ fn test_specific_sentence_debug() {
         ("내일 시간 있어요", "내일/NNG 시간/NNG 있/VV 어요/EF"),
         // "주말" 오류 분석
         ("주말에 영화 보러 갈래", "주말/NNG 에/JKB 영화/NNG 보/VV 러/EC 가/VV ㄹ래/EF"),
+        // "갈등" 오류 분석
+        ("갈등이 심화됐다", "갈등/NNG 이/JKS 심화/NNG 되/XSV 었/EP 다/EF"),
     ];
 
     println!("\n=== 특정 문장 디버그 분석 ===");

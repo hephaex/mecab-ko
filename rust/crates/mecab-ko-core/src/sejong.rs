@@ -5716,6 +5716,30 @@ impl SejongConverter {
             tokens.remove(idx + 1);
         }
 
+        // 232차 보정: "가/VV + ㄹ/ETM + 등/NNG|NNB" → "갈등/NNG" 병합
+        // MeCab이 "갈등"을 "갈/VV+ETM + 등/NNG"으로 잘못 분리
+        // sample.tsv 기준: "갈등이 심화됐다" → "갈등/NNG ..."
+        let mut galdeung_merge_indices: Vec<usize> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(2) {
+            if tokens[i].surface == "가"
+                && tokens[i].pos == "VV"
+                && tokens[i + 1].surface == "ㄹ"
+                && tokens[i + 1].pos == "ETM"
+                && tokens[i + 2].surface == "등"
+                && (tokens[i + 2].pos == "NNG" || tokens[i + 2].pos == "NNB")
+            {
+                galdeung_merge_indices.push(i);
+            }
+        }
+
+        for idx in galdeung_merge_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx + 2].end_pos;
+            tokens[idx] = SejongToken::new("갈등", "NNG", start, end);
+            tokens.remove(idx + 2);
+            tokens.remove(idx + 1);
+        }
+
         // 167차 보정: NNG + "적/XSN" → NNG 병합
         // "성공/NNG + 적/XSN" → "성공적/NNG"
         // "적극/NNG + 적/XSN" → "적극적/NNG"
