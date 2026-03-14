@@ -6343,6 +6343,7 @@ impl SejongConverter {
         // sample.tsv 기준: "걸어" → "걷/VV 어/EF" (활용형 "걸"을 원형 "걷"으로)
         // MeCab이 "걸/VV"로 분석하지만 원형은 "걷"
         // 주요 ㄷ불규칙 동사: 걷다(→걸), 듣다(→들), 묻다(→물), 싣다(→실), 깨닫다(→깨달)
+        // 229차 수정: "들/VV + 세요/시" 패턴은 "드시다" (먹다의 존칭)이므로 변환 제외
         let d_irregular_verbs: std::collections::HashMap<&str, &str> = [
             ("걸", "걷"),   // 걷다 → 걸어
             ("들", "듣"),   // 듣다 → 들어
@@ -6354,10 +6355,24 @@ impl SejongConverter {
         .copied()
         .collect();
 
-        for token in tokens.iter_mut() {
-            if token.pos == "VV" {
-                if let Some(&original) = d_irregular_verbs.get(token.surface.as_str()) {
-                    token.surface = original.to_string();
+        for i in 0..tokens.len() {
+            if tokens[i].pos == "VV" {
+                if let Some(&original) = d_irregular_verbs.get(tokens[i].surface.as_str()) {
+                    // 229차: "들/VV + 세요" 패턴은 "드시다" (먹다의 존칭)이므로 "듣"으로 변환 안함
+                    // sample.tsv 기준: "드세요" → "들/VV 세요/EF"
+                    let is_honorific_pattern = if i + 1 < tokens.len() {
+                        let next = &tokens[i + 1].surface;
+                        next == "세요" || next == "시" || next.starts_with("시")
+                    } else {
+                        false
+                    };
+
+                    // "들" + 존칭어미는 변환하지 않음 (드시다)
+                    if tokens[i].surface == "들" && is_honorific_pattern {
+                        continue;
+                    }
+
+                    tokens[i].surface = original.to_string();
                 }
             }
         }
