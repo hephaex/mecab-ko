@@ -1883,6 +1883,8 @@ fn test_specific_sentence_debug() {
         ("함 봄", "하/VV ㅁ/ETN 보/VV ㅁ/ETN"),
         // sample.tsv 기준: "쓰/VV 임/ETN" (피동 VX가 ETN에 병합)
         ("말함 쓰임", "말하/VV ㅁ/ETN 쓰/VV 임/ETN"),
+        // NNG 오류 디버깅
+        ("선생님 할머님", "선생님/NNG 할머님/NNG"),
     ];
 
     println!("\n=== 특정 문장 디버그 분석 ===");
