@@ -5913,6 +5913,77 @@ impl SejongConverter {
             tokens[idx + 1] = SejongToken::new(&ending, ending_pos, start2, end2);
         }
 
+        // 241차 보정: ㅂ불규칙 형용사 "무겁다" 활용형 처리
+        // MeCab이 "무거우면"을 "무거/NNG + 우면/NNG"로 잘못 분석
+        // sample.tsv 기준: "무겁다 무거워 무거우면" → "무겁/VA 다/EF 무겁/VA 어/EF 무겁/VA 으면/EC"
+        // "무거" 어간 → "무겁" 원형 복원
+        let mut mugeop_fix_indices: Vec<(usize, String)> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(1) {
+            if tokens[i].surface == "무거" && tokens[i].pos == "NNG" {
+                let next_surface = &tokens[i + 1].surface;
+                let next_pos = &tokens[i + 1].pos;
+                // "무거/NNG + 우면/NNG" → "무겁/VA + 으면/EC"
+                if next_surface == "우면" && next_pos == "NNG" {
+                    mugeop_fix_indices.push((i, "으면".to_string()));
+                }
+            }
+        }
+
+        for (idx, ending) in mugeop_fix_indices.into_iter().rev() {
+            let start1 = tokens[idx].start_pos;
+            let end1 = tokens[idx].end_pos;
+            let start2 = tokens[idx + 1].start_pos;
+            let end2 = tokens[idx + 1].end_pos;
+            tokens[idx] = SejongToken::new("무겁", "VA", start1, end1);
+            tokens[idx + 1] = SejongToken::new(&ending, "EC", start2, end2);
+        }
+
+        // 242차 보정: "이르면/MAJ" → "이르/VV + 면/EC"
+        // MeCab이 "이르면"을 접속부사 MAJ로 잘못 분석
+        // sample.tsv 기준: "이르다 일러 이르면" → "이르/VV 다/EF 이르/VV 어/EF 이르/VV 면/EC"
+        // 앞에 VV+EF가 있으면 동사 활용으로 분리
+        let mut ireumyeon_fix_indices: Vec<usize> = Vec::new();
+        for i in 1..tokens.len() {
+            if tokens[i].surface == "이르면" && tokens[i].pos == "MAJ" {
+                // 앞에 VV가 있는지 확인
+                if tokens[i - 1].pos == "VV" || tokens[i - 1].pos == "EF" {
+                    ireumyeon_fix_indices.push(i);
+                }
+            }
+        }
+
+        for idx in ireumyeon_fix_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx].end_pos;
+            // "이르면" → "이르/VV" + "면/EC"
+            tokens[idx] = SejongToken::new("이르", "VV", start, start + 2);
+            tokens.insert(idx + 1, SejongToken::new("면", "EC", start + 2, end));
+        }
+
+        // 243차 보정: ㅎ불규칙 "노랗다" 활용형 처리
+        // MeCab이 "노래"를 "노래/NNG"로 잘못 분석
+        // sample.tsv 기준: "노랗다 노래 노랗으면" → "노랗/VA 다/EF 노랗/VA 아/EF 노랗/VA 으면/EC"
+        // "노랗" 뒤의 "노래"는 "노랗 + 아"의 축약형
+        let mut norae_fix_indices: Vec<usize> = Vec::new();
+        for i in 1..tokens.len() {
+            if tokens[i].surface == "노래" && tokens[i].pos == "NNG" {
+                // 앞에 "노랗/VA + 다/EF"가 있는지 확인
+                if i >= 2 && tokens[i - 2].surface == "노랗" && tokens[i - 2].pos == "VA"
+                    && tokens[i - 1].surface == "다" && tokens[i - 1].pos == "EF"
+                {
+                    norae_fix_indices.push(i);
+                }
+            }
+        }
+
+        for idx in norae_fix_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx].end_pos;
+            // "노래" → "노랗/VA" + "아/EF"
+            tokens[idx] = SejongToken::new("노랗", "VA", start, start + 2);
+            tokens.insert(idx + 1, SejongToken::new("아", "EF", start + 2, end));
+        }
+
         // 167차 보정: NNG + "적/XSN" → NNG 병합
         // "성공/NNG + 적/XSN" → "성공적/NNG"
         // "적극/NNG + 적/XSN" → "적극적/NNG"
