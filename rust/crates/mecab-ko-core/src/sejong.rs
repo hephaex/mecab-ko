@@ -5785,6 +5785,31 @@ impl SejongConverter {
             }
         }
 
+        // 236차 보정: "지/VX + ㄴ/ETM + 행/NNG" → "진행/NNG" 병합
+        // MeCab이 "하여진행"을 "하/XSV + 여진/EC+VX+ETM + 행/NNG"로 잘못 분석
+        // "여진"이 "아/EC + 지/VX + ㄴ/ETM"으로 분리되어 "진행"이 깨짐
+        // 추가: "어/EC + 지/VX + ㄴ/ETM + 행/NNG" → "어/EC + 진행/NNG"로 병합
+        let mut jinheng_merge_indices: Vec<usize> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(2) {
+            if tokens[i].surface == "지"
+                && tokens[i].pos == "VX"
+                && tokens[i + 1].surface == "ㄴ"
+                && tokens[i + 1].pos == "ETM"
+                && tokens[i + 2].surface == "행"
+                && tokens[i + 2].pos == "NNG"
+            {
+                jinheng_merge_indices.push(i);
+            }
+        }
+
+        for idx in jinheng_merge_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx + 2].end_pos;
+            tokens[idx] = SejongToken::new("진행", "NNG", start, end);
+            tokens.remove(idx + 2);
+            tokens.remove(idx + 1);
+        }
+
         // 167차 보정: NNG + "적/XSN" → NNG 병합
         // "성공/NNG + 적/XSN" → "성공적/NNG"
         // "적극/NNG + 적/XSN" → "적극적/NNG"

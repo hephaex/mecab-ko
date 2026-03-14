@@ -1900,6 +1900,8 @@ fn test_specific_sentence_debug() {
         ("갈등이 심화됐다", "갈등/NNG 이/JKS 심화/NNG 되/XSV 었/EP 다/EF"),
         // "전망" 오류 분석
         ("기온이 영하로 떨어질 전망입니다", "기온/NNG 이/JKS 영하/NNG 로/JKB 떨어지/VV ㄹ/ETM 전망/NNG 이/VCP 습니다/EF"),
+        // "진행하고" 오류 분석
+        ("협력하여 진행하고 있다", "협력/NNG 하/XSV 어/EC 진행/NNG 하/XSV 고/EC 있/VX 다/EF"),
     ];
 
     println!("\n=== 특정 문장 디버그 분석 ===");
