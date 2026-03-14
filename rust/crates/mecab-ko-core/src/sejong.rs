@@ -5752,6 +5752,18 @@ impl SejongConverter {
             tokens.remove(idx + 1);
         }
 
+        // 234차 보정: 외래어(SL) 뒤 "가/VV" → "가/JKS"
+        // sample.tsv 기준: "MBTI가 뭐예요" → "MBTI/SL 가/JKS 뭐/NP 이/VCP 에요/EF"
+        // MeCab이 "MBTI가"를 "MBTI/SL 가/VV"로 분석하는 오류 수정
+        for i in 1..tokens.len() {
+            if tokens[i].surface == "가"
+                && tokens[i].pos == "VV"
+                && tokens[i - 1].pos == "SL"
+            {
+                tokens[i].pos = "JKS".to_string();
+            }
+        }
+
         // 167차 보정: NNG + "적/XSN" → NNG 병합
         // "성공/NNG + 적/XSN" → "성공적/NNG"
         // "적극/NNG + 적/XSN" → "적극적/NNG"
