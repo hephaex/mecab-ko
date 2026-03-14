@@ -6886,8 +6886,18 @@ impl SejongConverter {
                 && tokens[mid_idx].pos == "VCP"
                 && tokens[nng_idx].pos == "NNG"
             {
+                // 213차: 명사+보조사 패턴 예외 처리
+                // "진짜/NNG + 요" → "진짜/NNG 요/JX" (VV로 변환하지 않음)
+                let nng_exceptions = ["진짜", "정말", "별로"];
+                if nng_exceptions.contains(&tokens[nng_idx].surface.as_str()) {
+                    // NNG 유지, VCP+EC → JX 변환
+                    let start = tokens[mid_idx].start_pos;
+                    let end = tokens[last_idx].end_pos;
+                    tokens[mid_idx] = SejongToken::new("요", "JX", start, end);
+                    tokens.remove(last_idx);
+                }
                 // NNG의 마지막 글자 확인
-                if let Some(last_char) = tokens[nng_idx].surface.chars().last() {
+                else if let Some(last_char) = tokens[nng_idx].surface.chars().last() {
                     // 받침 없는 경우 (만나, 보다 등)
                     if !Self::has_jongseong(last_char) {
                         // NNG → VV, 이/VCP + 오/EC → 아요/EF

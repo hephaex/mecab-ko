@@ -1747,6 +1747,11 @@ fn test_xsv_debug_sentences() {
             "보이다 들리다",
             "보/VV 이/VX 다/EF 들리/VV 다/EF"
         ),
+        // 213차: 진짜 NNG 처리
+        (
+            "진짜요",
+            "진짜/NNG 요/JX"
+        ),
     ];
 
     println!("\n=== XSV 오류 문장 상세 분석 ===");
