@@ -6213,6 +6213,27 @@ impl SejongConverter {
             }
         }
 
+        // 220차 보정: "ㄹ/ETM + 지/NNB|VX" → "ㄹ지/EC" 병합
+        // sample.tsv 기준: "진학할지 취업을" → "진학/NNG 하/XSV ㄹ지/EC 취업/NNG"
+        // MeCab이 "할지"를 "하/VV ㄹ/ETM + 지/VX"로 분석
+        let mut lji_merge_indices: Vec<usize> = Vec::new();
+        for i in 1..tokens.len() {
+            if tokens[i - 1].surface == "ㄹ"
+                && tokens[i - 1].pos == "ETM"
+                && tokens[i].surface == "지"
+                && (tokens[i].pos == "NNB" || tokens[i].pos == "VX")
+            {
+                lji_merge_indices.push(i - 1);
+            }
+        }
+
+        for idx in lji_merge_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx + 1].end_pos;
+            tokens[idx] = SejongToken::new("ㄹ지", "EC", start, end);
+            tokens.remove(idx + 1);
+        }
+
         // 86차 보정: "ㄴ/ETM + 다/EF" → "ㄴ다/EF", "는/ETM + 다/EF" → "는다/EF" 병합
         // "간다" = "가/VV ㄴ다/EF", "먹는다" = "먹/VV 는다/EF"
         // sample.tsv 형식에 맞춰 현재형 종결어미를 단일 토큰으로 처리
@@ -6659,7 +6680,8 @@ impl SejongConverter {
                 }
 
                 // "ㄹ지/EF + 모르/VV" → "ㄹ지/EC"
-                if curr_surface == "ㄹ지" && curr_pos == "EF" && next_surface == "모르" {
+                // 220차: "ㄹ지/EF"가 문장 중간이면 EC (진학할지 취업을)
+                if curr_surface == "ㄹ지" && curr_pos == "EF" {
                     ef_to_ec_indices.push(i);
                 }
             }

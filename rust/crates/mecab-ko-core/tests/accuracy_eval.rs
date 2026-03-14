@@ -1845,6 +1845,62 @@ fn test_h_irregular_adjective_ec() {
     }
 }
 
+/// 특정 문장 디버그 테스트
+#[test]
+fn test_specific_sentence_debug() {
+    use mecab_ko_core::sejong::SejongConverter;
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
+        .unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or(std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH")
+        .unwrap_or_else(|_| {
+            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
+                .to_string_lossy()
+                .to_string()
+        });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path)
+        .expect("Failed to create tokenizer");
+
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let converter = SejongConverter::new();
+
+    let test_cases = [
+        ("교통사고로 인해 도로가 통제되고 있습니다",
+         "교통사고/NNG 로/JKB 인하/VV 어/EC 도로/NNG 가/JKS 통제/NNG 되/XSV 고/EC 있/VX 습니다/EF"),
+        ("학교를 졸업한 후에 대학원에 진학할지 취업을 할지 고민하고 있다",
+         "학교/NNG 를/JKO 졸업/NNG 하/XSV ㄴ/ETM 후/NNG 에/JKB 대학원/NNG 에/JKB 진학/NNG 하/XSV ㄹ지/EC 취업/NNG 을/JKO 하/VV ㄹ지/EC 고민/NNG 하/XSV 고/EC 있/VX 다/EF"),
+    ];
+
+    println!("\n=== 특정 문장 디버그 분석 ===");
+    for (input, expected) in test_cases {
+        let tokens = tokenizer.tokenize(input);
+        let sejong_tokens = converter.convert_tokens(&tokens);
+        let result = converter.format_sejong(&sejong_tokens);
+
+        println!("\n문장: {}", input);
+        println!("  예상: {}", expected);
+        println!("  결과: {}", result);
+        println!("  MeCab 원본:");
+        for tok in &tokens {
+            println!("    {} / {} | {}", tok.surface, tok.pos, tok.features);
+        }
+    }
+}
+
 /// ㄷ불규칙 동사 테스트
 #[test]
 fn test_d_irregular_verb() {
