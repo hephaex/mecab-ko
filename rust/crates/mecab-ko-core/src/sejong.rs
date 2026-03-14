@@ -1273,6 +1273,21 @@ impl SejongConverter {
                 }
             }
 
+            // 221차 보정: "ㄹ까" 패턴: "갈까" → "가/VV + ㄹ까/EF", "할까" → "하/VV + ㄹ까/EF"
+            // "갈까 하다"의 경우 109차 보정에서 EC로 변환됨
+            if surface.ends_with("까") && !surface.ends_with("까요") && surface.chars().count() >= 2 {
+                let chars: Vec<char> = surface.chars().collect();
+                let stem_char = chars[chars.len() - 2]; // "갈까"에서 "갈"
+                if let Some(stem) = Self::remove_jongseong_rieul(stem_char) {
+                    let prefix: String = chars[..chars.len() - 2].iter().collect();
+                    let full_stem = format!("{}{}", prefix, stem);
+                    return vec![
+                        (full_stem, "VV".to_string()),
+                        ("ㄹ까".to_string(), "EF".to_string()),
+                    ];
+                }
+            }
+
             // "ㄹ래요" 패턴: "할래요" → "하/VV + ㄹ래요/EF"
             if surface.ends_with("래요") && surface.chars().count() >= 3 {
                 let chars: Vec<char> = surface.chars().collect();
@@ -5264,7 +5279,11 @@ impl SejongConverter {
             // NNG이고 명사형 동사 후보인 경우
             if token.pos == "NNG" && nominalized_verbs.contains_key(token.surface.as_str()) {
                 // 앞에 NNG이 오면 복합명사로 간주하여 분리하지 않음
+                // 222차: 단, 앞의 NNG도 명사형 동사이면 연속 명사형으로 분리
                 let prev_is_nng = i > 0 && tokens[i - 1].pos == "NNG";
+                let prev_is_nominalized = i > 0
+                    && tokens[i - 1].pos == "NNG"
+                    && nominalized_verbs.contains_key(tokens[i - 1].surface.as_str());
                 // 뒤에 조사가 오면 명사형어미로 분리
                 let next_is_particle = i + 1 < tokens.len()
                     && (tokens[i + 1].pos.starts_with("JK")
@@ -5275,8 +5294,10 @@ impl SejongConverter {
                     && tokens[i + 1].pos == "NNG"
                     && nominalized_verbs.contains_key(tokens[i + 1].surface.as_str());
                 // 단독 사용, 조사가 따라오거나, 연속 명사형이면 분리
-                if !prev_is_nng && (next_is_particle || i + 1 >= tokens.len() || next_is_nominalized)
-                {
+                // 222차: 앞이 명사형 동사이면 분리 (함 봄 = 하/VV ㅁ/ETN 보/VV ㅁ/ETN)
+                let should_split = (!prev_is_nng || prev_is_nominalized)
+                    && (next_is_particle || i + 1 >= tokens.len() || next_is_nominalized || prev_is_nominalized);
+                if should_split {
                     if let Some(&stem) = nominalized_verbs.get(token.surface.as_str()) {
                         nominalized_split_indices.push((i, stem.to_string()));
                     }

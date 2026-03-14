@@ -1879,10 +1879,9 @@ fn test_specific_sentence_debug() {
     let converter = SejongConverter::new();
 
     let test_cases = [
-        ("교통사고로 인해 도로가 통제되고 있습니다",
-         "교통사고/NNG 로/JKB 인하/VV 어/EC 도로/NNG 가/JKS 통제/NNG 되/XSV 고/EC 있/VX 습니다/EF"),
-        ("학교를 졸업한 후에 대학원에 진학할지 취업을 할지 고민하고 있다",
-         "학교/NNG 를/JKO 졸업/NNG 하/XSV ㄴ/ETM 후/NNG 에/JKB 대학원/NNG 에/JKB 진학/NNG 하/XSV ㄹ지/EC 취업/NNG 을/JKO 하/VV ㄹ지/EC 고민/NNG 하/XSV 고/EC 있/VX 다/EF"),
+        ("갈까 한다", "가/VV ㄹ까/EC 하/VV ㄴ다/EF"),
+        ("함 봄", "하/VV ㅁ/ETN 보/VV ㅁ/ETN"),
+        ("말함 쓰임", "말하/VV ㅁ/ETN 쓰/VV 이/VX ㅁ/ETN"),
     ];
 
     println!("\n=== 특정 문장 디버그 분석 ===");
