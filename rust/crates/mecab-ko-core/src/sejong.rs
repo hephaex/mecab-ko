@@ -5849,6 +5849,20 @@ impl SejongConverter {
             }
         }
 
+        // 238차 보정: "하/VV + 아/EC|EF" → "하/VV + 어/EC|EF" 변환
+        // "하다" 어간 뒤의 "아"는 "어"로 통일 (하+아 → 해 → 하+어)
+        // 단, ㅡ불규칙(빠르다→빨라=아), ㅎ불규칙(하얗다→하얘=아)은 제외
+        for i in 1..tokens.len() {
+            if (tokens[i].pos == "EC" || tokens[i].pos == "EF") && tokens[i].surface == "아" {
+                // 이전 토큰이 "하"로 끝나는 VV/XSV인 경우만 변환
+                let prev_surface = &tokens[i - 1].surface;
+                let prev_pos = &tokens[i - 1].pos;
+                if (prev_pos == "VV" || prev_pos == "XSV") && prev_surface.ends_with("하") {
+                    tokens[i].surface = "어".to_string();
+                }
+            }
+        }
+
         // 167차 보정: NNG + "적/XSN" → NNG 병합
         // "성공/NNG + 적/XSN" → "성공적/NNG"
         // "적극/NNG + 적/XSN" → "적극적/NNG"

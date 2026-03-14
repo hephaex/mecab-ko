@@ -1909,6 +1909,8 @@ fn test_specific_sentence_debug() {
         ("어렵다 어려워", "어렵/VA 다/EF 어렵/VA 어/EF"),
         // 단어 나열에서 각 어절의 마지막은 EF
         ("먹다 먹어", "먹/VV 다/EF 먹/VV 어/EF"),
+        // "해" 분해: "하/VV 어/EC"
+        ("해 보았다", "하/VV 어/EC 보/VX 았/EP 다/EF"),
     ];
 
     println!("\n=== 특정 문장 디버그 분석 ===");
