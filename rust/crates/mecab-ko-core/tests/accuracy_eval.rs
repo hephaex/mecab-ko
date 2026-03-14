@@ -1752,6 +1752,11 @@ fn test_xsv_debug_sentences() {
             "진짜요",
             "진짜/NNG 요/JX"
         ),
+        // 214차: ㄹ까 EC 분리
+        (
+            "갈까 한다",
+            "가/VV ㄹ까/EC 하/VV ㄴ다/EF"
+        ),
     ];
 
     println!("\n=== XSV 오류 문장 상세 분석 ===");
