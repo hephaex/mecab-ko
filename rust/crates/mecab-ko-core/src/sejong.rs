@@ -5695,6 +5695,27 @@ impl SejongConverter {
             tokens.remove(idx + 1);
         }
 
+        // 231차 보정: "주/VX + 말/NNG" → "주말/NNG" 병합
+        // MeCab이 "주말"을 "주/VX + 말/NNG"으로 잘못 분리하는 문제 수정
+        // sample.tsv 기준: "주말에 영화 보러 갈래" → "주말/NNG ..."
+        let mut jumal_merge_indices: Vec<usize> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(1) {
+            if tokens[i].surface == "주"
+                && tokens[i].pos == "VX"
+                && tokens[i + 1].surface == "말"
+                && tokens[i + 1].pos == "NNG"
+            {
+                jumal_merge_indices.push(i);
+            }
+        }
+
+        for idx in jumal_merge_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx + 1].end_pos;
+            tokens[idx] = SejongToken::new("주말", "NNG", start, end);
+            tokens.remove(idx + 1);
+        }
+
         // 167차 보정: NNG + "적/XSN" → NNG 병합
         // "성공/NNG + 적/XSN" → "성공적/NNG"
         // "적극/NNG + 적/XSN" → "적극적/NNG"
