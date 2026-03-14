@@ -3396,12 +3396,32 @@ impl SejongConverter {
             }
         }
 
-        // 210차: MAJ → VV + EC 분리
-        // "하지만/MAJ" → "하/VV 지만/EC"
-        // "가지만/MAJ" → "가/VV 지만/EC"
+        // 210차: MAJ → VV + EC 분리 (문맥 기반)
+        // "하지만 가지만" → "하/VV 지만/EC 가/VV 지만/EC" (연결어미 패턴)
+        // "하지만 그러나" → "하지만/MAJ 그러나/MAJ" (접속부사 나열 - MAJ 유지)
+        // 214차: 인접 MAJ가 있으면 유지, 없으면 분리
+        let standalone_maj = ["그러나", "그래서", "따라서", "그리고", "또한", "그런데", "또는", "혹은"];
         let mut i = 0;
         while i < tokens.len() {
             if tokens[i].pos == "MAJ" && tokens[i].surface.ends_with("지만") {
+                // 인접한 토큰이 접속부사인지 확인 (앞/뒤)
+                let prev_is_maj = if i > 0 {
+                    tokens[i - 1].pos == "MAJ" || standalone_maj.contains(&tokens[i - 1].surface.as_str())
+                } else {
+                    false
+                };
+                let next_is_maj = if i + 1 < tokens.len() {
+                    tokens[i + 1].pos == "MAJ" || standalone_maj.contains(&tokens[i + 1].surface.as_str())
+                } else {
+                    false
+                };
+
+                // 접속부사 나열인 경우 MAJ 유지
+                if prev_is_maj || next_is_maj {
+                    i += 1;
+                    continue;
+                }
+
                 let surface = &tokens[i].surface;
                 if surface.len() > "지만".len() {
                     let stem = &surface[..surface.len() - "지만".len()];
@@ -4472,11 +4492,11 @@ impl SejongConverter {
         }
 
         // 32차 보정: 피동 동사 분리 "VV" → "VV + 리/이/VX"
-        // "들리/VV + 다/EF" → "들/VV + 리/VX + 다/EF"
         // "보이/VV + 다/EF" → "보/VV + 이/VX + 다/EF"
+        // 216차: "들리다"는 sample.tsv 기준 단일 동사로 처리 ("들리/VV 다/EF")
         let passive_verbs: std::collections::HashMap<&str, (&str, &str)> = [
-            // -리- 피동
-            ("들리", ("들", "리")),
+            // -리- 피동 (216차: "들리" 제외 - sample.tsv 기준 단일 동사)
+            // ("들리", ("들", "리")), // 216차 제외
             ("열리", ("열", "리")),
             ("걸리", ("걸", "리")),
             ("눌리", ("눌", "리")),
@@ -6126,6 +6146,26 @@ impl SejongConverter {
             {
                 tokens[i].pos = "XSA".to_string();
             }
+        }
+
+        // 215차: 형용사 어근 + 하 → VA 병합
+        // sample.tsv 기준: "미안해요" → "미안하/VA 어요/EF"
+        // "미안/NNG 하/XSA" → "미안하/VA"로 병합
+        let va_merge_roots = ["미안", "심심"];
+        let mut i = 0;
+        while i + 1 < tokens.len() {
+            if tokens[i].pos == "NNG"
+                && tokens[i + 1].surface == "하"
+                && (tokens[i + 1].pos == "XSA" || tokens[i + 1].pos == "XSV")
+                && va_merge_roots.contains(&tokens[i].surface.as_str())
+            {
+                let merged_surface = format!("{}하", tokens[i].surface);
+                let start = tokens[i].start_pos;
+                let end = tokens[i + 1].end_pos;
+                tokens[i] = SejongToken::new(&merged_surface, "VA", start, end);
+                tokens.remove(i + 1);
+            }
+            i += 1;
         }
 
         // 86차 보정: "ㄴ/ETM + 다/EF" → "ㄴ다/EF", "는/ETM + 다/EF" → "는다/EF" 병합
