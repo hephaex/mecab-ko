@@ -3375,6 +3375,19 @@ impl SejongConverter {
             }
         }
 
+        // 209차: 빈 POS → SL (외래어/영문자)
+        // MeCab이 영문자를 빈 품사로 분석하는 경우 SL 태그 부여
+        // "MBTI/" → "MBTI/SL"
+        for token in tokens.iter_mut() {
+            if token.pos.is_empty() {
+                // 영문자로만 구성된 경우 SL 태그 부여
+                let is_alpha = token.surface.chars().all(|c| c.is_ascii_alphabetic());
+                if is_alpha && !token.surface.is_empty() {
+                    token.pos = "SL".to_string();
+                }
+            }
+        }
+
         // 조사로 보정해야 할 표면형 -> 품사 매핑
         let particle_map: HashMap<&str, &str> = [
             // 주격조사 (JKS)

@@ -1727,6 +1727,11 @@ fn test_xsv_debug_sentences() {
             "크리에이터 되고 싶어",
             "크리에이터/NNG 되/VV 고/EC 싶/VX 어/EF"
         ),
+        // 209차: 뭐예요 분리
+        (
+            "MBTI가 뭐예요",
+            "MBTI/SL 가/JKS 뭐/NP 이/VCP 에요/EF"
+        ),
     ];
 
     println!("\n=== XSV 오류 문장 상세 분석 ===");
