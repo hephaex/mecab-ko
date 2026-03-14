@@ -6228,6 +6228,28 @@ impl SejongConverter {
             i += 1;
         }
 
+        // 225차: "NNG + 하/XSV + ㅁ/ETN" → "NNG하/VV + ㅁ/ETN" 병합
+        // sample.tsv 기준: "말함" → "말하/VV ㅁ/ETN"
+        // MeCab이 "말/NNG + 함/XSV+ETN"으로 분석하는 경우 병합
+        let vv_merge_roots = ["말"];
+        let mut i = 0;
+        while i + 2 < tokens.len() {
+            if tokens[i].pos == "NNG"
+                && tokens[i + 1].surface == "하"
+                && tokens[i + 1].pos == "XSV"
+                && tokens[i + 2].surface == "ㅁ"
+                && tokens[i + 2].pos == "ETN"
+                && vv_merge_roots.contains(&tokens[i].surface.as_str())
+            {
+                let merged_surface = format!("{}하", tokens[i].surface);
+                let start = tokens[i].start_pos;
+                let end = tokens[i + 1].end_pos;
+                tokens[i] = SejongToken::new(&merged_surface, "VV", start, end);
+                tokens.remove(i + 1);
+            }
+            i += 1;
+        }
+
         // 217차 보정: "으면/EF" → "으면/EC" (VA 뒤 연결어미)
         // sample.tsv 기준: "하얗으면" → "하얗/VA 으면/EC"
         // MeCab이 "으면"을 EF로 분석하지만 실제로는 연결어미(EC)
