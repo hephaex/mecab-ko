@@ -1732,6 +1732,21 @@ fn test_xsv_debug_sentences() {
             "MBTI가 뭐예요",
             "MBTI/SL 가/JKS 뭐/NP 이/VCP 에요/EF"
         ),
+        // 210차: MAJ → VV + EC 분리
+        (
+            "하지만 가지만",
+            "하/VV 지만/EC 가/VV 지만/EC"
+        ),
+        // 211차: NNG + 만/JX → VV + EC 분리
+        (
+            "보지만 하지만",
+            "보/VV 지만/EC 하/VV 지만/EC"
+        ),
+        // 212차: 들리다 단일 동사 처리
+        (
+            "보이다 들리다",
+            "보/VV 이/VX 다/EF 들리/VV 다/EF"
+        ),
     ];
 
     println!("\n=== XSV 오류 문장 상세 분석 ===");
@@ -1745,7 +1760,7 @@ fn test_xsv_debug_sentences() {
         println!("  결과: {}", result);
         println!("  MeCab 원본:");
         for tok in &tokens {
-            println!("    {} / {}", tok.surface, tok.pos);
+            println!("    {} / {} | features: {}", tok.surface, tok.pos, tok.features);
         }
         println!("  Sejong 변환 후:");
         for tok in &sejong_tokens {

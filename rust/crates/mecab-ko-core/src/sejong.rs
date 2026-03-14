@@ -1203,9 +1203,11 @@ impl SejongConverter {
             // 183차: 사동사/피동사는 단일 동사로 처리 (VX로 분리하지 않음)
             // "웃기다" = "웃기/VV + 다/EF" (not "웃/VV + 기/VX + 다/EF")
             // "울리다" = "울리/VV + 다/EF", "높이다" = "높이/VV + 다/EF"
+            // 212차: "들리다" 추가 (sample.tsv 기준)
             let causative_verbs = [
                 "웃기다", "울리다", "높이다", "낮추다", "늘이다", "줄이다",
                 "살리다", "죽이다", "알리다", "먹이다", "재우다", "깨우다",
+                "들리다", "놀리다",
             ];
             if causative_verbs.contains(&surface) {
                 let stem_len = surface.chars().count() - 1;
@@ -1738,8 +1740,14 @@ impl SejongConverter {
         // 일부 복합어(밤낮)는 분리해야 하지만 대부분(인공지능, 서울특별시)은 분리하면 안 됨
         // 세종 코퍼스 표준에 따라 선별적 적용 필요 - 현재는 비활성화
 
+        // 212차: 특수 동사는 분석결과 무시하고 규칙 기반 사용
+        // "들리다", "놀리다" 등은 VV+EF로 처리해야 함 (VV+VX+EF 아님)
+        let skip_decomp_verbs = ["들리다", "놀리다"];
+        let force_rule_based = token.pos == "VV+EF"
+            && skip_decomp_verbs.contains(&token.surface.as_str());
+
         // 1. 분석결과 컬럼 활용 시도
-        if self.use_decomposition && !token.features.is_empty() && !skip_decomposition {
+        if self.use_decomposition && !token.features.is_empty() && !skip_decomposition && !force_rule_based {
             if let Some(decomp) = Self::extract_decomposition(&token.features) {
                 let morphemes = Self::parse_decomposition(&decomp);
                 if !morphemes.is_empty() {
@@ -3386,6 +3394,58 @@ impl SejongConverter {
                     token.pos = "SL".to_string();
                 }
             }
+        }
+
+        // 210차: MAJ → VV + EC 분리
+        // "하지만/MAJ" → "하/VV 지만/EC"
+        // "가지만/MAJ" → "가/VV 지만/EC"
+        let mut i = 0;
+        while i < tokens.len() {
+            if tokens[i].pos == "MAJ" && tokens[i].surface.ends_with("지만") {
+                let surface = &tokens[i].surface;
+                if surface.len() > "지만".len() {
+                    let stem = &surface[..surface.len() - "지만".len()];
+                    let start = tokens[i].start_pos;
+                    let end = tokens[i].end_pos;
+                    let stem_end = start + stem.len();
+                    tokens[i] = SejongToken::new(stem, "VV", start, stem_end);
+                    tokens.insert(i + 1, SejongToken::new("지만", "EC", stem_end, end));
+                    i += 2;
+                    continue;
+                }
+            }
+            i += 1;
+        }
+
+        // 211차: NNG + 만/JX → VV + EC 분리
+        // "가지만" = "가지/NNG 만/JX" → MeCab이 잘못 분석
+        // sample.tsv 기준 "가/VV 지만/EC"로 처리해야 함
+        // 동사 어간 + 지만 패턴
+        let mut i = 0;
+        while i < tokens.len() {
+            if i + 1 < tokens.len()
+                && tokens[i].pos == "NNG"
+                && tokens[i + 1].surface == "만"
+                && tokens[i + 1].pos == "JX"
+            {
+                // "가지" + "만" → "가" + "지만" 확인
+                let surface = &tokens[i].surface;
+                if surface.ends_with("지") && surface.len() > "지".len() {
+                    let stem = &surface[..surface.len() - "지".len()];
+                    // 동사 어간인지 확인 (가, 보, 하 등)
+                    let verb_stems = ["가", "보", "하", "오", "서", "먹", "읽"];
+                    if verb_stems.contains(&stem) {
+                        let start = tokens[i].start_pos;
+                        let end = tokens[i + 1].end_pos;
+                        let stem_end = start + stem.len();
+                        tokens[i] = SejongToken::new(stem, "VV", start, stem_end);
+                        tokens[i + 1] = SejongToken::new("지만", "EC", stem_end, end);
+                        i += 2;
+                        continue;
+                    }
+                }
+            }
+            i += 1;
         }
 
         // 조사로 보정해야 할 표면형 -> 품사 매핑
@@ -8026,6 +8086,23 @@ mod tests {
         assert_eq!(result[0], ("가".to_string(), "VV".to_string()));
         assert_eq!(result[1], ("았".to_string(), "EP".to_string()));
         assert_eq!(result[2], ("다".to_string(), "EF".to_string()));
+    }
+
+    #[test]
+    fn test_causative_verb_split() {
+        let converter = SejongConverter::new();
+
+        // 212차: 들리다 -> 들리 + 다 (사동사는 VX로 분리하지 않음)
+        let result = converter.split_morpheme("들리다", "VV+EF");
+        assert_eq!(result.len(), 2, "들리다 should split into 2 parts, got {:?}", result);
+        assert_eq!(result[0], ("들리".to_string(), "VV".to_string()));
+        assert_eq!(result[1], ("다".to_string(), "EF".to_string()));
+
+        // 웃기다 -> 웃기 + 다
+        let result2 = converter.split_morpheme("웃기다", "VV+EF");
+        assert_eq!(result2.len(), 2);
+        assert_eq!(result2[0], ("웃기".to_string(), "VV".to_string()));
+        assert_eq!(result2[1], ("다".to_string(), "EF".to_string()));
     }
 
     #[test]
