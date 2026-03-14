@@ -5670,6 +5670,31 @@ impl SejongConverter {
             }
         }
 
+        // 230차 보정: "시/NNG + 가/VV + ㄴ/ETM" → "시간/NNG" 병합
+        // MeCab이 "시간"을 "시/NNG + 간/VV+ETM"으로 분리하고, "간/VV+ETM"이 "가/VV + ㄴ/ETM"으로 됨
+        // sample.tsv 기준: "내일 시간 있어요" → "내일/NNG 시간/NNG 있/VV 어요/EF"
+        let mut sigan_merge_indices: Vec<usize> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(2) {
+            // "시/NNG|NNB + 가/VV|JKS + ㄴ/ETM" 패턴 (MeCab의 잘못된 분리)
+            if tokens[i].surface == "시"
+                && (tokens[i].pos == "NNG" || tokens[i].pos == "NNB")
+                && tokens[i + 1].surface == "가"
+                && (tokens[i + 1].pos == "VV" || tokens[i + 1].pos == "JKS")
+                && tokens[i + 2].surface == "ㄴ"
+                && tokens[i + 2].pos == "ETM"
+            {
+                sigan_merge_indices.push(i);
+            }
+        }
+
+        for idx in sigan_merge_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx + 2].end_pos;
+            tokens[idx] = SejongToken::new("시간", "NNG", start, end);
+            tokens.remove(idx + 2);
+            tokens.remove(idx + 1);
+        }
+
         // 167차 보정: NNG + "적/XSN" → NNG 병합
         // "성공/NNG + 적/XSN" → "성공적/NNG"
         // "적극/NNG + 적/XSN" → "적극적/NNG"

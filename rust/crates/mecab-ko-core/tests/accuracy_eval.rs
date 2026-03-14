@@ -1888,6 +1888,12 @@ fn test_specific_sentence_debug() {
         ("선생님 할머님", "선생님/NNG 할머님/NNG"),
         // 목말라요 디버깅
         ("목말라요", "목마르/VA 아요/EF"),
+        // 존칭 시/EP 패턴 (sample.tsv)
+        ("오셨습니다", "오/VV 시/EP 었/EP 습니다/EF"),
+        ("드시겠어요", "드/VV 시/EP 겠/EP 어요/EF"),
+        ("계십니다", "계/VV 시/EP ㅂ니다/EF"),
+        // NNG 토큰화 오류 디버깅 (sample.tsv: 있/VV 어요/EF)
+        ("내일 시간 있어요", "내일/NNG 시간/NNG 있/VV 어요/EF"),
     ];
 
     println!("\n=== 특정 문장 디버그 분석 ===");
