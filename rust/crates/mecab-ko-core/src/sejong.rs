@@ -5625,6 +5625,51 @@ impl SejongConverter {
             tokens.remove(idx + 1);
         }
 
+        // 228차 보정: "하/XSV + ㄹ/ETM + 머/NP + 님/XSN" → "할머님/NNG"
+        // MeCab이 "할머님"을 잘못 분석하는 경우 병합
+        let mut family_merge_indices: Vec<(usize, usize, String)> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(3) {
+            let t0 = &tokens[i];
+            let t1 = &tokens[i + 1];
+            let t2 = &tokens[i + 2];
+            let t3 = &tokens[i + 3];
+
+            // "하/XSV + ㄹ/ETM + 머/NP + 님/XSN" → "할머님/NNG"
+            if t0.surface == "하"
+                && (t0.pos == "XSV" || t0.pos == "VV")
+                && t1.surface == "ㄹ"
+                && t1.pos == "ETM"
+                && t2.surface == "머"
+                && t2.pos == "NP"
+                && t3.surface == "님"
+                && t3.pos == "XSN"
+            {
+                family_merge_indices.push((i, i + 3, "할머님".to_string()));
+            }
+            // "하/XSV + ㄹ/ETM + 아버/NNG + 님/XSN" → "할아버님/NNG"
+            else if t0.surface == "하"
+                && (t0.pos == "XSV" || t0.pos == "VV")
+                && t1.surface == "ㄹ"
+                && t1.pos == "ETM"
+                && t2.surface == "아버"
+                && t2.pos == "NNG"
+                && t3.surface == "님"
+                && t3.pos == "XSN"
+            {
+                family_merge_indices.push((i, i + 3, "할아버님".to_string()));
+            }
+        }
+
+        for (start_idx, end_idx, merged) in family_merge_indices.into_iter().rev() {
+            let start = tokens[start_idx].start_pos;
+            let end = tokens[end_idx].end_pos;
+            tokens[start_idx] = SejongToken::new(&merged, "NNG", start, end);
+            // Remove the extra tokens (in reverse order)
+            for j in (start_idx + 1..=end_idx).rev() {
+                tokens.remove(j);
+            }
+        }
+
         // 167차 보정: NNG + "적/XSN" → NNG 병합
         // "성공/NNG + 적/XSN" → "성공적/NNG"
         // "적극/NNG + 적/XSN" → "적극적/NNG"
