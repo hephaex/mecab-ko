@@ -6190,6 +6190,29 @@ impl SejongConverter {
             }
         }
 
+        // 219차 보정: ㄷ불규칙 동사 어간 복원
+        // sample.tsv 기준: "걸어" → "걷/VV 어/EF" (활용형 "걸"을 원형 "걷"으로)
+        // MeCab이 "걸/VV"로 분석하지만 원형은 "걷"
+        // 주요 ㄷ불규칙 동사: 걷다(→걸), 듣다(→들), 묻다(→물), 싣다(→실), 깨닫다(→깨달)
+        let d_irregular_verbs: std::collections::HashMap<&str, &str> = [
+            ("걸", "걷"),   // 걷다 → 걸어
+            ("들", "듣"),   // 듣다 → 들어
+            ("물", "묻"),   // 묻다 → 물어
+            ("실", "싣"),   // 싣다 → 실어
+            ("깨달", "깨닫"), // 깨닫다 → 깨달아
+        ]
+        .iter()
+        .copied()
+        .collect();
+
+        for token in tokens.iter_mut() {
+            if token.pos == "VV" {
+                if let Some(&original) = d_irregular_verbs.get(token.surface.as_str()) {
+                    token.surface = original.to_string();
+                }
+            }
+        }
+
         // 86차 보정: "ㄴ/ETM + 다/EF" → "ㄴ다/EF", "는/ETM + 다/EF" → "는다/EF" 병합
         // "간다" = "가/VV ㄴ다/EF", "먹는다" = "먹/VV 는다/EF"
         // sample.tsv 형식에 맞춰 현재형 종결어미를 단일 토큰으로 처리
