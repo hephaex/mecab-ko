@@ -5813,6 +5813,8 @@ impl SejongConverter {
         // 237차 보정: 어절 끝 "어/EC" → "어/EF", "아/EC" → "아/EF"
         // "덥다 더워 더우면"에서 "더워"가 개별 어절이므로 "어/EF"여야 함
         // 어절 경계: 분해된 토큰의 original_surface가 다음 토큰과 다르면 어절 끝
+        // 240차 수정: "위하/VV", "대하/VV" 같은 연결 동사는 EC 유지
+        let ec_keep_verbs = ["위하", "대하", "인하", "관하", "의하", "통하", "비하"];
         for i in 0..tokens.len() {
             let surface = &tokens[i].surface;
             let pos = &tokens[i].pos;
@@ -5826,6 +5828,12 @@ impl SejongConverter {
                         || tokens[i - 1].pos == "VX");
 
                 if prev_is_verb {
+                    // 240차: 연결 동사 뒤의 "어/EC"는 EC 유지
+                    let prev_surface = &tokens[i - 1].surface;
+                    if ec_keep_verbs.iter().any(|v| prev_surface == *v) {
+                        continue;
+                    }
+
                     // 마지막 토큰인 경우
                     let is_last = i + 1 >= tokens.len();
 
@@ -5861,6 +5869,48 @@ impl SejongConverter {
                     tokens[i].surface = "어".to_string();
                 }
             }
+        }
+
+        // 239차 보정: ㅂ불규칙 동사 "줍다" 활용형 처리
+        // MeCab이 "주워"를 "주/VX + 워/NNG"로 잘못 분석
+        // "주우면"을 "주/VX + 우면/NNG"로 잘못 분석
+        // sample.tsv 기준: "줍다 주워 주우면" → "줍/VV 다/EF 줍/VV 어/EF 줍/VV 으면/EC"
+        let mut jup_fix_indices: Vec<(usize, String, String)> = Vec::new();
+        for i in 0..tokens.len().saturating_sub(1) {
+            if tokens[i].surface == "주" && tokens[i].pos == "VX" {
+                let next_surface = &tokens[i + 1].surface;
+                let next_pos = &tokens[i + 1].pos;
+                // "주/VX + 워/NNG" → "줍/VV + 어/EF"
+                if next_surface == "워" && next_pos == "NNG" {
+                    jup_fix_indices.push((i, "줍".to_string(), "어".to_string()));
+                }
+                // "주/VX + 우면/NNG" → "줍/VV + 으면/EC"
+                else if next_surface == "우면" && next_pos == "NNG" {
+                    jup_fix_indices.push((i, "줍".to_string(), "으면".to_string()));
+                }
+            }
+        }
+
+        for (idx, stem, ending) in jup_fix_indices.into_iter().rev() {
+            let start1 = tokens[idx].start_pos;
+            let end1 = tokens[idx].end_pos;
+            let start2 = tokens[idx + 1].start_pos;
+            let end2 = tokens[idx + 1].end_pos;
+            tokens[idx] = SejongToken::new(&stem, "VV", start1, end1);
+            // "워" → 어절 끝이면 EF, 아니면 EC
+            // 어절 끝 판단: 마지막 토큰이거나, 다음 토큰이 새로운 어절 시작 (VV, VX 등)
+            let is_eojeol_final = if ending == "으면" {
+                false // 으면은 항상 EC
+            } else if idx + 2 >= tokens.len() {
+                true // 마지막 토큰
+            } else {
+                // 다음 토큰이 VV, VX, NNG 등 새 어절 시작인지 확인
+                let next_pos = &tokens[idx + 2].pos;
+                next_pos == "VV" || next_pos == "VX" || next_pos == "NNG"
+                    || next_pos == "NNP" || next_pos == "NP" || next_pos == "MAG"
+            };
+            let ending_pos = if is_eojeol_final { "EF" } else { "EC" };
+            tokens[idx + 1] = SejongToken::new(&ending, ending_pos, start2, end2);
         }
 
         // 167차 보정: NNG + "적/XSN" → NNG 병합
