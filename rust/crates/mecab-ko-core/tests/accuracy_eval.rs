@@ -1881,7 +1881,8 @@ fn test_specific_sentence_debug() {
     let test_cases = [
         ("갈까 한다", "가/VV ㄹ까/EC 하/VV ㄴ다/EF"),
         ("함 봄", "하/VV ㅁ/ETN 보/VV ㅁ/ETN"),
-        ("말함 쓰임", "말하/VV ㅁ/ETN 쓰/VV 이/VX ㅁ/ETN"),
+        // sample.tsv 기준: "쓰/VV 임/ETN" (피동 VX가 ETN에 병합)
+        ("말함 쓰임", "말하/VV ㅁ/ETN 쓰/VV 임/ETN"),
     ];
 
     println!("\n=== 특정 문장 디버그 분석 ===");

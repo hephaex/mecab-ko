@@ -3407,7 +3407,26 @@ impl SejongConverter {
                 let is_alpha = token.surface.chars().all(|c| c.is_ascii_alphabetic());
                 if is_alpha && !token.surface.is_empty() {
                     token.pos = "SL".to_string();
+                } else {
+                    // 223차: 한글 의성어/의태어가 빈 POS인 경우 NNG 부여
+                    // "왈왈/" → "왈왈/NNG"
+                    let is_korean = token.surface.chars().all(|c| {
+                        let code = c as u32;
+                        (0xAC00..=0xD7A3).contains(&code) || (0x3131..=0x318E).contains(&code)
+                    });
+                    if is_korean && !token.surface.is_empty() {
+                        token.pos = "NNG".to_string();
+                    }
                 }
+            }
+        }
+
+        // 223차: XR(어근) → NNG 변환
+        // 의성어/의태어가 XR로 분석되는 경우 NNG로 처리
+        // "멍멍/XR" → "멍멍/NNG"
+        for token in tokens.iter_mut() {
+            if token.pos == "XR" {
+                token.pos = "NNG".to_string();
             }
         }
 
@@ -4641,6 +4660,26 @@ impl SejongConverter {
                     SejongToken::new(suffix, "VX", start + stem_len, end),
                 );
             }
+        }
+
+        // 224차: "이/VX + ㅁ/ETN" → "임/ETN" 병합
+        // sample.tsv 기준: "쓰임" → "쓰/VV 임/ETN" (피동 VX를 ETN에 병합)
+        // 32차/34차 피동/사동 분리 이후에 "쓰/VV 이/VX ㅁ/ETN" → "쓰/VV 임/ETN"
+        let mut vx_etn_merge_indices: Vec<usize> = Vec::new();
+        for i in 1..tokens.len() {
+            if tokens[i - 1].surface == "이"
+                && tokens[i - 1].pos == "VX"
+                && tokens[i].surface == "ㅁ"
+                && tokens[i].pos == "ETN"
+            {
+                vx_etn_merge_indices.push(i - 1);
+            }
+        }
+        for idx in vx_etn_merge_indices.into_iter().rev() {
+            let start = tokens[idx].start_pos;
+            let end = tokens[idx + 1].end_pos;
+            tokens[idx] = SejongToken::new("임", "ETN", start, end);
+            tokens.remove(idx + 1);
         }
 
         // 35차 보정: EC+VX+EF 패턴 분리 (볼게요 → 보/VV + ㄹ게요/EF)
