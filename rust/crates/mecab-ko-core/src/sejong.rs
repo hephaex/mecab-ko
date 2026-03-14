@@ -1776,7 +1776,14 @@ impl SejongConverter {
                         .collect::<Vec<_>>()
                         .join("+");
                     if decomp_pos == token.pos {
-                        return Self::morphemes_to_sejong_tokens(&morphemes, token);
+                        // 245차 보정: 단일 형태소의 경우 표면형이 변경되면 decomposition 무시
+                        // ㄷ불규칙 동사 "듣"의 features에 "들/VV/*"가 있지만 표면형은 "듣" 유지
+                        // 단일 형태소에서 decomposition 표면형이 원본과 다르면 규칙 기반 사용
+                        if morphemes.len() == 1 && morphemes[0].surface != token.surface {
+                            // 표면형이 다르면 decomposition 무시
+                        } else {
+                            return Self::morphemes_to_sejong_tokens(&morphemes, token);
+                        }
                     }
                     // POS 구조가 일치하지 않으면 규칙 기반으로 폴백
                 }
@@ -2967,38 +2974,45 @@ impl SejongConverter {
             // 패턴 27: "Xㄹ/VV + 까요/EF" → "X/VV + ㄹ까요/EF" (ㄹ 이동)
             // "올까요" → "오/VV + ㄹ까요/EF", "볼까요" → "보/VV + ㄹ까요/EF" 등
             // ㄹ-final verb stems where ㄹ should be part of the ending
+            // 246차 수정: "까", "게", "래" 등 ㄹ로 시작해야 하는 어미에만 적용
+            // "어", "아" 같은 일반 어미에는 적용하지 않음 (ㄷ불규칙 깨짐 방지)
             if !merged && i + 1 < tokens.len() && tokens[i].pos == "VV" && tokens[i + 1].pos == "EF"
             {
                 let surface = &tokens[i].surface;
                 let next_surface = &tokens[i + 1].surface;
+                // ㄹ 어미 패턴: 까, 까요, 게, 게요, 래, 래요 등
+                let rieul_endings = ["까", "까요", "게", "게요", "래", "래요", "지", "지요"];
+                let should_move_rieul = rieul_endings.iter().any(|e| *e == next_surface);
                 // ㄹ을 떼어내기: 올 → 오
-                if let Some(last_char) = surface.chars().last() {
-                    // 받침이 ㄹ인 경우 (종성 ㄹ = 0x11AF)
-                    // 올 = 오 + ㅗ + ㄹ => 떼면 오
-                    let code = last_char as u32;
-                    if code >= 0xAC00 && code <= 0xD7A3 {
-                        let final_jamo = (code - 0xAC00) % 28;
-                        if final_jamo == 8 {
-                            // ㄹ 받침
-                            // ㄹ을 떼면 새로운 글자
-                            let new_code = code - 8;
-                            if let Some(new_char) = char::from_u32(new_code) {
-                                // 어미에 ㄹ을 붙임
-                                let new_ending = format!("ㄹ{}", next_surface);
-                                let new_stem: String = surface
-                                    .chars()
-                                    .take(surface.chars().count() - 1)
-                                    .chain(std::iter::once(new_char))
-                                    .collect();
+                if should_move_rieul {
+                    if let Some(last_char) = surface.chars().last() {
+                        // 받침이 ㄹ인 경우 (종성 ㄹ = 0x11AF)
+                        // 올 = 오 + ㅗ + ㄹ => 떼면 오
+                        let code = last_char as u32;
+                        if code >= 0xAC00 && code <= 0xD7A3 {
+                            let final_jamo = (code - 0xAC00) % 28;
+                            if final_jamo == 8 {
+                                // ㄹ 받침
+                                // ㄹ을 떼면 새로운 글자
+                                let new_code = code - 8;
+                                if let Some(new_char) = char::from_u32(new_code) {
+                                    // 어미에 ㄹ을 붙임
+                                    let new_ending = format!("ㄹ{}", next_surface);
+                                    let new_stem: String = surface
+                                        .chars()
+                                        .take(surface.chars().count() - 1)
+                                        .chain(std::iter::once(new_char))
+                                        .collect();
 
-                                let start = tokens[i].start_pos;
-                                let end = tokens[i + 1].end_pos;
-                                let stem_len = new_stem.chars().count();
-                                tokens[i] =
-                                    SejongToken::new(&new_stem, "VV", start, start + stem_len);
-                                tokens[i + 1] =
-                                    SejongToken::new(&new_ending, "EF", start + stem_len, end);
-                                // merged = true; // 마지막 패턴이므로 불필요
+                                    let start = tokens[i].start_pos;
+                                    let end = tokens[i + 1].end_pos;
+                                    let stem_len = new_stem.chars().count();
+                                    tokens[i] =
+                                        SejongToken::new(&new_stem, "VV", start, start + stem_len);
+                                    tokens[i + 1] =
+                                        SejongToken::new(&new_ending, "EF", start + stem_len, end);
+                                    // merged = true; // 마지막 패턴이므로 불필요
+                                }
                             }
                         }
                     }
