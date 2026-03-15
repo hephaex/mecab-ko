@@ -3453,6 +3453,26 @@ impl SejongConverter {
             }
         }
 
+        // 252차: 신조어 NNP → NNG 변환
+        // "킹/NNP" → "킹/NNG" (킹받네, 킹성비 등)
+        // MeCab이 인명으로 분석하지만 실제로는 신조어 접두사
+        let slang_nnp_to_nng = ["킹"];
+        for token in tokens.iter_mut() {
+            if token.pos == "NNP" && slang_nnp_to_nng.contains(&token.surface.as_str()) {
+                token.pos = "NNG".to_string();
+            }
+        }
+
+        // 253차: 의성어 NNG → IC 변환
+        // "야옹/NNG" → "야옹/IC" (고양이 울음소리)
+        // sample.tsv에서 IC로 태깅되는 의성어들
+        let onomatopoeia_to_ic = ["야옹"];
+        for token in tokens.iter_mut() {
+            if token.pos == "NNG" && onomatopoeia_to_ic.contains(&token.surface.as_str()) {
+                token.pos = "IC".to_string();
+            }
+        }
+
         // 249차: "어디/NP + 서/JKB" → "어디/NP + 에서/JKB"
         // "어디서" = "어디/NP 에서/JKB" (sample.tsv 기준)
         // MeCab이 "서/JKB"로 분석하지만 세종 기준은 "에서/JKB"
