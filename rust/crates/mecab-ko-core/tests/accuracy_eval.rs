@@ -2097,3 +2097,81 @@ fn test_d_irregular_verb() {
         println!("  일치: {}", if is_match { "✓" } else { "✗" });
     }
 }
+
+/// 전체 데이터셋에서 틀린 문장 목록 출력
+#[test]
+fn test_list_all_mismatches() {
+    use mecab_ko_core::sejong::SejongConverter;
+
+    // 프로젝트 루트 경로 계산
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
+        .unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or(std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH")
+        .unwrap_or_else(|_| {
+            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
+                .to_string_lossy()
+                .to_string()
+        });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path)
+        .expect("Failed to create tokenizer");
+
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let converter = SejongConverter::new();
+
+    let eval_path = std::env::var("MECAB_EVAL_PATH")
+        .unwrap_or_else(|_| {
+            project_root.join("data/eval/sample.tsv")
+                .to_string_lossy()
+                .to_string()
+        });
+
+    let dataset = TestDataset::from_tsv(&eval_path)
+        .expect("Failed to load test dataset");
+
+    println!("\n=== 틀린 문장 목록 ===\n");
+    let mut mismatch_count = 0;
+
+    for sentence in &dataset.sentences {
+        let tokens = tokenizer.tokenize(&sentence.text);
+        let sejong_tokens = converter.convert_tokens(&tokens);
+        let result = converter.format_sejong(&sejong_tokens);
+
+        // Gold 형식으로 변환
+        let expected: String = sentence.tokens.iter()
+            .map(|t| format!("{}/{}", t.surface, t.pos))
+            .collect::<Vec<_>>()
+            .join(" ");
+
+        if result.trim() != expected.trim() {
+            mismatch_count += 1;
+            println!("{}. 문장: {}", mismatch_count, sentence.text);
+            println!("   예상: {}", expected);
+            println!("   결과: {}", result);
+
+            // MeCab 원본 출력
+            println!("   MeCab:");
+            for tok in &tokens {
+                println!("     {} / {} | {}", tok.surface, tok.pos, tok.features);
+            }
+            println!();
+        }
+    }
+
+    println!("\n총 틀린 문장: {} / {} ({:.1}%)",
+        mismatch_count, dataset.sentences.len(),
+        (dataset.sentences.len() - mismatch_count) as f64 / dataset.sentences.len() as f64 * 100.0);
+}
