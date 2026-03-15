@@ -1911,6 +1911,8 @@ fn test_specific_sentence_debug() {
         ("인해 통제되고", "인하/VV 어/EC 통제/NNG 되/XSV 고/EC"),
         // "되었는데" 테스트
         ("되었는데 그동안", "되/VV 었/EP 는데/EC 그동안/NNG"),
+        // "코드 리뷰" 테스트
+        ("코드 리뷰를 진행했다", "코드/NNG 리뷰/NNG 를/JKO 진행/NNG 하/XSV 았/EP 다/EF"),
         // ㅂ불규칙 동사 분석
         ("줍다 주워 주우면", "줍/VV 다/EF 줍/VV 어/EF 줍/VV 으면/EC"),
         // ㅂ불규칙 형용사 분석

@@ -8702,6 +8702,25 @@ impl SejongConverter {
             }
             i += 1;
         }
+
+        // 258차: 삭제됨 - sample.tsv는 "말씀/NNG 하/VV 세요/EF" (하/VV 유지)
+
+        // 259차: "채/VV + 아/EF" (문장 끝) → "채/NNB"
+        // "만큼 뿐 채" 등에서 "채"는 의존명사
+        // MeCab이 "채/VV 아/EF"로 분석하는 경우 수정
+        let len = tokens.len();
+        if len >= 2 {
+            if tokens[len - 2].surface == "채"
+                && tokens[len - 2].pos == "VV"
+                && (tokens[len - 1].surface == "아" || tokens[len - 1].surface == "ㅏ")
+                && tokens[len - 1].pos == "EF"
+            {
+                // "채/VV 아/EF" → "채/NNB"
+                tokens[len - 2].pos = "NNB".to_string();
+                // "아/EF" 제거
+                tokens.remove(len - 1);
+            }
+        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
