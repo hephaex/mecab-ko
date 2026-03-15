@@ -1902,6 +1902,15 @@ fn test_specific_sentence_debug() {
         ("기온이 영하로 떨어질 전망입니다", "기온/NNG 이/JKS 영하/NNG 로/JKB 떨어지/VV ㄹ/ETM 전망/NNG 이/VCP 습니다/EF"),
         // "진행하고" 오류 분석
         ("협력하여 진행하고 있다", "협력/NNG 하/XSV 어/EC 진행/NNG 하/XSV 고/EC 있/VX 다/EF"),
+        // "호출하여" 오류 분석 - sample.tsv 기준
+        ("API를 호출하여 결과를 받았다", "API/SL 를/JKO 호출/NNG 하/XSV 어/EC 결과/NNG 를/JKO 받/VV 았/EP 다/EF"),
+        // JKB 테스트 케이스 추가
+        ("어디서 만날까요", "어디/NP 에서/JKB 만나/VV ㄹ까요/EF"),
+        ("예상보다 높았다", "예상/NNG 보다/JKB 높/VA 았/EP 다/EF"),
+        // "인해" 테스트
+        ("인해 통제되고", "인하/VV 어/EC 통제/NNG 되/XSV 고/EC"),
+        // "되었는데" 테스트
+        ("되었는데 그동안", "되/VV 었/EP 는데/EC 그동안/NNG"),
         // ㅂ불규칙 동사 분석
         ("줍다 주워 주우면", "줍/VV 다/EF 줍/VV 어/EF 줍/VV 으면/EC"),
         // ㅂ불규칙 형용사 분석
@@ -1938,6 +1947,92 @@ fn test_specific_sentence_debug() {
         for tok in &sejong_tokens {
             println!("    {} / {} [{}-{}]", tok.surface, tok.pos, tok.start_pos, tok.end_pos);
         }
+    }
+}
+
+/// EP 샘플 오류 분석
+#[test]
+fn test_ep_sample_errors() {
+    use mecab_ko_core::sejong::SejongConverter;
+    use mecab_ko_core::evaluate::TestDataset;
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
+        .unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or(std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH")
+        .unwrap_or_else(|_| {
+            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
+                .to_string_lossy()
+                .to_string()
+        });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path)
+        .expect("Failed to create tokenizer");
+
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let converter = SejongConverter::new();
+
+    let eval_path = project_root.join("data/eval/sample.tsv");
+    let dataset = TestDataset::from_tsv(&eval_path)
+        .expect("Failed to load test dataset");
+
+    println!("\n=== EP 포함 문장 오류 분석 ===");
+    let mut ep_errors: Vec<(String, String, String)> = Vec::new();
+
+    for sentence in &dataset.sentences {
+        // expected 재구성
+        let expected: String = sentence.tokens.iter()
+            .map(|t| format!("{}/{}", t.surface, t.pos))
+            .collect::<Vec<_>>()
+            .join(" ");
+
+        // EP가 있는 문장만
+        if !expected.contains("/EP") {
+            continue;
+        }
+
+        let tokens = tokenizer.tokenize(&sentence.text);
+        let sejong_tokens = converter.convert_tokens(&tokens);
+        let result = converter.format_sejong(&sejong_tokens);
+
+        if result != expected {
+            ep_errors.push((sentence.text.clone(), expected, result));
+        }
+    }
+
+    println!("EP 포함 오류 문장 수: {}\n", ep_errors.len());
+
+    for (input, expected, result) in &ep_errors {
+        println!("입력: {}", input);
+        println!("예상: {}", expected);
+        println!("결과: {}", result);
+
+        // 토큰별 비교
+        let exp_tokens: Vec<&str> = expected.split_whitespace().collect();
+        let res_tokens: Vec<&str> = result.split_whitespace().collect();
+
+        println!("차이:");
+        let max_len = std::cmp::max(exp_tokens.len(), res_tokens.len());
+        for i in 0..max_len {
+            let exp = exp_tokens.get(i).unwrap_or(&"MISSING");
+            let res = res_tokens.get(i).unwrap_or(&"MISSING");
+            if exp != res {
+                println!("  [{}] 예상: {} → 결과: {}", i, exp, res);
+            }
+        }
+        println!("---");
     }
 }
 

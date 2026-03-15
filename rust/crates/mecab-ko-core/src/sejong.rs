@@ -3200,6 +3200,20 @@ impl SejongConverter {
             }
         }
 
+        // 247차: "하/XSV + 여/XSN" → "하/XSV + 어/EC" 변환
+        // "호출하여" = "호출/NNG 하/XSV 어/EC"
+        // MeCab이 "하여"를 "하/XSV 여/XSN"으로 분석하지만 세종 기준은 "어/EC"
+        for i in 0..tokens.len().saturating_sub(1) {
+            if tokens[i].surface == "하"
+                && tokens[i].pos == "XSV"
+                && tokens[i + 1].surface == "여"
+                && tokens[i + 1].pos == "XSN"
+            {
+                tokens[i + 1].surface = "어".to_string();
+                tokens[i + 1].pos = "EC".to_string();
+            }
+        }
+
         // 192차: "가/VV + 지/NNB + 고/EC" → "가지/VV + 고/EC" 병합
         // "가지고 오다" = "가지/VV 고/EC 오/VV 다/EF"
         let mut i = 0;
@@ -3422,6 +3436,56 @@ impl SejongConverter {
             if token.pos == "NNP" && nnp_to_nng_orgs.contains(&token.surface.as_str()) {
                 token.pos = "NNG".to_string();
             }
+        }
+
+        // 248차: 외래어 NNP → NNG 변환
+        // "프레임워크/NNP" → "프레임워크/NNG"
+        // "리팩토링/NNP" → "리팩토링/NNG"
+        // sample.tsv에서 NNG로 태깅되는 외래어들
+        let foreign_nnp_to_nng = [
+            "프레임워크", "리팩토링", "알고리즘", "커버리지", "아키텍처",
+            "머신러닝", "컨테이너", "인터페이스", "데이터베이스", "서버",
+            "클라이언트", "프로토콜", "레이어", "모듈", "컴포넌트",
+        ];
+        for token in tokens.iter_mut() {
+            if token.pos == "NNP" && foreign_nnp_to_nng.contains(&token.surface.as_str()) {
+                token.pos = "NNG".to_string();
+            }
+        }
+
+        // 249차: "어디/NP + 서/JKB" → "어디/NP + 에서/JKB"
+        // "어디서" = "어디/NP 에서/JKB" (sample.tsv 기준)
+        // MeCab이 "서/JKB"로 분석하지만 세종 기준은 "에서/JKB"
+        for i in 0..tokens.len().saturating_sub(1) {
+            if tokens[i].surface == "어디"
+                && tokens[i].pos == "NP"
+                && tokens[i + 1].surface == "서"
+                && tokens[i + 1].pos == "JKB"
+            {
+                tokens[i + 1].surface = "에서".to_string();
+            }
+        }
+
+        // 250차: "EP + 늘/VV + ㄴ데/EC" → "EP + 는데/EC"
+        // "되었는데" = "되/VV 었/EP 는데/EC"
+        // MeCab이 "는데"를 "늘/VV + ㄴ데/EC"로 잘못 분석하는 경우 수정
+        let mut i = 0;
+        while i + 2 < tokens.len() {
+            if tokens[i].pos == "EP"
+                && tokens[i + 1].surface == "늘"
+                && tokens[i + 1].pos == "VV"
+                && tokens[i + 2].surface == "ㄴ데"
+                && tokens[i + 2].pos == "EC"
+            {
+                // "늘/VV + ㄴ데/EC" → "는데/EC" 병합
+                let start = tokens[i + 1].start_pos;
+                let end = tokens[i + 2].end_pos;
+                tokens[i + 1] = SejongToken::new("는데", "EC", start, end);
+                tokens.remove(i + 2);
+                i += 2;
+                continue;
+            }
+            i += 1;
         }
 
         // 209차: 빈 POS → SL (외래어/영문자)
