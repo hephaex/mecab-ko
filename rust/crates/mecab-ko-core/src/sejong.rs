@@ -3488,6 +3488,25 @@ impl SejongConverter {
             i += 1;
         }
 
+        // 251차: "그/NP + 동안/NNG" → "그동안/NNG" 병합
+        // "그동안" = "그동안/NNG" (sample.tsv 기준)
+        // MeCab이 "그/NP 동안/NNG"으로 분리하는 경우 병합
+        let mut i = 0;
+        while i + 1 < tokens.len() {
+            if tokens[i].surface == "그"
+                && tokens[i].pos == "NP"
+                && tokens[i + 1].surface == "동안"
+                && tokens[i + 1].pos == "NNG"
+            {
+                let start = tokens[i].start_pos;
+                let end = tokens[i + 1].end_pos;
+                tokens[i] = SejongToken::new("그동안", "NNG", start, end);
+                tokens.remove(i + 1);
+                continue;
+            }
+            i += 1;
+        }
+
         // 209차: 빈 POS → SL (외래어/영문자)
         // MeCab이 영문자를 빈 품사로 분석하는 경우 SL 태그 부여
         // "MBTI/" → "MBTI/SL"
