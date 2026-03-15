@@ -6666,6 +6666,20 @@ impl SejongConverter {
             }
         }
 
+        // 264차 보정: NNG/NNP 뒤의 "에/IC" → "에/JKB"
+        // "순방길에", "인스타에", "회의에" 등에서 "에"가 IC로 태깅되는 오류 수정
+        // 명사 뒤의 "에"는 부사격 조사
+        for i in 1..tokens.len() {
+            if tokens[i].surface == "에"
+                && tokens[i].pos == "IC"
+                && (tokens[i - 1].pos == "NNG"
+                    || tokens[i - 1].pos == "NNP"
+                    || tokens[i - 1].pos == "NNB")
+            {
+                tokens[i].pos = "JKB".to_string();
+            }
+        }
+
         // 85차 보정: NP 뒤의 "야/IC" → "이/VCP 야/EF" 분리
         // "뭐야", "누구야" 등에서 "야"가 감탄사로 태깅되는 오류 수정
         let mut ya_split_indices: Vec<usize> = Vec::new();
@@ -8608,6 +8622,22 @@ impl SejongConverter {
                 }
             }
         }
+
+        // 265차 보정: VV/VA 뒤의 문장 끝 "네/IC" → "네/EF"
+        // "킹받네" = "킹받/VV 네/EF" (종결어미)
+        // 동사/형용사 뒤의 "네"는 종결어미
+        if tokens.len() >= 2 {
+            let last_idx = tokens.len() - 1;
+            if tokens[last_idx].surface == "네"
+                && tokens[last_idx].pos == "IC"
+                && (tokens[last_idx - 1].pos == "VV"
+                    || tokens[last_idx - 1].pos == "VA"
+                    || tokens[last_idx - 1].pos == "VX")
+            {
+                tokens[last_idx].pos = "EF".to_string();
+            }
+        }
+
 
         // 163차 보정: EF 축약 모음 정규화
         // "ㅔ요/EF" → "에요/EF", "ㅐ요/EF" → "애요/EF"
