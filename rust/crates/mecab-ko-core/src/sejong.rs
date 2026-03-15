@@ -3473,6 +3473,53 @@ impl SejongConverter {
             }
         }
 
+        // 254차: "ㅓ요/EF" → "어요/EF" 표면형 정규화
+        // MeCab decomposition이 "ㅓ요"로 분리하지만 세종 기준은 "어요"
+        // "쉬워요" = "쉽/VA 어요/EF"
+        for token in tokens.iter_mut() {
+            if token.surface == "ㅓ요" && token.pos == "EF" {
+                token.surface = "어요".to_string();
+            }
+        }
+
+        // 256차: "졸리/VV → 졸리/VA" 변환
+        // "졸려요" = "졸리/VA 어요/EF"
+        // MeCab이 VV로 분석하지만 형용사(VA)로 처리
+        let vv_to_va = ["졸리"];
+        for token in tokens.iter_mut() {
+            if token.pos == "VV" && vv_to_va.contains(&token.surface.as_str()) {
+                token.pos = "VA".to_string();
+            }
+        }
+
+        // 257차: "VA + ㅁ/ETN + NNG" → "명사화/NNG + NNG" 병합
+        // "나쁨 수준" = "나쁨/NNG 수준/NNG"
+        // 형용사가 명사형 어미와 결합하여 명사로 사용될 때
+        let mut i = 0;
+        while i + 2 < tokens.len() {
+            if tokens[i].pos == "VA"
+                && tokens[i + 1].surface == "ㅁ"
+                && tokens[i + 1].pos == "ETN"
+                && tokens[i + 2].pos == "NNG"
+            {
+                // "나쁘/VA ㅁ/ETN 수준/NNG" → "나쁨/NNG 수준/NNG"
+                let start = tokens[i].start_pos;
+                let end = tokens[i + 1].end_pos;
+                // 원본 표면형 재구성 (나쁘 + ㅁ = 나쁨)
+                let surface = format!("{}ㅁ", tokens[i].surface);
+                // ㅡ로 끝나면 ㅁ 붙이기
+                let merged_surface = if tokens[i].surface.ends_with("쁘") {
+                    "나쁨".to_string()
+                } else {
+                    surface
+                };
+                tokens[i] = SejongToken::new(&merged_surface, "NNG", start, end);
+                tokens.remove(i + 1);
+                continue;
+            }
+            i += 1;
+        }
+
         // 249차: "어디/NP + 서/JKB" → "어디/NP + 에서/JKB"
         // "어디서" = "어디/NP 에서/JKB" (sample.tsv 기준)
         // MeCab이 "서/JKB"로 분석하지만 세종 기준은 "에서/JKB"
@@ -8635,6 +8682,25 @@ impl SejongConverter {
             {
                 token.pos = "SN".to_string();
             }
+        }
+
+        // 255차: "어/EF + 요/JX" → "어요/EF" 병합 (8차 EC→EF 변환 후 실행)
+        // "추워요" = "춥/VA 어요/EF"
+        // MeCab이 "어/EC + 요/JX"로 분리하는 경우 병합
+        let mut i = 0;
+        while i + 1 < tokens.len() {
+            if tokens[i].surface == "어"
+                && tokens[i].pos == "EF"
+                && tokens[i + 1].surface == "요"
+                && tokens[i + 1].pos == "JX"
+            {
+                let start = tokens[i].start_pos;
+                let end = tokens[i + 1].end_pos;
+                tokens[i] = SejongToken::new("어요", "EF", start, end);
+                tokens.remove(i + 1);
+                continue;
+            }
+            i += 1;
         }
     }
 
