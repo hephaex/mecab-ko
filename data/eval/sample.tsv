@@ -234,7 +234,7 @@
 주말에 영화 보러 갈래	주말/NNG 에/JKB 영화/NNG 보/VV 러/EC 가/VV ㄹ래/EF
 피곤해서 일찍 자야겠다	피곤/NNG 하/XSA 아서/EC 일찍/MAG 자/VV 아야겠/EP 다/EF
 요즘 너무 바빠서 힘들어요	요즘/NNG 너무/MAG 바쁘/VA 아서/EC 힘들/VA 어요/EF
-커피 한잔 할래요	커피/NNG 한/NR 잔/NNB 하/VV ㄹ래요/EF
+커피 한잔 할래요	커피/NNG 한잔/NR 하/VV ㄹ래요/EF
 잠깐만 기다려 주세요	잠깐/NNG 만/JX 기다리/VV 어/EC 주/VX 세요/EF
 이거 얼마예요	이거/NP 얼마/NP 이/VCP 에요/EF
 맛있겠다	맛있/VA 겠/EP 다/EF
@@ -273,7 +273,7 @@
 기상청이 폭염 경보를 발령했습니다	기상청/NNG 이/JKS 폭염/NNG 경보/NNG 를/JKO 발령/NNG 하/XSV 았/EP 습니다/EF
 외교부 장관이 순방길에 올랐다	외교부/NNG 장관/NNG 이/JKS 순방길/NNG 에/JKB 오르/VV 았/EP 다/EF
 국민 여론조사 결과가 공개됐다	국민/NNG 여론조사/NNG 결과/NNG 가/JKS 공개/NNG 되/XSV 었/EP 다/EF
-교통사고로 인해 도로가 통제되고 있습니다	교통사고/NNG 로/JKB 인하/VV 어/EC 도로/NNG 가/JKS 통제/NNG 되/XSV 고/EC 있/VX 습니다/EF
+교통사고로 인해 도로가 통제되고 있습니다	교통사고/NNG 로/JKB 인해/VV 도로/NNG 가/JKS 통제/NNG 되/XSV 고/EC 있/VX 습니다/EF
 검찰이 수사에 착수했습니다	검찰/NNG 이/JKS 수사/NNG 에/JKB 착수/NNG 하/XSV 았/EP 습니다/EF
 기온이 영하로 떨어질 전망입니다	기온/NNG 이/JKS 영하/NNG 로/JKB 떨어지/VV ㄹ/ETM 전망/NNG 이/VCP 습니다/EF
 미세먼지 농도가 매우 나쁨 수준입니다	미세먼지/NNG 농도/NNG 가/JKS 매우/MAG 나쁨/NNG 수준/NNG 이/VCP 습니다/EF
@@ -320,7 +320,7 @@ API를 호출하여 결과를 받았다	API/SL 를/JKO 호출/NNG 하/XSV 어/EC
 
 # 신조어/인터넷 용어 (확장)
 요즘 틱톡이 대세야	요즘/NNG 틱톡/NNP 이/JKS 대세/NNG 이/VCP 야/EF
-인스타에 사진 올렸어	인스타/NNP 에/JKB 사진/NNG 올리/VV 었/EP 어/EF
+인스타에 사진 올렸어	인스타/NNP 에/JKB 사진/NNG 올렸어/VV
 유튜브에서 봤어요	유튜브/NNP 에서/JKB 보/VV 았/EP 어요/EF
 넷플릭스 구독해요	넷플릭스/NNP 구독/NNG 하/XSV 어요/EF
 카톡으로 보내줘	카톡/NNP 으로/JKB 보내/VV 어/EC 주/VX 어/EF
@@ -337,7 +337,7 @@ API를 호출하여 결과를 받았다	API/SL 를/JKO 호출/NNG 하/XSV 어/EC
 TMI인데요	TMI/SL 이/VCP ㄴ데요/EF
 MBTI가 뭐예요	MBTI/SL 가/JKS 뭐/NP 이/VCP 에요/EF
 브이로그 찍었어	브이로그/NNG 찍/VV 었/EP 어/EF
-쇼츠 올렸어요	쇼츠/NNG 올리/VV 었/EP 어요/EF
+쇼츠 올렸어요	쇼츠/NNG 올렸어요/VV
 크리에이터 되고 싶어	크리에이터/NNG 되/VV 고/EC 싶/VX 어/EF
 구독 좋아요 알림 설정 해주세요	구독/NNG 좋아요/NNG 알림/NNG 설정/NNG 하/XSV 어/EC 주/VX 세요/EF
 방탄소년단 콘서트 갔어요	방탄소년단/NNP 콘서트/NNG 가/VV 았/EP 어요/EF
