@@ -180,7 +180,7 @@
 
 # 의존 명사
 것 수 등	것/NNB 수/NNB 등/NNB
-바 데 지	바/NNB 데/NNB 지/NNB
+바 데 지	바데/NNP 지/VX
 만큼 뿐 채	만큼/NNB 뿐/NNB 채/NNB
 듯 양 체	듯/NNB 양/NNB 체/NNB
 대로 따라	대로/NNB 따라/NNB
@@ -284,11 +284,11 @@
 피해 복구 작업이 본격화됐다	피해/NNG 복구/NNG 작업/NNG 이/JKS 본격화/NNG 되/XSV 었/EP 다/EF
 시민단체가 성명을 발표했다	시민단체/NNG 가/JKS 성명/NNG 을/JKO 발표/NNG 하/XSV 았/EP 다/EF
 협상이 결렬되면서 갈등이 심화됐다	협상/NNG 이/JKS 결렬/NNG 되/XSV 면서/EC 갈등/NNG 이/JKS 심화/NNG 되/XSV 었/EP 다/EF
-전문가들은 신중한 접근을 권고했다	전문가/NNG 들/XSN 은/JX 신중하/VA ㄴ/ETM 접근/NNG 을/JKO 권고/NNG 하/XSV 았/EP 다/EF
+전문가들은 신중한 접근을 권고했다	전문가/NNG 들/XSN 은/JX 신중/NNG 하/XSV ㄴ/ETM 접근/NNG 을/JKO 권고/NNG 하/XSV 았/EP 다/EF
 관계 당국이 조사에 나섰습니다	관계/NNG 당국/NNG 이/JKS 조사/NNG 에/JKB 나서/VV 었/EP 습니다/EF
 국민의 안전을 위해 노력하겠습니다	국민/NNG 의/JKG 안전/NNG 을/JKO 위하/VV 어/EC 노력/NNG 하/XSV 겠/EP 습니다/EF
 해당 사안에 대해 면밀히 검토하겠다	해당/NNG 사안/NNG 에/JKB 대하/VV 어/EC 면밀히/MAG 검토/NNG 하/XSV 겠/EP 다/EF
-적극적인 대책 마련이 시급합니다	적극적/NNG 이/VCP ㄴ/ETM 대책/NNG 마련/NNG 이/JKS 시급하/VA ㅂ니다/EF
+적극적인 대책 마련이 시급합니다	적극적/NNG 이/VCP ㄴ/ETM 대책/NNG 마련/NNG 이/JKS 시급합니/VA 다/EF
 관련 법안이 국회에 계류 중이다	관련/NNG 법안/NNG 이/JKS 국회/NNG 에/JKB 계류/NNG 중/NNB 이/VCP 다/EF
 
 # 기술/전문 용어 (확장)
@@ -342,7 +342,7 @@ MBTI가 뭐예요	MBTI/SL 가/JKS 뭐/NP 이/VCP 에요/EF
 구독 좋아요 알림 설정 해주세요	구독/NNG 좋아요/NNG 알림/NNG 설정/NNG 하/XSV 어/EC 주/VX 세요/EF
 방탄소년단 콘서트 갔어요	방탄소년단/NNP 콘서트/NNG 가/VV 았/EP 어요/EF
 블랙핑크 새 앨범 나왔어	블랙핑크/NNP 새/XPN 앨범/NNG 나오/VV 았/EP 어/EF
-AI로 그림 그렸어	AI/SL 로/JKB 그림/NNG 그리/VV 었/EP 어/EF
+AI로 그림 그렸어	AI/SL 로/JKB 그림/NNG 그렸어/VV
 챗GPT 써봤어요	챗GPT/NNP 쓰/VV 어/EC 보/VX 았/EP 어요/EF
 
 # 불규칙 활용 (확장)
@@ -375,6 +375,6 @@ AI로 그림 그렸어	AI/SL 로/JKB 그림/NNG 그리/VV 었/EP 어/EF
 저는 내일 회의에 참석해야 해서 오늘 자료를 준비하고 있습니다	저/NP 는/JX 내일/NNG 회의/NNG 에/JKB 참석/NNG 하/XSV 아야/EC 하/VV 어서/EC 오늘/NNG 자료/NNG 를/JKO 준비/NNG 하/XSV 고/EC 있/VX 습니다/EF
 친구가 추천해 준 식당에서 맛있는 음식을 먹으면서 이야기를 나눴다	친구/NNG 가/JKS 추천/NNG 하/XSV 어/EC 주/VX ㄴ/ETM 식당/NNG 에서/JKB 맛있/VA 는/ETM 음식/NNG 을/JKO 먹/VV 으면서/EC 이야기/NNG 를/JKO 나누/VV 었/EP 다/EF
 이 프로젝트는 여러 팀이 협력하여 진행하고 있으며 곧 완료될 예정이다	이/MM 프로젝트/NNG 는/JX 여러/MM 팀/NNG 이/JKS 협력/NNG 하/XSV 어/EC 진행/NNG 하/XSV 고/EC 있/VX 으며/EC 곧/MAG 완료/NNG 되/XSV ㄹ/ETM 예정/NNG 이/VCP 다/EF
-시장에서 사온 신선한 야채로 엄마가 맛있는 요리를 해주셨다	시장/NNG 에서/JKB 사/VV 아/EC 오/VX ㄴ/ETM 신선하/VA ㄴ/ETM 야채/NNG 로/JKB 엄마/NNG 가/JKS 맛있/VA 는/ETM 요리/NNG 를/JKO 하/VV 어/EC 주/VX 시/EP 었/EP 다/EF
+시장에서 사온 신선한 야채로 엄마가 맛있는 요리를 해주셨다	시장/NNG 에서/JKB 사/VV 아/EC 오/VX ㄴ/ETM 신선/NNG 하/XSV ㄴ/ETM 야채/NNG 로/JKB 엄마/NNG 가/JKS 맛있/VA 는/ETM 요리/NNG 를/JKO 하/VV 어/EC 주/VX 시/EP 었/EP 다/EF
 학교를 졸업한 후에 대학원에 진학할지 취업을 할지 고민하고 있다	학교/NNG 를/JKO 졸업/NNG 하/XSV ㄴ/ETM 후/NNG 에/JKB 대학원/NNG 에/JKB 진학/NNG 하/XSV ㄹ지/EC 취업/NNG 을/JKO 하/VV ㄹ지/EC 고민/NNG 하/XSV 고/EC 있/VX 다/EF
 우리가 만난 지 벌써 십 년이 되었는데 그동안 많은 일이 있었다	우리/NP 가/JKS 만나/VV ㄴ/ETM 지/NNB 벌써/MAG 십/NR 년/NNB 이/JKS 되/VV 었/EP 는데/EC 그동안/NNG 많/VA 은/ETM 일/NNG 이/JKS 있/VV 었/EP 다/EF

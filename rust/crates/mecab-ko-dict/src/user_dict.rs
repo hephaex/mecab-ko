@@ -445,6 +445,10 @@ impl UserDictionary {
     }
 
     /// CSV 라인 파싱
+    ///
+    /// 확장 포맷 지원:
+    /// - 기본: 표면형,품사,비용,읽기
+    /// - 확장: 표면형,품사,비용,읽기,left_id,right_id
     fn parse_csv_line(&mut self, line: &str, line_num: usize) -> Result<()> {
         let parts: Vec<&str> = line.split(',').collect();
 
@@ -477,7 +481,18 @@ impl UserDictionary {
             None
         };
 
-        self.add_entry(surface, pos, Some(cost), reading);
+        // 확장 포맷: left_id, right_id 지원 (5번째, 6번째 필드)
+        if parts.len() >= 6 && !parts[4].trim().is_empty() && !parts[5].trim().is_empty() {
+            let left_id = parts[4].trim().parse::<u16>().map_err(|_| {
+                DictError::Format(format!("Invalid left_id at line {}: {}", line_num, parts[4]))
+            })?;
+            let right_id = parts[5].trim().parse::<u16>().map_err(|_| {
+                DictError::Format(format!("Invalid right_id at line {}: {}", line_num, parts[5]))
+            })?;
+            self.add_entry_with_ids(surface, pos, cost, left_id, right_id, reading);
+        } else {
+            self.add_entry(surface, pos, Some(cost), reading);
+        }
 
         Ok(())
     }

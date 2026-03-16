@@ -77,8 +77,38 @@ fn main() {
         }
     }
 
+    // 사용자 사전 디버깅
+    println!("=== 사용자 사전 디버깅 ===");
+    let ud = tokenizer.dictionary().user_dictionary();
+    if let Some(ud) = ud {
+        let test_surfaces = ["신중한", "신중하", "신선한", "시급합니다"];
+        for surface in &test_surfaces {
+            let entries = ud.lookup(surface);
+            println!("'{}' in user dict: {} entries", surface, entries.len());
+            for e in entries {
+                println!("  pos={}, cost={}, left_id={}, right_id={}",
+                    e.pos, e.cost, e.left_id, e.right_id);
+            }
+        }
+    }
+    println!();
+
+    // Lattice 디버깅 - "신중한" 노드 확인
+    println!("=== Lattice 디버깅 ===");
+    let lattice = tokenizer.tokenize_to_lattice("신중한");
+    println!("Lattice for '신중한':");
+    for node in lattice.nodes() {
+        println!("  start={} end={} surface='{}' cost={} pos='{}'",
+            node.start_pos, node.end_pos, node.surface, node.word_cost,
+            node.feature.split(',').next().unwrap_or("?"));
+    }
+    println!();
+
     // 디버깅 케이스 - sample.tsv에서 실패하는 케이스 분석
     let debug_cases = [
+        // VA 에러 - 형용사 인식 문제
+        ("신중한", "신중하/VA ㄴ/ETM"),
+        ("신선한", "신선하/VA ㄴ/ETM"),
         // EF 에러 - XSA/XSV 관련
         ("미안해요", "미안/NNG 하/XSA 어요/EF"),
         ("하니까 보니까", "하/VV 니까/EC 보/VV 니까/EC"),
