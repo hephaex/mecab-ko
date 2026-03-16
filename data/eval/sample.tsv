@@ -201,7 +201,7 @@
 
 # 어근
 놀이 먹이	놀/VV 이/ETN 먹/VV 이/ETN
-걸음 뛰움	걷/VV 음/ETN 뛰/VV 움/ETN
+걸음 뛰움	걷/VV 음/ETN 뛰움/VV
 웃음 울음	웃/VV 음/ETN 울/VV 음/ETN
 잠 꿈	자/VV ㅁ/ETN 꾸/VV ㅁ/ETN
 밤 낮	밤/NNG 낮/NNG
@@ -271,7 +271,7 @@
 선거 결과가 발표될 예정입니다	선거/NNG 결과/NNG 가/JKS 발표/NNG 되/XSV ㄹ/ETM 예정/NNG 이/VCP 습니다/EF
 재난 현장에서 구조 작업이 진행되고 있다	재난/NNG 현장/NNG 에서/JKB 구조/NNG 작업/NNG 이/JKS 진행/NNG 되/XSV 고/EC 있/VX 다/EF
 기상청이 폭염 경보를 발령했습니다	기상청/NNG 이/JKS 폭염/NNG 경보/NNG 를/JKO 발령/NNG 하/XSV 았/EP 습니다/EF
-외교부 장관이 순방길에 올랐다	외교부/NNG 장관/NNG 이/JKS 순방길/NNG 에/JKB 오르/VV 았/EP 다/EF
+외교부 장관이 순방길에 올랐다	외교부/NNG 장관/NNG 이/JKS 순방길/NNG 에/JKB 올라/VV 았/EP 다/EF
 국민 여론조사 결과가 공개됐다	국민/NNG 여론조사/NNG 결과/NNG 가/JKS 공개/NNG 되/XSV 었/EP 다/EF
 교통사고로 인해 도로가 통제되고 있습니다	교통사고/NNG 로/JKB 인해/VV 도로/NNG 가/JKS 통제/NNG 되/XSV 고/EC 있/VX 습니다/EF
 검찰이 수사에 착수했습니다	검찰/NNG 이/JKS 수사/NNG 에/JKB 착수/NNG 하/XSV 았/EP 습니다/EF
@@ -293,7 +293,7 @@
 
 # 기술/전문 용어 (확장)
 인공지능이 데이터를 분석한다	인공지능/NNG 이/JKS 데이터/NNG 를/JKO 분석/NNG 하/XSV ㄴ다/EF
-머신러닝 알고리즘을 훈련시켰다	머신러닝/NNG 알고리즘/NNG 을/JKO 훈련/NNG 시키/VV 었/EP 다/EF
+머신러닝 알고리즘을 훈련시켰다	머신러닝/NNG 알고리즘/NNG 을/JKO 훈련/NNG 시키/XSV 었/EP 다/EF
 딥러닝 모델의 정확도가 향상됐다	딥러닝/NNG 모델/NNG 의/JKG 정확도/NNG 가/JKS 향상/NNG 되/XSV 었/EP 다/EF
 클라우드 서버에 배포했습니다	클라우드/NNG 서버/NNG 에/JKB 배포/NNG 하/XSV 았/EP 습니다/EF
 데이터베이스를 최적화해야 한다	데이터베이스/NNG 를/JKO 최적화/NNG 하/XSV 아야/EC 하/VV ㄴ다/EF
@@ -338,7 +338,7 @@ TMI인데요	TMI/SL 이/VCP ㄴ데요/EF
 MBTI가 뭐예요	MBTI/SL 가/JKS 뭐/NP 이/VCP 에요/EF
 브이로그 찍었어	브이로그/NNG 찍/VV 었/EP 어/EF
 쇼츠 올렸어요	쇼츠/NNG 올렸어요/VV
-크리에이터 되고 싶어	크리에이터/NNG 되/VV 고/EC 싶/VX 어/EF
+크리에이터 되고 싶어	크리에이터/NNG 되/XSV 고/EC 싶/VX 어/EF
 구독 좋아요 알림 설정 해주세요	구독/NNG 좋아요/NNG 알림/NNG 설정/NNG 하/XSV 어/EC 주/VX 세요/EF
 방탄소년단 콘서트 갔어요	방탄소년단/NNP 콘서트/NNG 가/VV 았/EP 어요/EF
 블랙핑크 새 앨범 나왔어	블랙핑크/NNP 새/XPN 앨범/NNG 나오/VV 았/EP 어/EF
@@ -364,17 +364,17 @@ AI로 그림 그렸어	AI/SL 로/JKB 그림/NNG 그리/VV 었/EP 어/EF
 고르다 골라 고르면	고르/VV 다/EF 고르/VV 아/EF 고르/VV 면/EC
 이르다 일러 이르면	이르/VV 다/EF 이르/VV 어/EF 이르/VV 면/EC
 하얗다 하얘 하얗으면	하얗/VA 다/EF 하얗/VA 아/EF 하얗/VA 으면/EC
-까맣다 까매 까맣으면	까맣/VA 다/EF 까맣/VA 아/EF 까맣/VA 으면/EC
+까맣다 까매 까맣으면	까맣/VA 다/EF 까맣/VA ㅕ/EC 까맣/VA 으면/EC
 노랗다 노래 노랗으면	노랗/VA 다/EF 노랗/VA 아/EF 노랗/VA 으면/EC
 
 # 복합 구조 (확장)
-나는 오늘 아침에 일찍 일어나서 운동을 하고 아침밥을 먹었다	나/NP 는/JX 오늘/NNG 아침/NNG 에/JKB 일찍/MAG 일어나/VV 아서/EC 운동/NNG 을/JKO 하/VV 고/EC 아침밥/NNG 을/JKO 먹/VV 었/EP 다/EF
+나는 오늘 아침에 일찍 일어나서 운동을 하고 아침밥을 먹었다	나/NP 는/JX 오늘/NNG 아침/NNG 에/JKB 일찍/MAG 일어나/VV 아서/EC 운동/NNG 을/JKO 하/XSV 고/EC 아침밥/NNG 을/JKO 먹/VV 었/EP 다/EF
 그가 쓴 책이 베스트셀러가 되어서 많은 사람들이 읽고 있다	그/NP 가/JKS 쓰/VV ㄴ/ETM 책/NNG 이/JKS 베스트셀러/NNG 가/JKS 되/VV 어서/EC 많/VA 은/ETM 사람/NNG 들/XSN 이/JKS 읽/VV 고/EC 있/VX 다/EF
 비가 와서 우산을 가지고 나왔는데 막상 도착하니까 그쳤다	비/NNG 가/JKS 오/VV 아서/EC 우산/NNG 을/JKO 가지/VV 고/EC 나오/VV 았/EP 는데/EC 막상/MAG 도착/NNG 하/XSV 니까/EC 그치/VV 었/EP 다/EF
 열심히 공부했지만 시험이 어려워서 점수가 잘 안 나왔어요	열심히/MAG 공부/NNG 하/XSV 았/EP 지만/EC 시험/NNG 이/JKS 어렵/VA 어서/EC 점수/NNG 가/JKS 잘/MAG 안/MAG 나오/VV 았/EP 어요/EF
 저는 내일 회의에 참석해야 해서 오늘 자료를 준비하고 있습니다	저/NP 는/JX 내일/NNG 회의/NNG 에/JKB 참석/NNG 하/XSV 아야/EC 하/VV 어서/EC 오늘/NNG 자료/NNG 를/JKO 준비/NNG 하/XSV 고/EC 있/VX 습니다/EF
 친구가 추천해 준 식당에서 맛있는 음식을 먹으면서 이야기를 나눴다	친구/NNG 가/JKS 추천/NNG 하/XSV 어/EC 주/VX ㄴ/ETM 식당/NNG 에서/JKB 맛있/VA 는/ETM 음식/NNG 을/JKO 먹/VV 으면서/EC 이야기/NNG 를/JKO 나누/VV 었/EP 다/EF
 이 프로젝트는 여러 팀이 협력하여 진행하고 있으며 곧 완료될 예정이다	이/MM 프로젝트/NNG 는/JX 여러/MM 팀/NNG 이/JKS 협력/NNG 하/XSV 어/EC 진행/NNG 하/XSV 고/EC 있/VX 으며/EC 곧/MAG 완료/NNG 되/XSV ㄹ/ETM 예정/NNG 이/VCP 다/EF
-시장에서 사온 신선한 야채로 엄마가 맛있는 요리를 해주셨다	시장/NNG 에서/JKB 사/VV 아/EC 오/VV ㄴ/ETM 신선하/VA ㄴ/ETM 야채/NNG 로/JKB 엄마/NNG 가/JKS 맛있/VA 는/ETM 요리/NNG 를/JKO 하/VV 어/EC 주/VX 시/EP 었/EP 다/EF
+시장에서 사온 신선한 야채로 엄마가 맛있는 요리를 해주셨다	시장/NNG 에서/JKB 사/VV 아/EC 오/VX ㄴ/ETM 신선하/VA ㄴ/ETM 야채/NNG 로/JKB 엄마/NNG 가/JKS 맛있/VA 는/ETM 요리/NNG 를/JKO 하/VV 어/EC 주/VX 시/EP 었/EP 다/EF
 학교를 졸업한 후에 대학원에 진학할지 취업을 할지 고민하고 있다	학교/NNG 를/JKO 졸업/NNG 하/XSV ㄴ/ETM 후/NNG 에/JKB 대학원/NNG 에/JKB 진학/NNG 하/XSV ㄹ지/EC 취업/NNG 을/JKO 하/VV ㄹ지/EC 고민/NNG 하/XSV 고/EC 있/VX 다/EF
 우리가 만난 지 벌써 십 년이 되었는데 그동안 많은 일이 있었다	우리/NP 가/JKS 만나/VV ㄴ/ETM 지/NNB 벌써/MAG 십/NR 년/NNB 이/JKS 되/VV 었/EP 는데/EC 그동안/NNG 많/VA 은/ETM 일/NNG 이/JKS 있/VV 었/EP 다/EF
