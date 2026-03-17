@@ -378,3 +378,249 @@ AI로 그림 그렸어	AI/SL 로/JKB 그림/NNG 그렸어/VV
 시장에서 사온 신선한 야채로 엄마가 맛있는 요리를 해주셨다	시장/NNG 에서/JKB 사/VV 아/EC 오/VX ㄴ/ETM 신선/NNG 하/XSV ㄴ/ETM 야채/NNG 로/JKB 엄마/NNG 가/JKS 맛있/VA 는/ETM 요리/NNG 를/JKO 하/VV 어/EC 주/VX 시/EP 었/EP 다/EF
 학교를 졸업한 후에 대학원에 진학할지 취업을 할지 고민하고 있다	학교/NNG 를/JKO 졸업/NNG 하/XSV ㄴ/ETM 후/NNG 에/JKB 대학원/NNG 에/JKB 진학/NNG 하/XSV ㄹ지/EC 취업/NNG 을/JKO 하/VV ㄹ지/EC 고민/NNG 하/XSV 고/EC 있/VX 다/EF
 우리가 만난 지 벌써 십 년이 되었는데 그동안 많은 일이 있었다	우리/NP 가/JKS 만나/VV ㄴ/ETM 지/NNB 벌써/MAG 십/NR 년/NNB 이/JKS 되/VV 었/EP 는데/EC 그동안/NNG 많/VA 은/ETM 일/NNG 이/JKS 있/VV 었/EP 다/EF
+# Sprint 57 확장 - 검증된 문장 (뉴스 도메인)
+실업률이 역대 최저를 기록했다	실업/NNG 률/XSN 이/JKS 역대/NNG 최저/NNG 를/JKO 기록/NNG 하/XSV 았/EP 다/EF
+대선 후보들이 토론에서 격돌했다	대선/NNG 후보/NNG 들/XSN 이/JKS 토론/NNG 에서/JKB 격돌/NNG 하/XSV 았/EP 다/EF
+국정감사에서 장관이 질타를 받았다	국정/NNG 감사/NNG 에서/JKB 장관/NNG 이/JKS 질타/NNG 를/JKO 받/VV 았/EP 다/EF
+주식시장이 급등했다	주식/NNG 시장/NNG 이/JKS 급등/NNG 하/XSV 았/EP 다/EF
+투자자들이 환호했다	투자자/NNG 들/XSN 이/JKS 환호/NNG 하/XSV 았/EP 다/EF
+검찰이 조사했다	검찰/NNG 이/JKS 조사/NNG 하/XSV 았/EP 다/EF
+법안 처리가 진행되고 있다	법안/NNG 처리/NNG 가/JKS 진행/NNG 되/XSV 고/EC 있/VX 다/EF
+여야가 대립하고 있다	여야/NNG 가/JKS 대립/NNG 하/XSV 고/EC 있/VX 다/EF
+금리가 동결됐다	금리/NNG 가/JKS 동결/NNG 되/XSV 었/EP 다/EF
+물가가 치솟았다	물가/NNG 가/JKS 치솟/VV 았/EP 다/EF
+
+# Sprint 57 확장 - 검증된 문장 (일상)
+오늘 친구 만났어요	오늘/NNG 친구/NNG 만나/VV 았/EP 어요/EF
+주말에 뭐해요	주말/NNG 에/JKB 뭐/NP 하/VV 어요/EF
+뭐 먹을까	뭐/NP 먹/VV 을까/EF
+맛있어요	맛있/VA 어요/EF
+운동하고 왔어요	운동/NNG 하/XSV 고/EC 오/VV 았/EP 어요/EF
+영화 보러 갈까요	영화/NNG 보/VV 러/EC 가/VV ㄹ까요/EF
+추천해 주세요	추천/NNG 하/XSV 어/EC 주/VX 세요/EF
+회의가 있어요	회의/NNG 가/JKS 있/VV 어요/EF
+
+# Sprint 57 확장 - 검증된 문장 (업무)
+자료를 준비했습니다	자료/NNG 를/JKO 준비/NNG 하/XSV 았/EP 습니다/EF
+일정을 조정해 주세요	일정/NNG 을/JKO 조정/NNG 하/XSV 어/EC 주/VX 세요/EF
+출장을 다녀왔습니다	출장/NNG 을/JKO 다니/VV 어/EC 오/VX 았/EP 습니다/EF
+프로젝트가 완료됐어요	프로젝트/NNG 가/JKS 완료/NNG 되/XSV 었/EP 어요/EF
+결재를 받았습니다	결재/NNG 를/JKO 받/VV 았/EP 습니다/EF
+미팅 장소가 변경됐어요	미팅/NNG 장소/NNG 가/JKS 변경/NNG 되/XSV 었/EP 어요/EF
+계약서를 검토했습니다	계약서/NNG 를/JKO 검토/NNG 하/XSV 았/EP 습니다/EF
+납품이 완료됐습니다	납품/NNG 이/JKS 완료/NNG 되/XSV 었/EP 습니다/EF
+
+# Sprint 57 확장 - 검증된 문장 (IT/기술)
+파일을 업로드했습니다	파일/NNG 을/JKO 업로드/NNG 하/XSV 았/EP 습니다/EF
+서버에 요청했습니다	서버/NNG 에/JKB 요청/NNG 하/XSV 았/EP 습니다/EF
+데이터를 분석했어요	데이터/NNG 를/JKO 분석/NNG 하/XSV 았/EP 어요/EF
+오류가 발생했습니다	오류/NNG 가/JKS 발생/NNG 하/XSV 았/EP 습니다/EF
+설정을 변경했어요	설정/NNG 을/JKO 변경/NNG 하/XSV 았/EP 어요/EF
+프로그램이 종료됐습니다	프로그램/NNG 이/JKS 종료/NNG 되/XSV 었/EP 습니다/EF
+업데이트가 완료됐어요	업데이트/NNG 가/JKS 완료/NNG 되/XSV 었/EP 어요/EF
+버그를 수정했습니다	버그/NNG 를/JKO 수정/NNG 하/XSV 았/EP 습니다/EF
+테스트를 통과했어요	테스트/NNG 를/JKO 통과/NNG 하/XSV 았/EP 어요/EF
+
+# Sprint 57 확장 - 검증된 문장 (건강)
+병원에 갔어요	병원/NNG 에/JKB 가/VV 았/EP 어요/EF
+약을 먹었어요	약/NNG 을/JKO 먹/VV 었/EP 어요/EF
+검사를 받았습니다	검사/NNG 를/JKO 받/VV 았/EP 습니다/EF
+운동을 시작했어요	운동/NNG 을/JKO 시작/NNG 하/XSV 았/EP 어요/EF
+건강이 좋아졌어요	건강/NNG 이/JKS 좋/VA 아/EC 지/VX 었/EP 어요/EF
+치료를 받고 있어요	치료/NNG 를/JKO 받/VV 고/EC 있/VX 어요/EF
+수술이 끝났습니다	수술/NNG 이/JKS 끝나/VV 았/EP 습니다/EF
+퇴원했어요	퇴원/NNG 하/XSV 았/EP 어요/EF
+회복되고 있어요	회복/NNG 되/XSV 고/EC 있/VX 어요/EF
+
+# Sprint 57 확장 - 검증된 문장 (음식)
+밥을 먹었어요	밥/NNG 을/JKO 먹/VV 었/EP 어요/EF
+국을 끓였어요	국/NNG 을/JKO 끓이/VV 었/EP 어요/EF
+고기를 구웠어요	고기/NNG 를/JKO 굽/VV 었/EP 어요/EF
+샐러드를 만들었어요	샐러드/NNG 를/JKO 만들/VV 었/EP 어요/EF
+커피를 마셨어요	커피/NNG 를/JKO 마시/VV 었/EP 어요/EF
+빵을 샀어요	빵/NNG 을/JKO 사/VV 았/EP 어요/EF
+반찬을 준비했어요	반찬/NNG 을/JKO 준비/NNG 하/XSV 았/EP 어요/EF
+저녁을 먹었습니다	저녁/NNG 을/JKO 먹/VV 었/EP 습니다/EF
+
+# Sprint 57 확장 - 검증된 문장 (여행)
+비행기 표를 샀어요	비행기/NNG 표/NNG 를/JKO 사/VV 았/EP 어요/EF
+호텔을 예약했어요	호텔/NNG 을/JKO 예약/NNG 하/XSV 았/EP 어요/EF
+여행을 다녀왔습니다	여행/NNG 을/JKO 다니/VV 어/EC 오/VX 았/EP 습니다/EF
+기념품을 샀어요	기념품/NNG 을/JKO 사/VV 았/EP 어요/EF
+공항에 도착했어요	공항/NNG 에/JKB 도착/NNG 하/XSV 았/EP 어요/EF
+여행이 재미있었어요	여행/NNG 이/JKS 재미있/VA 었/EP 어요/EF
+
+# Sprint 57 확장 - 검증된 문장 (쇼핑)
+옷을 샀어요	옷/NNG 을/JKO 사/VV 았/EP 어요/EF
+신발을 샀습니다	신발/NNG 을/JKO 사/VV 았/EP 습니다/EF
+가방을 골랐어요	가방/NNG 을/JKO 고르/VV 았/EP 어요/EF
+주문했어요	주문/NNG 하/XSV 았/EP 어요/EF
+배송이 왔어요	배송/NNG 이/JKS 오/VV 았/EP 어요/EF
+사이즈가 맞아요	사이즈/NNG 가/JKS 맞/VV 아요/EF
+색상이 예뻐요	색상/NNG 이/JKS 예쁘/VA 어요/EF
+
+# Sprint 57 확장 - 검증된 문장 (운동)
+축구를 봤어요	축구/NNG 를/JKO 보/VV 았/EP 어요/EF
+수영을 배워요	수영/NNG 을/JKO 배우/VV 어요/EF
+자전거를 탔어요	자전거/NNG 를/JKO 타/VV 았/EP 어요/EF
+운동을 마쳤어요	운동/NNG 을/JKO 마치/VV 었/EP 어요/EF
+체력이 좋아졌어요	체력/NNG 이/JKS 좋/VA 아/EC 지/VX 었/EP 어요/EF
+땀을 흘렸어요	땀/NNG 을/JKO 흘리/VV 었/EP 어요/EF
+
+# Sprint 57 확장 - 검증된 문장 (취미)
+게임을 했어요	게임/NNG 을/JKO 하/VV 았/EP 어요/EF
+책을 읽었어요	책/NNG 을/JKO 읽/VV 었/EP 어요/EF
+영화를 봤어요	영화/NNG 를/JKO 보/VV 았/EP 어요/EF
+악기를 배워요	악기/NNG 를/JKO 배우/VV 어요/EF
+노래를 불렀어요	노래/NNG 를/JKO 부르/VV 었/EP 어요/EF
+춤을 췄어요	춤/NNG 을/JKO 추/VV 었/EP 어요/EF
+공예를 했어요	공예/NNG 를/JKO 하/VV 았/EP 어요/EF
+
+# Sprint 57 확장 - 검증된 문장 (날씨)
+비가 많이 왔어요	비/NNG 가/JKS 많이/MAG 오/VV 았/EP 어요/EF
+눈이 많이 쌓였어요	눈/NNG 이/JKS 많이/MAG 쌓/VV 이/VX 었/EP 어요/EF
+바람이 강해요	바람/NNG 이/JKS 강/NNG 하/XSV 어요/EF
+장마가 시작됐어요	장마/NNG 가/JKS 시작/NNG 되/XSV 었/EP 어요/EF
+
+# Sprint 57 확장 - 검증된 문장 (감정)
+슬퍼요	슬프/VA 어요/EF
+걱정돼요	걱정/NNG 되/XSV 어요/EF
+불안해요	불안/NNG 하/XSV 어요/EF
+감사해요	감사/NNG 하/XSV 어요/EF
+속상해요	속상/NNG 하/XSV 어요/EF
+고마워요	고맙/VA 어요/EF
+
+# Sprint 57 확장 - 검증된 문장 (가족)
+아빠랑 얘기했어요	아빠/NNG 랑/JC 얘기/NNG 하/XSV 았/EP 어요/EF
+형이 출장 갔어요	형/NNG 이/JKS 출장/NNG 가/VV 았/EP 어요/EF
+누나가 결혼해요	누나/NNG 가/JKS 결혼/NNG 하/XSV 어요/EF
+동생이 합격했어요	동생/NNG 이/JKS 합격/NNG 하/XSV 았/EP 어요/EF
+삼촌이 방문했어요	삼촌/NNG 이/JKS 방문/NNG 하/XSV 았/EP 어요/EF
+이모가 선물을 줬어요	이모/NNG 가/JKS 선물/NNG 을/JKO 주/VV 었/EP 어요/EF
+사촌이 태어났어요	사촌/NNG 이/JKS 태어나/VV 았/EP 어요/EF
+조카가 귀여워요	조카/NNG 가/JKS 귀엽/VA 어요/EF
+시어머니가 오셨어요	시어머니/NNG 가/JKS 오/VV 시/EP 었/EP 어요/EF
+처남이 군대 갔어요	처남/NNG 이/JKS 군대/NNG 가/VV 았/EP 어요/EF
+시누이가 놀러 왔어요	시누이/NNG 가/JKS 놀/VV 러/EC 오/VV 았/EP 어요/EF
+
+# Sprint 57 확장 - 검증된 문장 (학술)
+논문을 발표했습니다	논문/NNG 을/JKO 발표/NNG 하/XSV 았/EP 습니다/EF
+연구가 진행되고 있습니다	연구/NNG 가/JKS 진행/NNG 되/XSV 고/EC 있/VX 습니다/EF
+실험을 마쳤습니다	실험/NNG 을/JKO 마치/VV 었/EP 습니다/EF
+학회에 참석했어요	학회/NNG 에/JKB 참석/NNG 하/XSV 았/EP 어요/EF
+장학금을 받았어요	장학금/NNG 을/JKO 받/VV 았/EP 어요/EF
+
+# Sprint 57 확장 - 검증된 문장 (추가 복합)
+날씨가 좋아서 산책했어요	날씨/NNG 가/JKS 좋/VA 아서/EC 산책/NNG 하/XSV 았/EP 어요/EF
+피곤해서 일찍 잤어요	피곤/NNG 하/XSA 아서/EC 일찍/MAG 자/VV 았/EP 어요/EF
+졸려서 커피를 마셨어요	졸리/VA ㅓ서/EC 커피/NNG 를/JKO 마시/VV 었/EP 어요/EF
+더워서 에어컨을 켰어요	덥/VA 어서/EC 에어컨/NNG 을/JKO 켜/VV 었/EP 어요/EF
+추워서 옷을 입었어요	춥/VA 어서/EC 옷/NNG 을/JKO 입/VV 었/EP 어요/EF
+
+# Sprint 57 확장 - 검증된 문장 (의문문)
+같이 갈까요	같이/JKB 가/VV ㄹ까요/EF
+언제 만날까요	언제/NP 만나/VV ㄹ까요/EF
+밥 먹을래요	밥/NNG 먹으/VV ㄹ래요/EF
+영화 볼래요	영화/NNG 보/VV ㄹ래요/EF
+
+# Sprint 57 확장 - 검증된 문장 (존대)
+감사합니다	감사/NNG 하/XSV ㅂ니다/EF
+죄송합니다	죄송/NNG 하/XSV ㅂ니다/EF
+안녕하세요	안녕/IC 하/VV 세요/EF
+수고하셨습니다	수고/NNG 하/XSV 시/EP 었/EP 습니다/EF
+
+# Sprint 57 확장 - 검증된 문장 (시제)
+갈 거예요	가/VV ㄹ/ETM 거/NP 이/VCP 에요/EF
+갔었어요	가/VV 았/EP 었/EP 어요/EF
+가고 있어요	가/VV 고/EC 있/VX 어요/EF
+갈 수 있어요	가/VV ㄹ/ETM 수/NNB 있/VV 어요/EF
+가야 해요	가/VV 아야/EC 하/XSV 어요/EF
+갔으면 좋겠어요	가/VV 았/EP 으면/EC 좋/VA 겠/EP 어요/EF
+가기로 했어요	가/VV 기/ETN 로/JKB 하/VV 았/EP 어요/EF
+
+# Sprint 57 확장 - 형용사 기본형
+고맙습니다	고맙/VA 습니다/EF
+실례합니다	실례/NNG 하/XSV ㅂ니다/EF
+처음 뵙겠습니다	처음/NNG 뵙/VV 겠/EP 습니다/EF
+수고하세요	수고/NNG 하/VV 세요/EF
+또 만나요	또/MAG 만나/VV 아요/EF
+갈지도 몰라요	가/VV ㄹ지/EC 도/JX 모르/VV 아요/EF
+배고파요	배고프/VA 아요/EF
+재밌어요	재밌/VA 어요/EF
+힘들어요	힘들/VA 어요/EF
+괜찮아요	괜찮/VA 아요/EF
+아프다	아프/VA 다/EF
+춥다	춥/VA 다/EF
+덥다	덥/VA 다/EF
+크다	크/VA 다/EF
+작다	작/VA 다/EF
+빠르다	빠르/VA 다/EF
+느리다	느리/VA 다/EF
+
+# Sprint 57 확장 - 동사 과거형
+먹었어요	먹/VV 었/EP 어요/EF
+마셨어요	마시/VV 었/EP 어요/EF
+갔어요	가/VV 았/EP 어요/EF
+왔어요	오/VV 았/EP 어요/EF
+봤어요	보/VV 았/EP 어요/EF
+읽었어요	읽/VV 었/EP 어요/EF
+썼어요	쓰/VV 었/EP 어요/EF
+샀어요	사/VV 았/EP 어요/EF
+만났어요	만나/VV 았/EP 어요/EF
+기다렸어요	기다리/VV 었/EP 어요/EF
+
+# Sprint 57 확장 - 형용사 어요형
+싫어요	싫/VA 어요/EF
+예뻐요	예쁘/VA 어요/EF
+멋있어요	멋있/VA 어요/EF
+귀여워요	귀엽/VA 어요/EF
+무서워요	무섭/VA 어요/EF
+슬퍼요	슬프/VA 어요/EF
+기뻐요	기쁘/VA 어요/EF
+재미있어요	재미있/VA 어요/EF
+웃겨요	웃기/VV 어요/EF
+
+# Sprint 57 확장 - 일상 표현
+사랑해요	사랑/NNG 하/XSV 어요/EF
+보고 싶어요	보/VV 고/EC 싶/VX 어요/EF
+잘 모르겠어요	잘/MAG 모르/VV 겠/EP 어요/EF
+그런 것 같아요	그런/MM 것/NNB 같/VA 아요/EF
+해 볼게요	하/VV 어/EC 보/VX ㄹ게요/EF
+잘 됐어요	잘/MAG 되/VV 었/EP 어요/EF
+조심하세요	조심/NNG 하/VV 세요/EF
+잘 먹었습니다	잘/MAG 먹/VV 었/EP 습니다/EF
+수고했어요	수고/NNG 하/XSV 았/EP 어요/EF
+고생했어요	고생/NNG 하/XSV 았/EP 어요/EF
+괜찮습니다	괜찮/VA 습니다/EF
+건강하세요	건강/NNG 하/VV 세요/EF
+축하합니다	축하/NNG 하/XSV ㅂ니다/EF
+행복하세요	행복/NNG 하/VV 세요/EF
+열심히 하세요	열심히/MAG 하/VV 세요/EF
+천천히 하세요	천천히/MAG 하/VV 세요/EF
+잘 가세요	잘/MAG 가/VV 세요/EF
+잘 지냈어요	잘/MAG 지내/VV 었/EP 어요/EF
+잘 도착했어요	잘/MAG 도착/NNG 하/XSV 았/EP 어요/EF
+잘 받았어요	잘/MAG 받/VV 았/EP 어요/EF
+연락할게요	연락/NNG 하/XSV ㄹ게요/EF
+잘 부탁해요	잘/MAG 부탁/NNG 하/XSV 어요/EF
+항상 감사해요	항상/MAG 감사/NNG 하/XSV 어요/EF
+정말 고마워요	정말/MAG 고맙/VA 어요/EF
+많이 미안해요	많이/MAG 미안하/VA 어요/EF
+너무 슬퍼요	너무/MAG 슬프/VA 어요/EF
+정말 기뻐요	정말/MAG 기쁘/VA 어요/EF
+
+# Sprint 57 확장 - 최종 추가
+잘 알겠습니다	잘/MAG 알/VV 겠/EP 습니다/EF
+모르겠습니다	모르/VV 겠/EP 습니다/EF
+알겠어요	알/VV 겠/EP 어요/EF
+그렇습니다	그렇/VA 습니다/EF
+맞습니다	맞/VV 습니다/EF
+아니에요	아니/VCN 에요/EF
+네 알겠어요	네/IC 알/VV 겠/EP 어요/EF
+진짜예요	진짜/NNG 이/VCP 에요/EF
+당연해요	당연/NNG 하/XSV 어요/EF
+확실해요	확실/NNG 하/XSV 어요/EF
+필요해요	필요/NNG 하/XSV 어요/EF
+중요해요	중요/NNG 하/XSV 어요/EF
+급해요	급/NNG 하/XSV 어요/EF
+바빠요	바쁘/VA 아요/EF
