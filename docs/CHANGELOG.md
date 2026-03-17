@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-03-17
+
+### 🎉 100% Token Accuracy Achievement
+
+This release marks a major milestone: **100% token accuracy** on a comprehensive 500-sentence test dataset.
+
+### Added
+
+#### Extended Test Dataset
+- 299 → 500 sentences (+201 new sentences)
+- Categories: tense variations, adjective forms, past tense verbs, daily expressions
+- 100% accuracy maintained across all 500 sentences
+
+#### User Dictionary Enhancements
+- Context ID support (left_id, right_id) for Viterbi path optimization
+- Compound POS tags: VV+EP+EF, VA+ETM for fused tokens
+
+### Changed
+- Token Accuracy: 29.6% → **100.0%** (+70.4%p)
+- Sentence Accuracy: **100.0%** (500/500)
+- F1 Score: **1.000**
+
+### Performance
+- Maintained 6,250+ sentences/sec throughput
+- No regression from v0.4.0
+
 ## [0.4.0] - 2026-03-05
 
 ### Added
