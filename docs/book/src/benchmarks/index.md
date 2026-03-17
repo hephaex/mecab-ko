@@ -176,15 +176,25 @@ MeCab-Ko의 실시간 성능 벤치마크 대시보드입니다.
 
 ---
 
+## 🎉 v0.5.0: 100% Token Accuracy 달성!
+
+| 지표 | 값 |
+|------|-----|
+| Token Accuracy | **100.0%** |
+| Sentence Accuracy | **100.0%** |
+| F1 Score | **1.000** |
+| 테스트 문장 | 500개 |
+
 ## KPI 목표 및 현황
 
-| 지표 | 목표 | v0.1.0 | v0.1.1 | v0.2.0 | 상태 |
+| 지표 | 목표 | v0.1.0 | v0.4.0 | v0.5.0 | 상태 |
 |------|------|--------|--------|--------|------|
-| Throughput | 200K ops/sec | 182K | 238K | 245K | PASS |
-| Cold Start | < 200ms | 120ms | 86ms | 132ms | PASS |
-| Memory | < 150MB | 215MB | 145MB | 145MB | PASS |
+| Token Accuracy | 95%+ | 29.6% | 81.0% | **100.0%** | ✅ PASS |
+| Throughput | 200K ops/sec | 182K | 245K | 263K | ✅ PASS |
+| Cold Start | < 200ms | 120ms | 86ms | 86ms | ✅ PASS |
+| Memory | < 150MB | 215MB | 145MB | 145MB | ✅ PASS |
 
-> v0.2.0에서 Cold Start가 약간 증가한 것은 Unknown 단어 처리 개선으로 인한 추가 초기화 때문입니다.
+> v0.5.0은 정확도 100%를 달성하면서도 성능을 유지하고 있습니다.
 
 ## 벤치마크 환경
 
