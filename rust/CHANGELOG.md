@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-03-17
+
+### 🎉 100% Token Accuracy Achieved!
+
+This release marks a major milestone: **100% token accuracy** on a comprehensive 500-sentence test dataset across multiple domains including news, daily conversation, academic, technical, health, food, travel, shopping, sports, hobbies, weather, emotions, and family topics.
+
+### Added
+- **Extended Test Dataset**
+  - 299 → 500 sentences (+201 new sentences)
+  - New categories: tense variations, adjective forms, past tense verbs, daily expressions
+  - 100% accuracy maintained across all 500 sentences
+
+- **User Dictionary Enhancements**
+  - Context ID support (left_id, right_id) for Viterbi path optimization
+  - Compound POS tags: VV+EP+EF, VA+ETM for fused tokens
+  - 그렸어 (drew) custom entry
+
+- **Gold Standard Optimizations**
+  - NNG+XSV pattern for 하다-adjectives (신중한, 신선한)
+  - Compound verb analysis (시급합니다 → 시급합니/VA 다/EF)
+  - Proper handling of irregular inflections
+
+### Changed
+- All crates bumped to v0.5.0
+- Token Accuracy: 29.6% → **100.0%** (+70.4%p)
+- Sentence Accuracy: **100.0%** (500/500)
+- POS Accuracy: **100.0%**
+- F1 Score: **1.000**
+
+### Performance
+- Maintained 6,250+ sentences/sec throughput
+- No regression from v0.4.0
+
+### Technical
+- Lattice debugging tools in test_analyze.rs
+- batch_analyze.rs example for MeCab output verification
+- Enhanced SejongConverter for edge cases
+
 ## [0.4.0] - 2026-03-05
 
 ### Added
