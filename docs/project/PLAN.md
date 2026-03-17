@@ -31,8 +31,9 @@
   - mecab-ko-python v0.5.0
   - 토큰 문제 해결 필요
 
-- [ ] S57-04: npm mecab-ko-wasm v0.5.0 배포
+- [ ] S57-04: npm mecab-ko-wasm v0.5.0 배포 (PENDING: npm login 필요)
   - 100% 정확도 WASM 버전
+  - wasm-pack build 완료, npm publish 대기
 
 - [ ] S57-05: 문서 사이트 업데이트
   - 100% 정확도 달성 기록

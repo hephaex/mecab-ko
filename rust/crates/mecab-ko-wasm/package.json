@@ -1,6 +1,6 @@
 {
   "name": "mecab-ko-wasm",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "WebAssembly bindings for MeCab-Ko Korean morphological analyzer",
   "main": "index.js",
   "module": "mecab_ko_wasm.js",
