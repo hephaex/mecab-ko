@@ -51,9 +51,9 @@
   - 100% 정확도 달성 KPI 테이블 추가
 
 ### P3 (Low)
-- [ ] S57-08: 커뮤니티 공지
-  - GitHub Release Notes
-  - 100% 달성 블로그 포스트
+- [x] S57-08: 커뮤니티 공지 ✅
+  - GitHub Release Notes v0.5.0 생성
+  - https://github.com/hephaex/mecab-ko/releases/tag/v0.5.0
 
 ---
 
