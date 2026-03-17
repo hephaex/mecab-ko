@@ -21,10 +21,10 @@
   - 100% 정확도 유지
   - 시제변형, 형용사, 동사, 일상표현 카테고리 추가
 
-- [ ] S57-02: crates.io v0.5.0 배포
+- [x] S57-02: crates.io v0.5.0 배포 ✅
   - 100% 정확도 버전 공식 릴리스
   - CHANGELOG 업데이트
-  - 6개 크레이트 순차 배포
+  - 6개 크레이트 순차 배포 완료
 
 ### P1 (High)
 - [ ] S57-03: PyPI 배포 재시도
@@ -35,9 +35,9 @@
   - 100% 정확도 WASM 버전
   - wasm-pack build 완료, npm publish 대기
 
-- [ ] S57-05: 문서 사이트 업데이트
+- [x] S57-05: 문서 사이트 업데이트 ✅
   - 100% 정확도 달성 기록
-  - Sprint 37-56 여정 문서화
+  - README, CHANGELOG 업데이트 완료
 
 ### P2 (Medium)
 - [ ] S57-06: CI/CD 정확도 게이트
@@ -156,14 +156,14 @@ Token Accuracy 95.0%+ 달성 → **96.1% 달성!**
 
 | 크레이트 | 최신 버전 | 플랫폼 | 상태 |
 |---------|----------|--------|------|
-| mecab-ko-hangul | v0.4.0 | crates.io | ✅ |
-| mecab-ko-dict | v0.4.0 | crates.io | ✅ |
-| mecab-ko-core | v0.4.0 | crates.io | ✅ |
-| mecab-ko-dict-validator | v0.4.0 | crates.io | ✅ |
-| mecab-ko-dict-builder | v0.4.0 | crates.io | ✅ |
-| mecab-ko | v0.4.0 | crates.io | ✅ |
+| mecab-ko-hangul | v0.5.0 | crates.io | ✅ |
+| mecab-ko-dict | v0.5.0 | crates.io | ✅ |
+| mecab-ko-core | v0.5.0 | crates.io | ✅ |
+| mecab-ko-dict-validator | v0.5.0 | crates.io | ✅ |
+| mecab-ko-dict-builder | v0.5.0 | crates.io | ✅ |
+| mecab-ko | v0.5.0 | crates.io | ✅ |
 | mecab-ko-python | - | PyPI | BLOCKED |
-| mecab-ko-wasm | v0.4.0 | npm | ✅ |
+| mecab-ko-wasm | v0.5.0 | npm | PENDING (npm login 필요) |
 
 ---
 
