@@ -1,0 +1,99 @@
+name: Accuracy Gate
+
+on:
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'rust/**'
+      - 'data/eval/**'
+      - 'data/user-dict/**'
+      - '.github/workflows/accuracy-gate.yml'
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  accuracy-check:
+    name: Token Accuracy Gate (95%+ required)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Restore cargo cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - name: Run accuracy evaluation
+        id: accuracy
+        run: |
+          cd rust
+          # Run accuracy test and capture output
+          OUTPUT=$(cargo test -p mecab-ko-core --test accuracy_eval test_accuracy_gate -- --nocapture 2>&1) || true
+          echo "$OUTPUT"
+
+          # Extract accuracy value
+          ACCURACY=$(echo "$OUTPUT" | grep -oP 'Token Accuracy: \K[0-9.]+' | tail -1 || echo "0")
+          echo "Token Accuracy: $ACCURACY%"
+          echo "accuracy=$ACCURACY" >> $GITHUB_OUTPUT
+
+          # Check if test passed
+          if echo "$OUTPUT" | grep -q "test test_accuracy_gate ... ok"; then
+            echo "status=passed" >> $GITHUB_OUTPUT
+          else
+            echo "status=failed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check accuracy threshold
+        run: |
+          ACCURACY="${{ steps.accuracy.outputs.accuracy }}"
+          STATUS="${{ steps.accuracy.outputs.status }}"
+
+          echo "=================================="
+          echo "  ACCURACY GATE RESULT"
+          echo "=================================="
+          echo "Token Accuracy: ${ACCURACY}%"
+          echo "Required: 95%+"
+          echo "Status: ${STATUS}"
+          echo "=================================="
+
+          if [ "$STATUS" = "failed" ]; then
+            echo "::error::Accuracy gate FAILED. Token accuracy is below 95% threshold."
+            exit 1
+          fi
+
+          echo "Accuracy gate PASSED!"
+
+      - name: Post accuracy to PR comment
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const accuracy = '${{ steps.accuracy.outputs.accuracy }}';
+            const status = '${{ steps.accuracy.outputs.status }}';
+            const emoji = status === 'passed' ? '✅' : '❌';
+            const statusText = status === 'passed' ? 'PASSED' : 'FAILED';
+
+            const body = `## ${emoji} Accuracy Gate ${statusText}
+
+            | Metric | Value | Threshold |
+            |--------|-------|-----------|
+            | Token Accuracy | **${accuracy}%** | 95%+ |
+
+            ${status === 'passed'
+              ? '🎉 All accuracy checks passed!'
+              : '⚠️ Token accuracy is below the required threshold. Please fix before merging.'}
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });

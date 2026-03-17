@@ -2175,3 +2175,72 @@ fn test_list_all_mismatches() {
         mismatch_count, dataset.sentences.len(),
         (dataset.sentences.len() - mismatch_count) as f64 / dataset.sentences.len() as f64 * 100.0);
 }
+
+/// CI/CD Accuracy Gate: 95%+ 정확도 요구
+///
+/// PR 병합 전 정확도 검증을 위한 테스트
+#[test]
+fn test_accuracy_gate() {
+    // 프로젝트 루트 경로 계산
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
+        .unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or(std::path::Path::new("."));
+
+    // 사전 경로 설정
+    let dict_path = std::env::var("MECAB_DIC_PATH")
+        .unwrap_or_else(|_| {
+            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
+                .to_string_lossy()
+                .to_string()
+        });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path)
+        .expect("Failed to create tokenizer");
+
+    // 사용자 사전 로드
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    // 테스트 데이터셋 로드
+    let eval_path = std::env::var("MECAB_EVAL_PATH")
+        .unwrap_or_else(|_| {
+            project_root.join("data/eval/sample.tsv")
+                .to_string_lossy()
+                .to_string()
+        });
+
+    let dataset = TestDataset::from_tsv(&eval_path)
+        .expect("Failed to load test dataset");
+
+    println!("\n=== CI/CD Accuracy Gate ===");
+    println!("테스트 문장 수: {}", dataset.len());
+
+    // 세종 형식으로 평가
+    let result = evaluate_dataset_sejong(&mut tokenizer, &dataset);
+
+    // 결과 출력 (CI에서 파싱용)
+    let accuracy_percent = result.token_accuracy * 100.0;
+    println!("Token Accuracy: {:.1}", accuracy_percent);
+    println!("Sentence Accuracy: {:.1}%", result.sentence_accuracy * 100.0);
+    println!("F1 Score: {:.3}", result.f1_score);
+
+    // 95% 정확도 게이트
+    const ACCURACY_THRESHOLD: f64 = 0.95;
+    assert!(
+        result.token_accuracy >= ACCURACY_THRESHOLD,
+        "ACCURACY GATE FAILED: Token accuracy {:.1}% is below {:.0}% threshold",
+        accuracy_percent,
+        ACCURACY_THRESHOLD * 100.0
+    );
+
+    println!("ACCURACY GATE PASSED: {:.1}% >= {:.0}%", accuracy_percent, ACCURACY_THRESHOLD * 100.0);
+}
