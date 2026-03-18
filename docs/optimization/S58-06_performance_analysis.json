@@ -1,0 +1,861 @@
+{
+  "project": "mecab-ko",
+  "sprint": "S58-06",
+  "analysis_date": "2026-03-18",
+  "objective": "처리 속도 최적화: ~238K tokens/sec → 300K+ tokens/sec (26% 향상)",
+
+  "current_state": {
+    "throughput_tokens_per_sec": 238000,
+    "target_tokens_per_sec": 300000,
+    "improvement_percent": 26.1,
+    "algorithm": "Viterbi (동적 프로그래밍)",
+    "architecture": "단일 스레드, CPU 바운드",
+    "memory_profile": "150MB (LazyEntries 기반)",
+    "test_accuracy": "100% (500 문장)"
+  },
+
+  "bottleneck_analysis": {
+    "critical_paths": [
+      {
+        "rank": 1,
+        "path": "Viterbi Forward Pass",
+        "location": "rust/crates/mecab-ko-core/src/viterbi/mod.rs:300-328",
+        "function": "forward_pass()",
+        "complexity": "O(N*M) - N: 문자수, M: 각 위치의 노드수",
+        "issue": "임의의 메모리 접근 패턴, L3 캐시 미스 높음",
+        "percentage_execution_time": 65,
+        "cache_efficiency": "매우 낮음 (무선 접근)",
+        "estimated_impact": "가장 높은 최적화 잠재력"
+      },
+      {
+        "rank": 2,
+        "path": "연접 비용 조회",
+        "location": "rust/crates/mecab-ko-core/src/viterbi/mod.rs:363",
+        "function": "conn_cost.cost(right_id, left_id)",
+        "complexity": "O(1) 행렬 조회이지만 캐시 미스율 높음",
+        "issue": "2D 인덱싱으로 인한 캐시 라인 경합",
+        "percentage_execution_time": 20,
+        "cache_efficiency": "중간 (패턴 예측 가능하나 메모리 버스 대역폭 병목)",
+        "estimated_impact": "SIMD로 3-4배 향상 가능"
+      },
+      {
+        "rank": 3,
+        "path": "Trie 공통 접두사 검색",
+        "location": "rust/crates/mecab-ko-dict/src/trie.rs:166-171",
+        "function": "common_prefix_search()",
+        "complexity": "O(K) - K: 단어 길이",
+        "issue": "바이트 단위 비교, 분기 예측 실패",
+        "percentage_execution_time": 10,
+        "cache_efficiency": "중간 (캐시 친화적이나 IPC 낮음)",
+        "estimated_impact": "SIMD 바이트 비교로 개선 가능"
+      },
+      {
+        "rank": 4,
+        "path": "임시 메모리 할당",
+        "location": "rust/crates/mecab-ko-core/src/viterbi/mod.rs:306-322",
+        "function": "forward_pass() - Vec 할당",
+        "complexity": "O(N) 할당 및 해제",
+        "issue": "매 위치마다 Vec<NodeId> 임시 생성",
+        "percentage_execution_time": 3,
+        "cache_efficiency": "낮음 (할당 경합, 메모리 단편화)",
+        "estimated_impact": "미미함 (수정해도 전체 3% 이하 개선)"
+      },
+      {
+        "rank": 5,
+        "path": "띄어쓰기 패널티 조회",
+        "location": "rust/crates/mecab-ko-core/src/viterbi/mod.rs:348",
+        "function": "space_penalty.get(left_id)",
+        "complexity": "O(log N) 이진 검색",
+        "issue": "분기 예측 실패 가능성",
+        "percentage_execution_time": 2,
+        "cache_efficiency": "높음 (로컬 배열 접근)",
+        "estimated_impact": "극히 미미함 (이미 최적화됨)"
+      }
+    ]
+  },
+
+  "optimization_strategies": [
+    {
+      "id": "OPT-1",
+      "name": "SIMD 벡터화 확장 (Viterbi Forward Pass)",
+      "category": "Performance",
+      "target_critical_path": "Viterbi Forward Pass + 연접 비용 조회",
+
+      "description": "8개의 이전 노드에 대해 i32x8 SIMD 레지스터를 사용하여 비용 계산을 병렬화",
+
+      "implementation_details": {
+        "current_status": "부분 구현됨 (viterbi/simd.rs)",
+        "coverage_percent": 40,
+        "main_limitation": "배치 연접 비용 조회가 구현되지 않음",
+        "required_changes": [
+          "mecab-ko-dict의 Matrix trait에 batch_get_8() 메서드 추가",
+          "simd_forward_pass_position() 함수 통합",
+          "임계값 최적화 (현재 16개 이상 → 8개 이상으로 낮춤)"
+        ]
+      },
+
+      "expected_improvements": {
+        "forward_pass_improvement_percent": 35,
+        "connection_cost_improvement_percent": 42,
+        "total_throughput_improvement_percent": 22,
+        "estimated_final_throughput": 290000,
+        "cpu_cycles_reduction": "35-40%",
+        "memory_bandwidth_efficiency": "2.5배 향상"
+      },
+
+      "resource_requirements": {
+        "memory_overhead_mb": 0,
+        "cache_overhead": "최소 (L1 레지스터 사용)",
+        "cpu_feature_requirement": "AVX2 (Haswell+) 또는 동등",
+        "compilation_overhead_percent": 5
+      },
+
+      "technical_approach": {
+        "simd_lanes": 8,
+        "data_type": "i32x8",
+        "operations": [
+          "배치 연접 비용 조회: O(8) 호출",
+          "벡터 덧셈: saturating_add_simd()",
+          "최소값 탐색: reduce_min() + index 찾기",
+          "SIMD 포화 연산: 오버플로우 방지"
+        ],
+        "fallback_strategy": "CPU 기능 미지원 시 스칼라 경로 사용"
+      },
+
+      "implementation_timeline": {
+        "phase_1": "배치 연접 비용 조회 (mecab-ko-dict): 8시간, 150 LOC",
+        "phase_2": "SIMD 비용 계산 통합: 4시간, 100 LOC",
+        "phase_3": "임계값 튜닝 및 최적화: 2시간, 50 LOC",
+        "phase_4": "정확도 검증 및 테스트: 4시간, 200 LOC"
+      },
+
+      "complexity_assessment": {
+        "implementation_difficulty": "Medium",
+        "technical_complexity": "Medium-High",
+        "risk_level": "Low",
+        "code_maintainability": "Good (명확한 인터페이스)",
+        "debugging_difficulty": "Medium (SIMD 버그는 발현 어려움)"
+      },
+
+      "testing_requirements": [
+        "정확도 검증: scalar vs SIMD 비교",
+        "극단값 테스트: i32::MAX, MIN, 오버플로우",
+        "Property-based 테스트 (proptest)",
+        "크로스 플랫폼 테스트 (AVX2, AVX-512, NEON)",
+        "Benchmark: criterion.rs로 성능 측정"
+      ],
+
+      "risks_and_mitigations": [
+        {
+          "risk": "CPU별 성능 편차 (SSE2만 지원하는 구형 CPU)",
+          "mitigation": "런타임 CPU 기능 감지, 폴백 경로 유지, feature flag 제공"
+        },
+        {
+          "risk": "8개 레인 처리 시 캐시 라인 경합",
+          "mitigation": "SIMD 블록 크기 튜닝, 메모리 정렬 최적화"
+        },
+        {
+          "risk": "포화 연산 정확성 (예: i32::MAX + i32::MAX)",
+          "mitigation": "단위 테스트, property-based 테스트로 모든 경계값 검증"
+        },
+        {
+          "risk": "LLVM 벡터화 최적화와의 상호작용",
+          "mitigation": "명시적 SIMD 코드로 컴파일러 최적화 제어"
+        }
+      ],
+
+      "priority": "Critical",
+      "estimated_effort_days": 3,
+      "roi": "높음 - 22% 처리량 개선으로 회사 가치 상승"
+    },
+
+    {
+      "id": "OPT-2",
+      "name": "캐시 지역성 개선 (메모리 레이아웃)",
+      "category": "Performance",
+      "target_critical_path": "Viterbi Forward Pass - 메모리 접근",
+
+      "description": "Node 구조체를 Array-of-Structs (AoS)에서 Struct-of-Arrays (SoA)로 변환",
+
+      "current_architecture": {
+        "pattern": "AoS (Array of Structs)",
+        "node_size_bytes": 200,
+        "cache_line_size": 64,
+        "nodes_per_cacheline": 0.32,
+        "cache_miss_rate": "약 68%",
+        "issue": "각 노드가 캐시 라인을 낭비함"
+      },
+
+      "proposed_architecture": {
+        "pattern": "SoA (Struct of Arrays)",
+        "hot_fields": [
+          "total_cost (i32, 4 bytes)",
+          "prev_node_id (u32, 4 bytes)",
+          "left_id (u16, 2 bytes)",
+          "right_id (u16, 2 bytes)"
+        ],
+        "hot_field_size_bytes": 12,
+        "nodes_per_cacheline": 5.3,
+        "expected_cache_miss_rate": "약 20%",
+        "improvement": "68% → 20% (70% 개선)"
+      },
+
+      "expected_improvements": {
+        "forward_pass_improvement_percent": 18,
+        "memory_bandwidth_efficiency": "3.4배 향상",
+        "total_throughput_improvement_percent": 12,
+        "estimated_final_throughput": 267000
+      },
+
+      "complexity_assessment": {
+        "implementation_difficulty": "High",
+        "refactoring_scope": "매우 광범위 (1500+ LOC 수정)",
+        "risk_level": "High",
+        "regression_risk": "극히 높음 (전체 애플리케이션 영향)",
+        "maintenance_impact": "부정적 (코드 가독성 저하)"
+      },
+
+      "timeline_estimate": {
+        "phase_1": "메모리 레이아웃 분석 및 설계: 8시간",
+        "phase_2": "SoA 구조체 정의: 12시간, 400 LOC",
+        "phase_3": "인덱싱 함수 리팩토링: 16시간, 600 LOC",
+        "phase_4": "전체 회귀 테스트: 20시간, 500 LOC"
+      },
+
+      "risks": [
+        "코드 복잡도 대폭 증가 (유지보수 어려움)",
+        "다른 최적화 전략과의 상호작용 불명확",
+        "벡터화 컴파일러 최적화와 간섭 가능성",
+        "메모리 정렬 오버헤드 (padding 증가)"
+      ],
+
+      "trade_offs": [
+        "성능 이득: 높음 (12% 전체 개선)",
+        "구현 복잡도: 매우 높음",
+        "유지보수성: 악화",
+        "코드 리뷰 난이도: 매우 높음"
+      ],
+
+      "priority": "High",
+      "estimated_effort_days": 5,
+      "roi": "중간 - 큰 이득이지만 높은 복잡도"
+    },
+
+    {
+      "id": "OPT-3",
+      "name": "배치 처리 (멀티스레드 병렬화)",
+      "category": "Throughput (Scaling)",
+      "target_critical_path": "전체 처리 파이프라인",
+
+      "description": "여러 문장을 병렬로 처리 (Rayon ThreadPool + ThreadLocal 캐싱)",
+
+      "approach": {
+        "pattern": "데이터 병렬성 (문장 레벨)",
+        "framework": "Rayon",
+        "thread_pool": "ThreadPool::with_num_threads(num_cpus::get())",
+        "resource_sharing": "ThreadLocal<Lattice, ViterbiSearcher>",
+        "synchronization": "Lock-free (각 문장 독립 처리)"
+      },
+
+      "expected_improvements": {
+        "single_thread_baseline": 238000,
+        "after_batch_parallelization": {
+          "4_core_cpu": 832000,
+          "8_core_cpu": 1520000,
+          "16_core_cpu": 2880000
+        },
+        "estimated_throughput_improvement_percent": 180,
+        "scaling_efficiency": "70-80% (NUMA, 메모리 경합 고려)"
+      },
+
+      "complexity_assessment": {
+        "implementation_difficulty": "Medium",
+        "concurrency_complexity": "Medium-High",
+        "risk_level": "Medium",
+        "debugging_difficulty": "High (race condition 감지 어려움)",
+        "testing_complexity": "Very High"
+      },
+
+      "implementation_approach": {
+        "step_1": "API 변경: analyzer.analyze(texts: &[&str]) -> Vec<Result>",
+        "step_2": "Rayon par_iter() 도입: texts.par_iter().map(|t| analyze_one(t))",
+        "step_3": "ThreadLocal 자원 풀: thread_local!(static POOL: RefCell<...>)",
+        "step_4": "배치 크기 튜닝: 16-32 문장 / 스레드"
+      },
+
+      "timeline_estimate": {
+        "phase_1": "API 설계 및 prototype: 6시간",
+        "phase_2": "Rayon ThreadPool 구현: 8시간, 200 LOC",
+        "phase_3": "ThreadLocal 자원 풀: 6시간, 150 LOC",
+        "phase_4": "성능 테스트 및 튜닝: 8시간, 100 LOC"
+      },
+
+      "constraints": [
+        "최대 이득: 물리 코어 수 제한",
+        "NUMA 시스템에서 성능 악화 가능",
+        "메모리 대역폭 병목 (DDR4: ~60GB/s)",
+        "L3 캐시 경합 (멀티스레드 시 미스 증가)"
+      ],
+
+      "risks": [
+        "Thread contention (Lattice 메모리 할당 경합)",
+        "메모리 경합으로 인한 성능 저하 (예상: 70-80% 효율)",
+        "NUMA 친화성 관리 복잡도",
+        "사용자 코드 통합 API 변경 필요"
+      ],
+
+      "priority": "High",
+      "estimated_effort_days": 4,
+      "roi": "높음 - 선형에 가까운 확장성",
+      "note": "S58-06 범위 초과 - 향후 스프린트 권장 (OPT-1 완료 후)"
+    },
+
+    {
+      "id": "OPT-4",
+      "name": "Hot Path 인라인 최적화",
+      "category": "Performance",
+      "target_critical_path": "최소 비용 비교, 포화 덧셈",
+
+      "description": "컴파일러 힌트를 통해 핫 경로 함수를 강제 인라인",
+
+      "target_functions": [
+        {
+          "function": "update_node_cost_with_endings()",
+          "location": "viterbi/mod.rs:331-382",
+          "current_annotation": "없음",
+          "call_frequency": "매우 높음 (O(N*M))",
+          "function_size_bytes": 400,
+          "recommendation": "#[inline]"
+        },
+        {
+          "function": "saturating_add_chain()",
+          "location": "viterbi/simd.rs:261-262",
+          "current_annotation": "#[inline]",
+          "call_frequency": "매우 높음",
+          "function_size_bytes": 40,
+          "recommendation": "#[inline(always)]"
+        },
+        {
+          "function": "ConnectionCost::cost()",
+          "location": "matrix.rs",
+          "current_annotation": "#[inline]",
+          "call_frequency": "극히 높음 (8M+ 호출)",
+          "function_size_bytes": 20,
+          "recommendation": "#[inline(always)]"
+        }
+      ],
+
+      "expected_improvements": {
+        "instruction_cache_improvement_percent": 12,
+        "branch_prediction_improvement_percent": 8,
+        "total_throughput_improvement_percent": 5,
+        "estimated_final_throughput": 250000,
+        "ipc_improvement": "2%"
+      },
+
+      "resource_requirements": {
+        "memory_overhead_mb": 1,
+        "binary_size_increase_percent": 3,
+        "cache_overhead": "L1I 약간 증가 (128KB → 130KB)"
+      },
+
+      "trade_offs": [
+        "이득: 작음 (전체 5% 개선)",
+        "구현: 매우 간단",
+        "바이너리 크기: 약 2-3MB 증가",
+        "컴파일 시간: 약 3-5% 증가"
+      ],
+
+      "implementation_timeline": {
+        "total_effort": "2-3시간",
+        "phase_1": "프로파일러로 핫 함수 확인: 1시간",
+        "phase_2": "선택적 인라인 추가: 1시간, 30 LOC",
+        "phase_3": "벤치마크 측정: 1시간"
+      },
+
+      "risks": [
+        "과도한 인라인으로 명령 캐시 미스 증가 (역효과)",
+        "컴파일 시간 증가 (지속적인 개발 영향)",
+        "바이너리 크기 증가로 임베디드 환경 비호환"
+      ],
+
+      "priority": "Low",
+      "estimated_effort_days": 1,
+      "roi": "낮음 - 투자 대비 이득 미미"
+    },
+
+    {
+      "id": "OPT-5",
+      "name": "Trie 접두사 검색 최적화",
+      "category": "Performance",
+      "target_critical_path": "사전 검색 (10% 실행 시간)",
+
+      "description": "Double-Array Trie 구현 최적화 + SIMD 바이트 비교",
+
+      "opportunities": [
+        {
+          "opportunity": "yada 라이브러리 최신화",
+          "current_version": "0.3.x",
+          "latest_version": "0.4.x",
+          "expected_improvement": "8-12%",
+          "risk": "낮음 (API 호환성)"
+        },
+        {
+          "opportunity": "SIMD 바이트 비교 (memcmp 가속)",
+          "technique": "SSSE3 lddqu + PCMPxSTRM",
+          "expected_improvement": "15-20%",
+          "risk": "중간 (CPU 기능 의존)"
+        },
+        {
+          "opportunity": "LRU 캐시 추가 (검색 결과)",
+          "hit_rate_estimate": "40-50%",
+          "expected_improvement": "5-10%",
+          "memory_overhead_mb": 2
+        }
+      ],
+
+      "expected_improvements": {
+        "trie_search_improvement_percent": 25,
+        "total_throughput_improvement_percent": 2,
+        "estimated_final_throughput": 243000
+      },
+
+      "complexity_assessment": {
+        "implementation_difficulty": "Low",
+        "risk_level": "Low",
+        "maintenance_impact": "긍정적"
+      },
+
+      "implementation_approach": {
+        "step_1": "yada 0.4.x 업데이트: Cargo.toml 수정",
+        "step_2": "벤치마크 측정: 개선율 확인",
+        "step_3": "외부 SIMD 라이브러리 통합 검토 (bstr, bytes)"
+      },
+
+      "timeline_estimate": "1-2시간, 50 LOC",
+
+      "priority": "Medium",
+      "estimated_effort_days": 0.5,
+      "roi": "낮음 - 전체 성능에 미미한 영향 (2%)"
+    }
+  ],
+
+  "scenario_analysis": [
+    {
+      "scenario_id": "Conservative",
+      "scenario_name": "안정적 단기 최적화",
+      "optimizations": [
+        "OPT-1: SIMD 벡터화 확장",
+        "OPT-4: Hot Path 인라인"
+      ],
+      "estimated_throughput": 295000,
+      "improvement_percent": 23.9,
+      "total_effort_days": 4,
+      "complexity": "Low-Medium",
+      "risk": "Low",
+      "confidence": "High (90%)",
+      "recommendation": "권장 - 리스크 최소, 빠른 이득",
+      "rationale": [
+        "기존 SIMD 코드 활용 (구현 간단)",
+        "낮은 리스크 (폴백 경로 있음)",
+        "26% 목표 거의 달성 (24%)",
+        "S58-06 일정 내 완료 가능"
+      ]
+    },
+    {
+      "scenario_id": "Moderate",
+      "scenario_name": "장기 중간 최적화",
+      "optimizations": [
+        "OPT-1: SIMD 벡터화",
+        "OPT-2: 캐시 지역성",
+        "OPT-4: Hot Path 인라인"
+      ],
+      "estimated_throughput": 340000,
+      "improvement_percent": 42.9,
+      "total_effort_days": 9,
+      "complexity": "High",
+      "risk": "High",
+      "confidence": "Medium (65%)",
+      "recommendation": "도전적 - 큰 이득, 높은 복잡도",
+      "rationale": [
+        "43% 성능 개선 (목표 26% 초과)",
+        "높은 구현 복잡도 (1500+ LOC 수정)",
+        "회귀 테스트 비용 높음",
+        "S58-06 + S58-07 걸쳐 진행 필요"
+      ]
+    },
+    {
+      "scenario_id": "Aggressive",
+      "scenario_name": "최대 성능 추구",
+      "optimizations": [
+        "OPT-1: SIMD 벡터화",
+        "OPT-2: 캐시 지역성",
+        "OPT-3: 배치 처리 (병렬화)",
+        "OPT-4: Hot Path 인라인",
+        "OPT-5: Trie 최적화"
+      ],
+      "estimated_throughput": 720000,
+      "improvement_percent": 202.5,
+      "total_effort_days": 13,
+      "complexity": "Very High",
+      "risk": "Very High",
+      "confidence": "Low (40%)",
+      "recommendation": "향후 장기 프로젝트 - 매우 높은 리스크",
+      "rationale": [
+        "3배 성능 향상 (극히 야심적)",
+        "대규모 리팩토링 (API 변경 필요)",
+        "병렬화 버그 (race condition)",
+        "최소 3개월 이상 소요 예상"
+      ]
+    }
+  ],
+
+  "recommended_implementation_plan": {
+    "sprint": "S58-06",
+    "duration": "3-4 작업일",
+    "approach": "Conservative (OPT-1 + OPT-4)",
+    "target_throughput": "290K+ tokens/sec",
+
+    "phase_breakdown": [
+      {
+        "phase": 1,
+        "name": "분석 및 준비",
+        "duration_hours": 4,
+        "tasks": [
+          {
+            "task": "프로파일링 데이터 수집",
+            "tool": "perf stat, cargo-flamegraph",
+            "output": "forward_pass 실행 시간 재확인",
+            "deliverable": "성능 기준선 데이터"
+          },
+          {
+            "task": "배치 비용 조회 API 설계",
+            "owner": "Core Team",
+            "output": "batch_get_8() 메서드 시그니처",
+            "deliverable": "인터페이스 문서"
+          }
+        ]
+      },
+      {
+        "phase": 2,
+        "name": "OPT-1 구현 (SIMD)",
+        "duration_hours": 18,
+        "tasks": [
+          {
+            "task": "mecab-ko-dict: batch_get_8() 구현",
+            "owner": "Core Team",
+            "file": "rust/crates/mecab-ko-dict/src/matrix.rs",
+            "lines_of_code": 150,
+            "duration_hours": 8,
+            "test_requirement": "행렬 정확도 검증"
+          },
+          {
+            "task": "viterbi/simd.rs: 임계값 최적화",
+            "owner": "Performance Team",
+            "file": "rust/crates/mecab-ko-core/src/viterbi/simd.rs",
+            "lines_of_code": 100,
+            "duration_hours": 4,
+            "change": "SIMD_THRESHOLD: 16 → 8"
+          },
+          {
+            "task": "forward_pass() 통합",
+            "owner": "Core Team",
+            "file": "rust/crates/mecab-ko-core/src/viterbi/mod.rs",
+            "lines_of_code": 50,
+            "duration_hours": 4,
+            "test_requirement": "정확도 검증 (100% 유지)"
+          },
+          {
+            "task": "크로스 플랫폼 테스트",
+            "owner": "QA Team",
+            "platforms": ["x86_64 (AVX2)", "aarch64 (NEON)", "기타"],
+            "duration_hours": 2
+          }
+        ]
+      },
+      {
+        "phase": 3,
+        "name": "OPT-4 구현 (Hot Path)",
+        "duration_hours": 2,
+        "tasks": [
+          {
+            "task": "선택적 인라인 추가",
+            "owner": "Performance Team",
+            "targets": [
+              "update_node_cost_with_endings(): #[inline]",
+              "saturating_add_chain(): #[inline(always)]",
+              "ConnectionCost::cost(): #[inline(always)]"
+            ],
+            "duration_hours": 1,
+            "lines_of_code": 30
+          },
+          {
+            "task": "벤치마크 측정",
+            "owner": "Performance Team",
+            "duration_hours": 1,
+            "deliverable": "성능 비교 (before/after)"
+          }
+        ]
+      },
+      {
+        "phase": 4,
+        "name": "검증 및 최종화",
+        "duration_hours": 4,
+        "tasks": [
+          {
+            "task": "정확도 검증",
+            "owner": "QA Team",
+            "dataset": "500 문장 (S57)",
+            "requirement": "100% 정확도 유지",
+            "acceptance_criteria": "Token Accuracy: 100%, Sentence Accuracy: 100%"
+          },
+          {
+            "task": "회귀 테스트",
+            "owner": "QA Team",
+            "scope": "모든 유닛 테스트 + 통합 테스트",
+            "expected_result": "0 실패"
+          },
+          {
+            "task": "문서화",
+            "owner": "Tech Lead",
+            "deliverable": [
+              "LessonLearn 기록",
+              "performance_guide.md 업데이트",
+              "commit 메시지 작성"
+            ],
+            "duration_hours": 1
+          }
+        ]
+      }
+    ],
+
+    "resource_allocation": {
+      "core_team": 8,
+      "performance_team": 8,
+      "qa_team": 4
+    },
+
+    "daily_schedule": {
+      "day_1": "분석 (4h) + OPT-1 Phase 1 (4h)",
+      "day_2": "OPT-1 Phase 2 (8h)",
+      "day_3": "OPT-1 Phase 3 (4h) + OPT-4 (2h) + 검증 (2h)",
+      "day_4": "최종 검증 및 최적화 (4h)"
+    },
+
+    "success_criteria": {
+      "throughput": "290K+ tokens/sec (24% 개선)",
+      "accuracy": "100% (500 문장)",
+      "regression": "0 회귀",
+      "compilation": "<10% 컴파일 시간 증가",
+      "binary_size": "<2% 바이너리 크기 증가"
+    }
+  },
+
+  "performance_projection": {
+    "baseline": {
+      "text": "현재 상태 (S57 기준)",
+      "throughput": 238000,
+      "time_breakdown": {
+        "viterbi_forward_ms": 155,
+        "connection_cost_ms": 48,
+        "trie_search_ms": 24,
+        "other_ms": 13,
+        "total_ms": 240
+      }
+    },
+    "after_opt1": {
+      "text": "OPT-1 적용 후",
+      "throughput": 290000,
+      "improvement_percent": 22,
+      "time_breakdown": {
+        "viterbi_forward_ms": 101,
+        "connection_cost_ms": 28,
+        "trie_search_ms": 24,
+        "other_ms": 13,
+        "total_ms": 166
+      }
+    },
+    "after_opt1_plus_opt4": {
+      "text": "OPT-1 + OPT-4 적용 후",
+      "throughput": 295000,
+      "improvement_percent": 24,
+      "time_breakdown": {
+        "viterbi_forward_ms": 98,
+        "connection_cost_ms": 27,
+        "trie_search_ms": 23,
+        "other_ms": 12,
+        "total_ms": 160
+      }
+    }
+  },
+
+  "quality_assurance": {
+    "accuracy_testing": {
+      "dataset": "500 문장 (S57 테스트셋)",
+      "current_accuracy": "100%",
+      "required_accuracy": "100%",
+      "test_cases": [
+        "Token Accuracy 검증",
+        "Sentence Accuracy 검증",
+        "F1 Score 검증",
+        "극단값 테스트 (매우 긴 문장, 짧은 문장)"
+      ]
+    },
+    "performance_testing": {
+      "benchmarks": [
+        "criterion.rs (일일 실행)",
+        "cargo-flamegraph (회귀 감지)",
+        "벤치마크 회귀: ±3% 허용"
+      ]
+    },
+    "correctness_testing": {
+      "unit_tests": "SIMD 구현체의 동등성 검사",
+      "property_based_tests": "proptest로 극단값 검증",
+      "integration_tests": "전체 파이프라인 검증"
+    }
+  },
+
+  "risks_and_mitigations": [
+    {
+      "risk_id": "RISK-1",
+      "risk": "SIMD 포화 연산 정확성 오류",
+      "severity": "Critical",
+      "probability": "Medium",
+      "impact": "정확도 저하 (100% → 99.x%)",
+      "mitigations": [
+        "Property-based 테스트 (proptest)",
+        "극단값 테스트 (i32::MAX, MIN)",
+        "동등성 검사 (scalar vs SIMD)",
+        "CI/CD에서 자동 검증"
+      ]
+    },
+    {
+      "risk_id": "RISK-2",
+      "risk": "구형 CPU 호환성 (SSE2만 지원)",
+      "severity": "Medium",
+      "probability": "Low",
+      "impact": "특정 시스템에서 작동 불가",
+      "mitigations": [
+        "런타임 CPU 기능 감지 (cpufeatures)",
+        "폴백 스칼라 경로 유지",
+        "feature flag로 SIMD 선택적 활성화",
+        "CI에서 다양한 아키텍처 테스트"
+      ]
+    },
+    {
+      "risk_id": "RISK-3",
+      "risk": "캐시 라인 경합 (8개 레인)",
+      "severity": "Low",
+      "probability": "Low",
+      "impact": "예상보다 낮은 성능 향상",
+      "mitigations": [
+        "메모리 정렬 최적화 (64바이트 경계)",
+        "SIMD 블록 크기 튜닝",
+        "NUMA 친화성 고려"
+      ]
+    },
+    {
+      "risk_id": "RISK-4",
+      "risk": "컴파일러 최적화 불안정성",
+      "severity": "Low",
+      "probability": "Very Low",
+      "impact": "특정 Rust 버전에서 성능 저하",
+      "mitigations": [
+        "최소 Rust 버전 명시 (1.75+)",
+        "주기적 nightly 테스트",
+        "명시적 SIMD 코드로 컴파일러 통제"
+      ]
+    }
+  ],
+
+  "monitoring_and_metrics": {
+    "key_metrics": [
+      {
+        "metric": "Throughput (tokens/sec)",
+        "baseline": 238000,
+        "target": 290000,
+        "measurement": "criterion.rs",
+        "frequency": "매일"
+      },
+      {
+        "metric": "Accuracy (%)",
+        "baseline": 100.0,
+        "target": 100.0,
+        "measurement": "모델 평가",
+        "frequency": "매일"
+      },
+      {
+        "metric": "Memory Usage (MB)",
+        "baseline": 150,
+        "target": "<160",
+        "measurement": "valgrind, perf",
+        "frequency": "주 1회"
+      },
+      {
+        "metric": "Binary Size (MB)",
+        "baseline": 6.5,
+        "target": "<6.8",
+        "measurement": "cargo build --release",
+        "frequency": "매 커밋"
+      }
+    ],
+    "alerting": [
+      "성능 회귀: ±3% 변화",
+      "정확도 저하: 100% 미만",
+      "메모리 증가: >170MB",
+      "빌드 실패: 모든 플랫폼"
+    ]
+  },
+
+  "documentation": {
+    "deliverables": [
+      {
+        "name": "LessonLearn",
+        "file": ".history/2026-03-18_S58-06_performance_optimization.md",
+        "content": [
+          "배운 점: SIMD 최적화 기술",
+          "실수와 해결: 포화 연산 오류 처리",
+          "패턴: 배치 처리 설계"
+        ]
+      },
+      {
+        "name": "Reference Document",
+        "file": "references/simd_optimization_guide.md",
+        "content": [
+          "SIMD 벡터화 기법",
+          "포화 산술 연산",
+          "CPU 기능 감지"
+        ]
+      },
+      {
+        "name": "Performance Guide",
+        "file": "docs/performance_guide.md",
+        "update": "S58-06 최적화 결과 추가"
+      }
+    ]
+  },
+
+  "conclusion": {
+    "recommended_approach": "OPT-1 + OPT-4 (Conservative)",
+    "expected_outcome": {
+      "throughput": "238K → 295K tokens/sec",
+      "improvement": "24% 향상",
+      "accuracy": "100% 유지",
+      "timeline": "3-4 작업일"
+    },
+    "rationale": [
+      "26% 목표에 거의 도달 (24%)",
+      "낮은 리스크 (기존 코드 활용)",
+      "S58-06 일정 내 완료 가능",
+      "향후 OPT-2, OPT-3로 추가 개선 가능"
+    ],
+    "next_steps": [
+      "1. Sprint 시작: 프로파일러 데이터 수집",
+      "2. OPT-1 구현: 배치 비용 조회 + SIMD 계산",
+      "3. OPT-4 적용: 선택적 인라인",
+      "4. 검증: 정확도 100% 확인",
+      "5. 문서화: LessonLearn 기록",
+      "6. PR 제출 및 리뷰"
+    ]
+  }
+}

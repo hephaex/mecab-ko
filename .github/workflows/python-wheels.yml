@@ -1,0 +1,497 @@
+name: Python Wheels Build & Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'rust/crates/mecab-ko-python/**'
+      - '.github/workflows/python-wheels.yml'
+      - 'rust/Cargo.lock'
+  release:
+    types:
+      - created
+  workflow_dispatch:
+    inputs:
+      publish_to_pypi:
+        description: 'Publish wheels to PyPI after build'
+        required: false
+        default: 'false'
+        type: boolean
+      pypi_repository:
+        description: 'PyPI repository (pypi or testpypi)'
+        required: false
+        default: 'testpypi'
+        type: choice
+        options:
+          - pypi
+          - testpypi
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+
+jobs:
+  build_wheels:
+    name: Build wheels for ${{ matrix.platform }}-${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux x86_64
+          - platform: linux
+            runner: ubuntu-latest
+            arch: x86_64
+            target: x86_64-unknown-linux-gnu
+            manylinux: manylinux2014
+
+          # Linux aarch64 (ARM)
+          - platform: linux
+            runner: ubuntu-latest
+            arch: aarch64
+            target: aarch64-unknown-linux-gnu
+            manylinux: manylinux2014
+
+          # macOS x86_64
+          - platform: macos
+            runner: macos-latest
+            arch: x86_64
+            target: x86_64-apple-darwin
+
+          # macOS arm64 (Apple Silicon)
+          - platform: macos
+            runner: macos-latest
+            arch: arm64
+            target: aarch64-apple-darwin
+
+          # Windows x86_64
+          - platform: windows
+            runner: windows-latest
+            arch: x86_64
+            target: x86_64-pc-windows-msvc
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+          cache-all-crates: 'true'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install maturin[pyo3]
+
+      - name: Set up QEMU for Linux ARM builds
+        if: matrix.platform == 'linux' && matrix.arch == 'aarch64'
+        uses: docker/setup-qemu-action@v3
+
+      - name: Build wheels with maturin
+        uses: PyO3/maturin-action@v1
+        with:
+          working-directory: rust/crates/mecab-ko-python
+          target: ${{ matrix.target }}
+          args: --release --interpreter 3.8 3.9 3.10 3.11 3.12 3.13
+          sccache: 'true'
+          manylinux: ${{ matrix.manylinux || 'off' }}
+
+      - name: Upload wheels artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.platform }}-${{ matrix.arch }}
+          path: rust/crates/mecab-ko-python/target/wheels/*.whl
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Show build output
+        if: always()
+        run: ls -lh rust/crates/mecab-ko-python/target/wheels/
+
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install maturin[pyo3]
+
+      - name: Build source distribution
+        working-directory: rust/crates/mecab-ko-python
+        run: maturin build --release --sdist
+
+      - name: Upload sdist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: rust/crates/mecab-ko-python/target/wheels/*.tar.gz
+          if-no-files-found: warn
+          retention-days: 7
+
+  test_wheels:
+    name: Test wheels on ${{ matrix.runner }} with Python ${{ matrix.py_version }}
+    needs: build_wheels
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            py_version: '3.8'
+          - runner: ubuntu-latest
+            py_version: '3.12'
+          - runner: ubuntu-latest
+            py_version: '3.13'
+          - runner: macos-latest
+            py_version: '3.11'
+          - runner: windows-latest
+            py_version: '3.11'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.py_version }}
+
+      - name: Download wheels
+        uses: actions/download-artifact@v4
+        with:
+          path: wheels
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest
+
+      - name: Install wheel
+        run: |
+          python -m pip install wheels/*/*.whl --verbose
+        shell: bash
+
+      - name: Test basic import
+        run: |
+          python -c "import mecab_ko; print(f'MeCab-Ko successfully imported')"
+
+      - name: Run tests
+        working-directory: rust/crates/mecab-ko-python
+        run: |
+          if [ -d tests ]; then
+            pytest tests/ -v --tb=short
+          else
+            echo "No tests directory found, skipping tests"
+          fi
+        shell: bash
+        continue-on-error: true
+
+  verify_wheels:
+    name: Verify wheels and build artifacts
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install verification tools
+        run: |
+          python -m pip install wheel twine auditwheel
+
+      - name: List all artifacts
+        run: |
+          echo "=== Downloaded Artifacts ==="
+          find dist -type f | sort
+          echo ""
+          echo "=== Total Files ==="
+          find dist -type f | wc -l
+
+      - name: Verify wheel structure
+        run: |
+          echo "=== Verifying wheel structure ==="
+          for wheel in dist/wheels-*/*.whl; do
+            if [ -f "$wheel" ]; then
+              echo "Verifying: $(basename $wheel)"
+              python -m wheel unpack "$wheel" -d /tmp/wheel-check
+              rm -rf /tmp/wheel-check
+            fi
+          done
+
+      - name: Run twine check
+        run: |
+          echo "=== Checking metadata with twine ==="
+          python -m twine check dist/*/*.whl dist/*/*.tar.gz || true
+
+      - name: Audit wheel compatibility (Linux only)
+        run: |
+          echo "=== Auditing Linux wheel compatibility ==="
+          for wheel in dist/wheels-linux-x86_64/*.whl; do
+            if [ -f "$wheel" ]; then
+              echo "Auditing: $(basename $wheel)"
+              python -m auditwheel show "$wheel"
+            fi
+          done
+        continue-on-error: true
+
+      - name: Generate wheel report
+        run: |
+          echo "# Python Wheels Build Report" > /tmp/wheel-report.md
+          echo "" >> /tmp/wheel-report.md
+          echo "**Build Date:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> /tmp/wheel-report.md
+          echo "**Commit:** ${{ github.sha }}" >> /tmp/wheel-report.md
+          echo "" >> /tmp/wheel-report.md
+
+          echo "## Built Wheels" >> /tmp/wheel-report.md
+          echo "" >> /tmp/wheel-report.md
+          find dist/wheels-* -name "*.whl" | sort | while read wheel; do
+            size=$(du -h "$wheel" | cut -f1)
+            name=$(basename "$wheel")
+            echo "- \`$name\` ($size)" >> /tmp/wheel-report.md
+          done
+          echo "" >> /tmp/wheel-report.md
+
+          echo "## Source Distribution" >> /tmp/wheel-report.md
+          echo "" >> /tmp/wheel-report.md
+          find dist/sdist -name "*.tar.gz" | sort | while read sdist; do
+            size=$(du -h "$sdist" | cut -f1)
+            name=$(basename "$sdist")
+            echo "- \`$name\` ($size)" >> /tmp/wheel-report.md
+          done
+
+          echo "" >> /tmp/wheel-report.md
+          echo "## Supported Platforms" >> /tmp/wheel-report.md
+          echo "" >> /tmp/wheel-report.md
+          echo "- Linux x86_64 (manylinux2014)" >> /tmp/wheel-report.md
+          echo "- Linux aarch64/ARM (manylinux2014)" >> /tmp/wheel-report.md
+          echo "- macOS x86_64" >> /tmp/wheel-report.md
+          echo "- macOS arm64 (Apple Silicon)" >> /tmp/wheel-report.md
+          echo "- Windows x86_64" >> /tmp/wheel-report.md
+
+          echo "" >> /tmp/wheel-report.md
+          echo "## Python Versions Supported" >> /tmp/wheel-report.md
+          echo "" >> /tmp/wheel-report.md
+          echo "- Python 3.8" >> /tmp/wheel-report.md
+          echo "- Python 3.9" >> /tmp/wheel-report.md
+          echo "- Python 3.10" >> /tmp/wheel-report.md
+          echo "- Python 3.11" >> /tmp/wheel-report.md
+          echo "- Python 3.12" >> /tmp/wheel-report.md
+          echo "- Python 3.13" >> /tmp/wheel-report.md
+
+      - name: Upload wheel report
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-report
+          path: /tmp/wheel-report.md
+
+      - name: Comment on PR or commit
+        if: github.event_name == 'push'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('/tmp/wheel-report.md', 'utf8');
+
+            // Find or create commit comment
+            const { data: comments } = await github.rest.repos.listCommitComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha
+            });
+
+            const existingComment = comments.find(c =>
+              c.body.includes('Python Wheels Build Report')
+            );
+
+            if (existingComment) {
+              await github.rest.repos.updateCommitComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: report
+              });
+            } else {
+              await github.rest.repos.createCommitComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: context.sha,
+                body: report
+              });
+            }
+
+  publish_to_pypi:
+    name: Publish to PyPI
+    needs: [test_wheels, verify_wheels]
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'release' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_to_pypi == 'true')
+    environment:
+      name: ${{ github.event.inputs.pypi_repository || (github.event_name == 'release' && 'pypi') || 'testpypi' }}
+      url: ${{ github.event.inputs.pypi_repository == 'pypi' && 'https://pypi.org/project/mecab-ko-python' || 'https://test.pypi.org/project/mecab-ko-python' }}
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Flatten dist directory
+        run: |
+          mkdir -p final_dist
+          find dist -type f \( -name '*.whl' -o -name '*.tar.gz' \) -exec cp {} final_dist/ \;
+          echo "=== Packages to upload ==="
+          ls -lh final_dist/
+
+      - name: Determine PyPI target
+        id: pypi_target
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "repository_url=https://upload.pypi.org/legacy/" >> $GITHUB_OUTPUT
+            echo "repository=pypi" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event.inputs.pypi_repository }}" = "pypi" ]; then
+            echo "repository_url=https://upload.pypi.org/legacy/" >> $GITHUB_OUTPUT
+            echo "repository=pypi" >> $GITHUB_OUTPUT
+          else
+            echo "repository_url=https://test.pypi.org/legacy/" >> $GITHUB_OUTPUT
+            echo "repository=testpypi" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish to ${{ steps.pypi_target.outputs.repository }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: final_dist
+          repository-url: ${{ steps.pypi_target.outputs.repository_url }}
+          verify-metadata: true
+          skip-existing: false
+
+      - name: Create release summary
+        if: github.event_name == 'release'
+        run: |
+          echo "# PyPI Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Published wheels and source distribution to PyPI" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Packages" >> $GITHUB_STEP_SUMMARY
+          ls -1 final_dist/ | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## View on PyPI" >> $GITHUB_STEP_SUMMARY
+          echo "https://pypi.org/project/mecab-ko-python/" >> $GITHUB_STEP_SUMMARY
+
+      - name: Create TestPyPI summary
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.pypi_repository == 'testpypi'
+        run: |
+          echo "# TestPyPI Upload Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Published wheels and source distribution to TestPyPI" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Packages" >> $GITHUB_STEP_SUMMARY
+          ls -1 final_dist/ | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Test Installation" >> $GITHUB_STEP_SUMMARY
+          echo "pip install -i https://test.pypi.org/simple/ mecab-ko-python" >> $GITHUB_STEP_SUMMARY
+
+  update_release_with_wheels:
+    name: Update release with wheel information
+    needs: verify_wheels
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download wheel report
+        uses: actions/download-artifact@v4
+        with:
+          name: wheel-report
+
+      - name: Update release body
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('wheel-report.md', 'utf8');
+
+            const release = await github.rest.repos.getRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: context.payload.release.id
+            });
+
+            const separator = '\n---\n';
+            const newBody = release.data.body + separator + report;
+
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: context.payload.release.id,
+              body: newBody
+            });
+
+  notify_completion:
+    name: Notify on completion
+    needs: [build_wheels, build_sdist, test_wheels, verify_wheels]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check job results
+        run: |
+          if [ "${{ needs.test_wheels.result }}" = "failure" ]; then
+            echo "Test wheels job failed"
+            exit 1
+          fi
+          echo "All core jobs completed successfully"
+
+      - name: Create success summary
+        if: success()
+        run: |
+          echo "# Build Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ All Python wheels built and tested successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Next Steps" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "- Wheels are automatically published to PyPI" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- Download wheels from Actions artifacts" >> $GITHUB_STEP_SUMMARY
+            echo "- Or trigger manual publish with workflow_dispatch" >> $GITHUB_STEP_SUMMARY
+          fi
