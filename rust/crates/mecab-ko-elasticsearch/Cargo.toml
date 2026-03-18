@@ -18,8 +18,8 @@ publish = false
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-mecab-ko-core = { version = "0.5.0", path = "../mecab-ko-core" }
-mecab-ko-hangul = { version = "0.5.0", path = "../mecab-ko-hangul" }
+mecab-ko-core = { version = "0.6.0", path = "../mecab-ko-core" }
+mecab-ko-hangul = { version = "0.6.0", path = "../mecab-ko-hangul" }
 thiserror.workspace = true
 serde.workspace = true
 serde_json.workspace = true

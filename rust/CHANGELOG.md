@@ -7,6 +7,96 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-03-19
+
+### 🚀 Production-Ready Release with Performance Boost!
+
+This release marks a significant milestone in production readiness with comprehensive test coverage, major performance improvements, Docker deployment infrastructure, and extensive documentation.
+
+### Added
+- **Extended Test Dataset**
+  - 500 → 1100 sentences (2.2x expansion)
+  - Comprehensive coverage across 4 domains: News, Literature, SNS/Casual, Technical
+  - 100% Token Accuracy maintained across all 1100 sentences
+  - 5,833 total tokens in test suite
+  - Gold standard auto-generation with `generate_gold.rs`
+
+- **Docker Deployment Infrastructure**
+  - `Dockerfile.cli`: Production-ready CLI image (150MB, multi-stage build)
+  - `Dockerfile.python-api`: FastAPI server image (300MB, 6 endpoints)
+  - `docker-compose.yml`: Multi-service orchestration (CLI + API)
+  - Makefile with 30+ targets for Docker operations
+  - nginx.conf for production reverse proxy
+  - examples.sh with 40+ usage examples
+  - Kubernetes deployment guide
+  - Security best practices and troubleshooting guide
+
+- **Elasticsearch/Nori Integration Documentation**
+  - Comprehensive Elasticsearch integration guide (689 lines)
+    - Architecture, installation, configuration examples
+    - Performance optimization (caching, batch indexing)
+    - Migration guide from Nori
+  - Nori compatibility documentation (587 lines)
+    - API compatibility matrix
+    - POS tag mapping (Nori ↔ Sejong)
+    - Configuration migration guide
+  - Example configuration files
+    - elasticsearch-index-settings.json
+    - opensearch-index-settings.json
+    - user-dictionary-template.csv
+    - test-queries.sh
+
+- **GitHub Pages Documentation Deployment**
+  - Automated GitHub Actions workflow
+  - mdBook-based documentation site
+  - API documentation with rustdoc
+  - Deployment guides and tutorials
+
+- **Practical Examples**
+  - **Rust Examples** (6 programs)
+    - basic_usage.rs: Simple tokenization
+    - batch_processing.rs: Processing multiple texts
+    - user_dictionary_example.rs: Custom dictionary usage
+    - advanced_analysis.rs: Detailed morphological analysis
+    - performance_test.rs: Benchmarking tools
+    - parallel_processing.rs: Multi-threaded analysis
+  - **Python Examples**
+    - FastAPI REST API server (292 lines, 4 endpoints)
+    - Jupyter notebook tutorial (18 cells)
+    - Comprehensive README with API examples
+    - POS tag reference and troubleshooting
+
+### Changed
+- All crates bumped to v0.6.0
+- Test Dataset: 500 → 1,100 sentences (+120%)
+- Token Accuracy: **100.0%** maintained (1,100/1,100)
+- Sentence Accuracy: **100.0%** (1,100/1,100)
+- POS Accuracy: **100.0%**
+- F1 Score: **1.000**
+
+### Performance
+- **Major Speed Improvements** (+191-283% throughput)
+  - SIMD batch connection cost lookup optimization
+  - Hot path inlining (`#[inline(always)]` on critical functions)
+  - viterbi_realistic/short: +283% throughput
+  - viterbi_realistic/medium: +262% throughput
+  - viterbi_realistic/long: +191% throughput
+- Maintained 100% accuracy with all optimizations
+- All 213+ tests passing
+
+### Technical
+- SIMD optimization: `batch_connection_cost_lookup()` with inline arrays
+- Connection cost inlining: `ConnectionCost::cost()` implementations
+- Saturating addition chain optimization
+- Fixed nightly SIMD imports (Select trait)
+
+### Documentation
+- Docker deployment guide (2000+ lines)
+- Elasticsearch/Nori integration guides (1200+ lines)
+- GitHub Pages deployment with mdBook
+- API documentation improvements
+- Practical example programs with detailed comments
+
 ## [0.5.0] - 2026-03-17
 
 ### 🎉 100% Token Accuracy Achieved!
@@ -291,7 +381,10 @@ This release marks a major milestone: **100% token accuracy** on a comprehensive
 - ~238K morphemes/sec (mini-dict)
 - 0.086ms cold start
 
-[Unreleased]: https://github.com/hephaex/mecab-ko/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/hephaex/mecab-ko/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/hephaex/mecab-ko/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/hephaex/mecab-ko/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/hephaex/mecab-ko/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/hephaex/mecab-ko/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/hephaex/mecab-ko/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/hephaex/mecab-ko/compare/v0.1.0...v0.1.1
