@@ -31,9 +31,9 @@
   - mecab-ko-python v0.5.0
   - 토큰 문제 해결 필요
 
-- [ ] S57-04: npm mecab-ko-wasm v0.5.0 배포 (PENDING: npm login 필요)
+- [x] S57-04: npm mecab-ko-wasm v0.5.0 배포 ✅
   - 100% 정확도 WASM 버전
-  - wasm-pack build 완료, npm publish 대기
+  - https://www.npmjs.com/package/mecab-ko-wasm
 
 - [x] S57-05: 문서 사이트 업데이트 ✅
   - 100% 정확도 달성 기록
@@ -165,7 +165,7 @@ Token Accuracy 95.0%+ 달성 → **96.1% 달성!**
 | mecab-ko-dict-builder | v0.5.0 | crates.io | ✅ |
 | mecab-ko | v0.5.0 | crates.io | ✅ |
 | mecab-ko-python | - | PyPI | BLOCKED |
-| mecab-ko-wasm | v0.5.0 | npm | PENDING (npm login 필요) |
+| mecab-ko-wasm | v0.5.0 | npm | ✅ |
 
 ---
 
