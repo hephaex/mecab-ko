@@ -116,13 +116,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ matrix.platform }}-${{ matrix.arch }}
-          path: rust/crates/mecab-ko-python/target/wheels/*.whl
+          path: rust/target/wheels/*.whl
           if-no-files-found: warn
           retention-days: 7
 
       - name: Show build output
         if: always()
-        run: ls -lh rust/crates/mecab-ko-python/target/wheels/
+        run: ls -lh rust/target/wheels/
 
   build_sdist:
     name: Build source distribution
