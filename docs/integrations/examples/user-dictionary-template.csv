@@ -1,0 +1,88 @@
+# MeCab-Ko User Dictionary Template
+# Format: surface,cost,POS,reading
+#
+# POS Tags:
+#   NNG - General noun
+#   NNP - Proper noun
+#   VV  - Verb
+#   VA  - Adjective
+#   SL  - Foreign word
+#   SH  - Hanja
+#
+# Cost:
+#   -1000 to -3000 recommended for high priority
+#   Lower cost = higher priority
+#
+# Reading (optional):
+#   Hangul reading for Hanja or pronunciation
+
+# === Technology Terms ===
+딥러닝,-1000,NNG,딥러닝
+머신러닝,-1000,NNG,머신러닝
+자연어처리,-1000,NNG,자연어처리
+형태소분석,-1000,NNG,형태소분석
+인공지능,-1000,NNG,인공지능
+빅데이터,-1000,NNG,빅데이터
+클라우드,-1000,NNG,클라우드
+블록체인,-1000,NNG,블록체인
+사물인터넷,-1000,NNG,사물인터넷
+IoT,-1000,SL,IoT
+
+# === AI/ML Terms ===
+트랜스포머,-1000,NNG,트랜스포머
+어텐션,-1000,NNG,어텐션
+임베딩,-1000,NNG,임베딩
+파인튜닝,-1000,NNG,파인튜닝
+프롬프트,-1000,NNG,프롬프트
+LLM,-1000,SL,LLM
+GPT,-1000,SL,GPT
+ChatGPT,-1000,SL,ChatGPT
+Claude,-1000,SL,Claude
+BERT,-1000,SL,BERT
+
+# === Programming ===
+파이썬,-1000,NNG,파이썬
+자바스크립트,-1000,NNG,자바스크립트
+타입스크립트,-1000,NNG,타입스크립트
+리액트,-1000,NNG,리액트
+노드제이에스,-1000,NNG,노드제이에스
+Node.js,-1000,SL,Node.js
+Rust,-1000,SL,Rust
+Python,-1000,SL,Python
+JavaScript,-1000,SL,JavaScript
+
+# === Brand Names ===
+삼성전자,-2000,NNP,삼성전자
+네이버,-2000,NNP,네이버
+카카오,-2000,NNP,카카오
+쿠팡,-2000,NNP,쿠팡
+배달의민족,-2000,NNP,배달의민족
+토스,-2000,NNP,토스
+당근마켓,-2000,NNP,당근마켓
+오늘의집,-2000,NNP,오늘의집
+
+# === Search Engine / Elasticsearch ===
+엘라스틱서치,-1000,NNG,엘라스틱서치
+Elasticsearch,-1000,SL,Elasticsearch
+OpenSearch,-1000,SL,OpenSearch
+키바나,-1000,NNG,키바나
+Kibana,-1000,SL,Kibana
+루씬,-1000,NNG,루씬
+Lucene,-1000,SL,Lucene
+
+# === E-commerce Terms ===
+무료배송,-1500,NNG,무료배송
+당일배송,-1500,NNG,당일배송
+정품인증,-1500,NNG,정품인증
+할인쿠폰,-1500,NNG,할인쿠폰
+포인트적립,-1500,NNG,포인트적립
+
+# === Social Media ===
+인스타그램,-1500,NNP,인스타그램
+유튜브,-1500,NNP,유튜브
+틱톡,-1500,NNP,틱톡
+트위터,-1500,NNP,트위터
+페이스북,-1500,NNP,페이스북
+
+# === Custom Terms (Add your own below) ===
+# yourterm,-1000,NNG,yourterm

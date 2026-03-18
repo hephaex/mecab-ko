@@ -665,8 +665,18 @@ chown -R elasticsearch:elasticsearch /usr/share/elasticsearch/config/mecab-ko-di
 GET /_nodes/stats/indices/query_cache
 ```
 
+## 상세 문서
+
+더 자세한 내용은 다음 문서를 참조하세요:
+
+- **[Elasticsearch / OpenSearch 통합 가이드](../../../integrations/elasticsearch.md)** - 전체 설치 및 설정 가이드
+- **[Nori 호환성 가이드](../../../integrations/nori-compatibility.md)** - Nori 플러그인과의 호환성 및 마이그레이션
+- **[예제 설정 파일](../../../integrations/examples/)** - 바로 사용 가능한 설정 템플릿
+
 ## 참고 자료
 
 - [Elasticsearch 공식 문서](https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html)
 - [Analysis 플러그인 개발](https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis.html)
 - [MeCab-Ko CLI](../cli-usage.md)
+- [mecab-ko-elasticsearch 크레이트](../../../../rust/crates/mecab-ko-elasticsearch/README.md)
+- [성능 최적화 가이드](../../../../rust/crates/mecab-ko-elasticsearch/PERFORMANCE.md)

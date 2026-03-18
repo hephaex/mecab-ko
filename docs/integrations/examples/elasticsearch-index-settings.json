@@ -1,0 +1,131 @@
+{
+  "settings": {
+    "number_of_shards": 3,
+    "number_of_replicas": 1,
+    "refresh_interval": "30s",
+    "analysis": {
+      "tokenizer": {
+        "mecab_ko_standard": {
+          "type": "mecab_ko",
+          "decompound_mode": "mixed"
+        },
+        "mecab_ko_search": {
+          "type": "mecab_ko",
+          "decompound_mode": "discard"
+        },
+        "mecab_ko_with_userdict": {
+          "type": "mecab_ko",
+          "decompound_mode": "mixed",
+          "user_dict_path": "/usr/share/elasticsearch/config/user-dict.csv"
+        }
+      },
+      "filter": {
+        "korean_stop": {
+          "type": "nori_part_of_speech",
+          "stoptags": [
+            "J",
+            "E",
+            "SF",
+            "SP",
+            "SS",
+            "SE",
+            "SO"
+          ]
+        },
+        "korean_content_only": {
+          "type": "nori_part_of_speech",
+          "stoptags": [
+            "J",
+            "E",
+            "SF",
+            "SP",
+            "SS",
+            "SE",
+            "SO",
+            "SW",
+            "IC"
+          ]
+        },
+        "korean_reading": {
+          "type": "nori_readingform"
+        },
+        "korean_synonym": {
+          "type": "synonym",
+          "synonyms": [
+            "노트북, 랩탑, 휴대용컴퓨터",
+            "휴대폰, 핸드폰, 스마트폰, 모바일폰",
+            "TV, 티비, 텔레비전"
+          ]
+        },
+        "length_filter": {
+          "type": "length",
+          "min": 2,
+          "max": 50
+        }
+      },
+      "analyzer": {
+        "korean_standard": {
+          "type": "custom",
+          "tokenizer": "mecab_ko_standard",
+          "filter": [
+            "korean_stop",
+            "lowercase"
+          ]
+        },
+        "korean_search": {
+          "type": "custom",
+          "tokenizer": "mecab_ko_search",
+          "filter": [
+            "korean_stop",
+            "lowercase"
+          ]
+        },
+        "korean_content": {
+          "type": "custom",
+          "tokenizer": "mecab_ko_standard",
+          "filter": [
+            "korean_content_only",
+            "korean_reading",
+            "lowercase",
+            "length_filter"
+          ]
+        },
+        "korean_with_synonyms": {
+          "type": "custom",
+          "tokenizer": "mecab_ko_standard",
+          "filter": [
+            "korean_stop",
+            "korean_synonym",
+            "lowercase"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "title": {
+        "type": "text",
+        "analyzer": "korean_standard",
+        "search_analyzer": "korean_search",
+        "boost": 2.0
+      },
+      "content": {
+        "type": "text",
+        "analyzer": "korean_content"
+      },
+      "tags": {
+        "type": "keyword"
+      },
+      "category": {
+        "type": "keyword"
+      },
+      "created_at": {
+        "type": "date"
+      },
+      "author": {
+        "type": "keyword"
+      }
+    }
+  }
+}

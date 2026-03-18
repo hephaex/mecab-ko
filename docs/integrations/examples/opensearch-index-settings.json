@@ -1,0 +1,86 @@
+{
+  "_comment": "OpenSearch 2.x Korean Analysis Configuration with MeCab-Ko",
+  "settings": {
+    "index": {
+      "number_of_shards": 3,
+      "number_of_replicas": 1,
+      "refresh_interval": "30s"
+    },
+    "analysis": {
+      "tokenizer": {
+        "mecab_ko_tokenizer": {
+          "type": "mecab_ko",
+          "decompound_mode": "mixed",
+          "user_dict_path": "/usr/share/opensearch/config/user-dict.csv"
+        }
+      },
+      "filter": {
+        "korean_stop": {
+          "type": "nori_part_of_speech",
+          "stoptags": [
+            "J",
+            "E",
+            "SF",
+            "SP",
+            "SS"
+          ]
+        },
+        "korean_stemmer": {
+          "type": "nori_readingform"
+        },
+        "edge_ngram_filter": {
+          "type": "edge_ngram",
+          "min_gram": 1,
+          "max_gram": 10
+        }
+      },
+      "analyzer": {
+        "korean_standard": {
+          "type": "custom",
+          "tokenizer": "mecab_ko_tokenizer",
+          "filter": [
+            "korean_stop",
+            "lowercase"
+          ]
+        },
+        "korean_autocomplete": {
+          "type": "custom",
+          "tokenizer": "mecab_ko_tokenizer",
+          "filter": [
+            "korean_stop",
+            "lowercase",
+            "edge_ngram_filter"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "title": {
+        "type": "text",
+        "analyzer": "korean_standard",
+        "fields": {
+          "autocomplete": {
+            "type": "text",
+            "analyzer": "korean_autocomplete",
+            "search_analyzer": "korean_standard"
+          },
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "content": {
+        "type": "text",
+        "analyzer": "korean_standard"
+      },
+      "tags": {
+        "type": "keyword"
+      },
+      "timestamp": {
+        "type": "date"
+      }
+    }
+  }
+}
