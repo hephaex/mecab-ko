@@ -27,9 +27,9 @@
   - 6개 크레이트 순차 배포 완료
 
 ### P1 (High)
-- [ ] S57-03: PyPI 배포 재시도
+- [x] S57-03: PyPI 배포 ✅
   - mecab-ko-python v0.5.0
-  - 토큰 문제 해결 필요
+  - https://pypi.org/project/mecab-ko-python/
 
 - [x] S57-04: npm mecab-ko-wasm v0.5.0 배포 ✅
   - 100% 정확도 WASM 버전
@@ -164,7 +164,7 @@ Token Accuracy 95.0%+ 달성 → **96.1% 달성!**
 | mecab-ko-dict-validator | v0.5.0 | crates.io | ✅ |
 | mecab-ko-dict-builder | v0.5.0 | crates.io | ✅ |
 | mecab-ko | v0.5.0 | crates.io | ✅ |
-| mecab-ko-python | - | PyPI | BLOCKED |
+| mecab-ko-python | v0.5.0 | PyPI | ✅ |
 | mecab-ko-wasm | v0.5.0 | npm | ✅ |
 
 ---
