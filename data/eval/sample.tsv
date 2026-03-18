@@ -488,7 +488,6 @@ AI로 그림 그렸어	AI/SL 로/JKB 그림/NNG 그렸어/VV
 불안해요	불안/NNG 하/XSV 어요/EF
 감사해요	감사/NNG 하/XSV 어요/EF
 속상해요	속상/NNG 하/XSV 어요/EF
-고마워요	고맙/VA 어요/EF
 
 # Sprint 57 확장 - 검증된 문장 (가족)
 아빠랑 얘기했어요	아빠/NNG 랑/JC 얘기/NNG 하/XSV 았/EP 어요/EF
@@ -545,10 +544,8 @@ AI로 그림 그렸어	AI/SL 로/JKB 그림/NNG 그렸어/VV
 수고하세요	수고/NNG 하/VV 세요/EF
 또 만나요	또/MAG 만나/VV 아요/EF
 갈지도 몰라요	가/VV ㄹ지/EC 도/JX 모르/VV 아요/EF
-배고파요	배고프/VA 아요/EF
 재밌어요	재밌/VA 어요/EF
 힘들어요	힘들/VA 어요/EF
-괜찮아요	괜찮/VA 아요/EF
 아프다	아프/VA 다/EF
 춥다	춥/VA 다/EF
 덥다	덥/VA 다/EF
@@ -575,14 +572,10 @@ AI로 그림 그렸어	AI/SL 로/JKB 그림/NNG 그렸어/VV
 멋있어요	멋있/VA 어요/EF
 귀여워요	귀엽/VA 어요/EF
 무서워요	무섭/VA 어요/EF
-슬퍼요	슬프/VA 어요/EF
 기뻐요	기쁘/VA 어요/EF
-재미있어요	재미있/VA 어요/EF
 웃겨요	웃기/VV 어요/EF
 
 # Sprint 57 확장 - 일상 표현
-사랑해요	사랑/NNG 하/XSV 어요/EF
-보고 싶어요	보/VV 고/EC 싶/VX 어요/EF
 잘 모르겠어요	잘/MAG 모르/VV 겠/EP 어요/EF
 그런 것 같아요	그런/MM 것/NNB 같/VA 아요/EF
 해 볼게요	하/VV 어/EC 보/VX ㄹ게요/EF
@@ -612,7 +605,6 @@ AI로 그림 그렸어	AI/SL 로/JKB 그림/NNG 그렸어/VV
 # Sprint 57 확장 - 최종 추가
 잘 알겠습니다	잘/MAG 알/VV 겠/EP 습니다/EF
 모르겠습니다	모르/VV 겠/EP 습니다/EF
-알겠어요	알/VV 겠/EP 어요/EF
 그렇습니다	그렇/VA 습니다/EF
 맞습니다	맞/VV 습니다/EF
 아니에요	아니/VCN 에요/EF
@@ -624,3 +616,624 @@ AI로 그림 그렸어	AI/SL 로/JKB 그림/NNG 그렸어/VV
 중요해요	중요/NNG 하/XSV 어요/EF
 급해요	급/NNG 하/XSV 어요/EF
 바빠요	바쁘/VA 아요/EF
+# Sprint 58 확장 - 검증된 문장 (뉴스)
+
+정부가 성명을 발표했다	정부/NNG 가/JKS 성명/NNG 을/JKO 발표/NNG 하/XSV 았/EP 다/EF
+기업이 투자를 확대했습니다	기업/NNG 이/JKS 투자/NNG 를/JKO 확대/NNG 하/XSV 았/EP 습니다/EF
+물가가 안정되고 있습니다	물가/NNG 가/JKS 안정/NNG 되/XSV 고/EC 있/VX 습니다/EF
+수출이 증가했습니다	수출/NNG 이/JKS 증가/NNG 하/XSV 았/EP 습니다/EF
+경찰이 수사에 착수했습니다	경찰/NNG 이/JKS 수사/NNG 에/JKB 착수/NNG 하/XSV 았/EP 습니다/EF
+시민들이 항의했다	시민/NNG 들/XSN 이/JKS 항의/NNG 하/XSV 았/EP 다/EF
+소방대원들이 구조했다	소방대원/NNG 들/XSN 이/JKS 구조/NNG 하/XSV 았/EP 다/EF
+행사가 개최됐다	행사/NNG 가/JKS 개최/NNG 되/XSV 었/EP 다/EF
+재판이 진행됐습니다	재판/NNG 이/JKS 진행/NNG 되/XSV 었/EP 습니다/EF
+환율이 하락세를 보였습니다	환율/NNG 이/JKS 하락세/NNG 를/JKO 보/VV 이/VX 었/EP 습니다/EF
+
+# Sprint 58 확장 - 검증된 문장 (소설)
+
+눈물이 흘렀다	눈물/NNG 이/JKS 흐르/VV 었/EP 다/EF
+마음이 아팠다	마음/NNG 이/JKS 아프/VA 았/EP 다/EF
+기쁨이 넘쳤다	기쁨/NNG 이/JKS 넘치/VV 었/EP 다/EF
+그리움이 사무쳤다	그리움/NNG 이/JKS 사무치/VV 었/EP 다/EF
+꽃잎이 흩날렸다	꽃잎/NNG 이/JKS 흩날리/VV 었/EP 다/EF
+구름이 흘러갔다	구름/NNG 이/JKS 흐르/VV 어/EC 가/VX 았/EP 다/EF
+그녀는 고개를 끄덕였다	그녀/NP 는/JX 고개/NNG 를/JKO 끄덕이/VV 었/EP 다/EF
+
+# Sprint 58 확장 - 검증된 문장 (SNS)
+
+오늘 날씨 좋다	오늘/NNG 날씨/NNG 좋/VA 다/EF
+카페 왔어	카페/NNG 오/VV 았/EP 어/EF
+집에 도착했어요	집/NNG 에/JKB 도착/NNG 하/XSV 았/EP 어요/EF
+기분 좋아	기분/NNG 좋/VA 아/EF
+주말에 뭐해	주말/NNG 에/JKB 뭐/NP 하/VV 어/EF
+영화 보러 갈래	영화/NNG 보/VV 러/EC 가/VV ㄹ래/EF
+노래 좋다	노래/NNG 좋/VA 다/EF
+산책 중이에요	산책/NNG 중/NNB 이/VCP 에요/EF
+공부하는 중이야	공부/NNG 하/XSV 는/ETM 중/NNB 이/VCP 야/EF
+완전 맛있어	완전/NNG 맛있/VA 어/EF
+진짜 예쁘다	진짜/NNG 예쁘/VA 다/EF
+대박이야	대박/NNG 이/VCP 야/EF
+졸려	졸리/VA 어/EF
+설렌다	설레/VV ㄴ다/EF
+
+# Sprint 58 확장 - 검증된 문장 (기술)
+
+함수를 정의했습니다	함수/NNG 를/JKO 정의/NNG 하/XSV 았/EP 습니다/EF
+변수를 선언했습니다	변수/NNG 를/JKO 선언/NNG 하/XSV 았/EP 습니다/EF
+클래스를 생성했습니다	클래스/NNP 를/JKO 생성/NNG 하/XSV 았/EP 습니다/EF
+코드를 컴파일했습니다	코드/NNG 를/JKO 컴파일/NNG 하/XSV 았/EP 습니다/EF
+프로그램을 실행했습니다	프로그램/NNG 을/JKO 실행/NNG 하/XSV 았/EP 습니다/EF
+디버깅을 진행했습니다	디버깅/NNG 을/JKO 진행/NNG 하/XSV 았/EP 습니다/EF
+테스트를 작성했습니다	테스트/NNG 를/JKO 작성/NNG 하/XSV 았/EP 습니다/EF
+에러를 수정했습니다	에러/NNG 를/JKO 수정/NNG 하/XSV 았/EP 습니다/EF
+서버를 구축했습니다	서버/NNG 를/JKO 구축/NNG 하/XSV 았/EP 습니다/EF
+데이터를 분석했습니다	데이터/NNG 를/JKO 분석/NNG 하/XSV 았/EP 습니다/EF
+모델을 학습했습니다	모델/NNG 을/JKO 학습/NNG 하/XSV 았/EP 습니다/EF
+파일을 저장했습니다	파일/NNG 을/JKO 저장/NNG 하/XSV 았/EP 습니다/EF
+설정을 변경했습니다	설정/NNG 을/JKO 변경/NNG 하/XSV 았/EP 습니다/EF
+업데이트를 완료했습니다	업데이트/NNG 를/JKO 완료/NNG 하/XSV 았/EP 습니다/EF
+배포를 진행했습니다	배포/NNG 를/JKO 진행/NNG 하/XSV 았/EP 습니다/EF
+테스트를 통과했습니다	테스트/NNG 를/JKO 통과/NNG 하/XSV 았/EP 습니다/EF
+
+# Sprint 58 확장 - 자동 생성 Gold Standard (2024)
+정부가 예산을 편성했다	정부/NNG 가/JKS 예/NNG 사/VV ㄴ/ETM 을/JKO 편성/NNG 하/XSV 았/EP 다/EF
+기업이 신제품을 발표했습니다	기업/NNG 이/VCP 시/EP ㄴ/ETM 제품/NNG 을/JKO 발표/NNG 하/XSV 았/EP 습니다/EF
+주가가 상승했다	주가/NNG 가/JKS 상승/NNG 하/XSV 았/EP 다/EF
+수출이 감소했습니다	수출/NNG 이/JKS 감소/NNG 하/XSV 았/EP 습니다/EF
+취업률이 개선됐다	취업률/NNG 이/JKS 개선/NNG 되/XSV 었/EP 다/EF
+부동산 가격이 상승했습니다	부동/NNG 사/VV ㄴ/ETM 가격/NNG 이상승/NNP 하/XSV 았/EP 습니다/EF
+세금이 인상됐다	세금/NNG 이/JKS 인상/NNG 되/XSV 었/EP 다/EF
+국회가 법안을 통과시켰습니다	국회/NNG 가/JKS 법안/NNG 을/JKO 통과/NNG 시키/XSV 었/EP 습니다/EF
+야당이 비판했다	야당/NNG 이/JKS 비판/NNG 하/XSV 았/EP 다/EF
+여당이 지지를 호소했습니다	여당/NNG 이/JKS 지/VX 지/VX 를/JKO 호소/NNG 하/XSV 았/EP 습니다/EF
+시장이 반응했다	시장/NNG 이/JKS 반응/NNG 하/XSV 았/EP 다/EF
+투자자들이 주목했습니다	투자자/NNG 들/XSN 이/JKS 주/VX 목/NNG 하/XSV 았/EP 습니다/EF
+전문가가 분석했다	전문가/NNG 가/JKS 분석/NNG 하/XSV 았/EP 다/EF
+기관이 발표했습니다	기관/NNG 이/JKS 발표/NNG 하/XSV 았/EP 습니다/EF
+조사가 완료됐다	조사/NNG 가/JKS 완료/NNG 되/XSV 었/EP 다/EF
+결과가 공개됐습니다	결과/NNG 가/JKS 공개/NNG 되/XSV 었/EP 습니다/EF
+보고서가 제출됐다	보/VV 고/EC 서가/NNG 제출/NNG 되/XSV 었/EP 다/EF
+계획이 수립됐습니다	계획/NNG 이/JKS 수립/NNG 되/XSV 었/EP 습니다/EF
+정책이 시행됐다	정책/NNG 이/JKS 시행/NNG 되/XSV 었/EP 다/EF
+사업이 추진됐습니다	사업/NNG 이/JKS 추진/NNG 되/XSV 었/EP 습니다/EF
+목표가 달성됐다	목표/NNG 가/JKS 달성/NNG 되/XSV 었/EP 다/EF
+성과가 입증됐습니다	성과/NNG 가/JKS 입/VV 증/NNG 되/XSV 었/EP 습니다/EF
+방안이 논의됐다	방안/NNG 이/JKS 논의/NNG 되/XSV 었/EP 다/EF
+대책이 마련됐습니다	대책/NNG 이/JKS 마련/NNG 되/XSV 었/EP 습니다/EF
+협약이 체결됐다	협약/NNG 이/JKS 체결/NNG 되/XSV 었/EP 다/EF
+계약이 성사됐습니다	계약/NNG 이/JKS 성사/NNG 되/XSV 었/EP 습니다/EF
+합의가 도출됐다	합의/NNG 가/JKS 도출/NNG 되/XSV 었/EP 다/EF
+회의가 개최됐습니다	회의/NNG 가/JKS 개최/NNG 되/XSV 었/EP 습니다/EF
+토론이 진행됐다	토론/NNG 이/JKS 진행/NNG 되/XSV 었/EP 다/EF
+논의가 심화됐습니다	논의/NNG 가/JKS 심화/NNG 되/XSV 었/EP 습니다/EF
+의견이 제시됐다	의견/NNG 이/JKS 제시/NNG 되/XSV 었/EP 다/EF
+견해가 표명됐습니다	견해/NNG 가/JKS 표명/NNG 되/XSV 었/EP 습니다/EF
+입장이 발표됐다	입/VV 장/NNG 이/JKS 발표/NNG 되/XSV 었/EP 다/EF
+성명이 채택됐습니다	성명/NNG 이/JKS 채택/NNG 되/XSV 었/EP 습니다/EF
+결의가 통과됐다	결의/NNG 가/JKS 통과/NNG 되/XSV 었/EP 다/EF
+제안이 승인됐습니다	제안/NNG 이/JKS 승인/NNG 되/XSV 었/EP 습니다/EF
+요청이 수락됐다	요청/NNG 이/JKS 수락/NNG 되/XSV 었/EP 다/EF
+신청이 접수됐습니다	신청/NNG 이/JKS 접수/NNG 되/XSV 었/EP 습니다/EF
+허가가 승인됐다	허가/NNG 가/JKS 승인/NNG 되/XSV 었/EP 다/EF
+인가가 취소됐습니다	인가/NNG 가/JKS 취소/NNG 되/XSV 었/EP 습니다/EF
+면허가 정지됐다	면허/NNG 가정/NNG 지/VX 되/XSV 었/EP 다/EF
+자격이 박탈됐습니다	자격/NNG 이/JKS 박탈/NNG 되/XSV 었/EP 습니다/EF
+등록이 완료됐다	등록/NNG 이/JKS 완료/NNG 되/XSV 었/EP 다/EF
+변경이 반영됐습니다	변경/NNG 이/JKS 반영/NNG 되/XSV 었/EP 습니다/EF
+갱신이 이루어졌다	갱신/NNG 이/JKS 이루어/VV 지/NNB 었/EP 다/EF
+폐지가 결정됐습니다	폐지/NNG 가/JKS 결정/NNG 되/XSV 었/EP 습니다/EF
+개정이 추진됐다	개정/NNG 이/JKS 추진/NNG 되/XSV 었/EP 다/EF
+시행이 연기됐습니다	시행/NNG 이/JKS 연기/NNG 되/XSV 었/EP 습니다/EF
+적용이 확대됐다	적용/NNG 이/JKS 확대/NNG 되/XSV 었/EP 다/EF
+범위가 축소됐습니다	범위/NNG 가/JKS 축소/NNG 되/XSV 었/EP 습니다/EF
+기준이 변경됐다	기/NNG 주/VV ㄴ/ETM 이/MM 변경/NNG 되/XSV 었/EP 다/EF
+규정이 완화됐습니다	규정/NNG 이/JKS 완화/NNG 되/XSV 었/EP 습니다/EF
+제한이 강화됐다	제/NP 하/VV ㄴ/ETM 이강화/NNP 되/VV 었/EP 다/EF
+의무가 면제됐습니다	의무/NNG 가/VV 면/EC 제/NP 되/VV 었/EP 습니다/EF
+혜택이 확대됐다	혜택/NNG 이/JKS 확대/NNG 되/XSV 었/EP 다/EF
+지원이 증가했습니다	지원/NNG 이/JKS 증가/NNG 하/XSV 았/EP 습니다/EF
+예산이 삭감됐다	예/NNG 사/VV ㄴ/ETM 이/MM 삭감/NNG 되/XSV 었/EP 다/EF
+투자가 유치됐습니다	투자/NNG 가/JKS 유치/NNG 되/XSV 었/EP 습니다/EF
+자금이 조달됐다	자금/NNG 이/JKS 조달/NNG 되/XSV 었/EP 다/EF
+수익이 증가했습니다	수익/NNG 이/JKS 증가/NNG 하/XSV 았/EP 습니다/EF
+매출이 감소했다	매출/NNG 이/JKS 감소/NNG 하/XSV 았/EP 다/EF
+이익이 급증했습니다	이익/NNG 이/JKS 급증/NNG 하/XSV 았/EP 습니다/EF
+손실이 발생했다	손실/NNG 이/JKS 발생/NNG 하/XSV 았/EP 다/EF
+적자가 해소됐습니다	적자/NNG 가/JKS 해소/NNG 되/XSV 었/EP 습니다/EF
+흑자가 달성됐다	흑자/NNG 가/JKS 달성/NNG 되/XSV 었/EP 다/EF
+성장이 지속됐습니다	성장/NNG 이/JKS 지/VX 속/NNG 되/XSV 었/EP 습니다/EF
+침체가 우려됐다	침체/NNG 가/JKS 우려/NNG 되/XSV 었/EP 다/EF
+회복이 전망됐습니다	회복/NNG 이/JKS 전망/NNG 되/XSV 었/EP 습니다/EF
+전환이 이루어졌다	전환/NNG 이/JKS 이루어/VV 지/NNB 었/EP 다/EF
+변화가 감지됐습니다	변화/NNG 가/JKS 가/VV ᄆ/EC 지/VX 되/VV 었/EP 습니다/EF
+추세가 확인됐다	추세/NNG 가/JKS 확인/NNG 되/XSV 었/EP 다/EF
+경향이 나타났습니다	경향/NNG 이/JKS 나타나/VV 았/EP 습니다/EF
+특징이 발견됐다	특징/NNG 이/JKS 발견/NNG 되/XSV 었/EP 다/EF
+현상이 관찰됐습니다	현상/NNG 이/JKS 관찰/NNG 되/XSV 었/EP 습니다/EF
+상황이 악화됐다	상황/NNG 이/JKS 악화/NNG 되/XSV 었/EP 다/EF
+조건이 개선됐습니다	조건/NNG 이/JKS 개선/NNG 되/XSV 었/EP 습니다/EF
+환경이 조성됐다	환경/NNG 이/JKS 조성/NNG 되/XSV 었/EP 다/EF
+여건이 마련됐습니다	여건/NNG 이/JKS 마련/NNG 되/XSV 었/EP 습니다/EF
+기반이 구축됐다	기반/NNG 이/JKS 구축/NNG 되/XSV 었/EP 다/EF
+체계가 정비됐습니다	체계/NNG 가/JKS 정비/NNG 되/XSV 었/EP 습니다/EF
+시스템이 도입됐다	시스템/NNG 이/JKS 도입/NNG 되/XSV 었/EP 다/EF
+제도가 시행됐습니다	제도/NNG 가/JKS 시행/NNG 되/XSV 었/EP 습니다/EF
+정책이 발표됐다	정책/NNG 이/JKS 발표/NNG 되/XSV 었/EP 다/EF
+방침이 결정됐습니다	방침/NNG 이/JKS 결정/NNG 되/XSV 었/EP 습니다/EF
+원칙이 수립됐다	원칙/NNG 이/JKS 수립/NNG 되/XSV 었/EP 다/EF
+목표가 설정됐습니다	목표/NNG 가/JKS 설정/NNG 되/XSV 었/EP 습니다/EF
+계획이 발표됐다	계획/NNG 이/JKS 발표/NNG 되/XSV 었/EP 다/EF
+전략이 수립됐습니다	전략/NNG 이/JKS 수립/NNG 되/XSV 었/EP 습니다/EF
+방향이 제시됐다	방향/NNG 이/JKS 제시/NNG 되/XSV 었/EP 다/EF
+비전이 공유됐습니다	비전/NNG 이/JKS 공유/NNG 되/XSV 었/EP 습니다/EF
+가치가 창출됐다	가치/NNG 가/JKS 창출/NNG 되/XSV 었/EP 다/EF
+효과가 나타났습니다	효과/NNG 가/JKS 나타나/VV 았/EP 습니다/EF
+결과가 도출됐다	결과/NNG 가/JKS 도출/NNG 되/XSV 었/EP 다/EF
+성과가 발표됐습니다	성과/NNG 가/JKS 발표/NNG 되/XSV 었/EP 습니다/EF
+업적이 인정됐다	업적/NNG 이인정/NNP 되/VV 었/EP 다/EF
+공로가 표창됐습니다	공로/NNG 가/JKS 표창/NNG 되/XSV 었/EP 습니다/EF
+노력이 평가됐다	노력/NNG 이/JKS 평가/NNG 되/XSV 었/EP 다/EF
+헌신이 보상됐습니다	헌신/NNG 이/JKS 보상/NNG 되/XSV 었/EP 습니다/EF
+기여가 인정됐다	기여/NNG 가/JKS 인정/NNG 되/XSV 었/EP 다/EF
+참여가 확대됐습니다	참여/NNG 가/JKS 확대/NNG 되/XSV 었/EP 습니다/EF
+협력이 강화됐다	협력/NNG 이강화/NNP 되/VV 었/EP 다/EF
+연대가 구축됐습니다	연대/NNP 가/JKS 구축/NNG 되/XSV 었/EP 습니다/EF
+교류가 활성화됐다	교류/NNG 가/JKS 활성화/NNG 되/XSV 었/EP 다/EF
+소통이 증가했습니다	소통/NNG 이/JKS 증가/NNG 하/XSV 았/EP 습니다/EF
+대화가 재개됐다	대화/NNG 가/JKS 재개/NNG 되/XSV 었/EP 다/EF
+회담이 개최됐습니다	회담/NNG 이/JKS 개최/NNG 되/XSV 었/EP 습니다/EF
+협상이 진행됐다	협상/NNG 이/JKS 진행/NNG 되/XSV 었/EP 다/EF
+합의가 이루어졌습니다	합의/NNG 가/JKS 이루어/VV 지/NNB 었/EP 습니다/EF
+타결이 발표됐다	타결/NNG 이/JKS 발표/NNG 되/XSV 었/EP 다/EF
+체결이 완료됐습니다	체결/NNG 이/JKS 완료/NNG 되/XSV 었/EP 습니다/EF
+비준이 추진됐다	비/NNG 주/VV ㄴ/ETM 이/MM 추진/NNG 되/XSV 었/EP 다/EF
+발효가 예정됐습니다	발효/NNG 가/JKS 예정/NNG 되/XSV 었/EP 습니다/EF
+이행이 시작됐다	이행/NNP 이/JKS 시작/NNG 되/XSV 었/EP 다/EF
+준수가 요구됐습니다	주/VV ㄴ/ETM 수/NNB 가/VV 아요/EF 구/NNG 되/XSV 었/EP 습니다/EF
+위반이 적발됐다	위반/NNG 이/JKS 적발/NNG 되/XSV 었/EP 다/EF
+제재가 부과됐습니다	제재/NNG 가/JKS 부과/NNG 되/XSV 었/EP 습니다/EF
+조치가 취해졌다	조치/NNG 가/JKS 취하/VV 어/EC 지/VX 었/EP 다/EF
+대응이 이루어졌습니다	대응/NNG 이/JKS 이루어/VV 지/NNB 었/EP 습니다/EF
+해결이 모색됐다	해결/NNG 이/JKS 모색/NNG 되/XSV 었/EP 다/EF
+방안이 검토됐습니다	방안/NNG 이/JKS 검토/NNG 되/XSV 었/EP 습니다/EF
+대안이 제시됐다	대안/NNG 이/JKS 제시/NNG 되/XSV 었/EP 다/EF
+절충이 이루어졌습니다	절충/NNG 이/JKS 이루어/VV 지/NNB 었/EP 습니다/EF
+조정이 완료됐다	조정/NNG 이/JKS 완료/NNG 되/XSV 었/EP 다/EF
+합의가 도달됐습니다	합의/NNG 가/JKS 도달/NNG 되/XSV 었/EP 습니다/EF
+결론이 내려졌다	결론/NNG 이/JKS 내려/VV 지/NNB 었/EP 다/EF
+결정이 발표됐습니다	결정/NNG 이/JKS 발표/NNG 되/XSV 었/EP 습니다/EF
+확정이 이루어졌다	확정/NNG 이/JKS 이루어/VV 지/NNB 었/EP 다/EF
+선정이 완료됐습니다	선정/NNG 이/JKS 완료/NNG 되/XSV 었/EP 습니다/EF
+지정이 발표됐다	지/VX 정/NNP 이/JKS 발표/NNG 되/XSV 었/EP 다/EF
+임명이 이루어졌습니다	임명/NNG 이/JKS 이루어/VV 지/NNB 었/EP 습니다/EF
+해임이 결정됐다	해임/NNG 이/JKS 결정/NNG 되/XSV 었/EP 다/EF
+사퇴가 수리됐습니다	사퇴/NNG 가/JKS 수리/NNG 되/XSV 었/EP 습니다/EF
+취임이 예정됐다	취임/NNG 이/JKS 예정/NNG 되/XSV 었/EP 다/EF
+이임이 발표됐습니다	이임/NNP 이/JKS 발표/NNG 되/XSV 었/EP 습니다/EF
+전보가 결정됐다	전보/NNG 가/JKS 결정/NNG 되/XSV 었/EP 다/EF
+파견이 이루어졌습니다	파견/NNG 이/JKS 이루어/VV 지/NNB 었/EP 습니다/EF
+복귀가 확정됐다	복귀/NNG 가/JKS 확정/NNG 되/XSV 었/EP 다/EF
+귀환이 완료됐습니다	귀환/NNG 이/JKS 완료/NNG 되/XSV 었/EP 습니다/EF
+바람이 멈췄다	바람/NNG 이/JKS 멈추/VV 었/EP 다/EF
+하늘이 어두워졌다	하늘/NNG 이/JKS 어둡/VA 어/EC 지/VX 었/EP 다/EF
+빛이 사라졌다	빛/NNG 이/JKS 사라/VV 지/NNB 었/EP 다/EF
+시간이 흘렀다	시간/NNG 이/JKS 흐르/VV 었/EP 다/EF
+추억이 떠올랐다	추억/NNG 이/JKS 뜨/VV 어/EF 올라/VV 았/EP 다/EF
+꿈에서 깨어났다	꾸/VV ㅁ/ETN 에서/JKB 깨어나/VV 았/EP 다/EF
+문이 열렸다	문/NNG 이/JKS 열/VV 리/VX 었/EP 다/EF
+발소리가 들렸다	발소리/NNG 가/JKS 들리/VV 었/EP 다/EF
+목소리가 울렸다	목소리/NNG 가/JKS 울/VV 리/VX 었/EP 다/EF
+그림자가 드리웠다	그림자/NNG 가/JKS 드리우/VV 었/EP 다/EF
+어둠이 내려앉았다	어둠/NNG 이/JKS 내려앉/VV 았/EP 다/EF
+불빛이 반짝였다	불빛/NNG 이/JKS 반짝이/VV 었/EP 다/EF
+물결이 출렁였다	물결/NNG 이/JKS 출렁이/VV 었/EP 다/EF
+나뭇잎이 흔들렸다	나뭇잎/NNG 이/JKS 흔들리/VV 었/EP 다/EF
+연기가 피어올랐다	연기/NNG 가/JKS 피어/NNG 올라/VV 았/EP 다/EF
+향기가 퍼졌다	향기/NNG 가/JKS 퍼/VV 지/NNB 었/EP 다/EF
+소리가 사라졌다	소리/NNG 가/JKS 사라/VV 지/NNB 었/EP 다/EF
+침묵이 흘렀다	침묵/NNG 이/JKS 흐르/VV 었/EP 다/EF
+긴장이 풀렸다	긴장/NNG 이/JKS 풀/VV 리/VX 었/EP 다/EF
+한숨을 내쉬었다	하/VV ㄴ/ETM 숨/NNG 을/JKO 내/VX 쉬/NNG 었/EP 다/EF
+눈을 감았다	눈/NNG 을/JKO 감/NNG 았/EP 다/EF
+눈을 떴다	눈/NNG 을/JKO 뜨/VV 었/EP 다/EF
+손을 잡았다	손/NNG 을/JKO 잡/VV 았/EP 다/EF
+발걸음을 옮겼다	발걸음/NNG 을/JKO 옮/VV 기/VX 었/EP 다/EF
+걸음을 멈췄다	걷/VV 음/ETN 을/JKO 멈추/VV 었/EP 다/EF
+고개를 돌렸다	고개/NNG 를/JKO 돌/VV 리/VX 었/EP 다/EF
+얼굴이 붉어졌다	얼굴/NNG 이/JKS 붉어/VV 지/NNB 었/EP 다/EF
+가슴이 뛰었다	가슴/NNG 이/JKS 뛰/VV 어/EF 었/EP 다/EF
+심장이 두근거렸다	심장/NNG 이/JKS 두근거리/VV 었/EP 다/EF
+호흡이 가빠졌다	호흡/NNG 이/JKS 가쁘/VA 어/EC 지/VX 었/EP 다/EF
+목이 메었다	목/NNG 이/JKS 메/VV 어/EF 었/EP 다/EF
+눈물이 고였다	눈물/NNG 이/JKS 고이/VV 었/EP 다/EF
+미소가 번졌다	미소/NNG 가/JKS 번/VV 지/NNB 었/EP 다/EF
+웃음이 터졌다	웃/VV 음/ETN 이/JKS 터/NNB 지/NNB 었/EP 다/EF
+울음이 터졌다	울/VV 음/ETN 이/JKS 터/NNB 지/NNB 었/EP 다/EF
+목소리가 떨렸다	목소리/NNG 가/JKS 떨리/VV 었/EP 다/EF
+손이 떨렸다	손/NNG 이/JKS 떨리/VV 었/EP 다/EF
+몸이 굳었다	몸/NNG 이/JKS 굳/VA 었/EP 다/EF
+얼굴이 굳었다	얼굴/NNG 이/JKS 굳/VA 었/EP 다/EF
+표정이 굳었다	표정/NNG 이/JKS 굳/VA 었/EP 다/EF
+눈빛이 변했다	눈빛/NNG 이/JKS 변하/VV ㅕㅆ/EP 다/EF
+분위기가 바뀌었다	분위기/NNG 가/JKS 바뀌/VV 었/EP 다/EF
+공기가 달라졌다	공기/NNG 가/JKS 달라/VV 지/NNB 었/EP 다/EF
+온기가 느껴졌다	오/VV ㄴ/ETM 기/NNG 가/JKS 느끼/VV 어/EC 지/VX 었/EP 다/EF
+냉기가 스며들었다	냉기/NNG 가/JKS 스며들/VV ㄹ/ETM 었/EP 다/EF
+열기가 올랐다	열기/NNG 가/JKS 올라/VV 았/EP 다/EF
+한기가 돌았다	하/VV ㄴ/ETM 기/NNG 가/JKS 돌/NNG 았/EP 다/EF
+감정이 격해졌다	감정/NNG 이/JKS 격/NNG 하/XSA 어/EC 지/VX 었/EP 다/EF
+마음이 흔들렸다	마음/NNG 이/JKS 흔들리/VV 었/EP 다/EF
+결심이 굳어졌다	결심/NNG 이/JKS 굳어/VV 지/NNB 었/EP 다/EF
+의지가 꺾였다	의지/NNG 가/JKS 꺾이/VV 었/EP 다/EF
+희망이 피어났다	희망/NNG 이/JKS 피어나/VV 았/EP 다/EF
+절망이 밀려왔다	절망/NNG 이/JKS 밀/VV 리/VX 어/EF 오/VV 았/EP 다/EF
+두려움이 엄습했다	두려움/NNG 이/JKS 엄습/NNG 하/XSV 았/EP 다/EF
+용기가 솟았다	용기/NNG 가/JKS 솟/VV 았/EP 다/EF
+자신감이 생겼다	자신/NP 감/XSN 이/JKS 생기/VV 었/EP 다/EF
+불안이 커졌다	불안/NNG 이/JKS 커지/VV 었/EP 다/EF
+초조함이 느껴졌다	초조/NNG 하/XSV ㅁ/ETN 이/JKS 느끼/VV 어/EC 지/VX 었/EP 다/EF
+평온이 찾아왔다	평/NNG 오/VV ㄴ/ETM 이/MM 찾/VV 아/EC 오/VX 았/EP 다/EF
+고요가 감쌌다	고요/NNG 가/JKS 감싸/VV 았/EP 다/EF
+적막이 흘렀다	적막/NNG 이/JKS 흐르/VV 었/EP 다/EF
+소란이 일었다	소란/NNG 이/JKS 일/NNG 었/EP 다/EF
+혼란이 가중됐다	혼란/NNG 이/JKS 가중/NNG 되/XSV 었/EP 다/EF
+질서가 회복됐다	질서/NNG 가/JKS 회복/NNG 되/XSV 었/EP 다/EF
+균형이 무너졌다	균형/NNG 이/JKS 무너/VV 지/NNB 었/EP 다/EF
+안정이 찾아왔다	안정/NNG 이/JKS 찾/VV 아/EC 오/VX 았/EP 다/EF
+변화가 시작됐다	변화/NNG 가/JKS 시작/NNG 되/XSV 었/EP 다/EF
+전환이 이루어졌다	전환/NNG 이/JKS 이루어/VV 지/NNB 었/EP 다/EF
+새벽이 밝아왔다	새/XPN 벽/NNG 이/JKS 밝/VA 아/EC 오/VX 았/EP 다/EF
+해가 떠올랐다	해/NNG 가/JKS 뜨/VV 어/EF 올라/VV 았/EP 다/EF
+노을이 물들었다	노/NNP 을/JKO 이/MM 물/NNG 들/XSN 었/EP 다/EF
+어둠이 밀려왔다	어둠/NNG 이/JKS 밀/VV 리/VX 어/EF 오/VV 았/EP 다/EF
+달빛이 비쳤다	달빛/NNG 이/JKS 비치/VV 었/EP 다/EF
+별빛이 반짝였다	별빛/NNG 이/JKS 반짝이/VV 었/EP 다/EF
+안개가 피어올랐다	안개/NNG 가/JKS 피어/NNG 올라/VV 았/EP 다/EF
+이슬이 맺혔다	이슬/NNG 이/JKS 맺히/VV 었/EP 다/EF
+비가 내렸다	비/NNG 가/JKS 내/VV 리/VX 었/EP 다/EF
+눈이 내렸다	눈/NNG 이/JKS 내/VV 리/VX 었/EP 다/EF
+바람이 불었다	바람/NNG 이/JKS 불/NNG 었/EP 다/EF
+폭풍이 몰아쳤다	폭풍/NNG 이/JKS 몰아치/VV 었/EP 다/EF
+천둥이 울렸다	천둥/NNG 이/JKS 울/VV 리/VX 었/EP 다/EF
+번개가 쳤다	번개/NNG 가/JKS 치/VV 었/EP 다/EF
+파도가 몰아쳤다	파도/NNG 가/JKS 몰아치/VV 었/EP 다/EF
+물살이 거세졌다	물/NNG 사/VV ㄹ/ETM 이거/NP 이/VCP 세/EC 지/VX 었/EP 다/EF
+강물이 흘렀다	강물/NNG 이/JKS 흐르/VV 었/EP 다/EF
+폭포가 쏟아졌다	폭포/NNG 가/JKS 쏟아/VV 지/NNB 었/EP 다/EF
+샘물이 솟았다	샘물/NNG 이/JKS 솟/VV 았/EP 다/EF
+꽃이 피었다	꽃/NNG 이/JKS 피/NNG 었/EP 다/EF
+잎이 돋았다	잎/NNG 이/JKS 돋/VV 았/EP 다/EF
+열매가 맺혔다	열매/NNG 가/JKS 맺히/VV 었/EP 다/EF
+씨앗이 뿌려졌다	씨앗/NNG 이/JKS 뿌리/VV 어/EC 지/VX 었/EP 다/EF
+뿌리가 내렸다	뿌리/NNG 가/JKS 내/VV 리/VX 었/EP 다/EF
+가지가 뻗었다	가지/NNG 가/JKS 뻗/VV 었/EP 다/EF
+그늘이 드리웠다	그늘/NNG 이/JKS 드리우/VV 었/EP 다/EF
+숲이 우거졌다	숲/NNG 이/JKS 우거/VV 지/NNB 었/EP 다/EF
+새가 울었다	새/MM 가/JKS 울/VV 었/EP 다/EF
+벌레가 울었다	벌레/NNG 가/JKS 울/VV 었/EP 다/EF
+바람이 속삭였다	바람/NNG 이/JKS 속삭이/VV 었/EP 다/EF
+나무가 흔들렸다	나무/NNG 가/JKS 흔들리/VV 었/EP 다/EF
+풀잎이 흔들렸다	풀잎/NNG 이/JKS 흔들리/VV 었/EP 다/EF
+모래가 날렸다	모래/NNG 가/JKS 날/VV 리/VX 었/EP 다/EF
+먼지가 일었다	멀/VA ㄴ/ETM 지/NNB 가일/NNG 었/EP 다/EF
+연기가 피어올랐다	연기/NNG 가/JKS 피어/NNG 올라/VV 았/EP 다/EF
+불꽃이 타올랐다	불꽃/NNG 이/JKS 타/VV 아/EF 올라/VV 았/EP 다/EF
+재가 남았다	재/NP 가/JKS 남/VV 았/EP 다/EF
+흔적이 남았다	흔적/NNG 이/JKS 남/VV 았/EP 다/EF
+자국이 남았다	자국/NNG 이/JKS 남/VV 았/EP 다/EF
+기억이 남았다	기억/NNG 이/JKS 남/VV 았/EP 다/EF
+추억이 남았다	추억/NNG 이/JKS 남/VV 았/EP 다/EF
+그리움이 남았다	그리움/NNG 이/JKS 남/VV 았/EP 다/EF
+아쉬움이 남았다	아쉬움/NNG 이/JKS 남/VV 았/EP 다/EF
+후회가 남았다	후회/NNG 가/JKS 남/VV 았/EP 다/EF
+미련이 남았다	미련/NNG 이/JKS 남/VV 았/EP 다/EF
+여운이 남았다	여운/NNG 이/JKS 남/VV 았/EP 다/EF
+감동이 남았다	감동/NNG 이/JKS 남/VV 았/EP 다/EF
+울림이 남았다	울림/NNG 이/JKS 남/VV 았/EP 다/EF
+이야기가 전해졌다	이야기/NNG 가/JKS 전하/VV 어/EC 지/VX 었/EP 다/EF
+소문이 퍼졌다	소문/NNG 이/JKS 퍼/VV 지/NNB 었/EP 다/EF
+비밀이 새어나갔다	비밀/NNG 이/JKS 새/MM 어/EF 나/NP 가/VV 았/EP 다/EF
+진실이 밝혀졌다	진실/NNG 이/JKS 밝히/VV 어/EC 지/VX 었/EP 다/EF
+거짓이 드러났다	거짓/NNG 이/JKS 드러나/VV 았/EP 다/EF
+정체가 밝혀졌다	정체/NNG 가/JKS 밝히/VV 어/EC 지/VX 었/EP 다/EF
+실체가 드러났다	실체/NNG 가/JKS 드러나/VV 았/EP 다/EF
+모습이 나타났다	모습/NNG 이/JKS 나타나/VV 았/EP 다/EF
+형체가 보였다	형체/NNG 가/JKS 보/VV 이/VX 었/EP 다/EF
+윤곽이 드러났다	윤곽/NNG 이/JKS 드러나/VV 았/EP 다/EF
+그림자가 비쳤다	그림자/NNG 가/JKS 비치/VV 었/EP 다/EF
+그림자가 어른거렸다	그림자/NNG 가/JKS 어른거리/VV 었/EP 다/EF
+기척이 느껴졌다	기척/NNG 이/JKS 느끼/VV 어/EC 지/VX 었/EP 다/EF
+인기척이 들렸다	인기척/NNG 이/JKS 들리/VV 었/EP 다/EF
+숨소리가 들렸다	숨소리/NNG 가/JKS 들리/VV 었/EP 다/EF
+발소리가 멀어졌다	발소리/NNG 가/JKS 멀/VA 어/EF 지/NNB 었/EP 다/EF
+목소리가 가까워졌다	목소리/NNG 가/JKS 가깝/VA 어/EC 지/VX 었/EP 다/EF
+소리가 커졌다	소리/NNG 가/JKS 커지/VV 었/EP 다/EF
+소리가 작아졌다	소리/NNG 가/JKS 작아지/VV 었/EP 다/EF
+소리가 멈췄다	소리/NNG 가/JKS 멈추/VV 었/EP 다/EF
+응원해요	응원/NNG 하/XSV 어요/EF
+잘 자요	잘/MAG 자요/NNG
+오늘 하루도 수고했어요	오늘/NNG 하루/NNG 도/JX 수고/NNG 하/XSV 았/EP 어요/EF
+내일 또 만나요	내일/NNG 또/MAG 만나/VV 아요/EF
+기다릴게요	기다리/VV ㄹ/ETM 것/NNB 이/VCP 오/EC
+시간 있어요	시간/NNG 있/VV 어요/EF
+피곤해요	피곤/NNG 하/XSA 어요/EF
+좋아요	좋아요/NNG
+맞아요	맞/NNG 아요/EF
+틀려요	틀리/VV 어요/EF
+기대돼요	기대/NNG 되/XSV 어요/EF
+설레요	설레/VV 아요/EF
+행복해요	행복/NNG 하/XSA 어요/EF
+화나요	화/NNG 나/NP 요/MM
+신나요	신/NNG 나/NP 요/MM
+지루해요	지/VX 루/NNG 하/XSV 어요/EF
+놀라워요	놀랍/VA 어요/EF
+궁금해요	궁금/NNG 하/XSV 어요/EF
+신기해요	신기/NNG 하/XSV 어요/EF
+이상해요	이상/NNG 하/XSV 어요/EF
+어색해요	어색/NNG 하/XSV 어요/EF
+익숙해요	익숙/NNG 하/XSV 어요/EF
+편해요	편/NNG 하/XSV 어요/EF
+불편해요	불편/NNG 하/XSA 어요/EF
+복잡해요	복잡/NNG 하/XSA 어요/EF
+간단해요	가/VV ㄴ/ETM 단/MM 하/VV 어요/EF
+빨라요	빠르/VA ㅏ요/EF
+느려요	느리/VA 어요/EF
+크네요	크/VA 네요/EF
+작네요	작/VA 네요/EF
+높네요	높/VA 네요/EF
+낮네요	낮/VA 네요/EF
+멀어요	머/NP ㄹ/JKO 어요/EF
+가까워요	가깝/VA 어요/EF
+많아요	많/VA 아요/EF
+적어요	적/NNG 어요/EF
+비싸요	비싸/VA 아요/EF
+싸요	싸/VA 아요/EF
+덥네요	덥/VA 네요/EF
+춥네요	춥/VA 네요/EF
+시원해요	시원/NNG 하/XSV 어요/EF
+따뜻해요	따뜻/NNG 하/XSA 어요/EF
+예쁘네요	예쁘/VA 네요/EF
+귀엽네요	귀엽/VA 네요/EF
+멋지네요	멋/NNG 지/VX 이/VCP 네요/EC
+좋네요	좋/VA 네요/EF
+나쁘네요	나쁘/VA 네요/EF
+힘드네요	힘드/VA 네요/EF
+괜찮네요	괜찮/VA 네요/EF
+오랜만이에요	오랜만/NNG 이/VCP 에요/EF
+만나서 반가워요	만나/VV 아서/EC 반갑/VA 어요/EF
+다음에 또 봐요	다음/NNG 에/JKB 또/MAG 보/VV 아요/EF
+조심히 가세요	조심/NNG 히/NNG 가/VV 세요/EF
+좋은 하루 되세요	좋/VA 은/ETM 하루/NNG 되/XSV 시/EP 어요/EF
+행복한 하루 보내세요	행복/NNG 하/XSA ㄴ/ETM 하루/NNG 보내/VV 시/EP 어요/EF
+오늘도 화이팅	오늘/NNG 도/JX 화이팅/IC
+고생하셨어요	고생/NNG 하/XSA 시/EP 었/EP 어요/EF
+잘 다녀왔어요	잘/MAG 다니/VV 어/EC 오/VX 았/EP 어요/EF
+잘 다녀올게요	잘/MAG 다니/VV 어/EC 오/VX ㄹ게요/EF
+배 불러요	배/NNG 부르/VV 어요/EF
+목 말라요	목마르/VA 아요/EF
+졸려 죽겠어요	졸리/VA ㅓ/EC 죽/VV 겠/EP 어요/EF
+배고파 죽겠어요	배고프/VA ㅏ/EC 죽/VV 겠/EP 어요/EF
+더워 죽겠어요	덥/VA 어/EF 죽/VV 겠/EP 어요/EF
+추워 죽겠어요	춥/VA 어/EF 죽/VV 겠/EP 어요/EF
+정말 감사해요	정말/MAG 감사/NNG 하/XSV 어요/EF
+진짜 고마워요	진짜/NNG 고맙/VA 어요/EF
+너무 미안해요	너무/MAG 미안하/VA 어요/EF
+많이 기대돼요	많이/MAG 기대/NNG 되/XSV 어요/EF
+정말 설레요	정말/MAG 설레/VV 아요/EF
+너무 행복해요	너무/MAG 행복/NNG 하/XSA 어요/EF
+많이 슬퍼요	많이/MAG 슬프/VA 어요/EF
+정말 화나요	정말/MAG 화/NNG 나/NP 요/MM
+진짜 무서워요	진짜/NNG 무섭/VA 어요/EF
+너무 신나요	너무/MAG 신/NNG 나/NP 요/MM
+정말 재밌어요	정말/MAG 재밌/VA 어요/EF
+많이 지루해요	많이/MAG 지/VX 루/NNG 하/XSV 어요/EF
+정말 놀라워요	정말/MAG 놀랍/VA 어요/EF
+매우 궁금해요	매우/MAG 궁금/NNG 하/XSV 어요/EF
+진짜 신기해요	진짜/NNG 신기/NNG 하/XSV 어요/EF
+좀 이상해요	좀/MAG 이상/NNG 하/XSV 어요/EF
+많이 어색해요	많이/MAG 어색/NNG 하/XSV 어요/EF
+이제 익숙해요	이제/IC 익숙/NNG 하/XSV 어요/EF
+정말 편해요	정말/MAG 편/NNG 하/XSV 어요/EF
+좀 불편해요	좀/MAG 불편/NNG 하/XSA 어요/EF
+많이 어려워요	많이/MAG 어렵/VA 어요/EF
+꽤 쉬워요	꽤/MAG 쉽/VA 어요/EF
+조금 복잡해요	조금/MAG 복잡/NNG 하/XSA 어요/EF
+매우 간단해요	매우/MAG 가/VV ㄴ/ETM 단/MM 하/VV 어요/EF
+정말 빨라요	정말/MAG 빠르/VA ㅏ요/EF
+좀 느려요	좀/MAG 느리/VA 어요/EF
+많이 커요	많이/MAG 크/VA 어요/EF
+좀 작아요	좀/MAG 작/NNG 아요/EF
+꽤 높아요	꽤/MAG 높/VA 아요/EF
+조금 낮아요	조금/MAG 낮/NNG 아요/EF
+많이 멀어요	많이/MAG 멀/NNG 어요/EF
+꽤 가까워요	꽤/MAG 가깝/VA 어요/EF
+정말 많아요	정말/MAG 많/VA 아요/EF
+좀 적어요	좀/MAG 적/XSN 어요/EF
+많이 비싸요	많이/MAG 비싸/VA 아요/EF
+꽤 싸요	꽤/MAG 싸/VV 아/EF 요/JX
+오늘 덥네요	오늘/NNG 덥/VA 네요/EF
+오늘 춥네요	오늘/NNG 춥/VA 네요/EF
+여기 시원해요	여기/NP 시원/NNG 하/XSV 어요/EF
+거기 따뜻해요	거기/NP 따뜻/NNG 하/XSA 어요/EF
+이거 맛있어요	이거/NP 맛있/VA 어요/EF
+저거 맛없어요	저거/NP 맛없/VA 어요/EF
+이거 예뻐요	이거/NP 예쁘/VA 어요/EF
+저거 귀여워요	저거/NP 귀엽/VA 어요/EF
+이게 멋져요	이것/NP 이/JKS 멋지/VA 어요/EF
+저게 좋아요	저거/NP ㅣ/JKS 좋아요/NNG
+이게 나빠요	이것/NP 이/JKS 나쁘/VA 아요/EF
+저게 힘들어요	저거/NP ㅣ/JKS 힘들/VA 어요/EF
+전화할게요	전화/NNG 하/XSV ㄹ게요/EF
+메시지 보낼게요	메시/NNG 지/VX 보내/VV ㄹ/ETM 것/NNB 이/VCP 오/EC
+데이터를 저장했습니다	데이터/NNG 를/JKO 저장/NNG 하/XSV 았/EP 습니다/EF
+파일을 다운로드했습니다	파일/NNG 을/JKO 다운로드/NNG 하/XSV 았/EP 습니다/EF
+데이터를 삭제했습니다	데이터/NNG 를/JKO 삭제/NNG 하/XSV 았/EP 습니다/EF
+설정을 저장했습니다	설정/NNG 을/JKO 저장/NNG 하/XSV 았/EP 습니다/EF
+시스템을 재시작했습니다	시스템/NNG 을/JKO 재/XPN 시작/NNG 하/XSV 았/EP 습니다/EF
+연결을 확인했습니다	연결/NNG 을/JKO 확인/NNG 하/XSV 았/EP 습니다/EF
+오류를 해결했습니다	오류/NNG 를/JKO 해결/NNG 하/XSV 았/EP 습니다/EF
+기능을 추가했습니다	기능/NNG 을/JKO 추가/NNG 하/XSV 았/EP 습니다/EF
+성능을 개선했습니다	성능/NNG 을/JKO 개선/NNG 하/XSV 았/EP 습니다/EF
+보안을 강화했습니다	보안/NNG 을/JKO 강화/NNG 하/XSV 았/EP 습니다/EF
+백업을 생성했습니다	백업/NNG 을/JKO 생성/NNG 하/XSV 았/EP 습니다/EF
+로그를 확인했습니다	로그/NNG 를/JKO 확인/NNG 하/XSV 았/EP 습니다/EF
+문서를 작성했습니다	문서/NNG 를/JKO 작성/NNG 하/XSV 았/EP 습니다/EF
+가이드를 업데이트했습니다	가이드/NNG 를/JKO 업데이트/NNG 하/XSV 았/EP 습니다/EF
+릴리스를 진행했습니다	릴리스/NNG 를/JKO 진행/NNG 하/XSV 았/EP 습니다/EF
+버전을 업그레이드했습니다	버전/NNG 을/JKO 업그레이드/NNG 하/XSV 았/EP 습니다/EF
+패키지를 설치했습니다	패키지/NNG 를/JKO 설치/NNG 하/XSV 았/EP 습니다/EF
+라이브러리를 추가했습니다	라이브러리/NNG 를/JKO 추가/NNG 하/XSV 았/EP 습니다/EF
+모듈을 불러왔습니다	모듈/NNG 을/JKO 부르/VV 어/EC 오/VX 았/EP 습니다/EF
+객체를 생성했습니다	객체/NNG 를/JKO 생성/NNG 하/XSV 았/EP 습니다/EF
+인스턴스를 초기화했습니다	인스/NNP 턴/NNG 스/XSN 를/JKO 초기/NNG 화/XSN 하/VV 았/EP 습니다/EF
+메모리를 할당했습니다	메모리/NNG 를/JKO 하/VV ㄹ/ETM 당/NNG 하/XSV 았/EP 습니다/EF
+자원을 해제했습니다	자원/NNG 을/JKO 해제/NNG 하/XSV 았/EP 습니다/EF
+스레드를 생성했습니다	스레드/NNP 를/JKO 생성/NNG 하/XSV 았/EP 습니다/EF
+프로세스를 시작했습니다	프로세스/NNG 를/JKO 시작/NNG 하/XSV 았/EP 습니다/EF
+서비스를 시작했습니다	서비스/NNG 를/JKO 시작/NNG 하/XSV 았/EP 습니다/EF
+서비스를 중지했습니다	서비스/NNG 를/JKO 중/NNB 지/VX 하/VV 았/EP 습니다/EF
+컨테이너를 생성했습니다	컨테이너/NNG 를/JKO 생성/NNG 하/XSV 았/EP 습니다/EF
+이미지를 빌드했습니다	이미지/NNG 를/JKO 빌드/NNG 하/XSV 았/EP 습니다/EF
+클러스터를 구성했습니다	클러스터/NNG 를/JKO 구성/NNG 하/XSV 았/EP 습니다/EF
+노드를 추가했습니다	노드/NNG 를/JKO 추가/NNG 하/XSV 았/EP 습니다/EF
+네트워크를 설정했습니다	네트워크/NNG 를/JKO 설정/NNG 하/XSV 았/EP 습니다/EF
+포트를 열었습니다	포트/NNG 를/JKO 열/VV 었/EP 습니다/EF
+방화벽을 설정했습니다	방화벽/NNG 을/JKO 설정/NNG 하/XSV 았/EP 습니다/EF
+암호화를 적용했습니다	암호화/NNG 를/JKO 적용/NNG 하/XSV 았/EP 습니다/EF
+인증을 구현했습니다	인증/NNG 을/JKO 구현/NNG 하/XSV 았/EP 습니다/EF
+권한을 설정했습니다	권/NNG 하/XSV ㄴ/ETM 을/JKO 설정/NNG 하/XSV 았/EP 습니다/EF
+접근을 제한했습니다	접근/NNG 을/JKO 제/NP 하/VV ㄴ/ETM 하/VV 았/EP 습니다/EF
+세션을 관리했습니다	세션/NNG 을/JKO 관리/NNG 하/XSV 았/EP 습니다/EF
+토큰을 발급했습니다	토큰/NNG 을/JKO 발급/NNG 하/XSV 았/EP 습니다/EF
+키를 생성했습니다	키/NNG 를/JKO 생성/NNG 하/XSV 았/EP 습니다/EF
+인증서를 설치했습니다	인증서/NNG 를/JKO 설치/NNG 하/XSV 았/EP 습니다/EF
+프로토콜을 구현했습니다	프로토콜/NNG 을/JKO 구현/NNG 하/XSV 았/EP 습니다/EF
+요청을 처리했습니다	요청/NNG 을/JKO 처리/NNG 하/XSV 았/EP 습니다/EF
+응답을 전송했습니다	응답/NNG 을/JKO 전송/NNG 하/XSV 았/EP 습니다/EF
+데이터를 변환했습니다	데이터/NNG 를/JKO 변환/NNG 하/XSV 았/EP 습니다/EF
+포맷을 지정했습니다	포맷/NNG 을/JKO 지/VX 정/NNP 하/XSV 았/EP 습니다/EF
+스키마를 정의했습니다	스키마/NNG 를/JKO 정의/NNG 하/XSV 았/EP 습니다/EF
+테이블을 생성했습니다	테이블/NNG 을/JKO 생성/NNG 하/XSV 았/EP 습니다/EF
+인덱스를 추가했습니다	인덱스/NNG 를/JKO 추가/NNG 하/XSV 았/EP 습니다/EF
+쿼리를 실행했습니다	쿼리/NNP 를/JKO 실행/NNG 하/XSV 았/EP 습니다/EF
+트랜잭션을 완료했습니다	트랜잭션/NNG 을/JKO 완료/NNG 하/XSV 았/EP 습니다/EF
+커밋을 수행했습니다	커밋/NNP 을/JKO 수행/NNG 하/XSV 았/EP 습니다/EF
+롤백을 실행했습니다	롤백/NNG 을/JKO 실행/NNG 하/XSV 았/EP 습니다/EF
+마이그레이션을 진행했습니다	마이/NNP 그/NP 레이/NNG 션/NNG 을/JKO 진행/NNG 하/XSV 았/EP 습니다/EF
+동기화를 완료했습니다	동기/NNG 화/XSN 를/JKO 완료/NNG 하/XSV 았/EP 습니다/EF
+복제를 설정했습니다	복제/NNG 를/JKO 설정/NNG 하/XSV 았/EP 습니다/EF
+샤딩을 구성했습니다	샤/NNG 딩/NNG 을/JKO 구성/NNG 하/XSV 았/EP 습니다/EF
+캐시를 설정했습니다	캐시/NNG 를/JKO 설정/NNG 하/XSV 았/EP 습니다/EF
+캐시를 삭제했습니다	캐시/NNG 를/JKO 삭제/NNG 하/XSV 았/EP 습니다/EF
+큐를 생성했습니다	큐/NNG 를/JKO 생성/NNG 하/XSV 았/EP 습니다/EF
+메시지를 발행했습니다	메시/NNG 지/VX 를/JKO 발행/NNG 하/XSV 았/EP 습니다/EF
+이벤트를 구독했습니다	이벤트/NNG 를/JKO 구독/NNG 하/XSV 았/EP 습니다/EF
+알림을 전송했습니다	알림/NNG 을/JKO 전송/NNG 하/XSV 았/EP 습니다/EF
+스케줄을 등록했습니다	스/IC 케/NNP 주/VV ㄹ/ETM 을/JKO 등록/NNG 하/XSV 았/EP 습니다/EF
+작업을 예약했습니다	작업/NNG 을/JKO 예약/NNG 하/XSV 았/EP 습니다/EF
+배치를 실행했습니다	배치/NNG 를/JKO 실행/NNG 하/XSV 았/EP 습니다/EF
+파이프라인을 구성했습니다	파이프라인/NNG 을/JKO 구성/NNG 하/XSV 았/EP 습니다/EF
+워크플로우를 정의했습니다	워크/NNG 플로우/NNP 를/JKO 정의/NNG 하/XSV 았/EP 습니다/EF
+자동화를 구현했습니다	자동화/NNG 를/JKO 구현/NNG 하/XSV 았/EP 습니다/EF
+모니터링을 설정했습니다	모니터링/NNG 을/JKO 설정/NNG 하/XSV 았/EP 습니다/EF
+대시보드를 생성했습니다	대시보드/NNP 를/JKO 생성/NNG 하/XSV 았/EP 습니다/EF
+메트릭을 수집했습니다	메/NNG 트릭/NNG 을/JKO 수집/NNG 하/XSV 았/EP 습니다/EF
+로깅을 구성했습니다	로/NNG 깅/NNG 을/JKO 구성/NNG 하/XSV 았/EP 습니다/EF
+추적을 활성화했습니다	추적/NNG 을/JKO 활성화/NNG 하/XSV 았/EP 습니다/EF
+프로파일링을 수행했습니다	프로파일링/NNP 을/JKO 수행/NNG 하/XSV 았/EP 습니다/EF
+벤치마크를 실행했습니다	벤치마크/NNG 를/JKO 실행/NNG 하/XSV 았/EP 습니다/EF
+부하테스트를 진행했습니다	부하/NNG 테스트/NNG 를/JKO 진행/NNG 하/XSV 았/EP 습니다/EF
+스트레스테스트를 완료했습니다	스트레스/NNG 테스트/NNG 를/JKO 완료/NNG 하/XSV 았/EP 습니다/EF
+회귀테스트를 통과했습니다	회귀/NNG 테스트/NNG 를/JKO 통과/NNG 하/XSV 았/EP 습니다/EF
+단위테스트를 작성했습니다	단위/NNG 테스트/NNG 를/JKO 작성/NNG 하/XSV 았/EP 습니다/EF
+통합테스트를 실행했습니다	통합/NNG 테스트/NNG 를/JKO 실행/NNG 하/XSV 았/EP 습니다/EF
+코드리뷰를 완료했습니다	코드/NNG 리뷰/NNG 를/JKO 완료/NNG 하/XSV 았/EP 습니다/EF
+머지를 수행했습니다	머/NP 지/VX 를/JKO 수행/NNG 하/XSV 았/EP 습니다/EF
+브랜치를 생성했습니다	브랜치/NNP 를/JKO 생성/NNG 하/XSV 았/EP 습니다/EF
+태그를 추가했습니다	태그/NNG 를/JKO 추가/NNG 하/XSV 았/EP 습니다/EF
+릴리스노트를 작성했습니다	릴리스/NNG 노트/NNG 를/JKO 작성/NNG 하/XSV 았/EP 습니다/EF
+변경로그를 업데이트했습니다	변경/NNG 로/JKB 그/NP 를/JKO 업데이트/NNG 하/XSV 았/EP 습니다/EF
+문서화를 완료했습니다	문서화/NNG 를/JKO 완료/NNG 하/XSV 았/EP 습니다/EF
+주석을 추가했습니다	주석/NNG 을/JKO 추가/NNG 하/XSV 았/EP 습니다/EF
+리팩토링을 진행했습니다	리팩토링/NNG 을/JKO 진행/NNG 하/XSV 았/EP 습니다/EF
+최적화를 수행했습니다	최적화/NNG 를/JKO 수행/NNG 하/XSV 았/EP 습니다/EF
+의존성을 업데이트했습니다	의존/NNG 성/XSN 을/JKO 업데이트/NNG 하/XSV 았/EP 습니다/EF
+취약점을 패치했습니다	취약점/NNG 을/JKO 패치/NNG 하/XSV 았/EP 습니다/EF
+보안점검을 완료했습니다	보안/NNG 점검/NNG 을/JKO 완료/NNG 하/XSV 았/EP 습니다/EF
+감사로그를 확인했습니다	감사/NNG 로/JKB 그/NP 를/JKO 확인/NNG 하/XSV 았/EP 습니다/EF
+접근로그를 분석했습니다	접근로/NNG 그/NP 를/JKO 분석/NNG 하/XSV 았/EP 습니다/EF
+에러로그를 검토했습니다	에러/NNG 로/JKB 그/NP 를/JKO 검토/NNG 하/XSV 았/EP 습니다/EF
+디버그모드를 활성화했습니다	디버/NNP 그/NP 모드/NNG 를/JKO 활성화/NNG 하/XSV 았/EP 습니다/EF
+프로덕션을 배포했습니다	프로덕션/NNG 을/JKO 배포/NNG 하/XSV 았/EP 습니다/EF
+스테이징을 테스트했습니다	스테이/NNP 징/NNG 을/JKO 테스트/NNG 하/XSV 았/EP 습니다/EF
+개발환경을 구성했습니다	개발/NNG 환경/NNG 을/JKO 구성/NNG 하/XSV 았/EP 습니다/EF
+가상환경을 생성했습니다	가상/NNG 환경/NNG 을/JKO 생성/NNG 하/XSV 았/EP 습니다/EF
+컨테이너를 실행했습니다	컨테이너/NNG 를/JKO 실행/NNG 하/XSV 았/EP 습니다/EF
+오케스트레이션을 구성했습니다	오케스트레이션/NNG 을/JKO 구성/NNG 하/XSV 았/EP 습니다/EF
+로드밸런싱을 설정했습니다	로드/NNG 밸/NNG 이/VCP 런/ETM 싱/NNP 을/JKO 설정/NNG 하/XSV 았/EP 습니다/EF
+스케일링을 적용했습니다	스케일링/NNG 을/JKO 적용/NNG 하/XSV 았/EP 습니다/EF
+페일오버를 테스트했습니다	페일/NNG 오버/NNG 를/JKO 테스트/NNG 하/XSV 았/EP 습니다/EF
+복구절차를 검증했습니다	복구/NNG 절차/NNG 를/JKO 검증/NNG 하/XSV 았/EP 습니다/EF
+백업정책을 수립했습니다	백업/NNG 정책/NNG 을/JKO 수립/NNG 하/XSV 았/EP 습니다/EF
+보존기간을 설정했습니다	보존/NNG 기/NNG 가/JKS ㄴ/ETM 을/JKO 설정/NNG 하/XSV 았/EP 습니다/EF
+스냅샷을 생성했습니다	스냅샷/NNP 을/JKO 생성/NNG 하/XSV 았/EP 습니다/EF
+아카이브를 완료했습니다	아카이브/NNP 를/JKO 완료/NNG 하/XSV 았/EP 습니다/EF
+압축을 적용했습니다	압축/NNG 을/JKO 적용/NNG 하/XSV 았/EP 습니다/EF
+암호화를 완료했습니다	암호화/NNG 를/JKO 완료/NNG 하/XSV 았/EP 습니다/EF
+서명을 추가했습니다	서명/NNG 을/JKO 추가/NNG 하/XSV 았/EP 습니다/EF
+검증을 완료했습니다	검증/NNG 을/JKO 완료/NNG 하/XSV 았/EP 습니다/EF
+인터페이스를 정의했습니다	인터페이스/NNG 를/JKO 정의/NNG 하/XSV 았/EP 습니다/EF
+추상화를 구현했습니다	추상화/NNG 를/JKO 구현/NNG 하/XSV 았/EP 습니다/EF
+상속을 적용했습니다	상속/NNG 을/JKO 적용/NNG 하/XSV 았/EP 습니다/EF
+다형성을 활용했습니다	다형성/NNG 을/JKO 활용/NNG 하/XSV 았/EP 습니다/EF
+캡슐화를 구현했습니다	캡슐/NNG 화/XSN 를/JKO 구현/NNG 하/XSV 았/EP 습니다/EF
+모듈화를 완료했습니다	모듈/NNG 화/XSN 를/JKO 완료/NNG 하/XSV 았/EP 습니다/EF
+컴포넌트를 분리했습니다	컴포넌트/NNG 를/JKO 분리/NNG 하/XSV 았/EP 습니다/EF
+레이어를 구성했습니다	레이어/NNG 를/JKO 구성/NNG 하/XSV 았/EP 습니다/EF
+아키텍처를 설계했습니다	아키텍처/NNG 를/JKO 설계/NNG 하/XSV 았/EP 습니다/EF
+패턴을 적용했습니다	패턴/NNG 을/JKO 적용/NNG 하/XSV 았/EP 습니다/EF
+디자인을 개선했습니다	디자인/NNG 을/JKO 개선/NNG 하/XSV 았/EP 습니다/EF
+구조를 변경했습니다	구조/NNG 를/JKO 변경/NNG 하/XSV 았/EP 습니다/EF
+흐름을 최적화했습니다	흐름/NNG 을/JKO 최적화/NNG 하/XSV 았/EP 습니다/EF
+로직을 수정했습니다	로직/NNG 을/JKO 수정/NNG 하/XSV 았/EP 습니다/EF
+알고리즘을 개선했습니다	알고리즘/NNG 을/JKO 개선/NNG 하/XSV 았/EP 습니다/EF
+데이터구조를 변경했습니다	데이터/NNG 구조/NNG 를/JKO 변경/NNG 하/XSV 았/EP 습니다/EF
+엔드포인트를 추가했습니다	엔드/NNG 포인트/NNG 를/JKO 추가/NNG 하/XSV 았/EP 습니다/EF
+날씨가 좋아졌습니다	날씨/NNG 가/JKS 좋/VA 아/EF 지/NNB 었/EP 습니다/EF
+비가 그쳤습니다	비/NNG 가/JKS 그/NP 치/VV ㅓㅆ/EC 습니다/EF
+눈이 멈췄습니다	눈/NNG 이/JKS 멈추/VV 었/EP 습니다/EF
+바람이 잦아들었습니다	바람/NNG 이/JKS 잦아들/VV ㄹ/ETM 었/EP 습니다/EF
+기온이 올랐습니다	기온/NNG 이/JKS 오/VV ㄹ/ETM 랐/NNG 습니다/EF
+기온이 내려갔습니다	기온/NNG 이/JKS 내/VX 려/NNG 가/VV 았/EP 습니다/EF
+습도가 높아졌습니다	습도/NNG 가/JKS 높/VA 아/EF 지/NNB 었/EP 습니다/EF
+건조해졌습니다	건조/NNG 하/XSV 어/EC 습니다/EF
+봄이 왔습니다	보/VV ㅁ/ETN 이/JKS 오/VV 았/EP 습니다/EF
+여름이 시작됐습니다	여름/NNG 이/JKS 시작/NNG 되/XSV 었/EP 습니다/EF
+음식이 완성됐습니다	음식/NNG 이/JKS 완성/NNG 되/XSV 었/EP 습니다/EF
+요리가 맛있습니다	요리/NNG 가/JKS 맛있/VA 습니다/EF
+커피를 마셨습니다	커피/NNG 를/JKO 마시/VV 었/EP 습니다/EF
+물을 마셨습니다	물/NNG 을/JKO 마시/VV 었/EP 습니다/EF
+음식을 주문했습니다	음식/NNG 을/JKO 주문/NNG 하/XSV 았/EP 습니다/EF
+배달이 도착했습니다	배달/NNG 이/JKS 도착/NNG 하/XSV 았/EP 습니다/EF
+계산을 완료했습니다	계/NNG 사/VV ㄴ/ETM 을/JKO 완료/NNG 하/XSV 았/EP 습니다/EF
+영수증을 받았습니다	영수증/NNG 을/JKO 받/VV 았/EP 습니다/EF
+팁을 남겼습니다	팁/NNG 을/JKO 남기/VV 었/EP 습니다/EF
+운동을 시작했습니다	운동/NNG 을/JKO 시작/NNG 하/XSV 았/EP 습니다/EF
+운동을 마쳤습니다	운동/NNG 을/JKO 마치/VV 었/EP 습니다/EF
+체중이 줄었습니다	체중/NNG 이/JKS 주/VV ㄹ/ETM 었/EP 습니다/EF
+체중이 늘었습니다	체중/NNG 이늘/NNG 었/EP 습니다/EF
+건강이 좋아졌습니다	건강/NNG 이/JKS 좋/VA 아/EF 지/NNB 었/EP 습니다/EF
+컨디션이 나아졌습니다	컨디션/NNG 이/JKS 나아지/VV 었/EP 습니다/EF
+약을 먹었습니다	약/NNG 을/JKO 먹/VV 었/EP 습니다/EF
+병원에 갔습니다	병원/NNG 에/JKB 가/VV 았/EP 습니다/EF
+진단이 나왔습니다	진단/NNG 이나/JC 오/VV 았/EP 습니다/EF
+공부를 시작했습니다	공부/NNG 를/JKO 시작/NNG 하/XSV 았/EP 습니다/EF
+공부를 마쳤습니다	공부/NNG 를/JKO 마치/VV 었/EP 습니다/EF
+시험을 봤습니다	시험/NNG 을/JKO 보/VV 았/EP 습니다/EF
+성적이 나왔습니다	성적/NNG 이나/JC 오/VV 았/EP 습니다/EF
+합격했습니다	합격/NNG 하/XSV 았/EP 습니다/EF
+졸업했습니다	졸업/NNG 하/XSV 았/EP 습니다/EF
+수업이 시작됐습니다	수업/NNG 이/JKS 시작/NNG 되/XSV 었/EP 습니다/EF
+수업이 끝났습니다	수업/NNG 이/JKS 끝나/VV 았/EP 습니다/EF
+숙제를 완료했습니다	숙제/NNG 를/JKO 완료/NNG 하/XSV 았/EP 습니다/EF
+과제를 제출했습니다	과제/NNG 를/JKO 제출/NNG 하/XSV 았/EP 습니다/EF

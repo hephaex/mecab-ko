@@ -1,0 +1,63 @@
+# Sprint 58 확장 - 검증된 문장 (뉴스)
+
+정부가 성명을 발표했다	정부/NNG 가/JKS 성명/NNG 을/JKO 발표/NNG 하/XSV 았/EP 다/EF
+기업이 투자를 확대했습니다	기업/NNG 이/JKS 투자/NNG 를/JKO 확대/NNG 하/XSV 았/EP 습니다/EF
+금리가 동결됐다	금리/NNG 가/JKS 동결/NNG 되/XSV 었/EP 다/EF
+물가가 안정되고 있습니다	물가/NNG 가/JKS 안정/NNG 되/XSV 고/EC 있/VX 습니다/EF
+주식시장이 급등했다	주식/NNG 시장/NNG 이/JKS 급등/NNG 하/XSV 았/EP 다/EF
+수출이 증가했습니다	수출/NNG 이/JKS 증가/NNG 하/XSV 았/EP 습니다/EF
+경찰이 수사에 착수했습니다	경찰/NNG 이/JKS 수사/NNG 에/JKB 착수/NNG 하/XSV 았/EP 습니다/EF
+시민들이 항의했다	시민/NNG 들/XSN 이/JKS 항의/NNG 하/XSV 았/EP 다/EF
+소방대원들이 구조했다	소방대원/NNG 들/XSN 이/JKS 구조/NNG 하/XSV 았/EP 다/EF
+행사가 개최됐다	행사/NNG 가/JKS 개최/NNG 되/XSV 었/EP 다/EF
+재판이 진행됐습니다	재판/NNG 이/JKS 진행/NNG 되/XSV 었/EP 습니다/EF
+대통령이 기자회견을 열었습니다	대통령/NNG 이/JKS 기자회견/NNG 을/JKO 열/VV 었/EP 습니다/EF
+환율이 하락세를 보였습니다	환율/NNG 이/JKS 하락세/NNG 를/JKO 보/VV 이/VX 었/EP 습니다/EF
+
+# Sprint 58 확장 - 검증된 문장 (소설)
+
+눈물이 흘렀다	눈물/NNG 이/JKS 흐르/VV 었/EP 다/EF
+마음이 아팠다	마음/NNG 이/JKS 아프/VA 았/EP 다/EF
+기쁨이 넘쳤다	기쁨/NNG 이/JKS 넘치/VV 었/EP 다/EF
+그리움이 사무쳤다	그리움/NNG 이/JKS 사무치/VV 었/EP 다/EF
+꽃잎이 흩날렸다	꽃잎/NNG 이/JKS 흩날리/VV 었/EP 다/EF
+구름이 흘러갔다	구름/NNG 이/JKS 흐르/VV 어/EC 가/VX 았/EP 다/EF
+그녀는 고개를 끄덕였다	그녀/NP 는/JX 고개/NNG 를/JKO 끄덕이/VV 었/EP 다/EF
+
+# Sprint 58 확장 - 검증된 문장 (SNS)
+
+오늘 날씨 좋다	오늘/NNG 날씨/NNG 좋/VA 다/EF
+카페 왔어	카페/NNG 오/VV 았/EP 어/EF
+집에 도착했어요	집/NNG 에/JKB 도착/NNG 하/XSV 았/EP 어요/EF
+기분 좋아	기분/NNG 좋/VA 아/EF
+주말에 뭐해	주말/NNG 에/JKB 뭐/NP 하/VV 어/EF
+영화 보러 갈래	영화/NNG 보/VV 러/EC 가/VV ㄹ래/EF
+노래 좋다	노래/NNG 좋/VA 다/EF
+산책 중이에요	산책/NNG 중/NNB 이/VCP 에요/EF
+공부하는 중이야	공부/NNG 하/XSV 는/ETM 중/NNB 이/VCP 야/EF
+완전 맛있어	완전/NNG 맛있/VA 어/EF
+진짜 예쁘다	진짜/NNG 예쁘/VA 다/EF
+대박이야	대박/NNG 이/VCP 야/EF
+졸려	졸리/VA 어/EF
+배고파요	배고프/VA 아요/EF
+심심해요	심심하/VA 어요/EF
+설렌다	설레/VV ㄴ다/EF
+
+# Sprint 58 확장 - 검증된 문장 (기술)
+
+함수를 정의했습니다	함수/NNG 를/JKO 정의/NNG 하/XSV 았/EP 습니다/EF
+변수를 선언했습니다	변수/NNG 를/JKO 선언/NNG 하/XSV 았/EP 습니다/EF
+클래스를 생성했습니다	클래스/NNP 를/JKO 생성/NNG 하/XSV 았/EP 습니다/EF
+코드를 컴파일했습니다	코드/NNG 를/JKO 컴파일/NNG 하/XSV 았/EP 습니다/EF
+프로그램을 실행했습니다	프로그램/NNG 을/JKO 실행/NNG 하/XSV 았/EP 습니다/EF
+디버깅을 진행했습니다	디버깅/NNG 을/JKO 진행/NNG 하/XSV 았/EP 습니다/EF
+테스트를 작성했습니다	테스트/NNG 를/JKO 작성/NNG 하/XSV 았/EP 습니다/EF
+에러를 수정했습니다	에러/NNG 를/JKO 수정/NNG 하/XSV 았/EP 습니다/EF
+서버를 구축했습니다	서버/NNG 를/JKO 구축/NNG 하/XSV 았/EP 습니다/EF
+데이터를 분석했습니다	데이터/NNG 를/JKO 분석/NNG 하/XSV 았/EP 습니다/EF
+모델을 학습했습니다	모델/NNG 을/JKO 학습/NNG 하/XSV 았/EP 습니다/EF
+파일을 저장했습니다	파일/NNG 을/JKO 저장/NNG 하/XSV 았/EP 습니다/EF
+설정을 변경했습니다	설정/NNG 을/JKO 변경/NNG 하/XSV 았/EP 습니다/EF
+업데이트를 완료했습니다	업데이트/NNG 를/JKO 완료/NNG 하/XSV 았/EP 습니다/EF
+배포를 진행했습니다	배포/NNG 를/JKO 진행/NNG 하/XSV 았/EP 습니다/EF
+테스트를 통과했습니다	테스트/NNG 를/JKO 통과/NNG 하/XSV 았/EP 습니다/EF
