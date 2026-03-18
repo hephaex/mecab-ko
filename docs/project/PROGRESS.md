@@ -15,7 +15,7 @@
 | S59-05 | Docker Hub 배포 | ⏸️ Ready, not pushed |
 | S59-06 | Rust 예제 구현 | ✅ CLI + Keywords |
 | S59-07 | Python 예제 구현 | ✅ FastAPI + Jupyter |
-| S59-08 | v0.6.0 릴리스 | ✅ Prepared (0.5→0.6)
+| S59-08 | v0.6.0 릴리스 | ✅ Released!
 
 ---
 

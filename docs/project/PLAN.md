@@ -43,10 +43,11 @@ Sprint 58 설계 구현 및 v0.6.0 릴리스
   - README 문서 (183 lines)
 
 ### P3 (Low) - 릴리스
-- [x] S59-08: v0.6.0 릴리스 준비 ✅
+- [x] S59-08: v0.6.0 릴리스 ✅
   - CHANGELOG 업데이트 완료
   - 버전 범프 완료 (0.5.0 → 0.6.0, 15 files)
-  - GitHub Release 생성 대기
+  - GitHub Release 생성 완료 (2026-03-18)
+  - URL: https://github.com/hephaex/mecab-ko/releases/tag/v0.6.0
 
 ---
 
