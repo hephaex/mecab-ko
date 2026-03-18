@@ -1,0 +1,46 @@
+# Docker build artifacts
+Dockerfile.bak
+docker-compose.override.yml
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Volume data (local development)
+logs/
+cache/
+input/
+output/
+data/
+
+# Container runtime files
+*.log
+.dockerignore.bak
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+.coverage
+
+# Temporary files
+*.tmp
+*.temp
+*.bak

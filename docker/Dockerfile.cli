@@ -1,0 +1,80 @@
+# MeCab-Ko CLI - Multi-stage Docker Build
+# Stage 1: Builder
+# Stage 2: Runtime
+# Produces: ~150MB image with mecab-ko CLI and dictionary
+
+# ============================================================================
+# Stage 1: Builder
+# ============================================================================
+FROM rust:1.75-bookworm as builder
+
+LABEL maintainer="hephaex <hephaex@gmail.com>"
+LABEL description="MeCab-Ko CLI builder stage"
+
+WORKDIR /app
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    pkg-config \
+    libssl-dev \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy workspace files for dependency caching
+COPY rust/Cargo.toml rust/Cargo.lock ./
+
+# Copy workspace members
+COPY rust/crates/mecab-ko-core ./crates/mecab-ko-core
+COPY rust/crates/mecab-ko-dict ./crates/mecab-ko-dict
+COPY rust/crates/mecab-ko-dict-sync ./crates/mecab-ko-dict-sync
+COPY rust/crates/mecab-ko-hangul ./crates/mecab-ko-hangul
+COPY rust/crates/mecab-ko-cli ./crates/mecab-ko-cli
+
+# Copy dictionary data
+COPY data/mecab-ko-dic-2.1.1-20180720/ ./data/mecab-ko-dic/
+
+# Build release binary
+RUN cargo build --release \
+    --manifest-path crates/mecab-ko-cli/Cargo.toml \
+    --bin mecab \
+    && strip /app/target/release/mecab
+
+# ============================================================================
+# Stage 2: Runtime
+# ============================================================================
+FROM debian:bookworm-slim
+
+LABEL maintainer="hephaex <hephaex@gmail.com>"
+LABEL description="MeCab-Ko Korean morphological analyzer CLI"
+LABEL version="0.5.0"
+
+# Install minimal runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user for security
+RUN useradd -m -s /sbin/nologin mecab
+
+# Copy binary from builder
+COPY --from=builder /app/target/release/mecab /usr/local/bin/mecab
+
+# Copy dictionary data
+COPY --from=builder /app/data/mecab-ko-dic /usr/share/mecab-ko-dic
+
+# Set environment variables
+ENV MECAB_DIC_DIR=/usr/share/mecab-ko-dic
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+
+# Switch to non-root user
+USER mecab
+WORKDIR /home/mecab
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD mecab --version | grep -q mecab || exit 1
+
+# Default command
+ENTRYPOINT ["mecab"]
+CMD ["--help"]

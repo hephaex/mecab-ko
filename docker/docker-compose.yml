@@ -1,0 +1,164 @@
+version: '3.8'
+
+# Docker Compose configuration for MeCab-Ko deployment
+# Provides both CLI tool container and API server container
+
+services:
+  # =========================================================================
+  # MeCab-Ko CLI Container
+  # =========================================================================
+  mecab-cli:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.cli
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    image: mecab-ko:latest
+    image-tags:
+      - mecab-ko:cli
+      - mecab-ko:0.5.0-cli
+    container_name: mecab-ko-cli
+
+    # Run interactively with text input
+    stdin_open: true
+    tty: true
+
+    # Volume mounts for input/output
+    volumes:
+      - ./data:/data:ro              # Read-only dictionary data
+      - ./input:/input:ro             # Read-only input files
+      - ./output:/output:rw           # Writable output directory
+
+    # Environment variables
+    environment:
+      MECAB_DIC_DIR: /usr/share/mecab-ko-dic
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "mecab", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+    # Restart policy
+    restart: unless-stopped
+
+    labels:
+      description: "MeCab-Ko Korean Morphological Analyzer CLI"
+      version: "0.5.0"
+
+  # =========================================================================
+  # MeCab-Ko Python API Server Container
+  # =========================================================================
+  mecab-api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.python-api
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    image: mecab-ko-api:latest
+    image-tags:
+      - mecab-ko-api:0.5.0
+      - mecab-ko-api:latest
+    container_name: mecab-ko-api
+
+    # Port mapping
+    ports:
+      - "8000:8000"                  # FastAPI server
+
+    # Expose port for internal communication
+    expose:
+      - "8000"
+
+    # Volume mounts
+    volumes:
+      - ./logs:/app/logs:rw          # Application logs
+      - ./cache:/app/cache:rw        # Cache directory
+
+    # Environment variables
+    environment:
+      MECAB_DIC_DIR: /usr/share/mecab-ko-dic
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+      PYTHONUNBUFFERED: 1
+      LOG_LEVEL: info
+      WORKERS: 4
+      PORT: 8000
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1024M
+        reservations:
+          cpus: '1'
+          memory: 512M
+      # Restart policy
+      restart_policy:
+        condition: unless-stopped
+        delay: 10s
+        max_attempts: 5
+        window: 120s
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    labels:
+      description: "MeCab-Ko Python API Server (FastAPI + Uvicorn)"
+      version: "0.5.0"
+
+  # =========================================================================
+  # Optional: Reverse Proxy/Load Balancer (Nginx)
+  # Uncomment to add reverse proxy in front of API server
+  # =========================================================================
+  # nginx:
+  #   image: nginx:1.25-alpine
+  #   container_name: mecab-ko-nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./ssl:/etc/nginx/ssl:ro
+  #   depends_on:
+  #     - mecab-api
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+
+volumes:
+  # Named volumes for persistent data
+  logs:
+    driver: local
+  cache:
+    driver: local
+
+networks:
+  default:
+    name: mecab-ko-network
+    driver: bridge
+    driver_opts:
+      # Enable IPv6 if needed
+      # com.docker.network.driver.mtu: "9000"

@@ -1,0 +1,128 @@
+# MeCab-Ko Python API Server - Multi-stage Docker Build
+# Stage 1: Python builder (wheel compilation)
+# Stage 2: Rust builder (Python extension compilation)
+# Stage 3: Runtime
+# Produces: ~300MB image with FastAPI server
+
+# ============================================================================
+# Stage 1: Python builder (build wheels for dependencies)
+# ============================================================================
+FROM python:3.11-bookworm as python-builder
+
+LABEL maintainer="hephaex <hephaex@gmail.com>"
+LABEL description="MeCab-Ko Python API builder stage - Python dependencies"
+
+WORKDIR /build
+
+# Install Python build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create wheels directory
+RUN mkdir -p /wheels
+
+# Copy requirements
+COPY docker/requirements.txt /tmp/requirements.txt
+
+# Build wheels for all dependencies
+RUN pip install --upgrade pip setuptools wheel && \
+    pip wheel --no-cache-dir --no-deps --wheel-dir /wheels -r /tmp/requirements.txt
+
+# ============================================================================
+# Stage 2: Rust/Maturin builder (build Python extension)
+# ============================================================================
+FROM rust:1.75-bookworm as rust-builder
+
+LABEL maintainer="hephaex <hephaex@gmail.com>"
+LABEL description="MeCab-Ko Python API builder stage - Rust extension"
+
+WORKDIR /app
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    python3-dev \
+    python3-pip \
+    pkg-config \
+    libssl-dev \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install maturin for building Python extensions
+RUN pip3 install maturin
+
+# Copy workspace files
+COPY rust/Cargo.toml rust/Cargo.lock ./
+
+# Copy workspace members (minimal set needed)
+COPY rust/crates/mecab-ko-core ./crates/mecab-ko-core
+COPY rust/crates/mecab-ko-dict ./crates/mecab-ko-dict
+COPY rust/crates/mecab-ko-dict-sync ./crates/mecab-ko-dict-sync
+COPY rust/crates/mecab-ko-hangul ./crates/mecab-ko-hangul
+COPY rust/crates/mecab-ko-python ./crates/mecab-ko-python
+
+# Copy dictionary data
+COPY data/mecab-ko-dic-2.1.1-20180720/ ./data/mecab-ko-dic/
+
+# Build Python extension wheel
+WORKDIR /app/crates/mecab-ko-python
+RUN maturin build --release --strip && \
+    mkdir -p /wheels && \
+    cp target/wheels/*.whl /wheels/
+
+# ============================================================================
+# Stage 3: Runtime
+# ============================================================================
+FROM python:3.11-slim-bookworm
+
+LABEL maintainer="hephaex <hephaex@gmail.com>"
+LABEL description="MeCab-Ko Python API Server (FastAPI)"
+LABEL version="0.5.0"
+
+WORKDIR /app
+
+# Install minimal runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user for security
+RUN useradd -m -s /sbin/nologin appuser
+
+# Copy wheels from builders
+COPY --from=python-builder /wheels /wheels
+COPY --from=rust-builder /wheels /wheels
+
+# Install Python dependencies from wheels
+RUN pip install --upgrade pip setuptools && \
+    pip install --no-cache-dir --no-index --find-links /wheels /wheels/* && \
+    rm -rf /wheels
+
+# Copy dictionary data
+COPY --from=rust-builder /app/data/mecab-ko-dic /usr/share/mecab-ko-dic
+
+# Copy API server source code
+COPY docker/api_server.py /app/api_server.py
+
+# Set environment variables
+ENV MECAB_DIC_DIR=/usr/share/mecab-ko-dic
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+ENV PYTHONUNBUFFERED=1
+ENV WORKERS=4
+ENV PORT=8000
+
+# Switch to non-root user
+USER appuser
+
+# Expose API port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Run FastAPI server with Uvicorn
+CMD ["uvicorn", "api_server:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
