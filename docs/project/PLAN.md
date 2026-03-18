@@ -40,14 +40,16 @@ Production-grade 품질 확보 및 사용자 확대
   - 상세 분석 JSON/MD 문서화
 
 ### P3 (Low) - 생태계 확장
-- [ ] S58-07: Elasticsearch 플러그인 테스트
-  - nori 호환성 검증
-  - 설치 가이드 문서화
+- [x] S58-07: Elasticsearch/Nori 호환성 문서화 ✅
+  - Nori 플러그인 호환성 가이드 (587 lines)
+  - Elasticsearch 통합 가이드 (689 lines)
+  - 설정 예제 및 테스트 쿼리
 
-- [ ] S58-08: Docker 이미지 배포
-  - mecab-ko CLI 이미지
-  - Python API 서버 이미지
-  - Docker Hub 배포
+- [x] S58-08: Docker 이미지 배포 ✅
+  - mecab-ko CLI 이미지 (Dockerfile.cli)
+  - Python API 서버 이미지 (Dockerfile.python-api)
+  - docker-compose.yml + Makefile
+  - 프로덕션 배포 가이드
 
 ---
 
