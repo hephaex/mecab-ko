@@ -1,9 +1,58 @@
-# 현재 스프린트: Phase 27 - Sprint 58 (Production Ready)
+# 현재 스프린트: Phase 28 - Sprint 59 (Implementation & Release)
+
+## 🎯 Sprint 59 목표
+Sprint 58 설계 구현 및 v0.6.0 릴리스
+
+## Sprint 59 작업 목록
+
+### P0 (Critical) - 성능 최적화 구현
+- [ ] S59-01: 처리 속도 최적화 구현
+  - SIMD 배치 연접 비용 조회 (OPT-1)
+  - Hot Path 인라인 최적화 (OPT-4)
+  - 목표: 238K → 295K tokens/sec (+24%)
+  - 정확도 100% 유지 검증
+
+- [ ] S59-02: 메모리 최적화 Phase 1
+  - LazyEntries 적응형 캐시
+  - 목표: 150MB → 140MB (-10MB)
+
+### P1 (High) - CI/CD 및 배포
+- [ ] S59-03: Python wheel CI/CD 활성화
+  - GitHub Actions 워크플로우 테스트
+  - TestPyPI 배포 검증
+  - PyPI Trusted Publisher 설정
+
+- [ ] S59-04: GitHub Pages 문서 배포
+  - mdBook 사이트 배포
+  - https://hephaex.github.io/mecab-ko/ 활성화
+
+- [ ] S59-05: Docker Hub 배포
+  - mecab-ko:latest CLI 이미지
+  - mecab-ko-api:latest Python API 이미지
+
+### P2 (Medium) - 예제 프로젝트 구현
+- [ ] S59-06: Rust 예제 구현
+  - CLI 분석기 (cli_analyzer.rs)
+  - 키워드 추출기 (keyword_extractor.rs)
+
+- [ ] S59-07: Python 예제 구현
+  - FastAPI 서버 예제
+  - Jupyter 튜토리얼 노트북
+
+### P3 (Low) - 릴리스
+- [ ] S59-08: v0.6.0 릴리스 준비
+  - CHANGELOG 업데이트
+  - 버전 범프 (Cargo.toml, pyproject.toml)
+  - GitHub Release 생성
+
+---
+
+# 완료된 스프린트: Phase 27 - Sprint 58 (Production Ready) ✅
 
 ## 🎯 Sprint 58 목표
 Production-grade 품질 확보 및 사용자 확대
 
-## Sprint 58 작업 목록
+## Sprint 58 작업 목록 (8/8 완료)
 
 ### P0 (Critical) - 안정성 강화
 - [x] S58-01: 테스트셋 1100문장 확장 ✅
