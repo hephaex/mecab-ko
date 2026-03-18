@@ -328,6 +328,9 @@ impl ViterbiSearcher {
     }
 
     /// 단일 노드의 최소 비용 계산 및 업데이트 (사전 수집된 `ending_nodes` 사용)
+    ///
+    /// Hot path: 성능 최적화를 위해 인라인 처리
+    #[inline]
     fn update_node_cost_with_endings<C: ConnectionCost>(
         &self,
         lattice: &mut Lattice,

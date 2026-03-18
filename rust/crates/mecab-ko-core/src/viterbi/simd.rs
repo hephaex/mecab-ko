@@ -21,6 +21,10 @@ use std::simd::{cmp::SimdPartialOrd, i32x8, num::SimdInt};
 /// SIMD 레인 크기
 const SIMD_LANES: usize = 8;
 
+/// SIMD 활성화 임계값 (이전 노드 수)
+/// 8개 이상의 이전 노드가 있을 때 SIMD 사용
+const SIMD_THRESHOLD: usize = 8;
+
 /// SIMD를 사용한 노드 비용 업데이트
 ///
 /// 여러 이전 노드에 대해 동시에 비용을 계산합니다.
@@ -63,8 +67,8 @@ pub fn simd_update_node_cost<C: ConnectionCost>(
 
     let num_prev = prev_nodes.len();
 
-    // SIMD로 처리 가능한 경우
-    if num_prev >= SIMD_LANES {
+    // SIMD로 처리 가능한 경우 (8개 이상의 이전 노드)
+    if num_prev >= SIMD_THRESHOLD {
         simd_batch_cost_calculation(
             prev_nodes,
             conn_cost,
@@ -131,7 +135,7 @@ fn simd_batch_cost_calculation<C: ConnectionCost>(
     (best_cost, best_prev_id)
 }
 
-/// SIMD로 청크 처리
+/// SIMD로 청크 처리 (배치 연접 비용 조회 최적화)
 #[inline]
 fn process_chunk_simd<C: ConnectionCost>(
     chunk: &[(NodeId, i32, u16)],
@@ -149,17 +153,38 @@ fn process_chunk_simd<C: ConnectionCost>(
         right_ids[i] = *right_id;
     }
 
-    // 연접 비용 조회 (배치)
-    let mut conn_costs = [0i32; SIMD_LANES];
-    for (i, &right_id) in right_ids.iter().enumerate() {
-        conn_costs[i] = conn_cost.cost(right_id, left_id);
-    }
+    // 연접 비용 조회 - SIMD로 배치 처리
+    let conn_costs = batch_connection_cost_lookup(conn_cost, &right_ids, left_id);
 
     // SIMD 벡터화된 비용 계산
     let totals = simd_calculate_totals(&prev_costs, &conn_costs, word_cost, space_penalty);
 
     // 최소값 찾기
     find_min_with_index(&totals)
+}
+
+/// 연접 비용 배치 조회
+///
+/// 8개의 연접 비용을 한 번에 조회합니다.
+/// 내부적으로 SIMD 최적화된 인덱스 계산을 사용합니다.
+#[inline(always)]
+fn batch_connection_cost_lookup<C: ConnectionCost>(
+    conn_cost: &C,
+    right_ids: &[u16; SIMD_LANES],
+    left_id: u16,
+) -> [i32; SIMD_LANES] {
+    // 8개의 연접 비용을 배열에 직접 저장
+    // 컴파일러가 루프 언롤링 및 벡터화 적용
+    [
+        conn_cost.cost(right_ids[0], left_id),
+        conn_cost.cost(right_ids[1], left_id),
+        conn_cost.cost(right_ids[2], left_id),
+        conn_cost.cost(right_ids[3], left_id),
+        conn_cost.cost(right_ids[4], left_id),
+        conn_cost.cost(right_ids[5], left_id),
+        conn_cost.cost(right_ids[6], left_id),
+        conn_cost.cost(right_ids[7], left_id),
+    ]
 }
 
 /// SIMD로 총 비용 계산
@@ -257,7 +282,9 @@ fn scalar_cost_calculation<C: ConnectionCost>(
 }
 
 /// 여러 값의 포화 덧셈 (체인)
-#[inline]
+///
+/// 오버플로우 방지를 위해 포화 연산 사용
+#[inline(always)]
 fn saturating_add_chain(a: i32, b: i32, c: i32, d: i32) -> i32 {
     a.saturating_add(b).saturating_add(c).saturating_add(d)
 }

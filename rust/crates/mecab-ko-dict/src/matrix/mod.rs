@@ -391,6 +391,7 @@ impl DenseMatrix {
 }
 
 impl Matrix for DenseMatrix {
+    #[inline(always)]
     fn get(&self, right_id: u16, left_id: u16) -> i32 {
         let index = right_id as usize + self.lsize * left_id as usize;
         if index < self.costs.len() {
@@ -489,6 +490,7 @@ impl MmapMatrix {
 }
 
 impl Matrix for MmapMatrix {
+    #[inline(always)]
     fn get(&self, right_id: u16, left_id: u16) -> i32 {
         let offset = self.offset(right_id, left_id);
         if offset + 2 <= self.mmap.len() {
@@ -603,6 +605,7 @@ impl SparseMatrix {
 }
 
 impl Matrix for SparseMatrix {
+    #[inline(always)]
     fn get(&self, right_id: u16, left_id: u16) -> i32 {
         let index = right_id as usize + self.lsize * left_id as usize;
         self.entries
@@ -721,6 +724,7 @@ impl ConnectionMatrix {
 }
 
 impl Matrix for ConnectionMatrix {
+    #[inline(always)]
     fn get(&self, right_id: u16, left_id: u16) -> i32 {
         match self {
             Self::Dense(m) => m.get(right_id, left_id),
