@@ -45,6 +45,14 @@ pub mod simd;
 #[cfg(feature = "simd")]
 pub use simd::{simd_forward_pass_position, simd_update_node_cost};
 
+/// 여러 값의 포화 덧셈 (체인)
+///
+/// 오버플로우 방지를 위해 포화 연산 사용
+#[inline(always)]
+fn saturating_add_chain(a: i32, b: i32, c: i32, d: i32) -> i32 {
+    a.saturating_add(b).saturating_add(c).saturating_add(d)
+}
+
 /// 연접 비용 조회 인터페이스
 ///
 /// 두 형태소 간의 연결 비용을 반환합니다.
@@ -70,6 +78,7 @@ pub trait ConnectionCost {
 pub struct ZeroConnectionCost;
 
 impl ConnectionCost for ZeroConnectionCost {
+    #[inline(always)]
     fn cost(&self, _right_id: u16, _left_id: u16) -> i32 {
         0
     }
@@ -91,6 +100,7 @@ impl FixedConnectionCost {
 }
 
 impl ConnectionCost for FixedConnectionCost {
+    #[inline(always)]
     fn cost(&self, _right_id: u16, _left_id: u16) -> i32 {
         self.default_cost
     }
@@ -100,6 +110,7 @@ impl ConnectionCost for FixedConnectionCost {
 ///
 /// 사전 모듈의 연접 비용 행렬을 Viterbi 알고리즘에서 직접 사용할 수 있습니다.
 impl<T: mecab_ko_dict::Matrix> ConnectionCost for T {
+    #[inline(always)]
     fn cost(&self, right_id: u16, left_id: u16) -> i32 {
         self.get(right_id, left_id)
     }
@@ -330,6 +341,7 @@ impl ViterbiSearcher {
     /// 단일 노드의 최소 비용 계산 및 업데이트 (사전 수집된 `ending_nodes` 사용)
     ///
     /// Hot path: 성능 최적화를 위해 인라인 처리
+    /// SIMD 최적화: 8개 이상의 이전 노드가 있으면 SIMD 배치 처리 사용
     #[inline]
     fn update_node_cost_with_endings<C: ConnectionCost>(
         &self,
@@ -338,6 +350,18 @@ impl ViterbiSearcher {
         node_id: NodeId,
         ending_nodes: &[(NodeId, i32, u16)],
     ) {
+        // SIMD 최적화: 8개 이상의 이전 노드가 있으면 SIMD 사용
+        #[cfg(feature = "simd")]
+        if ending_nodes.len() >= 8 {
+            let (best_cost, best_prev) =
+                simd::simd_update_node_cost(lattice, conn_cost, node_id, ending_nodes, &self.space_penalty);
+            if let Some(node) = lattice.node_mut(node_id) {
+                node.total_cost = best_cost;
+                node.prev_node_id = best_prev;
+            }
+            return;
+        }
+
         // 현재 노드 정보 추출
         let (left_id, word_cost, has_space) = {
             let Some(node) = lattice.node(node_id) else {
@@ -366,10 +390,7 @@ impl ViterbiSearcher {
             let connection = conn_cost.cost(prev_right_id, left_id);
 
             // 총 비용 = 이전 비용 + 연접 비용 + 단어 비용 + 띄어쓰기 패널티
-            let total = prev_cost
-                .saturating_add(connection)
-                .saturating_add(word_cost)
-                .saturating_add(space_penalty);
+            let total = saturating_add_chain(prev_cost, connection, word_cost, space_penalty);
 
             if total < best_cost {
                 best_cost = total;

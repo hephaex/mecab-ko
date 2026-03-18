@@ -19,7 +19,8 @@ use std::simd::{
     cmp::{SimdOrd, SimdPartialOrd},
     i32x8,
     num::SimdInt,
-    u16x16, u16x8, LaneCount, Simd, SupportedLaneCount,
+    u16x16, u16x8, Simd,
+    Select,
 };
 
 /// SIMD 레인 크기 (i32x8 사용)
@@ -249,18 +250,17 @@ pub fn simd_min_across_8(a: &[i32; 8], b: &[i32; 8]) -> [i32; 8] {
     a_vec.simd_min(b_vec).to_array()
 }
 
-/// 일반적인 SIMD 레인 크기에 대한 배치 조회 (제네릭)
+/// 일반적인 SIMD 레인 크기에 대한 배치 조회 (8레인)
 ///
-/// 이 함수는 다양한 SIMD 레인 크기를 지원합니다.
+/// 이 함수는 8레인 SIMD를 사용하여 연접 비용을 조회합니다.
 #[inline]
-fn batch_lookup_generic<const LANES: usize>(
+#[allow(dead_code)]
+fn batch_lookup_generic_8(
     matrix: &DenseMatrix,
     right_ids: &[u16],
     left_ids: &[u16],
-) -> Vec<i32>
-where
-    LaneCount<LANES>: SupportedLaneCount,
-{
+) -> Vec<i32> {
+    const LANES: usize = 8;
     let len = right_ids.len().min(left_ids.len());
     let mut result = Vec::with_capacity(len);
 
@@ -275,17 +275,20 @@ where
         let right_slice = &right_ids[start..end];
         let left_slice = &left_ids[start..end];
 
-        // 제네릭 SIMD 벡터 생성
-        let right_vec = Simd::<u16, LANES>::from_slice(right_slice);
-        let left_vec = Simd::<u16, LANES>::from_slice(left_slice);
-        let lsize_vec = Simd::<u16, LANES>::splat(lsize);
+        // 8레인 SIMD 벡터 생성
+        let right_arr: [u16; 8] = right_slice.try_into().unwrap_or([0; 8]);
+        let left_arr: [u16; 8] = left_slice.try_into().unwrap_or([0; 8]);
+        let right_vec = Simd::<u16, 8>::from_array(right_arr);
+        let left_vec = Simd::<u16, 8>::from_array(left_arr);
+        let lsize_vec = Simd::<u16, 8>::splat(lsize);
 
         let left_scaled = left_vec * lsize_vec;
         let indices = right_vec + left_scaled;
 
         // 결과 조회
-        for lane in 0..LANES {
-            let idx = indices.to_array()[lane] as usize;
+        let indices_arr = indices.to_array();
+        for idx_u16 in indices_arr {
+            let idx = idx_u16 as usize;
             let cost = if idx < costs_ref.len() {
                 costs_ref[idx] as i32
             } else {

@@ -16,7 +16,7 @@
 
 use crate::lattice::{Lattice, NodeId};
 use crate::viterbi::{ConnectionCost, SpacePenalty};
-use std::simd::{cmp::SimdPartialOrd, i32x8, num::SimdInt};
+use std::simd::{cmp::SimdPartialOrd, i32x8, num::SimdInt, Select};
 
 /// SIMD 레인 크기
 const SIMD_LANES: usize = 8;
