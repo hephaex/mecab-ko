@@ -57,22 +57,37 @@ jobs:
         working-directory: rust/crates/mecab-ko-node
         run: npm ci
 
+      - name: Set up Python (for PyO3)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Build native module (cross)
         if: matrix.settings.use-cross
-        working-directory: rust/crates/mecab-ko-node
+        working-directory: rust
         run: |
-          cross build --release --target ${{ matrix.settings.target }} --manifest-path ../../Cargo.toml -p mecab-ko-node
-          npx napi artifacts --napi-dir . --target ${{ matrix.settings.target }}
-        env:
-          CARGO_TARGET_DIR: ../../target
+          cross build --release --target ${{ matrix.settings.target }} -p mecab-ko-node
+          cp target/${{ matrix.settings.target }}/release/libmecab_ko_node.so crates/mecab-ko-node/mecab-ko-node.linux-arm64-gnu.node || true
 
       - name: Build native module
         if: "!matrix.settings.use-cross"
-        working-directory: rust/crates/mecab-ko-node
+        working-directory: rust
         run: |
-          npx napi build --platform --release --cargo-name mecab-ko-node --target ${{ matrix.settings.target }} --cargo-cwd ../..
-        env:
-          CARGO_TARGET_DIR: ../../target
+          cargo build --release --target ${{ matrix.settings.target }} -p mecab-ko-node
+          # Copy the built library to the expected location
+          cd crates/mecab-ko-node
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            cp ../../target/${{ matrix.settings.target }}/release/mecab_ko_node.dll mecab-ko-node.win32-x64-msvc.node
+          elif [ "${{ runner.os }}" = "macOS" ]; then
+            if [ "${{ matrix.settings.target }}" = "aarch64-apple-darwin" ]; then
+              cp ../../target/${{ matrix.settings.target }}/release/libmecab_ko_node.dylib mecab-ko-node.darwin-arm64.node
+            else
+              cp ../../target/${{ matrix.settings.target }}/release/libmecab_ko_node.dylib mecab-ko-node.darwin-x64.node
+            fi
+          else
+            cp ../../target/${{ matrix.settings.target }}/release/libmecab_ko_node.so mecab-ko-node.linux-x64-gnu.node
+          fi
+        shell: bash
 
       - name: List built artifacts
         working-directory: rust/crates/mecab-ko-node

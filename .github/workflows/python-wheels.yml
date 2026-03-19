@@ -192,8 +192,13 @@ jobs:
 
       - name: Install wheel
         run: |
-          # Find compatible wheel for this platform and Python version
-          python -m pip install mecab-ko-python --no-index --find-links wheels/ --find-links wheels/*/ --verbose
+          # Flatten all wheels into single directory
+          mkdir -p dist
+          find wheels -name "*.whl" -exec cp {} dist/ \;
+          find wheels -name "*.tar.gz" -exec cp {} dist/ \;
+          ls -la dist/
+          # Install - pip will automatically select compatible wheel
+          python -m pip install mecab-ko-python --no-index --find-links dist/ --verbose
         shell: bash
 
       - name: Test basic import
