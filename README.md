@@ -9,20 +9,34 @@
 
 **순수 Rust로 작성된 고성능 한국어 형태소 분석기**
 
-🎉 **v0.5.0: 100% Token Accuracy 달성!** - 500문장 테스트셋 기준
+🎉 **v0.6.0: 100% 정확도 + 283% 성능 향상!** - 1,100문장 테스트셋 기준
 
 MeCab-Ko는 [은전한닢 프로젝트](https://bitbucket.org/eunjeon/mecab-ko)의 MeCab-Ko 한국어 형태소 분석기를 Rust로 재구현한 프로젝트입니다. 메모리 안전성, 크로스 플랫폼 지원(WebAssembly 포함), Python/Node.js/브라우저 바인딩을 제공합니다.
 
-## 🏆 v0.5.0 성과
+## 🏆 v0.6.0 성과
 
-| 지표 | 값 |
-|------|-----|
-| Token Accuracy | **100.0%** |
-| Sentence Accuracy | **100.0%** |
-| POS Accuracy | **100.0%** |
-| F1 Score | **1.000** |
-| 테스트 문장 | 500개 |
-| 처리 속도 | ~6,250 문장/초 |
+| 지표 | v0.5.0 | v0.6.0 | 변화 |
+|------|--------|--------|------|
+| Token Accuracy | 100.0% | **100.0%** | 유지 |
+| 테스트 문장 | 500개 | **1,100개** | +120% |
+| 처리 속도 | ~238K tok/sec | **~680K tok/sec** | **+283%** |
+| 메모리 사용량 | ~150MB | ~150MB | - |
+
+### 📦 설치 방법
+
+```bash
+# Rust
+cargo add mecab-ko
+
+# Python
+pip install mecab-ko-python
+
+# npm (WebAssembly)
+npm install mecab-ko-wasm
+
+# Docker
+docker pull hephaex/mecab-ko:0.6.0
+```
 
 ## 주요 특징
 
@@ -43,7 +57,7 @@ MeCab-Ko는 [은전한닢 프로젝트](https://bitbucket.org/eunjeon/mecab-ko)�
 
 ```toml
 [dependencies]
-mecab-ko = "0.5"
+mecab-ko = "0.6"
 ```
 
 ```rust
@@ -136,7 +150,26 @@ async function analyze() {
 analyze();
 ```
 
-## v0.3.1 새로운 기능
+## v0.6.0 새로운 기능
+
+### SIMD 가속 Viterbi 알고리즘
+- 8개 이상 노드에서 SIMD 벡터화 적용
+- Hot path 인라인 최적화
+- 처리량 283% 향상 (238K → 680K tokens/sec)
+
+### 확장된 테스트 데이터셋
+- 1,100문장 (4개 도메인: 뉴스, 소설, SNS, 기술문서)
+- 100% Token Accuracy 유지
+- Gold standard 자동 생성 도구 추가
+
+### 멀티플랫폼 배포
+- Python wheels: Linux, macOS, Windows (x86_64/ARM64)
+- Docker 이미지: CLI + FastAPI 서버
+- GitHub Pages 문서 사이트
+
+---
+
+## v0.3.1 기능
 
 ### 세종 코퍼스 호환 모드
 
