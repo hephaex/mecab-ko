@@ -61,14 +61,18 @@ jobs:
         if: matrix.settings.use-cross
         working-directory: rust/crates/mecab-ko-node
         run: |
-          cross build --release --target ${{ matrix.settings.target }}
-          npx napi artifacts --cwd . --target ${{ matrix.settings.target }}
+          cross build --release --target ${{ matrix.settings.target }} --manifest-path ../../Cargo.toml -p mecab-ko-node
+          npx napi artifacts --napi-dir . --target ${{ matrix.settings.target }}
+        env:
+          CARGO_TARGET_DIR: ../../target
 
       - name: Build native module
         if: "!matrix.settings.use-cross"
         working-directory: rust/crates/mecab-ko-node
         run: |
-          npm run build -- --target ${{ matrix.settings.target }}
+          npx napi build --platform --release --cargo-name mecab-ko-node --target ${{ matrix.settings.target }} --cargo-cwd ../..
+        env:
+          CARGO_TARGET_DIR: ../../target
 
       - name: List built artifacts
         working-directory: rust/crates/mecab-ko-node

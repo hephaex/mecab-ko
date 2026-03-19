@@ -192,7 +192,8 @@ jobs:
 
       - name: Install wheel
         run: |
-          python -m pip install wheels/*/*.whl --verbose
+          # Find compatible wheel for this platform and Python version
+          python -m pip install mecab-ko-python --no-index --find-links wheels/ --find-links wheels/*/ --verbose
         shell: bash
 
       - name: Test basic import
