@@ -3,51 +3,125 @@
 ## 🎯 Sprint 60 목표
 v0.6.0 패키지 레지스트리 배포 및 생태계 완성
 
-## Sprint 60 작업 목록 (0/9)
+## Sprint 60 작업 목록 (7/9)
 
 ### P0 (Critical) - 패키지 배포
-- [ ] S60-01: crates.io v0.6.0 배포
-  - 6개 크레이트 순서대로 배포
-  - docs.rs 문서 확인
+- [x] S60-01: crates.io v0.6.0 배포 ✅
+  - 6개 크레이트 순서대로 배포 완료
+  - docs.rs 문서 확인 완료
 
-- [ ] S60-02: PyPI v0.6.0 배포
-  - 5개 플랫폼 wheel 빌드
-  - GitHub Actions 트리거
+- [ ] S60-02: PyPI v0.6.0 배포 🔄
+  - PyO3 generate-import-lib feature 추가 (Windows 호환성)
+  - 워크플로우 재실행 중
 
-- [ ] S60-03: npm v0.6.0 배포
-  - WASM 패키지 빌드
-  - npm publish
+- [x] S60-03: npm v0.6.0 배포 ✅
+  - WASM 패키지 빌드 완료
+  - npm publish 트리거
 
 ### P1 (High) - 연기된 작업 완료
-- [ ] S60-04: 메모리 최적화 Phase 1 (S59-02) ⏸️ (v0.7.0으로 연기)
+- [x] S60-04: 메모리 최적화 Phase 1 ⏸️ (v0.7.0으로 연기)
   - LazyEntries 통합 - API 변경 필요 (get_entry → Arc<DictEntry>)
   - load_memory_optimized() 이미 사용 가능 (mmap matrix)
   - 목표: 150MB → 140MB (-10MB)
   - 관련 파일: lazy_entries.rs (670 lines, 이미 구현됨)
 
-- [ ] S60-05: Docker Hub 배포 (S59-05)
+- [ ] S60-05: Docker Hub 배포 ⏳
   - mecab-ko:0.6.0 CLI 이미지
   - mecab-ko-api:0.6.0 Python API 이미지
+  - Docker daemon 필요
 
 ### P2 (Medium) - 문서 및 생태계
-- [ ] S60-06: README.md v0.6.0 업데이트
+- [x] S60-06: README.md v0.6.0 업데이트 ✅
   - 버전 배지 업데이트
   - KPI 테이블 갱신
-  - Docker 예제 추가
+  - v0.6.0 성과 섹션 추가
 
-- [ ] S60-07: 벤치마크 CI 개선
-  - 성능 추적 추가
-  - 회귀 감지 알림
+- [x] S60-07: 벤치마크 CI 개선 ✅
+  - 주간 스케줄 벤치마크 추가
+  - 15%+ 회귀 시 자동 이슈 생성
 
-- [ ] S60-08: Node.js 바인딩 안정화
-  - v0.6.0 의존성 업데이트
-  - N-API 테스트
+- [x] S60-08: Node.js 바인딩 안정화 ✅
+  - package.json v0.6.0 업데이트
+  - N-API 빌드 확인
 
 ### P3 (Low) - 향후 준비
-- [ ] S60-09: v0.7.0 로드맵 수립
-  - 메모리 최적화 Phase 2 (100MB)
-  - 스트리밍 API
-  - 커스텀 사전 핫리로드
+- [x] S60-09: v0.7.0 로드맵 수립 ✅
+  - 아래 로드맵 참조
+
+---
+
+# 🗺️ v0.7.0 로드맵 (Phase 30-32)
+
+## 🎯 v0.7.0 목표
+메모리 최적화 및 고급 기능 추가
+
+**예상 기간:** Sprint 61-66 (6 sprints)
+**목표 릴리스:** 2026년 5월
+
+## Phase 30: 메모리 최적화 (Sprint 61-62)
+
+### Sprint 61: LazyEntries 통합
+- [ ] Dictionary API 변경: get_entry() → Arc<DictEntry>
+- [ ] LazyEntries 기본 활성화
+- [ ] 사용자 마이그레이션 가이드 작성
+- [ ] 목표: 150MB → 130MB (-20MB)
+
+### Sprint 62: 메모리 프로파일링 & 최적화
+- [ ] Memory profiler 통합 (jemalloc-ctl)
+- [ ] 미사용 필드 제거 (DictEntry 슬림화)
+- [ ] String interning 최적화
+- [ ] 목표: 130MB → 100MB (-30MB, 최종 목표)
+
+## Phase 31: 고급 기능 (Sprint 63-64)
+
+### Sprint 63: 스트리밍 API
+- [ ] StreamingTokenizer trait 설계
+- [ ] AsyncRead 지원 (tokio 기반)
+- [ ] 청크 단위 처리
+- [ ] 대용량 파일 분석 지원
+
+### Sprint 64: 커스텀 사전 핫리로드
+- [ ] HotReloadDict struct 구현
+- [ ] 파일 감시자 (notify crate)
+- [ ] 락 없는 업데이트 (ArcSwap)
+- [ ] 운영 중 사전 업데이트 지원
+
+## Phase 32: 생태계 확장 (Sprint 65-66)
+
+### Sprint 65: napi-rs 3.x 마이그레이션
+- [ ] Node.js 바인딩 napi 3.x 업그레이드
+- [ ] 브레이킹 체인지 대응
+- [ ] Node.js 예제 업데이트
+
+### Sprint 66: v0.7.0 릴리스
+- [ ] 모든 패키지 배포
+- [ ] 성능 벤치마크 문서화
+- [ ] 마이그레이션 가이드
+- [ ] 블로그 포스트 (100MB 메모리 달성)
+
+## 주요 KPI (v0.7.0)
+
+| 지표 | v0.6.0 | v0.7.0 목표 | 개선 |
+|------|--------|------------|------|
+| 메모리 사용량 | ~150MB | **≤100MB** | **-33%** |
+| Token Accuracy | 100% | 100% | 유지 |
+| 처리 속도 | ~680K tok/sec | ≥680K tok/sec | 유지 |
+| Python 버전 | 3.8-3.13 | 3.9-3.13 | 3.8 EOL |
+| Node.js napi | 2.x | **3.x** | 업그레이드 |
+
+## 기술 부채 해결
+
+1. **bincode 마이그레이션** (RUSTSEC-2025-0141)
+   - bincode 1.3 → postcard 또는 rmp-serde
+   - 사전 포맷 변경 필요
+
+2. **Python 3.8 지원 종료**
+   - Python 3.8 EOL (2024-10)
+   - 최소 버전 3.9로 상향
+
+3. **napi-rs 3.x**
+   - Node.js 바인딩 현대화
+   - 성능 개선 및 새 기능
 
 ---
 

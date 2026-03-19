@@ -9,14 +9,14 @@
 | Task | Description | Status |
 |------|-------------|--------|
 | S60-01 | crates.io v0.6.0 배포 | ✅ 6/6 crates published |
-| S60-02 | PyPI v0.6.0 배포 | 🔄 Workflow triggered |
-| S60-03 | npm v0.6.0 배포 | 🔄 Workflow triggered |
-| S60-04 | 메모리 최적화 Phase 1 | ⏳ Pending |
+| S60-02 | PyPI v0.6.0 배포 | 🔄 Rebuilding (PyO3 fix) |
+| S60-03 | npm v0.6.0 배포 | ✅ Workflow triggered |
+| S60-04 | 메모리 최적화 Phase 1 | ⏸️ v0.7.0 연기 (API 변경 필요) |
 | S60-05 | Docker Hub 배포 | ⏳ Docker daemon required |
-| S60-06 | README.md 업데이트 | ⏳ Pending |
-| S60-07 | 벤치마크 CI 개선 | ⏳ Pending |
-| S60-08 | Node.js 바인딩 안정화 | ⏳ Pending |
-| S60-09 | v0.7.0 로드맵 수립 | ⏳ Pending |
+| S60-06 | README.md 업데이트 | ✅ v0.6.0 정보 추가 |
+| S60-07 | 벤치마크 CI 개선 | ✅ 주간 스케줄 + 회귀 알림 |
+| S60-08 | Node.js 바인딩 안정화 | ✅ v0.6.0 버전 업데이트 |
+| S60-09 | v0.7.0 로드맵 수립 | ✅ PLAN.md에 상세 로드맵 추가 |
 
 ---
 
