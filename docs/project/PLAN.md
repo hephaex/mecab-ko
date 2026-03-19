@@ -1,4 +1,55 @@
-# 현재 스프린트: Phase 28 - Sprint 59 (Implementation & Release)
+# 현재 스프린트: Phase 29 - Sprint 60 (Package Publication & Ecosystem)
+
+## 🎯 Sprint 60 목표
+v0.6.0 패키지 레지스트리 배포 및 생태계 완성
+
+## Sprint 60 작업 목록 (0/9)
+
+### P0 (Critical) - 패키지 배포
+- [ ] S60-01: crates.io v0.6.0 배포
+  - 6개 크레이트 순서대로 배포
+  - docs.rs 문서 확인
+
+- [ ] S60-02: PyPI v0.6.0 배포
+  - 5개 플랫폼 wheel 빌드
+  - GitHub Actions 트리거
+
+- [ ] S60-03: npm v0.6.0 배포
+  - WASM 패키지 빌드
+  - npm publish
+
+### P1 (High) - 연기된 작업 완료
+- [ ] S60-04: 메모리 최적화 Phase 1 (S59-02)
+  - LazyEntries 적응형 캐시
+  - 목표: 150MB → 140MB (-10MB)
+
+- [ ] S60-05: Docker Hub 배포 (S59-05)
+  - mecab-ko:0.6.0 CLI 이미지
+  - mecab-ko-api:0.6.0 Python API 이미지
+
+### P2 (Medium) - 문서 및 생태계
+- [ ] S60-06: README.md v0.6.0 업데이트
+  - 버전 배지 업데이트
+  - KPI 테이블 갱신
+  - Docker 예제 추가
+
+- [ ] S60-07: 벤치마크 CI 개선
+  - 성능 추적 추가
+  - 회귀 감지 알림
+
+- [ ] S60-08: Node.js 바인딩 안정화
+  - v0.6.0 의존성 업데이트
+  - N-API 테스트
+
+### P3 (Low) - 향후 준비
+- [ ] S60-09: v0.7.0 로드맵 수립
+  - 메모리 최적화 Phase 2 (100MB)
+  - 스트리밍 API
+  - 커스텀 사전 핫리로드
+
+---
+
+# 완료된 스프린트: Phase 28 - Sprint 59 (Implementation & Release) ✅
 
 ## 🎯 Sprint 59 목표
 Sprint 58 설계 구현 및 v0.6.0 릴리스
