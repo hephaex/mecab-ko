@@ -14,12 +14,19 @@ on:
       - 'rust/crates/**'
       - 'rust/benches/**'
       - 'rust/Cargo.toml'
+  # Weekly scheduled benchmarks for historical tracking
+  schedule:
+    - cron: '0 0 * * 0'  # Every Sunday at 00:00 UTC
   workflow_dispatch:
     inputs:
       full_bench:
         description: 'Run full benchmarks with detailed output'
         required: false
         default: 'false'
+      create_issue_on_regression:
+        description: 'Create GitHub issue on critical regression'
+        required: false
+        default: 'true'
 
 # Skip benchmark if commit message contains [skip bench]
 concurrency:
@@ -359,6 +366,95 @@ jobs:
             /tmp/pr-benchmark.txt
             /tmp/benchmark-comparison.json
           retention-days: 90
+
+  # Create issue on critical regression for scheduled runs
+  regression-alert:
+    name: Regression Alert
+    runs-on: ubuntu-latest
+    needs: [run-benchmarks]
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.create_issue_on_regression == 'true')
+    permissions:
+      issues: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download benchmark results
+        uses: actions/download-artifact@v4
+        with:
+          name: benchmark-results-${{ github.run_id }}
+          path: /tmp
+
+      - name: Check for regression and create issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            // Read current results
+            let currentResults = {};
+            if (fs.existsSync('/tmp/benchmark-results.json')) {
+              const data = JSON.parse(fs.readFileSync('/tmp/benchmark-results.json', 'utf8'));
+              currentResults = data.results || {};
+            }
+
+            // Read previous baseline (if exists)
+            let baseline = {};
+            if (fs.existsSync('docs/book/src/benchmarks/baseline.json')) {
+              baseline = JSON.parse(fs.readFileSync('docs/book/src/benchmarks/baseline.json', 'utf8'));
+            }
+
+            // Compare and detect regressions
+            const regressions = [];
+            for (const [name, current] of Object.entries(currentResults)) {
+              if (baseline[name]) {
+                const baselineNs = baseline[name].time_ns;
+                const currentNs = current.time_ns;
+                const diffPct = ((currentNs - baselineNs) / baselineNs * 100);
+
+                if (diffPct > 15) {  // Critical: >15% regression
+                  regressions.push({
+                    name: name,
+                    baseline: baselineNs,
+                    current: currentNs,
+                    diff: diffPct.toFixed(1)
+                  });
+                }
+              }
+            }
+
+            if (regressions.length > 0) {
+              const body = `## 🚨 Performance Regression Alert
+
+              **Date:** ${new Date().toISOString().split('T')[0]}
+              **Commit:** \`${{ github.sha }}\`
+              **Run:** [#${{ github.run_number }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+              ### Critical Regressions Detected (>15%)
+
+              | Benchmark | Baseline | Current | Regression |
+              |-----------|----------|---------|------------|
+              ${regressions.map(r => `| ${r.name.split('::').pop()} | ${(r.baseline/1000).toFixed(1)}µs | ${(r.current/1000).toFixed(1)}µs | **+${r.diff}%** |`).join('\n')}
+
+              ### Action Required
+              1. Review recent commits for performance-impacting changes
+              2. Run local benchmarks to reproduce
+              3. Update baseline if regression is acceptable
+
+              /label performance, regression`;
+
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `🚨 Performance Regression Detected: ${regressions.length} benchmark(s)`,
+                body: body,
+                labels: ['performance', 'regression', 'automated']
+              });
+
+              core.warning(`Created issue for ${regressions.length} performance regressions`);
+            } else {
+              console.log('No critical regressions detected');
+            }
 
   # Update dashboard data (main branch only)
   update-dashboard:
