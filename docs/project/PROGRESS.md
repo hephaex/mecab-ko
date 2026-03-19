@@ -1,8 +1,41 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-03-19 (Sprint 59 완료!)
+## 마지막 업데이트: 2026-03-19 (Sprint 60 시작!)
 
-### 🎉 Sprint 59 - Implementation & Release (완료!)
+### 🚀 Sprint 60 - Package Publication & Ecosystem (진행 중)
+
+**목표:** v0.6.0 패키지 레지스트리 배포 및 생태계 완성
+
+| Task | Description | Status |
+|------|-------------|--------|
+| S60-01 | crates.io v0.6.0 배포 | ✅ 6/6 crates published |
+| S60-02 | PyPI v0.6.0 배포 | 🔄 Workflow triggered |
+| S60-03 | npm v0.6.0 배포 | 🔄 Workflow triggered |
+| S60-04 | 메모리 최적화 Phase 1 | ⏳ Pending |
+| S60-05 | Docker Hub 배포 | ⏳ Docker daemon required |
+| S60-06 | README.md 업데이트 | ⏳ Pending |
+| S60-07 | 벤치마크 CI 개선 | ⏳ Pending |
+| S60-08 | Node.js 바인딩 안정화 | ⏳ Pending |
+| S60-09 | v0.7.0 로드맵 수립 | ⏳ Pending |
+
+---
+
+#### S60-01: crates.io v0.6.0 배포 완료 (2026-03-19)
+**6개 크레이트 모두 배포 완료**
+
+배포 순서:
+1. mecab-ko-hangul v0.6.0 ✅
+2. mecab-ko-dict v0.6.0 ✅
+3. mecab-ko-core v0.6.0 ✅
+4. mecab-ko-dict-validator v0.6.0 ✅
+5. mecab-ko-dict-builder v0.6.0 ✅
+6. mecab-ko v0.6.0 ✅
+
+검증: `cargo add mecab-ko@0.6.0` 가능
+
+---
+
+### ✅ Sprint 59 - Implementation & Release (완료!)
 
 **목표:** Sprint 58 설계 구현 및 v0.6.0 릴리스
 
