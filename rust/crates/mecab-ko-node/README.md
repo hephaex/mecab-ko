@@ -198,7 +198,7 @@ Returns the version of the mecab-ko-node library.
 ```typescript
 import { getVersion } from '@mecab-ko/node';
 
-console.log(getVersion()); // "0.1.0"
+console.log(getVersion()); // "0.6.0"
 ```
 
 **Returns:** The version string.
