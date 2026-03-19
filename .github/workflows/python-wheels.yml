@@ -122,7 +122,8 @@ jobs:
 
       - name: Show build output
         if: always()
-        run: ls -lh rust/target/wheels/
+        shell: bash
+        run: ls -lh rust/target/wheels/ || echo "No wheels directory found"
 
   build_sdist:
     name: Build source distribution
