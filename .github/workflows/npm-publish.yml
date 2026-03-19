@@ -15,6 +15,10 @@ env:
   PACKAGE_NAME: "@mecab-ko/node"
   NODE_VERSION: "20"
 
+concurrency:
+  group: npm-publish-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
     name: Build on ${{ matrix.settings.os }} (${{ matrix.settings.target }})
