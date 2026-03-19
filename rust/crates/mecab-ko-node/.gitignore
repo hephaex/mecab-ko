@@ -1,8 +1,7 @@
 # Build output
 target/
 *.node
-index.js
-index.d.ts
+# index.js and index.d.ts are needed for npm package - don't ignore
 
 # Dependencies
 node_modules/
