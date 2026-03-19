@@ -19,9 +19,11 @@ v0.6.0 패키지 레지스트리 배포 및 생태계 완성
   - npm publish
 
 ### P1 (High) - 연기된 작업 완료
-- [ ] S60-04: 메모리 최적화 Phase 1 (S59-02)
-  - LazyEntries 적응형 캐시
+- [ ] S60-04: 메모리 최적화 Phase 1 (S59-02) ⏸️ (v0.7.0으로 연기)
+  - LazyEntries 통합 - API 변경 필요 (get_entry → Arc<DictEntry>)
+  - load_memory_optimized() 이미 사용 가능 (mmap matrix)
   - 목표: 150MB → 140MB (-10MB)
+  - 관련 파일: lazy_entries.rs (670 lines, 이미 구현됨)
 
 - [ ] S60-05: Docker Hub 배포 (S59-05)
   - mecab-ko:0.6.0 CLI 이미지
