@@ -1,18 +1,18 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-03-19 (Sprint 60 시작!)
+## 마지막 업데이트: 2026-03-21 (Sprint 60 완료!)
 
-### 🚀 Sprint 60 - Package Publication & Ecosystem (진행 중)
+### ✅ Sprint 60 - Package Publication & Ecosystem (완료!)
 
 **목표:** v0.6.0 패키지 레지스트리 배포 및 생태계 완성
 
 | Task | Description | Status |
 |------|-------------|--------|
 | S60-01 | crates.io v0.6.0 배포 | ✅ 6/6 crates published |
-| S60-02 | PyPI v0.6.0 배포 | 🔄 Rebuilding (PyO3 fix) |
-| S60-03 | npm v0.6.0 배포 | ✅ Workflow triggered |
+| S60-02 | PyPI v0.6.0 배포 | ✅ v0.6.0 배포 완료 |
+| S60-03 | npm v0.6.0 배포 | ✅ @mecab-ko/node v0.6.0 배포 완료 |
 | S60-04 | 메모리 최적화 Phase 1 | ⏸️ v0.7.0 연기 (API 변경 필요) |
-| S60-05 | Docker Hub 배포 | ⏳ Docker daemon required |
+| S60-05 | Docker Hub 배포 | ✅ ghcr.io 배포 완료 |
 | S60-06 | README.md 업데이트 | ✅ v0.6.0 정보 추가 |
 | S60-07 | 벤치마크 CI 개선 | ✅ 주간 스케줄 + 회귀 알림 |
 | S60-08 | Node.js 바인딩 안정화 | ✅ v0.6.0 버전 업데이트 |
