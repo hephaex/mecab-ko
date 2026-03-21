@@ -48,7 +48,7 @@ COPY --from=builder /app/rust/target/release/mecab /usr/local/bin/mecab
 COPY --from=builder /app/data/mecab-ko-dic /usr/share/mecab-ko-dic
 
 # Set environment
-ENV MECAB_DIC_DIR=/usr/share/mecab-ko-dic
+ENV MECAB_DICDIR=/usr/share/mecab-ko-dic
 
 # Switch to non-root user
 USER mecab
