@@ -1,34 +1,58 @@
-# 현재 스프린트: Phase 29 - Sprint 60 (Package Publication & Ecosystem)
+# 현재 스프린트: Phase 30 - Sprint 61 (Memory Optimization)
+
+## 🎯 Sprint 61 목표
+LazyEntries 통합 및 메모리 최적화 시작
+
+## Sprint 61 작업 목록 (0/4)
+
+### P0 (Critical) - API 변경
+- [ ] S61-01: Dictionary API 변경
+  - get_entry() → Arc<DictEntry>
+  - Breaking change migration guide
+
+- [ ] S61-02: LazyEntries 기본 활성화
+  - lazy_entries.rs 통합
+  - 기존 테스트 업데이트
+
+### P1 (High) - 최적화 검증
+- [ ] S61-03: 메모리 벤치마크
+  - 목표: 150MB → 130MB (-20MB)
+  - memory profiler 설정
+
+- [ ] S61-04: 마이그레이션 가이드 작성
+  - MIGRATION.md 작성
+  - v0.6.0 → v0.7.0 변경사항
+
+---
+
+# ✅ 완료된 스프린트: Phase 29 - Sprint 60 (Package Publication & Ecosystem)
 
 ## 🎯 Sprint 60 목표
 v0.6.0 패키지 레지스트리 배포 및 생태계 완성
 
-## Sprint 60 작업 목록 (7/9)
+## Sprint 60 작업 목록 (9/9) ✅
 
 ### P0 (Critical) - 패키지 배포
 - [x] S60-01: crates.io v0.6.0 배포 ✅
   - 6개 크레이트 순서대로 배포 완료
   - docs.rs 문서 확인 완료
 
-- [ ] S60-02: PyPI v0.6.0 배포 🔄
-  - PyO3 generate-import-lib feature 추가 (Windows 호환성)
-  - 워크플로우 재실행 중
+- [x] S60-02: PyPI v0.6.0 배포 ✅
+  - mecab-ko-python v0.6.0 배포 완료
 
 - [x] S60-03: npm v0.6.0 배포 ✅
-  - WASM 패키지 빌드 완료
-  - npm publish 트리거
+  - @mecab-ko/node v0.6.0 배포 완료
+  - npmjs.com 조직 생성
 
 ### P1 (High) - 연기된 작업 완료
 - [x] S60-04: 메모리 최적화 Phase 1 ⏸️ (v0.7.0으로 연기)
   - LazyEntries 통합 - API 변경 필요 (get_entry → Arc<DictEntry>)
   - load_memory_optimized() 이미 사용 가능 (mmap matrix)
-  - 목표: 150MB → 140MB (-10MB)
-  - 관련 파일: lazy_entries.rs (670 lines, 이미 구현됨)
 
-- [ ] S60-05: Docker Hub 배포 ⏳
-  - mecab-ko:0.6.0 CLI 이미지
-  - mecab-ko-api:0.6.0 Python API 이미지
-  - Docker daemon 필요
+- [x] S60-05: Docker Hub 배포 ✅
+  - ghcr.io/hephaex/mecab-ko:latest 배포 완료
+  - 사전 컴파일 포함 (sys.dic, matrix.bin)
+  - 멀티 플랫폼 (amd64, arm64)
 
 ### P2 (Medium) - 문서 및 생태계
 - [x] S60-06: README.md v0.6.0 업데이트 ✅
