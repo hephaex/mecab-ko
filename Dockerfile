@@ -10,25 +10,31 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     pkg-config \
     libssl-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy source code
 COPY rust/ ./rust/
 
-# Download MeCab-Ko dictionary
-RUN apt-get update && apt-get install -y curl && \
-    curl -L https://bitbucket.org/eunjeon/mecab-ko-dic/downloads/mecab-ko-dic-2.1.1-20180720.tar.gz \
+# Download MeCab-Ko dictionary CSV
+RUN curl -L https://bitbucket.org/eunjeon/mecab-ko-dic/downloads/mecab-ko-dic-2.1.1-20180720.tar.gz \
     -o /tmp/mecab-ko-dic.tar.gz && \
     mkdir -p ./data && \
     tar -xzf /tmp/mecab-ko-dic.tar.gz -C ./data && \
-    mv ./data/mecab-ko-dic-2.1.1-20180720 ./data/mecab-ko-dic && \
-    rm /tmp/mecab-ko-dic.tar.gz && \
-    apt-get remove -y curl && apt-get autoremove -y && \
-    rm -rf /var/lib/apt/lists/*
+    rm /tmp/mecab-ko-dic.tar.gz
 
-# Build release binary
+# Build dictionary builder and CLI
 WORKDIR /app/rust
-RUN cargo build --release --bin mecab
+RUN cargo build --release --bin mecab-ko-dict-builder --bin mecab
+
+# Compile dictionary from CSV to binary format
+RUN mkdir -p /app/dict-output && \
+    ./target/release/mecab-ko-dict-builder \
+    --input /app/data/mecab-ko-dic-2.1.1-20180720 \
+    --output /app/dict-output \
+    --compression 3 \
+    --encoding auto \
+    --verbose
 
 # Stage 2: Runtime
 FROM debian:bookworm-slim
@@ -44,8 +50,8 @@ RUN useradd -m -s /bin/bash mecab
 # Copy binary
 COPY --from=builder /app/rust/target/release/mecab /usr/local/bin/mecab
 
-# Copy dictionary data
-COPY --from=builder /app/data/mecab-ko-dic /usr/share/mecab-ko-dic
+# Copy compiled dictionary (binary format)
+COPY --from=builder /app/dict-output /usr/share/mecab-ko-dic
 
 # Set environment
 ENV MECAB_DICDIR=/usr/share/mecab-ko-dic
