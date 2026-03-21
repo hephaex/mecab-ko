@@ -14,7 +14,17 @@ RUN apt-get update && apt-get install -y \
 
 # Copy source code
 COPY rust/ ./rust/
-COPY data/mecab-ko-dic-2.1.1-20180720/ ./data/mecab-ko-dic/
+
+# Download MeCab-Ko dictionary
+RUN apt-get update && apt-get install -y curl && \
+    curl -L https://bitbucket.org/eunjeon/mecab-ko-dic/downloads/mecab-ko-dic-2.1.1-20180720.tar.gz \
+    -o /tmp/mecab-ko-dic.tar.gz && \
+    mkdir -p ./data && \
+    tar -xzf /tmp/mecab-ko-dic.tar.gz -C ./data && \
+    mv ./data/mecab-ko-dic-2.1.1-20180720 ./data/mecab-ko-dic && \
+    rm /tmp/mecab-ko-dic.tar.gz && \
+    apt-get remove -y curl && apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/*
 
 # Build release binary
 WORKDIR /app/rust
