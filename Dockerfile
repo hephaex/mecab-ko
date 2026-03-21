@@ -2,7 +2,7 @@
 # Multi-stage build for minimal image size
 
 # Stage 1: Build
-FROM rust:1.75-bookworm as builder
+FROM rust:1.83-bookworm as builder
 
 WORKDIR /app
 
