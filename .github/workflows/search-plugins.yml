@@ -1,0 +1,345 @@
+name: Search Plugins CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'search-plugins/**'
+      - 'rust/crates/mecab-ko-elasticsearch/**'
+      - '.github/workflows/search-plugins.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'search-plugins/**'
+      - 'rust/crates/mecab-ko-elasticsearch/**'
+      - '.github/workflows/search-plugins.yml'
+  workflow_dispatch:
+    inputs:
+      skip_integration_tests:
+        description: 'Skip integration tests'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  JAVA_VERSION: '17'
+  RUST_TOOLCHAIN: '1.83'
+
+jobs:
+  # Build native libraries for all platforms
+  build-native:
+    name: Build Native (${{ matrix.artifact }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact: linux-x64
+            lib_name: libmecab_ko_elasticsearch.so
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            artifact: linux-arm64
+            lib_name: libmecab_ko_elasticsearch.so
+            cross: true
+          - os: macos-14
+            target: aarch64-apple-darwin
+            artifact: darwin-arm64
+            lib_name: libmecab_ko_elasticsearch.dylib
+          - os: macos-13
+            target: x86_64-apple-darwin
+            artifact: darwin-x64
+            lib_name: libmecab_ko_elasticsearch.dylib
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact: windows-x64
+            lib_name: mecab_ko_elasticsearch.dll
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          targets: ${{ matrix.target }}
+
+      - name: Install cross-compilation tools (Linux ARM64)
+        if: matrix.cross
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+
+      - name: Build native library
+        working-directory: rust
+        env:
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+        run: |
+          cargo build --release --target ${{ matrix.target }} \
+            -p mecab-ko-elasticsearch \
+            --features jni-bindings
+
+      - name: Prepare artifacts
+        run: |
+          mkdir -p native/${{ matrix.artifact }}
+          cp rust/target/${{ matrix.target }}/release/${{ matrix.lib_name }} \
+             native/${{ matrix.artifact }}/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.artifact }}
+          path: native/${{ matrix.artifact }}/
+          retention-days: 7
+
+  # Build Elasticsearch plugin
+  build-elasticsearch:
+    name: Build Elasticsearch Plugin
+    runs-on: ubuntu-latest
+    needs: build-native
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Download all native libraries
+        uses: actions/download-artifact@v4
+        with:
+          pattern: native-*
+          path: search-plugins/native
+          merge-multiple: true
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v3
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+
+      - name: Build plugin
+        working-directory: search-plugins
+        run: ./gradlew :elasticsearch:bundlePlugin --no-daemon
+
+      - name: Run tests
+        working-directory: search-plugins
+        run: ./gradlew :elasticsearch:test --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: elasticsearch-plugin
+          path: search-plugins/elasticsearch/build/distributions/*.zip
+          retention-days: 30
+
+  # Build OpenSearch plugin
+  build-opensearch:
+    name: Build OpenSearch Plugin
+    runs-on: ubuntu-latest
+    needs: build-native
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Download all native libraries
+        uses: actions/download-artifact@v4
+        with:
+          pattern: native-*
+          path: search-plugins/native
+          merge-multiple: true
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v3
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+
+      - name: Build plugin
+        working-directory: search-plugins
+        run: ./gradlew :opensearch:bundlePlugin --no-daemon
+
+      - name: Run tests
+        working-directory: search-plugins
+        run: ./gradlew :opensearch:test --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: opensearch-plugin
+          path: search-plugins/opensearch/build/distributions/*.zip
+          retention-days: 30
+
+  # Integration tests for Elasticsearch
+  test-elasticsearch:
+    name: Test ES ${{ matrix.es-version }}
+    runs-on: ubuntu-latest
+    needs: build-elasticsearch
+    if: ${{ github.event.inputs.skip_integration_tests != 'true' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        es-version: ['8.11.0', '8.12.0', '8.13.0', '8.14.0', '8.15.0']
+
+    services:
+      elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:${{ matrix.es-version }}
+        ports:
+          - 9200:9200
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: 'false'
+          ES_JAVA_OPTS: '-Xms512m -Xmx512m'
+        options: >-
+          --health-cmd="curl -f http://localhost:9200/_cluster/health"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download plugin
+        uses: actions/download-artifact@v4
+        with:
+          name: elasticsearch-plugin
+          path: plugins
+
+      - name: Wait for Elasticsearch
+        run: |
+          for i in {1..30}; do
+            curl -s http://localhost:9200/_cluster/health && break
+            sleep 5
+          done
+
+      - name: Install plugin
+        run: |
+          PLUGIN_FILE=$(ls plugins/*.zip | head -1)
+          docker cp "$PLUGIN_FILE" $(docker ps -q --filter "ancestor=docker.elastic.co/elasticsearch/elasticsearch:${{ matrix.es-version }}"):/tmp/plugin.zip
+          docker exec $(docker ps -q --filter "ancestor=docker.elastic.co/elasticsearch/elasticsearch:${{ matrix.es-version }}") \
+            bin/elasticsearch-plugin install file:///tmp/plugin.zip --batch
+
+      - name: Restart Elasticsearch
+        run: |
+          docker restart $(docker ps -q --filter "ancestor=docker.elastic.co/elasticsearch/elasticsearch:${{ matrix.es-version }}")
+          sleep 30
+          for i in {1..30}; do
+            curl -s http://localhost:9200/_cluster/health && break
+            sleep 5
+          done
+
+      - name: Test analyzer
+        run: |
+          # Test mecab_ko analyzer
+          curl -s -X POST "http://localhost:9200/_analyze" \
+            -H 'Content-Type: application/json' \
+            -d '{"analyzer": "mecab_ko", "text": "한국어 형태소 분석기 테스트입니다."}' | jq .
+
+          # Test tokenizer
+          curl -s -X POST "http://localhost:9200/_analyze" \
+            -H 'Content-Type: application/json' \
+            -d '{"tokenizer": "mecab_ko_tokenizer", "text": "서울시 강남구"}' | jq .
+
+  # Integration tests for OpenSearch
+  test-opensearch:
+    name: Test OS ${{ matrix.os-version }}
+    runs-on: ubuntu-latest
+    needs: build-opensearch
+    if: ${{ github.event.inputs.skip_integration_tests != 'true' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os-version: ['3.0.0']
+
+    services:
+      opensearch:
+        image: opensearchproject/opensearch:${{ matrix.os-version }}
+        ports:
+          - 9200:9200
+        env:
+          discovery.type: single-node
+          DISABLE_SECURITY_PLUGIN: 'true'
+          OPENSEARCH_JAVA_OPTS: '-Xms512m -Xmx512m'
+        options: >-
+          --health-cmd="curl -f http://localhost:9200/_cluster/health"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download plugin
+        uses: actions/download-artifact@v4
+        with:
+          name: opensearch-plugin
+          path: plugins
+
+      - name: Wait for OpenSearch
+        run: |
+          for i in {1..30}; do
+            curl -s http://localhost:9200/_cluster/health && break
+            sleep 5
+          done
+
+      - name: Install plugin
+        run: |
+          PLUGIN_FILE=$(ls plugins/*.zip | head -1)
+          docker cp "$PLUGIN_FILE" $(docker ps -q --filter "ancestor=opensearchproject/opensearch:${{ matrix.os-version }}"):/tmp/plugin.zip
+          docker exec $(docker ps -q --filter "ancestor=opensearchproject/opensearch:${{ matrix.os-version }}") \
+            bin/opensearch-plugin install file:///tmp/plugin.zip --batch
+
+      - name: Restart OpenSearch
+        run: |
+          docker restart $(docker ps -q --filter "ancestor=opensearchproject/opensearch:${{ matrix.os-version }}")
+          sleep 30
+          for i in {1..30}; do
+            curl -s http://localhost:9200/_cluster/health && break
+            sleep 5
+          done
+
+      - name: Test analyzer
+        run: |
+          # Test mecab_ko analyzer
+          curl -s -X POST "http://localhost:9200/_analyze" \
+            -H 'Content-Type: application/json' \
+            -d '{"analyzer": "mecab_ko", "text": "한국어 형태소 분석기 테스트입니다."}' | jq .
+
+          # Test tokenizer
+          curl -s -X POST "http://localhost:9200/_analyze" \
+            -H 'Content-Type: application/json' \
+            -d '{"tokenizer": "mecab_ko_tokenizer", "text": "서울시 강남구"}' | jq .
+
+  # Release job
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [build-elasticsearch, build-opensearch]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Elasticsearch plugin
+        uses: actions/download-artifact@v4
+        with:
+          name: elasticsearch-plugin
+          path: release
+
+      - name: Download OpenSearch plugin
+        uses: actions/download-artifact@v4
+        with:
+          name: opensearch-plugin
+          path: release
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release/*.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

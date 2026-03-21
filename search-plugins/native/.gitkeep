@@ -1,0 +1,7 @@
+# Native library placeholder directories
+# Libraries are built by CI/CD and placed in platform-specific subdirectories:
+# - linux-x64/libmecab_ko_elasticsearch.so
+# - linux-arm64/libmecab_ko_elasticsearch.so
+# - darwin-x64/libmecab_ko_elasticsearch.dylib
+# - darwin-arm64/libmecab_ko_elasticsearch.dylib
+# - windows-x64/mecab_ko_elasticsearch.dll
