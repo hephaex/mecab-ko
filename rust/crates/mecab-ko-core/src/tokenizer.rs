@@ -432,7 +432,10 @@ impl Tokenizer {
         // the same surface (not just the first one). This is essential for
         // the Viterbi algorithm to consider all possible POS tags and select
         // the best path based on connection costs.
-        let dict_entries: Vec<_> = self.dictionary.common_prefix_search(search_text);
+        let dict_entries: Vec<_> = self
+            .dictionary
+            .common_prefix_search(search_text)
+            .unwrap_or_default();
 
         // Collect user-dict entries as owned data before mutating lattice.
         // user_dict.common_prefix_search returns owned UserEntry values so

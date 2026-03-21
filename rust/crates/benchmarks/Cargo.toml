@@ -47,5 +47,9 @@ harness = false
 name = "memory_bench"
 harness = false
 
+[[bench]]
+name = "dict_loading_bench"
+harness = false
+
 [lints]
 workspace = true

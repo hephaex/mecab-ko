@@ -23,6 +23,7 @@
 #![cfg_attr(feature = "simd", feature(portable_simd))]
 
 pub mod dictionary;
+pub mod entry_store;
 pub mod file_watcher;
 pub mod hot_reload;
 pub mod lazy_entries;
@@ -31,7 +32,8 @@ pub mod matrix;
 pub mod trie;
 pub mod user_dict;
 
-pub use dictionary::{DictEntry, DictionaryLoader, SystemDictionary};
+pub use dictionary::{DictEntry, DictionaryLoader, LoadOptions, SystemDictionary};
+pub use entry_store::{EagerStore, EntryStore, LazyStore};
 pub use error::{DictError, Result};
 pub use file_watcher::{FileEvent, FileWatcher, WatchConfig};
 pub use hot_reload::{

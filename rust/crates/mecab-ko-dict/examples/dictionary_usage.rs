@@ -21,7 +21,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         dict.matrix().left_size(),
                         dict.matrix().right_size()
                     );
-                    println!("   Entry count: {}", dict.entries().len());
+                    println!("   Entry count: {}", dict.entry_count());
                 }
                 Err(e) => {
                     println!("   Failed to load dictionary: {e}");

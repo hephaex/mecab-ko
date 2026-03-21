@@ -204,7 +204,13 @@ impl MmapDictionary {
 
         // 비압축 바이너리 파일
         if bin_path.exists() {
-            return Self::load_entries_from_bin(&bin_path);
+            match Self::load_entries_from_bin(&bin_path) {
+                Ok(entries) => return Ok(entries),
+                Err(DictError::Format(ref msg)) if msg.contains("MKED") || msg.contains("MKE2") => {
+                    // SystemDictionary 형식이면 CSV로 폴백
+                }
+                Err(e) => return Err(e),
+            }
         }
 
         // CSV 파일 (fallback)
@@ -226,7 +232,13 @@ impl MmapDictionary {
 
         // 비압축 바이너리 파일
         if bin_path.exists() {
-            return Self::load_entries_from_bin(&bin_path);
+            match Self::load_entries_from_bin(&bin_path) {
+                Ok(entries) => return Ok(entries),
+                Err(DictError::Format(ref msg)) if msg.contains("MKED") || msg.contains("MKE2") => {
+                    // SystemDictionary 형식이면 CSV로 폴백
+                }
+                Err(e) => return Err(e),
+            }
         }
 
         // CSV 파일 (fallback)
@@ -273,8 +285,23 @@ impl MmapDictionary {
     }
 
     /// 바이너리 데이터 파싱
+    ///
+    /// MmapDictionary 고유 형식만 지원합니다.
+    /// v1 (MKED) 및 v2 (MKE2) 형식은 SystemDictionary를 사용하세요.
     fn parse_entries_binary(data: &[u8]) -> Result<Vec<Entry>> {
         use std::io::{Cursor, Read};
+
+        // v1/v2 매직 넘버 검사 (MKED/MKE2)
+        if data.len() >= 4 {
+            let magic = &data[0..4];
+            if magic == b"MKED" || magic == b"MKE2" {
+                return Err(DictError::Format(
+                    "entries.bin is in SystemDictionary format (MKED/MKE2). \
+                     MmapDictionary uses a different format. \
+                     Falling back to CSV.".to_string()
+                ));
+            }
+        }
 
         let mut cursor = Cursor::new(data);
         let mut count_bytes = [0u8; 4];

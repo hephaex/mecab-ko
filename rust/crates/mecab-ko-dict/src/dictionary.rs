@@ -33,7 +33,9 @@ use std::sync::Arc;
 
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
+use crate::entry_store::{EagerStore, EntryStore, LazyStore};
 use crate::error::{DictError, Result};
+use crate::lazy_entries::LazyEntries;
 use crate::matrix::{ConnectionMatrix, Matrix};
 use crate::trie::Trie;
 use crate::user_dict::UserDictionary;
@@ -69,8 +71,8 @@ pub struct SystemDictionary {
     trie: Trie<'static>,
     /// 연접 비용 행렬
     matrix: ConnectionMatrix,
-    /// 엔트리 배열 (Trie의 value를 인덱스로 사용)
-    entries: Vec<DictEntry>,
+    /// 엔트리 저장소 (Eager/Lazy 추상화)
+    entry_store: Arc<dyn EntryStore>,
     /// 사용자 사전 (선택)
     user_dict: Option<Arc<UserDictionary>>,
 }
@@ -136,7 +138,10 @@ impl From<Entry> for DictEntry {
 }
 
 /// 사전 로드 옵션
-#[derive(Debug, Clone, Copy, Default)]
+///
+/// 기본값은 메모리 최적화 모드 (LazyEntries 사용)입니다.
+/// 속도 우선 모드가 필요하면 `LoadOptions::speed_optimized()`를 사용하세요.
+#[derive(Debug, Clone, Copy)]
 pub struct LoadOptions {
     /// Matrix에 mmap 사용 (멀티프로세스 메모리 공유, 물리 메모리 절약)
     pub use_mmap_matrix: bool,
@@ -146,8 +151,23 @@ pub struct LoadOptions {
     pub lazy_cache_size: Option<usize>,
 }
 
+impl Default for LoadOptions {
+    /// 기본값: 메모리 최적화 모드
+    ///
+    /// - `use_mmap_matrix`: false
+    /// - `use_lazy_entries`: true (LazyEntries 사용)
+    /// - `lazy_cache_size`: Some(10000)
+    fn default() -> Self {
+        Self {
+            use_mmap_matrix: false,
+            use_lazy_entries: true,
+            lazy_cache_size: Some(10000),
+        }
+    }
+}
+
 impl LoadOptions {
-    /// 메모리 효율 최적화 옵션
+    /// 메모리 효율 최적화 옵션 (mmap + lazy 모두 활성화)
     #[must_use]
     pub const fn memory_optimized() -> Self {
         Self {
@@ -158,6 +178,9 @@ impl LoadOptions {
     }
 
     /// 속도 최적화 옵션 (전체 메모리 로드)
+    ///
+    /// 모든 엔트리를 메모리에 로드하여 조회 속도를 최대화합니다.
+    /// 메모리 사용량이 증가하지만, 개별 조회 시 디스크 I/O가 없습니다.
     #[must_use]
     pub const fn speed_optimized() -> Self {
         Self {
@@ -165,6 +188,14 @@ impl LoadOptions {
             use_lazy_entries: false,
             lazy_cache_size: None,
         }
+    }
+
+    /// Eager 로드 옵션 (호환성 유지)
+    ///
+    /// v0.6.0 이전의 기본 동작과 동일합니다.
+    #[must_use]
+    pub const fn eager() -> Self {
+        Self::speed_optimized()
     }
 }
 
@@ -250,14 +281,39 @@ impl SystemDictionary {
             }
         };
 
-        // 엔트리 로드 (현재는 eager loading, lazy는 추후 통합)
-        let entries = Self::load_entries(&dicdir)?;
+        // 엔트리 저장소 생성 (옵션에 따라 Lazy/Eager 선택)
+        let entry_store: Arc<dyn EntryStore> = if options.use_lazy_entries {
+            let entries_path = dicdir.join(ENTRIES_BIN_FILE);
+            if entries_path.exists() {
+                // LazyEntries (v2 포맷) 시도, 실패 시 EagerStore로 폴백
+                match LazyEntries::from_file(&entries_path) {
+                    Ok(lazy) => {
+                        if let Some(cache_size) = options.lazy_cache_size {
+                            lazy.set_cache_size(cache_size);
+                        }
+                        Arc::new(LazyStore::new(lazy))
+                    }
+                    Err(_) => {
+                        // v1 포맷이거나 다른 형식이면 EagerStore로 폴백
+                        let entries = Self::load_entries(&dicdir)?;
+                        Arc::new(EagerStore::new(entries))
+                    }
+                }
+            } else {
+                // entries.bin이 없으면 eager로 폴백
+                let entries = Self::load_entries(&dicdir)?;
+                Arc::new(EagerStore::new(entries))
+            }
+        } else {
+            let entries = Self::load_entries(&dicdir)?;
+            Arc::new(EagerStore::new(entries))
+        };
 
         Ok(Self {
             dicdir,
             trie,
             matrix,
-            entries,
+            entry_store,
             user_dict: None,
         })
     }
@@ -315,14 +371,15 @@ impl SystemDictionary {
             }
         };
 
-        // 엔트리 로드 (entries.bin → entries.csv 순서로 시도)
+        // 엔트리 로드 (Eager 모드)
         let entries = Self::load_entries(&dicdir)?;
+        let entry_store: Arc<dyn EntryStore> = Arc::new(EagerStore::new(entries));
 
         Ok(Self {
             dicdir,
             trie,
             matrix,
-            entries,
+            entry_store,
             user_dict: None,
         })
     }
@@ -411,7 +468,8 @@ impl SystemDictionary {
 
     /// 바이너리 엔트리 파일 로드
     ///
-    /// 형식: `[magic:4][version:u32][count:u32][entries...]`
+    /// v1 형식: `[magic:MKED][version:u32][count:u32][entries...]`
+    /// v2 형식: `[magic:MKE2][version:u32][count:u32][index_offset:u64][entries...][index...]`
     fn load_entries_bin(path: &Path) -> Result<Vec<DictEntry>> {
         let data = std::fs::read(path).map_err(DictError::Io)?;
         let mut cursor = std::io::Cursor::new(&data);
@@ -421,9 +479,16 @@ impl SystemDictionary {
         cursor
             .read_exact(&mut magic)
             .map_err(|e| DictError::Format(format!("entries.bin magic: {e}")))?;
+
+        // v2 형식 (MKE2) - LazyEntries 형식
+        if &magic == b"MKE2" {
+            return Self::load_entries_bin_v2(path);
+        }
+
+        // v1 형식 (MKED)
         if &magic != ENTRIES_MAGIC {
             return Err(DictError::Format(
-                "entries.bin: invalid magic number".into(),
+                "entries.bin: invalid magic number (expected MKED or MKE2)".into(),
             ));
         }
 
@@ -485,6 +550,22 @@ impl SystemDictionary {
                 cost,
                 feature,
             });
+        }
+
+        Ok(entries)
+    }
+
+    /// v2 형식 (MKE2) 엔트리 파일 로드
+    ///
+    /// LazyEntries 형식을 사용하여 모든 엔트리를 로드합니다.
+    fn load_entries_bin_v2(path: &Path) -> Result<Vec<DictEntry>> {
+        let lazy = LazyEntries::from_file(path)?;
+        let count = lazy.len();
+        let mut entries = Vec::with_capacity(count);
+
+        for i in 0..count {
+            let entry = lazy.get(i as u32)?;
+            entries.push((*entry).clone());
         }
 
         Ok(entries)
@@ -558,17 +639,12 @@ impl SystemDictionary {
     ///
     /// 사전 빌더가 같은 surface의 엔트리를 연속으로 배치하므로,
     /// `first_index`부터 surface가 같은 동안 모든 엔트리를 수집합니다.
-    fn get_entries_at(&self, first_index: u32, surface: &str) -> Vec<&DictEntry> {
-        let start = first_index as usize;
-        let mut results = Vec::new();
-        for entry in self.entries.get(start..).unwrap_or(&[]) {
-            if entry.surface == surface {
-                results.push(entry);
-            } else {
-                break;
-            }
-        }
-        results
+    ///
+    /// # Errors
+    ///
+    /// Lazy 모드에서 디스크 읽기 실패 시 에러 반환
+    fn get_entries_at(&self, first_index: u32, surface: &str) -> Result<Vec<Arc<DictEntry>>> {
+        self.entry_store.get_entries_at(first_index, surface)
     }
 
     /// 사용자 사전 추가
@@ -605,10 +681,16 @@ impl SystemDictionary {
         &self.matrix
     }
 
-    /// 엔트리 배열 참조 반환
+    /// 엔트리 수 반환
     #[must_use]
-    pub fn entries(&self) -> &[DictEntry] {
-        &self.entries
+    pub fn entry_count(&self) -> usize {
+        self.entry_store.len()
+    }
+
+    /// 엔트리 저장소 참조 반환
+    #[must_use]
+    pub fn entry_store(&self) -> &Arc<dyn EntryStore> {
+        &self.entry_store
     }
 
     /// 사용자 사전 참조 반환
@@ -622,9 +704,13 @@ impl SystemDictionary {
     /// # Arguments
     ///
     /// * `index` - Trie에서 반환된 인덱스
-    #[must_use]
-    pub fn get_entry(&self, index: u32) -> Option<&DictEntry> {
-        self.entries.get(index as usize)
+    ///
+    /// # Errors
+    ///
+    /// - 인덱스가 범위를 벗어난 경우
+    /// - Lazy 모드에서 디스크 읽기 실패 시
+    pub fn get_entry(&self, index: u32) -> Result<Arc<DictEntry>> {
+        self.entry_store.get(index)
     }
 
     /// 공통 접두사 검색
@@ -639,17 +725,20 @@ impl SystemDictionary {
     /// # Returns
     ///
     /// 일치하는 엔트리와 바이트 길이의 벡터
-    #[must_use]
-    pub fn common_prefix_search(&self, text: &str) -> Vec<(&DictEntry, usize)> {
+    ///
+    /// # Errors
+    ///
+    /// Lazy 모드에서 디스크 읽기 실패 시 에러 반환
+    pub fn common_prefix_search(&self, text: &str) -> Result<Vec<(Arc<DictEntry>, usize)>> {
         let mut results = Vec::new();
         for (index, byte_len) in self.trie.common_prefix_search(text) {
             let surface = &text[..byte_len];
-            let entries = self.get_entries_at(index, surface);
+            let entries = self.get_entries_at(index, surface)?;
             for entry in entries {
                 results.push((entry, byte_len));
             }
         }
-        results
+        Ok(results)
     }
 
     /// 특정 위치에서 공통 접두사 검색
@@ -658,22 +747,25 @@ impl SystemDictionary {
     ///
     /// * `text` - 전체 텍스트
     /// * `start_byte` - 검색 시작 바이트 위치
-    #[must_use]
+    ///
+    /// # Errors
+    ///
+    /// Lazy 모드에서 디스크 읽기 실패 시 에러 반환
     pub fn common_prefix_search_at(
         &self,
         text: &str,
         start_byte: usize,
-    ) -> Vec<(&DictEntry, usize)> {
+    ) -> Result<Vec<(Arc<DictEntry>, usize)>> {
         let mut results = Vec::new();
         for (index, end_byte) in self.trie.common_prefix_search_at(text, start_byte) {
             let byte_len = end_byte - start_byte;
             let surface = &text[start_byte..end_byte];
-            let entries = self.get_entries_at(index, surface);
+            let entries = self.get_entries_at(index, surface)?;
             for entry in entries {
                 results.push((entry, byte_len));
             }
         }
-        results
+        Ok(results)
     }
 
     /// 시스템 사전과 사용자 사전을 통합하여 검색
@@ -694,18 +786,10 @@ impl SystemDictionary {
         results
     }
 
-    /// 엔트리 추가 (테스트용)
-    ///
-    /// 실제 사전에서는 파일에서 로드되므로, 이 메서드는 테스트에서만 사용됩니다.
-    #[cfg(test)]
-    pub fn add_entry(&mut self, entry: DictEntry) {
-        self.entries.push(entry);
-    }
-
     /// 테스트용 생성자 (외부 crate의 test에서도 사용 가능)
     #[doc(hidden)]
     #[must_use]
-    pub const fn new_test(
+    pub fn new_test(
         dicdir: PathBuf,
         trie: Trie<'static>,
         matrix: ConnectionMatrix,
@@ -715,7 +799,7 @@ impl SystemDictionary {
             dicdir,
             trie,
             matrix,
-            entries,
+            entry_store: Arc::new(EagerStore::new(entries)),
             user_dict: None,
         }
     }
@@ -725,9 +809,10 @@ impl Dictionary for SystemDictionary {
     fn lookup(&self, surface: &str) -> Vec<Entry> {
         // Trie exact match로 검색 → 같은 surface의 모든 엔트리 반환
         if let Some(index) = self.trie.exact_match(surface) {
-            let entries = self.get_entries_at(index, surface);
-            if !entries.is_empty() {
-                return entries.iter().map(|e| e.to_entry()).collect();
+            if let Ok(entries) = self.get_entries_at(index, surface) {
+                if !entries.is_empty() {
+                    return entries.iter().map(|e| e.to_entry()).collect();
+                }
             }
         }
 
@@ -886,7 +971,7 @@ mod tests {
             dicdir: PathBuf::from("./test_dic"),
             trie,
             matrix,
-            entries: dict_entries,
+            entry_store: Arc::new(EagerStore::new(dict_entries)),
             user_dict: None,
         }
     }
@@ -938,7 +1023,7 @@ mod tests {
         let dict = create_test_dictionary();
 
         // "가방에" 검색 -> "가", "가방" 매칭
-        let results = dict.common_prefix_search("가방에");
+        let results = dict.common_prefix_search("가방에").expect("search should work");
         assert_eq!(results.len(), 2);
 
         let surfaces: Vec<_> = results.iter().map(|(e, _)| e.surface.as_str()).collect();
@@ -953,7 +1038,7 @@ mod tests {
         let text = "나가다";
         let start = "나".len(); // 3 bytes
 
-        let results = dict.common_prefix_search_at(text, start);
+        let results = dict.common_prefix_search_at(text, start).expect("search should work");
         assert_eq!(results.len(), 2); // "가", "가다"
 
         let surfaces: Vec<_> = results.iter().map(|(e, _)| e.surface.as_str()).collect();
@@ -995,11 +1080,11 @@ mod tests {
         let dict = create_test_dictionary();
 
         let entry = dict.get_entry(0);
-        assert!(entry.is_some());
+        assert!(entry.is_ok());
         assert_eq!(entry.unwrap().surface, "가");
 
         let entry = dict.get_entry(100);
-        assert!(entry.is_none());
+        assert!(entry.is_err());
     }
 
     #[test]
@@ -1024,10 +1109,9 @@ mod tests {
     }
 
     #[test]
-    fn test_entries_reference() {
+    fn test_entry_count() {
         let dict = create_test_dictionary();
-        let entries = dict.entries();
-        assert_eq!(entries.len(), 5);
+        assert_eq!(dict.entry_count(), 5);
     }
 
     #[test]
@@ -1128,12 +1212,12 @@ mod tests {
             dicdir: PathBuf::from("./test"),
             trie,
             matrix,
-            entries: dict_entries,
+            entry_store: Arc::new(EagerStore::new(dict_entries)),
             user_dict: None,
         };
 
         // "가" 검색 → 2개 엔트리 반환
-        let results = dict.get_entries_at(0, "가");
+        let results = dict.get_entries_at(0, "가").expect("should get entries");
         assert_eq!(results.len(), 2);
         assert_eq!(results[0].feature, "VV,*,F,가,*,*,*,*");
         assert_eq!(results[1].feature, "JKS,*,F,가,*,*,*,*");

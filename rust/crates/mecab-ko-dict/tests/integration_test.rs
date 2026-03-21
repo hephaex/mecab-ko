@@ -32,18 +32,18 @@ fn test_system_dictionary_integration() {
         // entries.csv가 있으면 엔트리가 로드되어야 함
         if mini_dict_path.join("entries.csv").exists() {
             assert!(
-                !dict.entries().is_empty(),
+                dict.entry_count() > 0,
                 "entries.csv exists but no entries loaded"
             );
             println!(
                 "Loaded {} entries from mini dictionary",
-                dict.entries().len()
+                dict.entry_count()
             );
 
-            // 엔트리 내용 검증
-            let entries = dict.entries();
-            assert_eq!(entries[0].surface, "안녕");
-            assert_eq!(entries[0].cost, 100);
+            // 엔트리 내용 검증 (첫 번째 엔트리가 "안녕"인지 확인)
+            let entry = dict.get_entry(0).expect("should have first entry");
+            assert_eq!(entry.surface, "안녕");
+            assert_eq!(entry.cost, 100);
         }
 
         println!("Mini dictionary loaded successfully");
@@ -59,8 +59,8 @@ fn test_system_dictionary_integration() {
         Ok(dict) => {
             // 사전이 로드되면 기본 검증
             assert!(dict.dicdir().exists());
-            // 엔트리는 항상 Vec이므로 길이 확인만으로 충분
-            let _entry_count = dict.entries().len();
+            // 엔트리 수 확인
+            let _entry_count = dict.entry_count();
         }
         Err(e) => {
             // 사전이 없으면 에러 메시지 검증

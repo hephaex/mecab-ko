@@ -235,7 +235,7 @@ impl HotReloadDictionary {
 
         // 시스템 사전 검색
         if let Some(index) = dict.system_dict.trie().exact_match(surface) {
-            if let Some(entry) = dict.system_dict.get_entry(index) {
+            if let Ok(entry) = dict.system_dict.get_entry(index) {
                 results.push(entry.to_entry());
             }
         }

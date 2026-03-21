@@ -270,7 +270,7 @@ fn profile_dict_real(dict_path: Option<PathBuf>, verbose: bool) -> Result<Detail
         Ok(dict) => {
             if verbose {
                 eprintln!("  Dictionary loaded in {load_time:?}");
-                eprintln!("  Entries: {}", dict.entries().len());
+                eprintln!("  Entries: {}", dict.entry_count());
                 eprintln!(
                     "  Matrix: {}x{} ({})",
                     dict.matrix().left_size(),

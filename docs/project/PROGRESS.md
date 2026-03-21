@@ -1,6 +1,143 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-03-21 (Sprint 60 완료!)
+## 마지막 업데이트: 2026-03-21 (Sprint 61 완료!)
+
+### ✅ Sprint 61 - LazyEntries Integration & Memory Optimization
+
+**목표:** LazyEntries 통합으로 메모리 최적화 완성 (150MB → 130MB)
+
+| Task | Description | Status |
+|------|-------------|--------|
+| S61-01 | Dictionary API 변경 (get_entry → Arc<DictEntry>) | ✅ 완료 |
+| S61-02 | LazyEntries 기본 활성화 | ✅ 완료 |
+| S61-03 | 메모리 벤치마크 | ✅ 완료 |
+| S61-04 | 마이그레이션 가이드 작성 | ✅ 완료 |
+
+---
+
+#### S61-01: Dictionary API 변경 완료 (2026-03-21)
+**EntryStore trait 추상화 및 Arc<DictEntry> 반환 타입 적용**
+
+**구현 내용:**
+- `entry_store.rs` 모듈 생성
+  - `EntryStore` trait 정의 (get, get_entries_at, len, is_empty)
+  - `EagerStore` 구현 (Vec<Arc<DictEntry>> 래핑)
+  - `LazyStore` 구현 (LazyEntries 래핑)
+- `SystemDictionary` 리팩터링
+  - `entries: Vec<DictEntry>` → `entry_store: Arc<dyn EntryStore>`
+  - `get_entry()` 반환 타입: `Option<&DictEntry>` → `Result<Arc<DictEntry>>`
+  - `common_prefix_search()` 반환 타입: `Vec<(&DictEntry, usize)>` → `Result<Vec<(Arc<DictEntry>, usize)>>`
+  - `entries()` → `entry_count()` 및 `entry_store()` 메서드로 대체
+- `load_with_options()` LazyStore 지원
+  - `use_lazy_entries: true` 설정 시 LazyStore 사용
+  - entries.bin 파일 없으면 EagerStore로 폴백
+- 영향 받은 파일 수정
+  - `tokenizer.rs`: common_prefix_search Result 처리
+  - `hot_reload.rs`: get_entry Result 처리
+  - `mecab-profile.rs`: entries() → entry_count()
+
+**테스트:**
+- mecab-ko-dict: 93 tests passed
+- mecab-ko-core: 269 tests passed
+
+---
+
+#### S61-02: LazyEntries 기본 활성화 완료 (2026-03-21)
+**LoadOptions 기본값을 LazyEntries 모드로 변경**
+
+**변경 내용:**
+- `LoadOptions::default()` 커스텀 구현
+  - `use_lazy_entries: true` (기본 활성화)
+  - `lazy_cache_size: Some(10000)` (LRU 캐시 10,000개)
+- 기존 동작이 필요한 경우 `LoadOptions::speed_optimized()` 사용
+- `LoadOptions::eager()` 호환성 메서드 추가
+- `LoadOptions` lib.rs에서 export
+
+**예상 효과:**
+- 사전 로드 시 메모리 사용량 감소 (150MB → ~130MB)
+- 첫 번째 조회에서만 디스크 I/O 발생
+- LRU 캐시로 자주 사용하는 엔트리는 메모리에 유지
+
+---
+
+#### S61-03: 메모리 벤치마크 완료 (2026-03-21)
+**Eager vs Lazy 로딩 모드 벤치마크 및 검증 인프라 구축**
+
+**구현 내용:**
+- `dict_loading_bench.rs` 생성 (benchmarks crate)
+  - `bench_loading_mode_init`: Eager vs Lazy vs Memory-optimized 초기화 시간 비교
+  - `bench_first_lookup`: Cold cache 첫 조회 성능
+  - `bench_warm_lookup`: Warm cache 연속 조회 성능
+  - `bench_cache_efficiency`: 캐시 크기별 효율성
+  - `bench_multiple_instances`: 다중 인스턴스 메모리 공유 테스트
+
+- `memory_comparison.rs` 통합 테스트 생성
+  - `test_eager_vs_lazy_loading_characteristics`: 로딩 특성 비교
+  - `test_load_options_variants`: LoadOptions 변형 검증
+  - `test_lazy_cache_size_effect`: 캐시 크기 효과 테스트
+  - `test_entry_store_abstraction`: Eager/Lazy 동일 결과 검증
+
+- entries.bin v2 포맷 호환성 추가
+  - `load_entries_bin()`: v1 (MKED) 및 v2 (MKE2) 포맷 모두 지원
+  - `load_entries_bin_v2()`: LazyEntries 형식 전체 로드 메서드
+
+- 기타 API 수정
+  - `integration_test.rs`: entries() → entry_count() 마이그레이션
+  - `dictionary_usage.rs`: entries() → entry_count() 마이그레이션
+
+**테스트:**
+- mecab-ko-dict: 106 tests passed (기존 93 + 신규 13)
+- mecab-ko-core: 269 tests passed
+
+---
+
+#### S61-04: 마이그레이션 가이드 작성 완료 (2026-03-21)
+**v0.6.x → v0.7.0 업그레이드 가이드 작성**
+
+**문서 내용 (docs/MIGRATION_v0.7.md):**
+- 사전 로딩 기본값 변경 설명 (Eager → Lazy)
+- `entries()` → `entry_count()` API 변경
+- `get_entry()` 반환 타입 변경 (Option → Result<Arc>)
+- `common_prefix_search()` 반환 타입 변경
+- LoadOptions 사전 정의 옵션 설명
+- 마이그레이션 체크리스트
+- Eager/Lazy 모드 성능 특성 비교
+- 코드 예제 (기본, 고성능, 메모리 최적화)
+- 문제 해결 가이드
+
+---
+
+### ✅ Sprint 61 완료! (2026-03-21)
+
+**성과:**
+- LazyEntries 통합으로 메모리 최적화 기반 구축
+- EntryStore trait 추상화로 유연한 로딩 전략 지원
+- 벤치마크 인프라 구축으로 성능 검증 가능
+- 마이그레이션 가이드로 업그레이드 용이성 확보
+
+**실제 측정 결과 (816,283 엔트리 사전):**
+
+| 모드 | 로드 시간 | 메모리 증가 | 10,000회 조회 |
+|------|-----------|-------------|---------------|
+| Eager | 806ms | 291.6 MB | 3.7ms |
+| **Lazy** | **41ms** | **66.3 MB** | 22.4ms |
+| Memory Opt | 42ms | 64.1 MB | 22.0ms |
+
+- 메모리 절감: **-77.3%** (291.6 → 66.3 MB)
+- 로드 시간: **-94.9%** (806 → 41 ms)
+- 조회 속도 트레이드오프: 6x 느림 (대량 처리용)
+
+⚠️ **주의**: v1 포맷(MKED)에서는 EagerStore로 폴백됨. v2(MKE2) 변환 필요.
+
+**다음 단계 (v0.7.0 릴리스):**
+1. ~~실제 대형 사전으로 메모리 절감 효과 측정~~ ✅ 완료
+2. CI/CD에 벤치마크 통합
+3. ~~entries.bin v2 포맷 변환 도구 추가 (dict-builder)~~ ✅ 완료
+   - `mecab-ko-dict-builder convert --dict <path>` 명령 추가
+   - `mecab-ko-dict-builder info --dict <path>` 명령 추가
+4. crates.io v0.7.0 배포
+
+---
 
 ### ✅ Sprint 60 - Package Publication & Ecosystem (완료!)
 
