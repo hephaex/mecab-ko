@@ -554,6 +554,51 @@ enum Commands {
         #[arg(long)]
         report: bool,
     },
+    /// 미등록어(신조어) 수집
+    ///
+    /// 입력 텍스트에서 사전에 없는 단어를 추출하여 빈도순으로 정렬합니다.
+    /// 뉴스 기사, SNS 데이터 등에서 신조어를 발견하는 데 사용할 수 있습니다.
+    CollectUnknown {
+        /// 입력 파일 (여러 개 지정 가능, 없으면 stdin)
+        #[arg(short, long)]
+        input: Vec<PathBuf>,
+
+        /// 출력 파일 (없으면 stdout)
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+
+        /// 최소 빈도수 (기본: 2)
+        #[arg(long, default_value = "2")]
+        min_freq: usize,
+
+        /// 최소 단어 길이 (기본: 2)
+        #[arg(long, default_value = "2")]
+        min_length: usize,
+
+        /// 최대 결과 수 (기본: 무제한)
+        #[arg(long)]
+        limit: Option<usize>,
+
+        /// 출력 포맷
+        #[arg(long, value_enum, default_value = "csv")]
+        format: UnknownOutputFormat,
+
+        /// 예문 포함 여부
+        #[arg(long)]
+        with_examples: bool,
+
+        /// 사전 경로
+        #[arg(short = 'd', long)]
+        dicdir: Option<PathBuf>,
+
+        /// 사용자 정의 사전 (CSV 형식)
+        #[arg(short = 'u', long = "user-dic")]
+        user_dict: Option<PathBuf>,
+
+        /// 진행 상황 표시
+        #[arg(long)]
+        progress: bool,
+    },
     /// 버전 정보 표시
     Version,
     /// 셸 자동완성 스크립트 생성
@@ -582,6 +627,20 @@ enum EvalFormat {
     Tsv,
     /// JSON format (future support)
     Json,
+}
+
+/// Unknown word collection output format
+#[derive(Debug, Clone, Copy, ValueEnum, Default)]
+enum UnknownOutputFormat {
+    /// CSV format (word,count,example)
+    #[default]
+    Csv,
+    /// JSON format
+    Json,
+    /// TSV format
+    Tsv,
+    /// GitHub Issue markdown format
+    Markdown,
 }
 
 /// Output format options for analysis results
@@ -921,6 +980,31 @@ fn main() -> Result<()> {
                     *max_per_keyword,
                     *delay,
                     *report,
+                )?;
+            }
+            Commands::CollectUnknown {
+                input,
+                output,
+                min_freq,
+                min_length,
+                limit,
+                format,
+                with_examples,
+                dicdir,
+                user_dict,
+                progress,
+            } => {
+                run_collect_unknown(
+                    input,
+                    output.as_ref(),
+                    *min_freq,
+                    *min_length,
+                    *limit,
+                    *format,
+                    *with_examples,
+                    dicdir.as_ref(),
+                    user_dict.as_ref(),
+                    *progress,
                 )?;
             }
             Commands::Version => {
@@ -2115,6 +2199,208 @@ fn deduplicate_entries(entries: Vec<UserEntry>) -> Vec<UserEntry> {
     }
 
     result
+}
+
+/// Unknown word entry for collection
+#[derive(Debug, Clone, Serialize)]
+struct UnknownWordEntry {
+    word: String,
+    count: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    example: Option<String>,
+}
+
+/// Runs unknown word collection from input text
+///
+/// Analyzes text to find words not in the dictionary (POS == "UNKNOWN")
+/// and outputs them with frequency counts.
+#[allow(clippy::too_many_arguments)]
+fn run_collect_unknown(
+    input_files: &[PathBuf],
+    output_path: Option<&PathBuf>,
+    min_freq: usize,
+    min_length: usize,
+    limit: Option<usize>,
+    format: UnknownOutputFormat,
+    with_examples: bool,
+    dicdir: Option<&PathBuf>,
+    user_dict_path: Option<&PathBuf>,
+    show_progress: bool,
+) -> Result<()> {
+    use indicatif::{ProgressBar, ProgressStyle};
+
+    // Initialize tokenizer
+    let mut tokenizer = if let Some(dict_path) = dicdir {
+        Tokenizer::with_dict(
+            dict_path.to_str().context("Invalid dictionary path encoding")?,
+        ).context("Failed to load dictionary")?
+    } else {
+        Tokenizer::new().context("Failed to initialize tokenizer")?
+    };
+
+    // Load user dictionary if provided
+    if let Some(user_dict_path) = user_dict_path {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(user_dict_path).with_context(|| {
+            format!("Failed to load user dictionary: {}", user_dict_path.display())
+        })?;
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    // Collect unknown words with frequency and examples
+    let mut word_counts: HashMap<String, usize> = HashMap::new();
+    let mut word_examples: HashMap<String, String> = HashMap::new();
+    let mut lines_processed = 0;
+
+    // Setup progress bar
+    let progress = if show_progress {
+        let pb = ProgressBar::new_spinner();
+        pb.set_style(
+            ProgressStyle::default_spinner()
+                .template("{spinner:.green} {msg}")
+                .unwrap(),
+        );
+        Some(pb)
+    } else {
+        None
+    };
+
+    // Process input
+    let process_line = |line: &str, word_counts: &mut HashMap<String, usize>, word_examples: &mut HashMap<String, String>, tokenizer: &mut Tokenizer| {
+        let tokens = tokenizer.tokenize(line);
+        for token in tokens {
+            // Check if token is unknown (POS == "UNKNOWN" or empty POS)
+            let is_unknown = token.pos == "UNKNOWN" || token.pos.is_empty();
+            if is_unknown && token.surface.chars().count() >= min_length {
+                let surface = token.surface.clone();
+                *word_counts.entry(surface.clone()).or_insert(0) += 1;
+
+                // Store first example if not already present
+                if with_examples && !word_examples.contains_key(&surface) {
+                    // Trim line to reasonable length for example
+                    let example = if line.len() > 100 {
+                        format!("{}...", &line[..100])
+                    } else {
+                        line.to_string()
+                    };
+                    word_examples.insert(surface, example);
+                }
+            }
+        }
+    };
+
+    if input_files.is_empty() {
+        // Read from stdin
+        let stdin = io::stdin();
+        for line_result in stdin.lock().lines() {
+            let line = line_result.context("Failed to read stdin")?;
+            process_line(&line, &mut word_counts, &mut word_examples, &mut tokenizer);
+            lines_processed += 1;
+
+            if let Some(ref pb) = progress {
+                if lines_processed % 1000 == 0 {
+                    pb.set_message(format!("{} lines processed", lines_processed));
+                }
+            }
+        }
+    } else {
+        // Read from files
+        for file_path in input_files {
+            let file = File::open(file_path)
+                .with_context(|| format!("Failed to open file: {}", file_path.display()))?;
+            let reader = BufReader::new(file);
+
+            for line_result in reader.lines() {
+                let line = line_result
+                    .with_context(|| format!("Failed to read from: {}", file_path.display()))?;
+                process_line(&line, &mut word_counts, &mut word_examples, &mut tokenizer);
+                lines_processed += 1;
+
+                if let Some(ref pb) = progress {
+                    if lines_processed % 1000 == 0 {
+                        pb.set_message(format!("{} lines processed", lines_processed));
+                    }
+                }
+            }
+        }
+    }
+
+    if let Some(ref pb) = progress {
+        pb.finish_with_message(format!("Processed {} lines", lines_processed));
+    }
+
+    // Filter by minimum frequency and sort by count
+    let mut entries: Vec<UnknownWordEntry> = word_counts
+        .into_iter()
+        .filter(|(_, count)| *count >= min_freq)
+        .map(|(word, count)| UnknownWordEntry {
+            example: if with_examples { word_examples.get(&word).cloned() } else { None },
+            word,
+            count,
+        })
+        .collect();
+
+    entries.sort_by(|a, b| b.count.cmp(&a.count));
+
+    // Apply limit if specified
+    if let Some(limit) = limit {
+        entries.truncate(limit);
+    }
+
+    // Output results
+    let mut writer: Box<dyn Write> = match output_path {
+        Some(path) => {
+            let file = File::create(path)
+                .with_context(|| format!("Failed to create output file: {}", path.display()))?;
+            Box::new(BufWriter::new(file))
+        }
+        None => Box::new(io::stdout()),
+    };
+
+    match format {
+        UnknownOutputFormat::Csv => {
+            writeln!(writer, "word,count,example")?;
+            for entry in &entries {
+                let example = entry.example.as_deref().unwrap_or("");
+                // Escape CSV fields
+                let escaped_example = example.replace('"', "\"\"");
+                writeln!(writer, "{},{},\"{}\"", entry.word, entry.count, escaped_example)?;
+            }
+        }
+        UnknownOutputFormat::Tsv => {
+            writeln!(writer, "word\tcount\texample")?;
+            for entry in &entries {
+                let example = entry.example.as_deref().unwrap_or("");
+                writeln!(writer, "{}\t{}\t{}", entry.word, entry.count, example)?;
+            }
+        }
+        UnknownOutputFormat::Json => {
+            let json = serde_json::to_string_pretty(&entries)
+                .context("Failed to serialize to JSON")?;
+            writeln!(writer, "{json}")?;
+        }
+        UnknownOutputFormat::Markdown => {
+            writeln!(writer, "# 미등록어 후보 목록\n")?;
+            writeln!(writer, "총 {} 개의 미등록어 발견 (최소 빈도: {})\n", entries.len(), min_freq)?;
+            writeln!(writer, "| 순위 | 단어 | 빈도 | 예문 |")?;
+            writeln!(writer, "|------|------|------|------|")?;
+            for (i, entry) in entries.iter().enumerate() {
+                let example = entry.example.as_deref().unwrap_or("-");
+                let escaped_example = example.replace('|', "\\|");
+                writeln!(writer, "| {} | {} | {} | {} |", i + 1, entry.word, entry.count, escaped_example)?;
+            }
+        }
+    }
+
+    eprintln!(
+        "\n=== 수집 결과 ===\n처리된 라인: {}\n발견된 미등록어: {} 종류\n빈도 {}회 이상: {} 종류",
+        lines_processed,
+        entries.len() + entries.iter().filter(|e| e.count < min_freq).count(),
+        min_freq,
+        entries.len()
+    );
+
+    Ok(())
 }
 
 /// Runs evaluation on test dataset

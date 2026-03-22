@@ -1,0 +1,80 @@
+name: "신조어 후보 목록 (Bulk Word Candidates)"
+description: "[자동화] 미등록어 탐지 파이프라인에서 생성된 후보 목록"
+title: "[BULK] 신조어 후보 {{date}}"
+labels: ["type:word-request", "status:review-needed", "automated"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 자동 수집된 신조어 후보
+
+        이 이슈는 자동화된 미등록어 탐지 파이프라인에서 생성되었습니다.
+
+        **검토 방법:**
+        1. 각 단어의 적합성을 확인하세요
+        2. 적합한 단어는 체크박스에 표시하세요
+        3. 검토가 완료되면 코멘트로 알려주세요
+
+        **라벨:**
+        - ✅ 승인됨 → `status:approved`
+        - ❌ 거절됨 → `status:rejected`
+        - 🔍 검토 필요 → `status:review-needed`
+
+  - type: input
+    id: collection_date
+    attributes:
+      label: "수집 기간"
+      description: "데이터 수집 기간"
+      placeholder: "2026-03-17 ~ 2026-03-23"
+    validations:
+      required: true
+
+  - type: input
+    id: source
+    attributes:
+      label: "데이터 소스"
+      description: "수집에 사용된 데이터 소스"
+      placeholder: "뉴스 API, 위키백과 등"
+    validations:
+      required: true
+
+  - type: input
+    id: total_analyzed
+    attributes:
+      label: "분석된 문서 수"
+      placeholder: "1,234"
+
+  - type: textarea
+    id: candidates
+    attributes:
+      label: "신조어 후보 목록"
+      description: "빈도순으로 정렬된 미등록어 목록"
+      placeholder: |
+        | 순위 | 단어 | 빈도 | 추정 품사 | 예문 | 승인 |
+        |-----|------|-----|---------|-----|-----|
+        | 1 | 메타버스 | 523 | NNG | 메타버스 시대가 열렸다 | [ ] |
+        | 2 | 챗GPT | 412 | NNP | 챗GPT로 코딩을 배웠다 | [ ] |
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: statistics
+    attributes:
+      label: "수집 통계"
+      description: "수집 파이프라인 통계"
+      placeholder: |
+        - 총 미등록어: 1,234개
+        - 빈도 10회 이상: 156개
+        - 중복 제거 후: 89개
+        - 기존 사전 대조: 45개 신규
+
+  - type: checkboxes
+    id: review_checklist
+    attributes:
+      label: "검토 체크리스트"
+      options:
+        - label: "품사 태그 검증 완료"
+        - label: "중복 단어 확인 완료"
+        - label: "부적절한 단어 필터링 완료"
+        - label: "최종 승인 준비 완료"

@@ -1,0 +1,445 @@
+# Multi-Source Neologism Collection Workflow
+#
+# This workflow collects new Korean words from multiple sources:
+# 1. 국립국어원 우리말샘 OpenDict API
+# 2. Baram semantic search API (internal knowledge base)
+# 3. Unknown word collection from text corpora
+#
+# Schedule:
+#   - Weekly: Every Monday at 09:00 KST (00:00 UTC)
+#
+# Manual Trigger:
+#   Use workflow_dispatch with custom options
+#
+# Required Secrets:
+#   - OPENDICT_API_KEY: API key from data.go.kr for 우리말샘 API
+#   - BARAM_API_URL: (Optional) Baram API endpoint URL
+
+name: Multi-Source Neologism Sync
+
+on:
+  schedule:
+    # Weekly sync: Every Monday at 00:00 UTC (09:00 KST)
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+    inputs:
+      sources:
+        description: 'Data sources to use'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - opendict
+          - baram
+          - corpus
+      keywords:
+        description: 'Custom keywords (comma-separated)'
+        required: false
+        type: string
+      corpus_url:
+        description: 'Corpus URL for unknown word collection'
+        required: false
+        type: string
+      min_freq:
+        description: 'Minimum frequency for corpus collection'
+        required: false
+        default: '3'
+        type: string
+      dry_run:
+        description: 'Dry run (collect only, no PR creation)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  NEOLOGISMS_CSV: data/user-dict/neologisms.csv
+  CANDIDATES_DIR: data/neologism-candidates
+
+jobs:
+  # ============================================================================
+  # Source 1: OpenDict API Collection
+  # ============================================================================
+  collect-opendict:
+    name: OpenDict API
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.sources == 'all' || github.event.inputs.sources == 'opendict' || github.event_name == 'schedule' }}
+    outputs:
+      entries: ${{ steps.collect.outputs.entries }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-cargo-cli-${{ hashFiles('rust/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-cli-
+
+      - name: Build CLI
+        run: cargo build --release --manifest-path rust/Cargo.toml -p mecab-ko-cli
+
+      - name: Collect from OpenDict
+        id: collect
+        env:
+          OPENDICT_API_KEY: ${{ secrets.OPENDICT_API_KEY }}
+        run: |
+          KEYWORDS="${{ github.event.inputs.keywords }}"
+          if [ -z "$KEYWORDS" ]; then
+            KEYWORDS="신조어,AI,메타버스,MZ세대,챗GPT,생성AI"
+          fi
+
+          mkdir -p $CANDIDATES_DIR
+          OUTPUT="$CANDIDATES_DIR/opendict_$(date +%Y%m%d).csv"
+
+          # Collect using CLI
+          IFS=',' read -ra KW_ARRAY <<< "$KEYWORDS"
+          > "$OUTPUT"
+
+          for kw in "${KW_ARRAY[@]}"; do
+            echo "Collecting: $kw"
+            ./rust/target/release/mecab-ko sync \
+              --source opendict \
+              --query "$kw" \
+              --api-key "$OPENDICT_API_KEY" \
+              --max-results 20 \
+              --output temp.csv \
+              2>&1 || true
+
+            if [ -f temp.csv ]; then
+              cat temp.csv >> "$OUTPUT"
+              rm temp.csv
+            fi
+            sleep 1
+          done
+
+          COUNT=$(wc -l < "$OUTPUT" | tr -d ' ')
+          echo "entries=$COUNT" >> $GITHUB_OUTPUT
+          echo "Collected $COUNT entries from OpenDict"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: opendict-candidates
+          path: ${{ env.CANDIDATES_DIR }}/opendict_*.csv
+          retention-days: 30
+
+  # ============================================================================
+  # Source 2: Baram Semantic Search
+  # ============================================================================
+  collect-baram:
+    name: Baram Search
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.sources == 'all' || github.event.inputs.sources == 'baram' }}
+    outputs:
+      entries: ${{ steps.collect.outputs.entries }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Collect from Baram API
+        id: collect
+        env:
+          BARAM_API_URL: ${{ secrets.BARAM_API_URL || 'http://172.20.1.30:8080' }}
+        run: |
+          KEYWORDS="${{ github.event.inputs.keywords }}"
+          if [ -z "$KEYWORDS" ]; then
+            KEYWORDS="신조어,트렌드,신기술,문화"
+          fi
+
+          mkdir -p $CANDIDATES_DIR
+          OUTPUT="$CANDIDATES_DIR/baram_$(date +%Y%m%d).json"
+
+          > "$OUTPUT"
+          IFS=',' read -ra KW_ARRAY <<< "$KEYWORDS"
+
+          echo "[" >> "$OUTPUT"
+          FIRST=true
+
+          for kw in "${KW_ARRAY[@]}"; do
+            echo "Searching Baram: $kw"
+
+            RESPONSE=$(curl -sf "$BARAM_API_URL/api/search?q=$kw&k=10" 2>/dev/null || echo '{"results":[]}')
+
+            if [ "$FIRST" = true ]; then
+              FIRST=false
+            else
+              echo "," >> "$OUTPUT"
+            fi
+
+            echo "{\"keyword\":\"$kw\",\"results\":$RESPONSE}" >> "$OUTPUT"
+            sleep 0.5
+          done
+
+          echo "]" >> "$OUTPUT"
+
+          # Count unique results (rough estimate)
+          COUNT=$(grep -o '"text"' "$OUTPUT" 2>/dev/null | wc -l | tr -d ' ')
+          echo "entries=$COUNT" >> $GITHUB_OUTPUT
+          echo "Collected $COUNT text segments from Baram"
+
+      - name: Extract unknown words from Baram results
+        if: steps.collect.outputs.entries != '0'
+        run: |
+          # Install jq for JSON processing
+          sudo apt-get update && sudo apt-get install -y jq
+
+          INPUT="$CANDIDATES_DIR/baram_$(date +%Y%m%d).json"
+          OUTPUT="$CANDIDATES_DIR/baram_words_$(date +%Y%m%d).txt"
+
+          # Extract text content and save for later processing
+          jq -r '.[].results.results[]?.text // empty' "$INPUT" > "$OUTPUT" 2>/dev/null || true
+
+          echo "Extracted text content for unknown word analysis"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: baram-candidates
+          path: ${{ env.CANDIDATES_DIR }}/baram_*.json
+          retention-days: 30
+
+  # ============================================================================
+  # Source 3: Corpus Unknown Word Collection
+  # ============================================================================
+  collect-corpus:
+    name: Corpus Analysis
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.sources == 'all' || github.event.inputs.sources == 'corpus' }}
+    outputs:
+      entries: ${{ steps.analyze.outputs.entries }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-cargo-cli-${{ hashFiles('rust/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-cli-
+
+      - name: Build CLI
+        run: cargo build --release --manifest-path rust/Cargo.toml -p mecab-ko-cli
+
+      - name: Download sample corpus
+        id: download
+        run: |
+          mkdir -p $CANDIDATES_DIR/corpus
+
+          # Download sample news data (placeholder - would use actual news API)
+          CORPUS_URL="${{ github.event.inputs.corpus_url }}"
+
+          if [ -n "$CORPUS_URL" ]; then
+            curl -sL "$CORPUS_URL" -o "$CANDIDATES_DIR/corpus/sample.txt" || true
+          fi
+
+          # If no corpus provided, create sample from README files
+          if [ ! -f "$CANDIDATES_DIR/corpus/sample.txt" ]; then
+            find . -name "*.md" -type f -exec cat {} \; > "$CANDIDATES_DIR/corpus/sample.txt"
+          fi
+
+          LINES=$(wc -l < "$CANDIDATES_DIR/corpus/sample.txt" | tr -d ' ')
+          echo "Corpus has $LINES lines"
+
+      - name: Analyze corpus for unknown words
+        id: analyze
+        run: |
+          MIN_FREQ="${{ github.event.inputs.min_freq || '3' }}"
+          OUTPUT="$CANDIDATES_DIR/corpus_unknown_$(date +%Y%m%d).csv"
+
+          ./rust/target/release/mecab-ko collect-unknown \
+            -d data/mecab-ko-dic-2.1.1-20180720 \
+            -i "$CANDIDATES_DIR/corpus/sample.txt" \
+            -o "$OUTPUT" \
+            --min-freq "$MIN_FREQ" \
+            --min-length 2 \
+            --with-examples \
+            --format csv \
+            2>&1 || true
+
+          if [ -f "$OUTPUT" ]; then
+            COUNT=$(wc -l < "$OUTPUT" | tr -d ' ')
+            COUNT=$((COUNT - 1))  # Exclude header
+          else
+            COUNT=0
+          fi
+
+          echo "entries=$COUNT" >> $GITHUB_OUTPUT
+          echo "Found $COUNT unknown words in corpus"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: corpus-candidates
+          path: ${{ env.CANDIDATES_DIR }}/corpus_unknown_*.csv
+          retention-days: 30
+
+  # ============================================================================
+  # Merge and Create Issue
+  # ============================================================================
+  merge-candidates:
+    name: Merge Candidates
+    runs-on: ubuntu-latest
+    needs: [collect-opendict, collect-baram, collect-corpus]
+    if: always() && !cancelled()
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Merge candidates
+        id: merge
+        run: |
+          mkdir -p $CANDIDATES_DIR
+          MERGED="$CANDIDATES_DIR/merged_$(date +%Y%m%d).csv"
+
+          echo "word,count,source,example" > "$MERGED"
+
+          # Process OpenDict results
+          if [ -d artifacts/opendict-candidates ]; then
+            for f in artifacts/opendict-candidates/*.csv; do
+              if [ -f "$f" ]; then
+                # Add source column
+                tail -n +2 "$f" | while IFS=',' read -r word rest; do
+                  echo "$word,1,opendict,$rest"
+                done >> "$MERGED"
+              fi
+            done
+          fi
+
+          # Process Corpus results
+          if [ -d artifacts/corpus-candidates ]; then
+            for f in artifacts/corpus-candidates/*.csv; do
+              if [ -f "$f" ]; then
+                tail -n +2 "$f" | while IFS=',' read -r word count example; do
+                  echo "$word,$count,corpus,$example"
+                done >> "$MERGED"
+              fi
+            done
+          fi
+
+          # Count total
+          TOTAL=$(wc -l < "$MERGED" | tr -d ' ')
+          TOTAL=$((TOTAL - 1))
+
+          echo "total=$TOTAL" >> $GITHUB_OUTPUT
+          echo "Total merged candidates: $TOTAL"
+
+          # Generate summary
+          echo "## Multi-Source Collection Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Source | Entries |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| OpenDict | ${{ needs.collect-opendict.outputs.entries || '0' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Baram | ${{ needs.collect-baram.outputs.entries || '0' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Corpus | ${{ needs.collect-corpus.outputs.entries || '0' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Total** | **$TOTAL** |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Create candidate issue
+        if: steps.merge.outputs.total != '0' && github.event.inputs.dry_run != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = '${{ env.CANDIDATES_DIR }}/merged_' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '.csv';
+
+            let candidates = '';
+            try {
+              candidates = fs.readFileSync(path, 'utf8');
+            } catch (e) {
+              console.log('Could not read merged file');
+              return;
+            }
+
+            // Parse CSV and create markdown table
+            const lines = candidates.split('\n').filter(l => l.trim());
+            const header = lines[0];
+            const data = lines.slice(1, 51);  // First 50 entries
+
+            let table = '| 순위 | 단어 | 빈도 | 소스 | 예문 | 승인 |\n';
+            table += '|------|------|------|------|------|------|\n';
+
+            data.forEach((line, i) => {
+              const [word, count, source, ...example] = line.split(',');
+              const exampleText = example.join(',').slice(0, 50);
+              table += `| ${i+1} | ${word} | ${count} | ${source} | ${exampleText} | [ ] |\n`;
+            });
+
+            const body = `## 자동 수집된 신조어 후보
+
+이 이슈는 자동화된 미등록어 탐지 파이프라인에서 생성되었습니다.
+
+**수집 정보:**
+- 수집 기간: ${new Date().toISOString().slice(0,10)}
+- 총 후보: ${{ steps.merge.outputs.total }}개
+
+**소스별 수집 현황:**
+- 우리말샘 API: ${{ needs.collect-opendict.outputs.entries || '0' }}개
+- Baram 검색: ${{ needs.collect-baram.outputs.entries || '0' }}개
+- 코퍼스 분석: ${{ needs.collect-corpus.outputs.entries || '0' }}개
+
+**검토 방법:**
+1. 각 단어의 적합성을 확인하세요
+2. 적합한 단어는 체크박스에 표시하세요
+3. 검토가 완료되면 코멘트로 알려주세요
+
+---
+
+### 신조어 후보 목록 (상위 50개)
+
+${table}
+
+---
+
+### 검토 체크리스트
+
+- [ ] 품사 태그 검증 완료
+- [ ] 중복 단어 확인 완료
+- [ ] 부적절한 단어 필터링 완료
+- [ ] 최종 승인 준비 완료
+
+> _이 이슈는 GitHub Actions에 의해 자동 생성되었습니다._
+> _Run: #${{ github.run_number }}_`;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[BULK] 신조어 후보 ${new Date().toISOString().slice(0,10)}`,
+              body: body,
+              labels: ['type:word-request', 'status:review-needed', 'automated']
+            });
+
+            console.log('Created bulk candidate issue');
+
+      - name: Upload merged artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: merged-candidates
+          path: ${{ env.CANDIDATES_DIR }}/merged_*.csv
+          retention-days: 90

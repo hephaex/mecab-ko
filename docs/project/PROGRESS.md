@@ -1,6 +1,81 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-03-22 (Sprint 62 완료!)
+## 마지막 업데이트: 2026-03-23 (Sprint 63 완료!)
+
+### ✅ Sprint 63 - Dictionary Enrichment Pipeline
+
+**목표:** 신조어 수집 파이프라인 구축
+
+| Task | Description | Status |
+|------|-------------|--------|
+| S63-01 | Issue 템플릿 생성 | ✅ 완료 |
+| S63-02 | 미등록어 수집 CLI | ✅ 완료 |
+| S63-03 | 자동 수집 워크플로우 | ✅ 완료 |
+| S63-04 | 기여 가이드 작성 | ✅ 완료 |
+
+---
+
+#### S63-01: Issue 템플릿 생성 완료 (2026-03-23)
+**GitHub Issue 템플릿으로 단어 제안 표준화**
+
+**구현 내용:**
+- `.github/ISSUE_TEMPLATE/new-word.yml` - 단일 단어 제안 폼
+  - 단어, 품사, 읽기, 카테고리, 예시, 출처 필드
+  - 자동 라벨링 (type:word-request, status:ready)
+- `.github/ISSUE_TEMPLATE/bulk-word-candidates.yml` - 대량 단어 제안 폼
+  - 수집 기간, 소스, 통계, 검토 체크리스트
+
+---
+
+#### S63-02: 미등록어 수집 CLI 완료 (2026-03-23)
+**텍스트에서 미등록어 자동 추출**
+
+**구현 내용:**
+- `collect-unknown` 서브커맨드 추가
+  - 입력: stdin 또는 파일 (여러 개 지정 가능)
+  - 출력: CSV, TSV, JSON, Markdown 형식
+  - 옵션: --min-freq, --min-length, --limit, --with-examples
+
+**사용 예:**
+```bash
+# 텍스트 파일에서 미등록어 수집
+mecab-ko collect-unknown \
+  -d ../data/mecab-ko-dic-2.1.1-20180720 \
+  -i news_articles.txt \
+  -o unknown_words.csv \
+  --min-freq 3 \
+  --with-examples \
+  --format markdown
+```
+
+---
+
+#### S63-03: 자동 수집 워크플로우 완료 (2026-03-23)
+**Multi-Source 신조어 수집 파이프라인**
+
+**구현 내용:**
+- `.github/workflows/neologism-multi-source.yml` 생성
+  - Source 1: 국립국어원 우리말샘 API
+  - Source 2: Baram 시맨틱 검색 API
+  - Source 3: 코퍼스 분석 (collect-unknown 활용)
+- 자동 Issue 생성으로 검토 프로세스 연동
+- 매주 월요일 자동 실행 (schedule)
+
+---
+
+#### S63-04: 기여 가이드 작성 완료 (2026-03-23)
+**사전 기여 가이드 문서화**
+
+**구현 내용:**
+- `docs/DICTIONARY_CONTRIBUTING.md` 생성
+  - Issue를 통한 단어 제안 방법
+  - PR을 통한 직접 기여 방법
+  - CLI를 통한 자동 수집 가이드
+  - CSV 형식 및 품사 태그 상세 가이드
+  - 비용 설정 가이드
+  - 품질 기준 및 검증 방법
+
+---
 
 ### ✅ Sprint 62 - Memory Profiling & String Interning
 

@@ -1,0 +1,89 @@
+name: "신조어 제안 (New Word Request)"
+description: "새로운 단어를 사전에 추가 요청합니다"
+title: "[WORD] "
+labels: ["type:word-request", "status:ready"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 신조어 제안
+        mecab-ko 사전에 새로운 단어를 추가해 주세요.
+
+        **참고:** 이미 등록된 단어인지 먼저 확인해 주세요.
+        ```bash
+        echo "단어" | mecab-ko
+        ```
+
+  - type: input
+    id: word
+    attributes:
+      label: "단어 (Word)"
+      description: "추가할 단어를 입력하세요"
+      placeholder: "메타버스"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: pos
+    attributes:
+      label: "품사 (Part of Speech)"
+      description: "단어의 품사를 선택하세요"
+      options:
+        - "NNG (일반명사)"
+        - "NNP (고유명사)"
+        - "VV (동사)"
+        - "VA (형용사)"
+        - "MAG (부사)"
+        - "IC (감탄사)"
+        - "잘 모르겠음"
+    validations:
+      required: true
+
+  - type: input
+    id: reading
+    attributes:
+      label: "읽기 (Reading)"
+      description: "한글 발음 (외래어/약어의 경우)"
+      placeholder: "예: 챗GPT → 챗지피티"
+
+  - type: checkboxes
+    id: category
+    attributes:
+      label: "카테고리 (Category)"
+      description: "해당되는 카테고리를 선택하세요 (복수 선택 가능)"
+      options:
+        - label: "IT/기술 (Tech)"
+        - label: "K-문화 (K-Culture)"
+        - label: "브랜드/상품명 (Brand)"
+        - label: "인터넷/SNS 용어"
+        - label: "경제/금융 (Finance)"
+        - label: "신조어/줄임말 (Slang)"
+        - label: "전문용어 (Technical)"
+        - label: "외래어 (Loanword)"
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: "사용 예시 (Usage Examples)"
+      description: "단어가 사용된 문장 예시를 작성해 주세요"
+      placeholder: |
+        1. 메타버스에서 아바타로 회의를 진행했다.
+        2. 메타버스 플랫폼이 급성장하고 있다.
+    validations:
+      required: true
+
+  - type: textarea
+    id: source
+    attributes:
+      label: "출처 (Source)"
+      description: "단어를 발견한 출처 (뉴스, SNS 등)"
+      placeholder: |
+        - 뉴스 기사 URL
+        - SNS 게시물
+        - 기타 출처
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: "추가 정보 (Additional Context)"
+      description: "단어에 대한 추가 설명이 있으면 작성해 주세요"
