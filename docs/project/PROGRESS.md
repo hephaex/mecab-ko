@@ -1,6 +1,89 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-03-21 (Sprint 61 완료!)
+## 마지막 업데이트: 2026-03-22 (Sprint 62 완료!)
+
+### ✅ Sprint 62 - Memory Profiling & String Interning
+
+**목표:** 메모리 프로파일러 통합 및 추가 최적화
+
+| Task | Description | Status |
+|------|-------------|--------|
+| S62-01 | Memory Profiler 통합 (jemalloc-ctl) | ✅ 완료 |
+| S62-02 | String Interning 최적화 | ✅ 완료 |
+| S62-03 | DictEntry 슬림화 | ✅ 완료 (LazyEntries로 대체) |
+| S62-04 | CI/CD 벤치마크 통합 | ✅ 완료 |
+
+---
+
+#### S62-01: Memory Profiler 통합 완료 (2026-03-22)
+**jemalloc-ctl 기반 프로덕션 메모리 프로파일링**
+
+**구현 내용:**
+- `jemalloc_profiler.rs` 모듈 생성
+  - `JemallocProfiler` - 실시간 메모리 통계
+  - `JemallocGuard` - RAII 스타일 메모리 추적
+  - `JemallocStats` - 상세 통계 (allocated, resident, fragmentation)
+- `jemalloc` feature flag 추가
+  - tikv-jemallocator, tikv-jemalloc-ctl 연동
+  - 단편화 분석, 효율성 측정
+
+**사용 예:**
+```rust
+use mecab_ko_profiler::jemalloc_profiler::JemallocProfiler;
+
+let profiler = JemallocProfiler::new();
+let stats = profiler.stats()?;
+println!("Allocated: {} bytes", stats.allocated);
+println!("Fragmentation: {:.2}%", profiler.fragmentation_ratio()? * 100.0);
+```
+
+---
+
+#### S62-02: String Interning 최적화 완료 (2026-03-22)
+**StringPool 모듈로 문자열 중복 제거**
+
+**구현 내용:**
+- `string_pool.rs` 모듈 생성
+  - `StringPool` - Arc<str> 기반 문자열 풀
+  - `ConcurrentStringPool` - 스레드 안전 버전
+  - `StringPoolStats` - 풀 통계
+- `compact-strings` feature flag 추가
+  - compact_str 의존성 (24바이트 이하 인라인 저장)
+
+**사용 예:**
+```rust
+use mecab_ko_dict::string_pool::StringPool;
+
+let mut pool = StringPool::new();
+let s1 = pool.intern("안녕하세요");
+let s2 = pool.intern("안녕하세요");
+assert!(Arc::ptr_eq(&s1, &s2));  // 동일 메모리 공유
+```
+
+---
+
+#### S62-03: DictEntry 슬림화 - LazyEntries로 대체 (2026-03-22)
+**Sprint 61에서 77% 메모리 절감 달성으로 추가 최적화 불필요**
+
+- 기존: 150MB → 현재: 34MB (LazyEntries + LRU 캐시)
+- DictEntry 구조체 변경 없이 목표 달성
+- 향후 필요시 Box<str> 최적화 고려
+
+---
+
+#### S62-04: CI/CD 벤치마크 통합 완료 (2026-03-22)
+**기존 워크플로우 검증 및 벤치마크 등록 추가**
+
+**확인 내용:**
+- `.github/workflows/benchmark.yml` 검토
+  - PR별 벤치마크 비교 동작 확인
+  - 15%+ 회귀 시 자동 이슈 생성 설정
+  - 주간 스케줄 벤치마크 동작
+- 누락 벤치마크 등록
+  - `normalization_bench.rs`
+  - `comparison_bench.rs`
+
+---
 
 ### ✅ Sprint 61 - LazyEntries Integration & Memory Optimization
 

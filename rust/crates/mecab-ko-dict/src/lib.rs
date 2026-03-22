@@ -29,6 +29,7 @@ pub mod hot_reload;
 pub mod lazy_entries;
 pub mod loader;
 pub mod matrix;
+pub mod string_pool;
 pub mod trie;
 pub mod user_dict;
 
@@ -42,6 +43,7 @@ pub use hot_reload::{
 pub use lazy_entries::LazyEntries;
 pub use loader::{LazyDictionary, LoaderConfig, MmapDictionary};
 pub use matrix::{ConnectionMatrix, DenseMatrix, Matrix, MatrixLoader, MmapMatrix, SparseMatrix};
+pub use string_pool::{ConcurrentStringPool, StringPool, StringPoolStats};
 pub use trie::{DictionarySearcher, EntryIndex, PrefixMatch, Trie, TrieBuilder};
 pub use user_dict::{UserDictionary, UserDictionaryBuilder, UserEntry};
 

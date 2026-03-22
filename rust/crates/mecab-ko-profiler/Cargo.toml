@@ -25,6 +25,10 @@ serde_json.workspace = true
 dhat = "0.3"
 tracking-allocator = "0.4"
 
+# jemalloc support (optional, for production profiling)
+tikv-jemallocator = { version = "0.6", optional = true }
+tikv-jemalloc-ctl = { version = "0.6", features = ["stats"], optional = true }
+
 # Statistics and reporting
 chrono = "0.4"
 humansize = "2.1"
@@ -50,8 +54,9 @@ default = ["cli", "profilers"]
 cli = ["dep:clap", "dep:colored"]
 profilers = ["dep:mecab-ko-core", "dep:mecab-ko-dict"]
 flamegraph = ["dep:inferno"]
+jemalloc = ["dep:tikv-jemallocator", "dep:tikv-jemalloc-ctl"]
 test-allocator = [] # Enable global allocator for integration tests
-full = ["cli", "profilers", "flamegraph"]
+full = ["cli", "profilers", "flamegraph", "jemalloc"]
 
 [[bin]]
 name = "mecab-profile"

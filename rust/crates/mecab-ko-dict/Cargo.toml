@@ -23,6 +23,7 @@ yada.workspace = true
 byteorder.workspace = true
 memmap2.workspace = true
 zstd = { workspace = true, optional = true }
+compact_str = { workspace = true, optional = true }
 notify = "6.1"
 crossbeam-channel = "0.5"
 
@@ -31,6 +32,8 @@ default = ["zstd"]
 simd = []
 # Enable zstd compression support (disabled for WASM)
 zstd = ["dep:zstd"]
+# Enable compact string support for reduced memory usage
+compact-strings = ["dep:compact_str"]
 
 [dev-dependencies]
 criterion.workspace = true

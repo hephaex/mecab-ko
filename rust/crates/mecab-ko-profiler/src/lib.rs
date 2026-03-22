@@ -100,6 +100,9 @@ pub mod allocator;
 pub mod reporter;
 pub mod stats;
 
+#[cfg(feature = "jemalloc")]
+pub mod jemalloc_profiler;
+
 #[cfg(feature = "profilers")]
 pub mod dict_profiler;
 #[cfg(feature = "profilers")]
@@ -111,6 +114,9 @@ pub mod trie_profiler;
 pub use allocator::{MemoryGuard, MemorySnapshot, TrackingAllocator};
 pub use reporter::{ProfilingReport, ReportFormat};
 pub use stats::{ComponentStats, DetailedStats, StatsCollector};
+
+#[cfg(feature = "jemalloc")]
+pub use jemalloc_profiler::{JemallocDelta, JemallocError, JemallocGuard, JemallocProfiler, JemallocStats};
 
 #[cfg(feature = "profilers")]
 pub use dict_profiler::DictProfiler;
@@ -124,6 +130,9 @@ pub mod prelude {
     pub use crate::allocator::{get_stats, reset_stats, snapshot, MemoryGuard, MemorySnapshot};
     pub use crate::reporter::{ProfilingReport, ReportFormat};
     pub use crate::stats::{ComponentStats, DetailedStats, StatsCollector};
+
+    #[cfg(feature = "jemalloc")]
+    pub use crate::jemalloc_profiler::{JemallocGuard, JemallocProfiler, JemallocStats};
 
     #[cfg(feature = "profilers")]
     pub use crate::dict_profiler::DictProfiler;

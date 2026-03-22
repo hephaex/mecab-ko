@@ -51,6 +51,7 @@ fst = "0.4"
 yada = "0.5"                    # Double Array Trie (Lindera 스타일)
 byteorder = "1.5"
 memmap2 = "0.9"
+compact_str = "0.8"             # Memory-efficient strings (inline up to 24 bytes)
 
 # Serialization
 # Updated to 0.8.13+ to fix UB in Arc/Rc impls on OOM (RUSTSEC-2026-0001)
