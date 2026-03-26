@@ -2,8 +2,9 @@
 #
 # This workflow collects new Korean words from multiple sources:
 # 1. 국립국어원 우리말샘 OpenDict API
-# 2. Baram semantic search API (internal knowledge base)
+# 2. Baram semantic search API (172.20.1.30:8080/api/search)
 # 3. Unknown word collection from text corpora
+# 4. Wiki dumps (나무위키, 위키백과)
 #
 # Schedule:
 #   - Weekly: Every Monday at 09:00 KST (00:00 UTC)
@@ -33,6 +34,11 @@ on:
           - opendict
           - baram
           - corpus
+          - wiki
+      wiki_dump_url:
+        description: 'Wiki dump URL (나무위키/위키백과 JSON dump)'
+        required: false
+        type: string
       keywords:
         description: 'Custom keywords (comma-separated)'
         required: false
@@ -296,12 +302,138 @@ jobs:
           retention-days: 30
 
   # ============================================================================
+  # Source 4: Wiki Dumps (나무위키/위키백과)
+  # ============================================================================
+  collect-wiki:
+    name: Wiki Dump Analysis
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.sources == 'all' || github.event.inputs.sources == 'wiki' }}
+    outputs:
+      entries: ${{ steps.analyze.outputs.entries }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-cargo-cli-${{ hashFiles('rust/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-cli-
+
+      - name: Build CLI
+        run: cargo build --release --manifest-path rust/Cargo.toml -p mecab-ko-cli
+
+      - name: Download and process wiki dump
+        id: download
+        run: |
+          mkdir -p $CANDIDATES_DIR/wiki
+
+          WIKI_URL="${{ github.event.inputs.wiki_dump_url }}"
+
+          if [ -n "$WIKI_URL" ]; then
+            echo "Downloading wiki dump from: $WIKI_URL"
+            curl -sL "$WIKI_URL" -o "$CANDIDATES_DIR/wiki/dump.json" || true
+          fi
+
+          # Process JSON dump to extract text
+          if [ -f "$CANDIDATES_DIR/wiki/dump.json" ]; then
+            # Extract text content from JSON (handles both 나무위키 and 위키백과 formats)
+            python3 << 'PYEOF'
+import json
+import sys
+
+try:
+    with open('${{ env.CANDIDATES_DIR }}/wiki/dump.json', 'r', encoding='utf-8') as f:
+        data = json.load(f)
+
+    texts = []
+    if isinstance(data, list):
+        for item in data[:10000]:  # Limit to 10k articles
+            if isinstance(item, dict):
+                # 나무위키 format
+                if 'text' in item:
+                    texts.append(item['text'])
+                # 위키백과 format
+                elif 'content' in item:
+                    texts.append(item['content'])
+                elif 'body' in item:
+                    texts.append(item['body'])
+    elif isinstance(data, dict):
+        if 'pages' in data:
+            for page in data['pages'][:10000]:
+                if 'text' in page:
+                    texts.append(page['text'])
+
+    with open('${{ env.CANDIDATES_DIR }}/wiki/extracted.txt', 'w', encoding='utf-8') as f:
+        f.write('\n'.join(texts))
+
+    print(f"Extracted {len(texts)} articles")
+except Exception as e:
+    print(f"Error processing dump: {e}")
+    sys.exit(0)
+PYEOF
+          fi
+
+          # Count lines
+          if [ -f "$CANDIDATES_DIR/wiki/extracted.txt" ]; then
+            LINES=$(wc -l < "$CANDIDATES_DIR/wiki/extracted.txt" | tr -d ' ')
+            echo "Wiki dump has $LINES lines"
+          else
+            echo "No wiki dump available, skipping"
+            touch "$CANDIDATES_DIR/wiki/extracted.txt"
+          fi
+
+      - name: Analyze wiki content for unknown words
+        id: analyze
+        run: |
+          MIN_FREQ="${{ github.event.inputs.min_freq || '3' }}"
+          OUTPUT="$CANDIDATES_DIR/wiki_unknown_$(date +%Y%m%d).csv"
+
+          if [ -s "$CANDIDATES_DIR/wiki/extracted.txt" ]; then
+            ./rust/target/release/mecab-ko collect-unknown \
+              -d data/mecab-ko-dic-2.1.1-20180720 \
+              -i "$CANDIDATES_DIR/wiki/extracted.txt" \
+              -o "$OUTPUT" \
+              --min-freq "$MIN_FREQ" \
+              --min-length 2 \
+              --with-examples \
+              --format csv \
+              2>&1 || true
+          fi
+
+          if [ -f "$OUTPUT" ]; then
+            COUNT=$(wc -l < "$OUTPUT" | tr -d ' ')
+            COUNT=$((COUNT - 1))  # Exclude header
+          else
+            COUNT=0
+          fi
+
+          echo "entries=$COUNT" >> $GITHUB_OUTPUT
+          echo "Found $COUNT unknown words in wiki dump"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wiki-candidates
+          path: ${{ env.CANDIDATES_DIR }}/wiki_unknown_*.csv
+          retention-days: 30
+          if-no-files-found: ignore
+
+  # ============================================================================
   # Merge and Create Issue
   # ============================================================================
   merge-candidates:
     name: Merge Candidates
     runs-on: ubuntu-latest
-    needs: [collect-opendict, collect-baram, collect-corpus]
+    needs: [collect-opendict, collect-baram, collect-corpus, collect-wiki]
     if: always() && !cancelled()
 
     steps:
@@ -344,6 +476,17 @@ jobs:
             done
           fi
 
+          # Process Wiki results
+          if [ -d artifacts/wiki-candidates ]; then
+            for f in artifacts/wiki-candidates/*.csv; do
+              if [ -f "$f" ]; then
+                tail -n +2 "$f" | while IFS=',' read -r word count example; do
+                  echo "$word,$count,wiki,$example"
+                done >> "$MERGED"
+              fi
+            done
+          fi
+
           # Count total
           TOTAL=$(wc -l < "$MERGED" | tr -d ' ')
           TOTAL=$((TOTAL - 1))
@@ -359,6 +502,7 @@ jobs:
           echo "| OpenDict | ${{ needs.collect-opendict.outputs.entries || '0' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Baram | ${{ needs.collect-baram.outputs.entries || '0' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Corpus | ${{ needs.collect-corpus.outputs.entries || '0' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Wiki | ${{ needs.collect-wiki.outputs.entries || '0' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Total** | **$TOTAL** |" >> $GITHUB_STEP_SUMMARY
 
       - name: Create candidate issue
@@ -403,6 +547,7 @@ jobs:
 - 우리말샘 API: ${{ needs.collect-opendict.outputs.entries || '0' }}개
 - Baram 검색: ${{ needs.collect-baram.outputs.entries || '0' }}개
 - 코퍼스 분석: ${{ needs.collect-corpus.outputs.entries || '0' }}개
+- 위키 덤프: ${{ needs.collect-wiki.outputs.entries || '0' }}개
 
 **검토 방법:**
 1. 각 단어의 적합성을 확인하세요
