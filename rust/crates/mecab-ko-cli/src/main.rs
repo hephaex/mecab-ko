@@ -2277,9 +2277,10 @@ fn run_collect_unknown(
 
                 // Store first example if not already present
                 if with_examples && !word_examples.contains_key(&surface) {
-                    // Trim line to reasonable length for example
-                    let example = if line.len() > 100 {
-                        format!("{}...", &line[..100])
+                    // Trim line to reasonable length for example (UTF-8 safe)
+                    let example = if line.chars().count() > 80 {
+                        let truncated: String = line.chars().take(80).collect();
+                        format!("{truncated}...")
                     } else {
                         line.to_string()
                     };
