@@ -1,27 +1,58 @@
-# 현재 스프린트: Phase 31 - Sprint 63 (Streaming API)
+# 현재 스프린트: Phase 31 - Sprint 64 (사전 품질 개선)
+
+## 🎯 Sprint 64 목표
+신조어 파이프라인 활용 및 사전 품질 향상
+
+## Sprint 64 작업 목록 (0/4)
+
+### P0 (Critical) - 신조어 수집
+- [ ] S64-01: 신조어 수집 실행 및 검토
+  - Multi-Source 워크플로우 실행
+  - 우리말샘 API 연동 테스트
+  - Baram API 연동 테스트
+  - 수집된 후보 검토
+
+- [ ] S64-02: 사전 정확도 벤치마크
+  - 현재 사전 정확도 측정
+  - 미등록어 비율 분석
+  - 세종 코퍼스 평가
+
+### P1 (High) - 분석 및 개선
+- [ ] S64-03: 미등록어 분석 리포트
+  - collect-unknown으로 대규모 코퍼스 분석
+  - 빈도별 미등록어 분류
+  - 카테고리별 분석 (IT, 문화, 신조어 등)
+
+- [ ] S64-04: v0.7.0 사전 릴리스 준비
+  - 검증된 신조어 neologisms.csv 병합
+  - 사전 빌드 및 테스트
+  - 변경사항 문서화
+
+---
+
+# ✅ 완료된 스프린트: Phase 31 - Sprint 63 (Dictionary Enrichment Pipeline)
 
 ## 🎯 Sprint 63 목표
-스트리밍 API 설계 및 구현
+신조어 수집 파이프라인 구축
 
-## Sprint 63 작업 목록 (0/4)
+## Sprint 63 작업 목록 (4/4) ✅
 
-### P0 (Critical) - API 설계
-- [ ] S63-01: StreamingTokenizer trait 설계
-  - Iterator 기반 토큰 스트림
-  - 청크 단위 처리 지원
+### P0 (Critical) - 인프라 구축
+- [x] S63-01: Issue 템플릿 생성 ✅
+  - new-word.yml (단일 단어 제안)
+  - bulk-word-candidates.yml (대량 제안)
 
-- [ ] S63-02: AsyncRead 지원
-  - tokio 기반 비동기 읽기
-  - 대용량 파일 분석
+- [x] S63-02: 미등록어 수집 CLI ✅
+  - collect-unknown 서브커맨드
+  - CSV/TSV/JSON/Markdown 출력
 
-### P1 (High) - 구현
-- [ ] S63-03: 청크 단위 처리 구현
-  - 메모리 효율적 처리
-  - 진행 상황 콜백
+### P1 (High) - 자동화
+- [x] S63-03: 자동 수집 워크플로우 ✅
+  - neologism-multi-source.yml
+  - 4개 소스 통합 (OpenDict, Baram, Corpus, Wiki)
 
-- [ ] S63-04: 스트리밍 API 테스트
-  - 단위 테스트
-  - 통합 테스트
+- [x] S63-04: 기여 가이드 작성 ✅
+  - DICTIONARY_CONTRIBUTING.md
 
 ---
 
