@@ -1,6 +1,38 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-01 (Sprint 66 완료)
+## 마지막 업데이트: 2026-04-02 (Sprint 67 완료)
+
+### ✅ Sprint 67 - 보안 및 의존성 정리
+
+**목표:** 보안 취약점 해소, 미사용 의존성 제거
+
+| Task | Description | Status |
+|------|-------------|--------|
+| S67-01 | rustls-webpki 취약점 수정 | ✅ 완료 |
+| S67-02 | bincode 의존성 제거 | ✅ 완료 |
+| S67-03 | 전체 검증 (빌드/테스트/Clippy/Audit) | ✅ 완료 |
+| S67-04 | PLAN.md/PROGRESS.md 업데이트 | ✅ 완료 |
+
+---
+
+#### S67-01: rustls-webpki 취약점 수정 (2026-04-02)
+- RUSTSEC-2026-0049: CRL Distribution Point 매칭 로직 버그
+- rustls-webpki 0.103.9 → 0.103.10 업데이트
+- cargo update -p rustls-webpki 실행
+
+#### S67-02: bincode 의존성 제거 (2026-04-02)
+- RUSTSEC-2025-0141: bincode 1.3 미관리 상태
+- 소스 코드 검사: 실제 사용 없음 (주석 처리된 테스트만 존재)
+- workspace 및 mecab-ko-dict에서 의존성 제거
+- 의존성 수: 427 → 426 크레이트
+
+#### S67-03: 전체 검증 (2026-04-02)
+- cargo build: 전체 workspace 통과
+- cargo test: 전체 테스트 통과
+- cargo clippy: 0 warnings
+- cargo audit: 0 vulnerabilities (1 allowed warning: paste via tikv-jemalloc-ctl)
+
+---
 
 ### ✅ Sprint 66 - Clippy Zero + 코드 정리
 
