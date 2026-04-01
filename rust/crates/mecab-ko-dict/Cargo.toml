@@ -17,7 +17,6 @@ categories = ["text-processing", "data-structures"]
 mecab-ko-hangul = { version = "0.6.0", path = "../mecab-ko-hangul" }
 thiserror.workspace = true
 serde.workspace = true
-bincode.workspace = true
 fst.workspace = true
 yada.workspace = true
 byteorder.workspace = true
