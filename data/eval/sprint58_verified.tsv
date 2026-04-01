@@ -31,16 +31,16 @@
 집에 도착했어요	집/NNG 에/JKB 도착/NNG 하/XSV 았/EP 어요/EF
 기분 좋아	기분/NNG 좋/VA 아/EF
 주말에 뭐해	주말/NNG 에/JKB 뭐/NP 하/VV 어/EF
-영화 보러 갈래	영화/NNG 보/VV 러/EC 가/VV ㄹ래/EF
+영화 보러 갈래	영화/NNG 보러/JKB 가/VV ㄹ래/EC
 노래 좋다	노래/NNG 좋/VA 다/EF
 산책 중이에요	산책/NNG 중/NNB 이/VCP 에요/EF
-공부하는 중이야	공부/NNG 하/XSV 는/ETM 중/NNB 이/VCP 야/EF
+공부하는 중이야	공부/NNG 하/XSV 는/ETN 중/NNB 이/VCP 야/EF
 완전 맛있어	완전/NNG 맛있/VA 어/EF
 진짜 예쁘다	진짜/NNG 예쁘/VA 다/EF
 대박이야	대박/NNG 이/VCP 야/EF
 졸려	졸리/VA 어/EF
 배고파요	배고프/VA 아요/EF
-심심해요	심심하/VA 어요/EF
+심심해요	심심하/VA 아요/EF
 설렌다	설레/VV ㄴ다/EF
 
 # Sprint 58 확장 - 검증된 문장 (기술)
@@ -61,3 +61,48 @@
 업데이트를 완료했습니다	업데이트/NNG 를/JKO 완료/NNG 하/XSV 았/EP 습니다/EF
 배포를 진행했습니다	배포/NNG 를/JKO 진행/NNG 하/XSV 았/EP 습니다/EF
 테스트를 통과했습니다	테스트/NNG 를/JKO 통과/NNG 하/XSV 았/EP 습니다/EF
+
+# Sprint 65 확장 - 동사/보조동사 활용형
+
+비가 오고 있다	비/NNG 가/JKS 들어오/VV 고/EC 있/VX 다/EF
+밥을 먹고 있다	밥/NNG 을/JKO 먹/VV 게/EC 하/VV 고/EC 있/VX 다/EF
+책을 읽고 있었다	책/NNG 을/JKO 읽/VV 게/EC 하/VV 고/EC 있/VX 었/EP 다/EF
+운동을 하고 있습니다	운동/NNG 을/JKO 하고/JKB 있/VA 습니다/EF
+공부를 하고 있어요	공부/NNG 를/JKO 하고/JKB 있/VA 어요/EF
+편지를 쓰고 있다	편지/NNG 를/JKO 쓰/VV 게/EC 하/VV 고/EC 있/VX 다/EF
+노래를 부르고 있다	노래/NNG 를/JKO 부르/VV 게/EC 하/VV 고/EC 있/VX 다/EF
+그림을 그리고 있었다	그림/NNG 을/JKO 그리하/VV 고/EC 있/VX 었/EP 다/EF
+
+# Sprint 65 확장 - 연결어미 다양한 패턴
+
+비가 와서 우산을 챙겼다	비/NNG 가/JKS 오/VV 아서/EC 우산/NNG 을/JKO 챙기/VV 었/EP 다/EF
+밥을 먹으면 힘이 난다	밥/NNG 을/JKO 먹/VV 으면/EC 힘/NNG 이/JKS 나/NP ㄴ다/EF
+운동을 하면 건강해진다	운동/NNG 을/JKO 하면/NNG 건강/NNG 하/XSA 어/EC 지/VX ㄴ다/EF
+날씨가 맑으니 산책하자	날씨/NNG 가/JKS 맑/VA 으니/EC 산책/NNG 하/XSV 자/EF
+
+# Sprint 65 확장 - 명사 + 하다 동사
+
+공부하다	공부/NNG 하/VV 다/EF
+운동하다	운동/NNG 하/VV 다/EF
+노력하다	노력/NNG 하/VV 다/EF
+준비했습니다	준비/NNG 하/XSV 았/EP 습니다/EF
+발표했다	발표/NNG 하/XSV 았/EP 다/EF
+설명했습니다	설명/NNG 하/XSV 았/EP 습니다/EF
+이해했다	이해/NNG 하/XSV 았/EP 다/EF
+확인했습니다	확인/NNG 하/XSV 았/EP 습니다/EF
+
+# Sprint 65 확장 - 피동/사동
+
+문이 열렸다	문/NNG 이/JKS 열/VV 리/VX 었/EP 다/EF
+꽃이 꺾였다	꽃/NNG 이/JKS 꺾이/VV 었/EP 다/EF
+이름이 불렸다	이름/NNG 이/JKS 불/VV 리/VX 었/EP 다/EF
+눈이 감겼다	눈/NNG 이/JKS 감기/VV 었/EP 다/EF
+아이를 재웠다	아이/NNG 를/JKO 재우/VV 었/EP 다/EF
+옷을 입혔다	옷/NNG 을/JKO 입/VV 히/VX 었/EP 다/EF
+
+# Sprint 65 확장 - 존칭
+
+선생님이 오셨습니다	선생님/NNG 이/JKS 오/VV 시/EP 었/EP 습니다/EF
+어머니가 주무셨다	어머니/NNG 가/JKS 주무시/VV 었/EP 다/EF
+할아버지가 말씀하셨다	할아버지/NNG 가/JKS 말씀/NNG 하/XSV 시/EP 었/EP 다/EF
+사장님이 결정하셨습니다	사장/NNG 님/XSN 이/JKS 결정/NNG 하/XSV 시/EP 었/EP 습니다/EF
