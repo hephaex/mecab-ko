@@ -343,7 +343,8 @@
 #![allow(
     clippy::too_many_lines,
     clippy::option_if_let_else,
-    clippy::unwrap_used
+    clippy::unwrap_used,
+    clippy::expect_used
 )]
 
 use anyhow::{Context, Result};

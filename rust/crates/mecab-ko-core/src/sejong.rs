@@ -1881,6 +1881,7 @@ impl SejongConverter {
     ///
     /// `MeCab`에서 "가세요", "오세요", "하세요" 등이 VV 단일 토큰으로 분석되면
     /// VV + 세요/EF로 분리합니다. (sample.tsv 형식 준수)
+    #[allow(clippy::needless_pass_by_value)]
     fn apply_vv_seyo_splits(tokens: Vec<SejongToken>) -> Vec<SejongToken> {
         let mut result = Vec::with_capacity(tokens.len() + 10);
         let mut i = 0;
@@ -3249,24 +3250,19 @@ impl SejongConverter {
 
         // 200차: "밤낮/NNG" → "밤/NNG 낮/NNG" 분리
         // "밤 낮" = "밤/NNG 낮/NNG"
-        let nng_splits: std::collections::HashMap<&str, (&str, &str)> =
-            [("밤낮", ("밤", "낮"))].into_iter().collect();
-
         let mut i = 0;
         while i < tokens.len() {
-            if tokens[i].pos == "NNG" {
-                if let Some((first, second)) = nng_splits.get(tokens[i].surface.as_str()) {
-                    let start = tokens[i].start_pos;
-                    let end = tokens[i].end_pos;
-                    let first_len = first.chars().count();
-                    tokens[i] = SejongToken::new(first, "NNG", start, start + first_len);
-                    tokens.insert(
-                        i + 1,
-                        SejongToken::new(second, "NNG", start + first_len, end),
-                    );
-                    i += 2;
-                    continue;
-                }
+            if tokens[i].pos == "NNG" && tokens[i].surface == "밤낮" {
+                let start = tokens[i].start_pos;
+                let end = tokens[i].end_pos;
+                let first_len = "밤".chars().count();
+                tokens[i] = SejongToken::new("밤", "NNG", start, start + first_len);
+                tokens.insert(
+                    i + 1,
+                    SejongToken::new("낮", "NNG", start + first_len, end),
+                );
+                i += 2;
+                continue;
             }
             i += 1;
         }
@@ -8242,15 +8238,14 @@ impl SejongConverter {
 
         for (idx, suffix) in hanguk_merge_indices.into_iter().rev() {
             let start = tokens[idx].start_pos;
+            let end = tokens[idx + 2].end_pos;
             if suffix == "국의" {
                 // "한국" + "의/JKG"로 분리
-                let end = tokens[idx + 2].end_pos;
                 tokens[idx] = SejongToken::new("한국", "NNP", start, start + 2);
                 tokens[idx + 1] = SejongToken::new("의", "JKG", start + 2, end);
                 tokens.remove(idx + 2);
             } else {
                 // "한국" 복원
-                let end = tokens[idx + 2].end_pos;
                 let merged_surface = format!("한{suffix}");
                 tokens[idx] = SejongToken::new(&merged_surface, "NNP", start, end);
                 tokens.remove(idx + 2);
