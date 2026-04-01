@@ -340,6 +340,12 @@
 //! - [`mecab_ko_core`]: Core tokenization engine
 //! - [`mecab_ko_dict`]: Dictionary management
 
+#![allow(
+    clippy::too_many_lines,
+    clippy::option_if_let_else,
+    clippy::unwrap_used
+)]
+
 use anyhow::{Context, Result};
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use clap_complete::{generate, Shell};
@@ -2258,7 +2264,7 @@ fn run_collect_unknown(
         pb.set_style(
             ProgressStyle::default_spinner()
                 .template("{spinner:.green} {msg}")
-                .unwrap(),
+                .expect("valid progress bar template"),
         );
         Some(pb)
     } else {
@@ -2300,7 +2306,7 @@ fn run_collect_unknown(
 
             if let Some(ref pb) = progress {
                 if lines_processed % 1000 == 0 {
-                    pb.set_message(format!("{} lines processed", lines_processed));
+                    pb.set_message(format!("{lines_processed} lines processed"));
                 }
             }
         }
@@ -2319,7 +2325,7 @@ fn run_collect_unknown(
 
                 if let Some(ref pb) = progress {
                     if lines_processed % 1000 == 0 {
-                        pb.set_message(format!("{} lines processed", lines_processed));
+                        pb.set_message(format!("{lines_processed} lines processed"));
                     }
                 }
             }
@@ -2327,7 +2333,7 @@ fn run_collect_unknown(
     }
 
     if let Some(ref pb) = progress {
-        pb.finish_with_message(format!("Processed {} lines", lines_processed));
+        pb.finish_with_message(format!("Processed {lines_processed} lines"));
     }
 
     // Filter by minimum frequency and sort by count
@@ -2534,9 +2540,9 @@ fn run_evaluate(
             };
 
             // Check if sentence matches using the same logic as evaluate function
-            let matches = if converter.is_some() {
+            let matches = if let Some(ref conv) = converter {
                 // For sejong mode, compare with converted tokens (with jamo normalization)
-                let sejong_tokens = converter.as_ref().unwrap().convert_tokens(&raw_tokens);
+                let sejong_tokens = conv.convert_tokens(&raw_tokens);
                 gold_sentence.tokens.len() == sejong_tokens.len()
                     && gold_sentence.tokens.iter().zip(&sejong_tokens).all(|(g, p)| {
                         let normalized_surface = SejongConverter::normalize_jamo(&p.surface);
@@ -2555,7 +2561,7 @@ fn run_evaluate(
                 error_count += 1;
                 eprintln!("\n[문장 #{}] {}", idx + 1, gold_sentence.text);
                 eprintln!("  정답: {}", format_tokens_gold(&gold_sentence.tokens));
-                eprintln!("  예측: {}", pred_display);
+                eprintln!("  예측: {pred_display}");
             }
         }
 

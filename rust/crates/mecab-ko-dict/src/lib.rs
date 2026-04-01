@@ -21,6 +21,17 @@
 #![warn(missing_docs)]
 #![deny(unsafe_code)]
 #![cfg_attr(feature = "simd", feature(portable_simd))]
+#![allow(
+    clippy::inline_always,
+    clippy::similar_names,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::option_if_let_else,
+    clippy::map_unwrap_or,
+    clippy::zero_sized_map_values,
+    clippy::missing_panics_doc,
+    clippy::unwrap_used
+)]
 
 pub mod dictionary;
 pub mod entry_store;

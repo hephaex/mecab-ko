@@ -122,6 +122,17 @@
 #![warn(missing_docs)]
 #![deny(unsafe_code)]
 #![cfg_attr(feature = "simd", feature(portable_simd))]
+#![allow(
+    clippy::similar_names,
+    clippy::too_many_lines,
+    clippy::needless_range_loop,
+    clippy::inline_always,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::option_if_let_else,
+    clippy::missing_panics_doc,
+    clippy::unwrap_used
+)]
 
 #[cfg(any(test, feature = "test-utils"))]
 pub mod test_utils;

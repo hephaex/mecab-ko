@@ -2,6 +2,12 @@
 //!
 //! 한국어 형태소 사전 빌더 명령줄 도구
 
+#![allow(
+    clippy::cast_precision_loss,
+    clippy::cast_possible_truncation,
+    clippy::map_unwrap_or
+)]
+
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use indicatif::{ProgressBar, ProgressStyle};
@@ -77,7 +83,7 @@ enum Commands {
 
     /// entries.bin을 v2 포맷(MKE2)으로 변환
     ///
-    /// LazyEntries 지원을 위해 v1(MKED) 포맷을 v2(MKE2) 포맷으로 변환합니다.
+    /// `LazyEntries` 지원을 위해 v1(MKED) 포맷을 v2(MKE2) 포맷으로 변환합니다.
     /// v2 포맷은 메모리 매핑과 지연 로딩을 지원하여 메모리 사용량을 최대 77% 절감합니다.
     Convert {
         /// 사전 디렉토리 (entries.bin 또는 entries.csv 포함)
@@ -241,7 +247,7 @@ fn run_convert(dict: &PathBuf, output: Option<&std::path::Path>, backup: bool, v
     println!("Dictionary: {}", dict.display());
 
     let entries_bin = dict.join("entries.bin");
-    let output_path = output.map_or_else(|| entries_bin.clone(), |p| p.to_path_buf());
+    let output_path = output.map_or_else(|| entries_bin.clone(), std::path::Path::to_path_buf);
 
     // 기존 포맷 확인
     if entries_bin.exists() {
@@ -373,7 +379,7 @@ fn run_info(dict: &PathBuf) -> Result<()> {
     let dict_loaded = SystemDictionary::load_with_options(dict, LoadOptions::eager())?;
     let load_time = start.elapsed();
 
-    println!("  Load time: {:?}", load_time);
+    println!("  Load time: {load_time:?}");
     println!("  Entry count: {}", dict_loaded.entry_count());
 
     Ok(())
