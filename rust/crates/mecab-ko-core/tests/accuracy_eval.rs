@@ -2244,3 +2244,56 @@ fn test_accuracy_gate() {
 
     println!("ACCURACY GATE PASSED: {:.1}% >= {:.0}%", accuracy_percent, ACCURACY_THRESHOLD * 100.0);
 }
+
+/// Sprint 65: 검증 데이터셋 정확도 게이트
+///
+/// 수작업 검증된 sprint58_verified.tsv 데이터셋에 대한 정확도 검증
+#[test]
+fn test_accuracy_gate_verified() {
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
+        .unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or(std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH")
+        .unwrap_or_else(|_| {
+            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
+                .to_string_lossy()
+                .to_string()
+        });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path)
+        .expect("Failed to create tokenizer");
+
+    let eval_path = project_root.join("data/eval/sprint58_verified.tsv");
+    if !eval_path.exists() {
+        println!("Skipping: sprint58_verified.tsv not found");
+        return;
+    }
+
+    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
+        .expect("Failed to load verified dataset");
+
+    println!("\n=== Verified Dataset Accuracy Gate ===");
+    println!("테스트 문장 수: {}", dataset.len());
+
+    let result = evaluate_dataset_sejong(&mut tokenizer, &dataset);
+
+    let accuracy_percent = result.token_accuracy * 100.0;
+    println!("Token Accuracy: {:.1}%", accuracy_percent);
+    println!("Sentence Accuracy: {:.1}%", result.sentence_accuracy * 100.0);
+    println!("F1 Score: {:.3}", result.f1_score);
+
+    const VERIFIED_THRESHOLD: f64 = 0.90;
+    assert!(
+        result.token_accuracy >= VERIFIED_THRESHOLD,
+        "VERIFIED ACCURACY GATE FAILED: Token accuracy {:.1}% is below {:.0}% threshold",
+        accuracy_percent,
+        VERIFIED_THRESHOLD * 100.0
+    );
+
+    println!("VERIFIED ACCURACY GATE PASSED: {:.1}% >= {:.0}%", accuracy_percent, VERIFIED_THRESHOLD * 100.0);
+}

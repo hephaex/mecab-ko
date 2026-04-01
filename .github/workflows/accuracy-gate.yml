@@ -34,17 +34,23 @@ jobs:
         id: accuracy
         run: |
           cd rust
-          # Run accuracy test and capture output
+          # Run both accuracy gate tests
           OUTPUT=$(cargo test -p mecab-ko-core --test accuracy_eval test_accuracy_gate -- --nocapture 2>&1) || true
           echo "$OUTPUT"
 
-          # Extract accuracy value
+          # Extract accuracy value from auto-generated dataset
           ACCURACY=$(echo "$OUTPUT" | grep -oP 'Token Accuracy: \K[0-9.]+' | tail -1 || echo "0")
-          echo "Token Accuracy: $ACCURACY%"
+          echo "Token Accuracy (sample): $ACCURACY%"
           echo "accuracy=$ACCURACY" >> $GITHUB_OUTPUT
 
-          # Check if test passed
-          if echo "$OUTPUT" | grep -q "test test_accuracy_gate ... ok"; then
+          # Extract verified dataset accuracy
+          VERIFIED=$(echo "$OUTPUT" | grep "VERIFIED ACCURACY GATE" | grep -oP '[0-9.]+%' | head -1 || echo "N/A")
+          echo "Token Accuracy (verified): $VERIFIED"
+          echo "verified_accuracy=$VERIFIED" >> $GITHUB_OUTPUT
+
+          # Check if all tests passed
+          FAILED=$(echo "$OUTPUT" | grep -c "FAILED" || true)
+          if [ "$FAILED" = "0" ]; then
             echo "status=passed" >> $GITHUB_OUTPUT
           else
             echo "status=failed" >> $GITHUB_OUTPUT
