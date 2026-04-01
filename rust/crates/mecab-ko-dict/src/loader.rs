@@ -286,8 +286,8 @@ impl MmapDictionary {
 
     /// 바이너리 데이터 파싱
     ///
-    /// MmapDictionary 고유 형식만 지원합니다.
-    /// v1 (MKED) 및 v2 (MKE2) 형식은 SystemDictionary를 사용하세요.
+    /// `MmapDictionary` 고유 형식만 지원합니다.
+    /// v1 (MKED) 및 v2 (MKE2) 형식은 `SystemDictionary`를 사용하세요.
     fn parse_entries_binary(data: &[u8]) -> Result<Vec<Entry>> {
         use std::io::{Cursor, Read};
 

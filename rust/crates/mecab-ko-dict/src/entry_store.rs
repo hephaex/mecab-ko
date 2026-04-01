@@ -65,7 +65,7 @@ impl EagerStore {
 
     /// Arc 벡터로부터 직접 생성
     #[must_use]
-    pub fn from_arc_vec(entries: Vec<Arc<DictEntry>>) -> Self {
+    pub const fn from_arc_vec(entries: Vec<Arc<DictEntry>>) -> Self {
         Self { entries }
     }
 
@@ -120,7 +120,7 @@ pub struct LazyStore {
 impl LazyStore {
     /// 새 Lazy 저장소 생성
     #[must_use]
-    pub fn new(lazy_entries: LazyEntries) -> Self {
+    pub const fn new(lazy_entries: LazyEntries) -> Self {
         Self { lazy_entries }
     }
 

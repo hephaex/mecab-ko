@@ -49,7 +49,7 @@ pub use simd::{simd_forward_pass_position, simd_update_node_cost};
 ///
 /// 오버플로우 방지를 위해 포화 연산 사용
 #[inline(always)]
-fn saturating_add_chain(a: i32, b: i32, c: i32, d: i32) -> i32 {
+const fn saturating_add_chain(a: i32, b: i32, c: i32, d: i32) -> i32 {
     a.saturating_add(b).saturating_add(c).saturating_add(d)
 }
 

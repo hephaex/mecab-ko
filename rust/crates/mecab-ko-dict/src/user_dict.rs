@@ -448,7 +448,7 @@ impl UserDictionary {
     ///
     /// 확장 포맷 지원:
     /// - 기본: 표면형,품사,비용,읽기
-    /// - 확장: 표면형,품사,비용,읽기,left_id,right_id
+    /// - 확장: `표면형,품사,비용,읽기,left_id,right_id`
     fn parse_csv_line(&mut self, line: &str, line_num: usize) -> Result<()> {
         let parts: Vec<&str> = line.split(',').collect();
 

@@ -139,7 +139,7 @@ impl From<Entry> for DictEntry {
 
 /// 사전 로드 옵션
 ///
-/// 기본값은 메모리 최적화 모드 (LazyEntries 사용)입니다.
+/// 기본값은 메모리 최적화 모드 (`LazyEntries` 사용)입니다.
 /// 속도 우선 모드가 필요하면 `LoadOptions::speed_optimized()`를 사용하세요.
 #[derive(Debug, Clone, Copy)]
 pub struct LoadOptions {
@@ -155,7 +155,7 @@ impl Default for LoadOptions {
     /// 기본값: 메모리 최적화 모드
     ///
     /// - `use_mmap_matrix`: false
-    /// - `use_lazy_entries`: true (LazyEntries 사용)
+    /// - `use_lazy_entries`: true (`LazyEntries` 사용)
     /// - `lazy_cache_size`: Some(10000)
     fn default() -> Self {
         Self {
@@ -286,18 +286,15 @@ impl SystemDictionary {
             let entries_path = dicdir.join(ENTRIES_BIN_FILE);
             if entries_path.exists() {
                 // LazyEntries (v2 포맷) 시도, 실패 시 EagerStore로 폴백
-                match LazyEntries::from_file(&entries_path) {
-                    Ok(lazy) => {
-                        if let Some(cache_size) = options.lazy_cache_size {
-                            lazy.set_cache_size(cache_size);
-                        }
-                        Arc::new(LazyStore::new(lazy))
+                if let Ok(lazy) = LazyEntries::from_file(&entries_path) {
+                    if let Some(cache_size) = options.lazy_cache_size {
+                        lazy.set_cache_size(cache_size);
                     }
-                    Err(_) => {
-                        // v1 포맷이거나 다른 형식이면 EagerStore로 폴백
-                        let entries = Self::load_entries(&dicdir)?;
-                        Arc::new(EagerStore::new(entries))
-                    }
+                    Arc::new(LazyStore::new(lazy))
+                } else {
+                    // v1 포맷이거나 다른 형식이면 EagerStore로 폴백
+                    let entries = Self::load_entries(&dicdir)?;
+                    Arc::new(EagerStore::new(entries))
                 }
             } else {
                 // entries.bin이 없으면 eager로 폴백
@@ -557,7 +554,7 @@ impl SystemDictionary {
 
     /// v2 형식 (MKE2) 엔트리 파일 로드
     ///
-    /// LazyEntries 형식을 사용하여 모든 엔트리를 로드합니다.
+    /// `LazyEntries` 형식을 사용하여 모든 엔트리를 로드합니다.
     fn load_entries_bin_v2(path: &Path) -> Result<Vec<DictEntry>> {
         let lazy = LazyEntries::from_file(path)?;
         let count = lazy.len();

@@ -1251,7 +1251,7 @@ impl SejongConverter {
                 let stem_char = chars[chars.len() - 3]; // "할게요"에서 "할"
                 if let Some(stem) = Self::remove_jongseong_rieul(stem_char) {
                     let prefix: String = chars[..chars.len() - 3].iter().collect();
-                    let full_stem = format!("{}{}", prefix, stem);
+                    let full_stem = format!("{prefix}{stem}");
                     return vec![
                         (full_stem, "VV".to_string()),
                         ("ㄹ게요".to_string(), "EF".to_string()),
@@ -1265,7 +1265,7 @@ impl SejongConverter {
                 let stem_char = chars[chars.len() - 3]; // "할까요"에서 "할"
                 if let Some(stem) = Self::remove_jongseong_rieul(stem_char) {
                     let prefix: String = chars[..chars.len() - 3].iter().collect();
-                    let full_stem = format!("{}{}", prefix, stem);
+                    let full_stem = format!("{prefix}{stem}");
                     return vec![
                         (full_stem, "VV".to_string()),
                         ("ㄹ까요".to_string(), "EF".to_string()),
@@ -1280,7 +1280,7 @@ impl SejongConverter {
                 let stem_char = chars[chars.len() - 2]; // "갈까"에서 "갈"
                 if let Some(stem) = Self::remove_jongseong_rieul(stem_char) {
                     let prefix: String = chars[..chars.len() - 2].iter().collect();
-                    let full_stem = format!("{}{}", prefix, stem);
+                    let full_stem = format!("{prefix}{stem}");
                     return vec![
                         (full_stem, "VV".to_string()),
                         ("ㄹ까".to_string(), "EF".to_string()),
@@ -1294,7 +1294,7 @@ impl SejongConverter {
                 let stem_char = chars[chars.len() - 3]; // "할래요"에서 "할"
                 if let Some(stem) = Self::remove_jongseong_rieul(stem_char) {
                     let prefix: String = chars[..chars.len() - 3].iter().collect();
-                    let full_stem = format!("{}{}", prefix, stem);
+                    let full_stem = format!("{prefix}{stem}");
                     return vec![
                         (full_stem, "VV".to_string()),
                         ("ㄹ래요".to_string(), "EF".to_string()),
@@ -1721,7 +1721,7 @@ impl SejongConverter {
 
         for (pattern, ep1, ep2, ef) in &patterns {
             if ending == *pattern {
-                return (ep1.to_string(), ep2.to_string(), ef.to_string());
+                return ((*ep1).to_string(), (*ep2).to_string(), (*ef).to_string());
             }
         }
 
@@ -1879,7 +1879,7 @@ impl SejongConverter {
 
     /// VV "세요" 패턴 분리
     ///
-    /// MeCab에서 "가세요", "오세요", "하세요" 등이 VV 단일 토큰으로 분석되면
+    /// `MeCab`에서 "가세요", "오세요", "하세요" 등이 VV 단일 토큰으로 분석되면
     /// VV + 세요/EF로 분리합니다. (sample.tsv 형식 준수)
     fn apply_vv_seyo_splits(tokens: Vec<SejongToken>) -> Vec<SejongToken> {
         let mut result = Vec::with_capacity(tokens.len() + 10);
@@ -1936,7 +1936,7 @@ impl SejongConverter {
                             && tokens[i + 1].pos == "EF"
                         {
                             let prefix: String = chars[..chars.len() - 2].iter().collect();
-                            let full_stem = format!("{}{}", prefix, stem);
+                            let full_stem = format!("{prefix}{stem}");
                             result.push(SejongToken::new(
                                 &full_stem,
                                 "VV",
@@ -1974,7 +1974,7 @@ impl SejongConverter {
                             && tokens[i + 1].pos == "EF"
                         {
                             let prefix: String = chars[..chars.len() - 2].iter().collect();
-                            let full_stem = format!("{}{}", prefix, stem);
+                            let full_stem = format!("{prefix}{stem}");
                             result.push(SejongToken::new(
                                 &full_stem,
                                 "VV",
@@ -2906,7 +2906,7 @@ impl SejongConverter {
                     "걸리", "팔리", "열리", "닫히", "막히", "뚫리", "풀리", "묶이",
                     "잡히", "쫓기", "밀리", "끌리", "불리", "실리", "읽히", "안기",
                 ];
-                let is_jida_verb = jida_verbs.iter().any(|v| *v == surface.as_str());
+                let is_jida_verb = jida_verbs.contains(&surface.as_str());
 
                 if !is_jida_verb {
                     if let Some(stem) = surface.strip_suffix("지") {
@@ -2989,7 +2989,7 @@ impl SejongConverter {
                         // 받침이 ㄹ인 경우 (종성 ㄹ = 0x11AF)
                         // 올 = 오 + ㅗ + ㄹ => 떼면 오
                         let code = last_char as u32;
-                        if code >= 0xAC00 && code <= 0xD7A3 {
+                        if (0xAC00..=0xD7A3).contains(&code) {
                             let final_jamo = (code - 0xAC00) % 28;
                             if final_jamo == 8 {
                                 // ㄹ 받침
@@ -2997,7 +2997,7 @@ impl SejongConverter {
                                 let new_code = code - 8;
                                 if let Some(new_char) = char::from_u32(new_code) {
                                     // 어미에 ㄹ을 붙임
-                                    let new_ending = format!("ㄹ{}", next_surface);
+                                    let new_ending = format!("ㄹ{next_surface}");
                                     let new_stem: String = surface
                                         .chars()
                                         .take(surface.chars().count() - 1)
@@ -5464,7 +5464,7 @@ impl SejongConverter {
                         "하" => "합니다".to_string(),
                         "가" => "갑니다".to_string(),
                         "오" => "옵니다".to_string(),
-                        _ => format!("{}ㅂ니다", stem), // 폴백
+                        _ => format!("{stem}ㅂ니다"), // 폴백
                     };
                     tokens[i].surface = merged;
                     tokens[i].pos = "EF".to_string();
@@ -7435,7 +7435,7 @@ impl SejongConverter {
                             || next_pos == "NNP"
                         // "싶어요/NNP" 같은 오분석
                         {
-                            vv_ec_splits.push((i, stem.to_string(), pos.to_string()));
+                            vv_ec_splits.push((i, (*stem).to_string(), (*pos).to_string()));
                         }
                     }
                 }
@@ -7454,11 +7454,10 @@ impl SejongConverter {
             tokens.insert(idx + 1, SejongToken::new("고", "EC", mid, end));
 
             // 다음 토큰의 "있/VA" → "있/VX" 변환
-            if idx + 2 < tokens.len() {
-                if tokens[idx + 2].surface == "있" && tokens[idx + 2].pos == "VA" {
+            if idx + 2 < tokens.len()
+                && tokens[idx + 2].surface == "있" && tokens[idx + 2].pos == "VA" {
                     tokens[idx + 2].pos = "VX".to_string();
                 }
-            }
         }
 
         // 112차 보정: "보고 싶어요" 패턴에서 "싶어요/NNP" 분리
@@ -7876,7 +7875,7 @@ impl SejongConverter {
                             let verb_stem: String =
                                 rest.chars().take(rest.chars().count() - 1).collect();
                             split_compound_indices
-                                .push((i, qword.to_string(), verb_stem, "니".to_string()));
+                                .push((i, (*qword).to_string(), verb_stem, "니".to_string()));
                             break;
                         }
                     }
@@ -8091,14 +8090,12 @@ impl SejongConverter {
                 && curr_surface == "자"
                 && next_surface == "이"
                 && next_pos == "VCP"
-            {
-                if i + 2 < tokens.len()
+                && i + 2 < tokens.len()
                     && tokens[i + 2].surface == "고"
                     && tokens[i + 2].pos == "EC"
                 {
                     quote_fix_indices.push((i, "자고".to_string(), true));
                 }
-            }
 
             // 패턴 2: ~다/EF + 고하/VV → 다고/EC + 하/VV
             if curr_pos == "EF" && curr_surface == "다" && next_surface == "고하" && next_pos == "VV"
@@ -8158,15 +8155,14 @@ impl SejongConverter {
             let pos = &tokens[i].pos;
 
             // VX가 1글자이고 앞에 EC가 있는 경우
-            if pos == "VX" && independent_vx.contains(surface.as_str()) {
-                if i > 0 && tokens[i - 1].pos == "EC" {
+            if pos == "VX" && independent_vx.contains(surface.as_str())
+                && i > 0 && tokens[i - 1].pos == "EC" {
                     // "어/EC" 또는 "아/EC" 뒤의 보조동사는 VX 유지 (보조 용언 구문)
                     let prev_surface = &tokens[i - 1].surface;
                     if prev_surface != "어" && prev_surface != "아" {
                         tokens[i].pos = "VV".to_string();
                     }
                 }
-            }
         }
 
         // 140차 보정: 시/EP 제거 (잘못 분리된 경우)
@@ -8236,7 +8232,7 @@ impl SejongConverter {
                         if *suffix == "국의" {
                             hanguk_merge_indices.push((i, "국의".to_string()));
                         } else {
-                            hanguk_merge_indices.push((i, suffix.to_string()));
+                            hanguk_merge_indices.push((i, (*suffix).to_string()));
                         }
                         break;
                     }
@@ -8255,7 +8251,7 @@ impl SejongConverter {
             } else {
                 // "한국" 복원
                 let end = tokens[idx + 2].end_pos;
-                let merged_surface = format!("한{}", suffix);
+                let merged_surface = format!("한{suffix}");
                 tokens[idx] = SejongToken::new(&merged_surface, "NNP", start, end);
                 tokens.remove(idx + 2);
                 tokens.remove(idx + 1);
@@ -8421,7 +8417,7 @@ impl SejongConverter {
                 && tokens[i + 2].pos == "NNG"
             {
                 if let Some(merged) = xpn_stem_map.get(tokens[i].surface.as_str()) {
-                    xpn_merge_indices.push((i, merged.to_string()));
+                    xpn_merge_indices.push((i, (*merged).to_string()));
                 }
             }
         }
@@ -8685,7 +8681,7 @@ impl SejongConverter {
                     if ["일", "이", "삼", "사", "오", "육", "칠", "팔", "구"].contains(&first.as_str())
                     {
                         // 병합
-                        tokens[idx].surface = format!("{}{}", first, second);
+                        tokens[idx].surface = format!("{first}{second}");
                         tokens.remove(idx + 1);
                         continue;
                     }
@@ -8739,8 +8735,8 @@ impl SejongConverter {
         // "만큼 뿐 채" 등에서 "채"는 의존명사
         // MeCab이 "채/VV 아/EF"로 분석하는 경우 수정
         let len = tokens.len();
-        if len >= 2 {
-            if tokens[len - 2].surface == "채"
+        if len >= 2
+            && tokens[len - 2].surface == "채"
                 && tokens[len - 2].pos == "VV"
                 && (tokens[len - 1].surface == "아" || tokens[len - 1].surface == "ㅏ")
                 && tokens[len - 1].pos == "EF"
@@ -8750,7 +8746,6 @@ impl SejongConverter {
                 // "아/EF" 제거
                 tokens.remove(len - 1);
             }
-        }
     }
 
     /// 한글 음절에 종성(받침)이 있는지 확인
@@ -8846,7 +8841,7 @@ impl SejongConverter {
     }
 
     /// 한글 자모 정규화: 종성 자모(U+11xx)를 호환 자모(U+31xx)로 변환
-    /// 124차 보정: MeCab 출력의 종성 자모를 세종 코퍼스 형식(호환 자모)으로 통일
+    /// 124차 보정: `MeCab` 출력의 종성 자모를 세종 코퍼스 형식(호환 자모)으로 통일
     #[must_use]
     pub fn normalize_jamo(text: &str) -> String {
         // 종성 자모 (U+11A8-U+11C2) → 호환 자모 (U+3131-U+314E) 매핑

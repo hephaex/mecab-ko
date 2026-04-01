@@ -60,7 +60,7 @@ impl StringPool {
     /// the existing `Arc<str>`. Otherwise, creates a new entry.
     pub fn intern(&mut self, s: &str) -> Arc<str> {
         // Check if already interned
-        if let Some((existing, _)) = self.strings.get_key_value(s) {
+        if let Some((existing, ())) = self.strings.get_key_value(s) {
             return Arc::clone(existing);
         }
 
@@ -76,7 +76,7 @@ impl StringPool {
     /// as it avoids an extra allocation if the string is not already pooled.
     pub fn intern_string(&mut self, s: String) -> Arc<str> {
         // Check if already interned
-        if let Some((existing, _)) = self.strings.get_key_value(s.as_str()) {
+        if let Some((existing, ())) = self.strings.get_key_value(s.as_str()) {
             return Arc::clone(existing);
         }
 
@@ -105,7 +105,7 @@ impl StringPool {
 
     /// Returns the memory usage of the pool in bytes (approximate).
     ///
-    /// This includes the HashMap overhead and the string data.
+    /// This includes the `HashMap` overhead and the string data.
     #[must_use]
     pub fn memory_usage(&self) -> usize {
         let mut total = std::mem::size_of::<Self>();
@@ -114,7 +114,7 @@ impl StringPool {
         total += self.strings.capacity() * std::mem::size_of::<(Arc<str>, ())>();
 
         // String data
-        for (s, _) in &self.strings {
+        for (s, ()) in &self.strings {
             total += std::mem::size_of::<Arc<str>>() + s.len();
         }
 
@@ -128,7 +128,7 @@ impl StringPool {
         let mut min_len = usize::MAX;
         let mut max_len = 0;
 
-        for (s, _) in &self.strings {
+        for (s, ()) in &self.strings {
             let len = s.len();
             total_string_bytes += len;
             min_len = min_len.min(len);
@@ -173,7 +173,7 @@ pub struct StringPoolStats {
 
 /// Thread-safe string pool using a concurrent hashmap.
 ///
-/// This version uses a parking_lot RwLock for thread-safe access.
+/// This version uses a `parking_lot` `RwLock` for thread-safe access.
 /// Suitable for multi-threaded dictionary building.
 #[derive(Debug, Default)]
 pub struct ConcurrentStringPool {
@@ -202,7 +202,7 @@ impl ConcurrentStringPool {
         // First try read lock to check if exists
         {
             let pool = self.inner.read().unwrap();
-            if let Some((existing, _)) = pool.strings.get_key_value(s) {
+            if let Some((existing, ())) = pool.strings.get_key_value(s) {
                 return Arc::clone(existing);
             }
         }
