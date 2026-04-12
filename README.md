@@ -9,20 +9,19 @@
 
 **순수 Rust로 작성된 고성능 한국어 형태소 분석기**
 
-🎉 **v0.6.0: 100% 정확도 + 283% 성능 향상!** - 1,100문장 테스트셋 기준
-
 MeCab-Ko는 [은전한닢 프로젝트](https://bitbucket.org/eunjeon/mecab-ko)의 MeCab-Ko 한국어 형태소 분석기를 Rust로 재구현한 프로젝트입니다. 메모리 안전성, 크로스 플랫폼 지원(WebAssembly 포함), Python/Node.js/브라우저 바인딩을 제공합니다.
 
-## 🏆 v0.6.0 성과
+## 주요 성과
 
-| 지표 | v0.5.0 | v0.6.0 | 변화 |
-|------|--------|--------|------|
-| Token Accuracy | 100.0% | **100.0%** | 유지 |
-| 테스트 문장 | 500개 | **1,100개** | +120% |
-| 처리 속도 | ~238K tok/sec | **~680K tok/sec** | **+283%** |
-| 메모리 사용량 | ~150MB | ~150MB | - |
+| 지표 | v0.5.0 | v0.6.0 | v0.7.0-dev |
+|------|--------|--------|------------|
+| Token Accuracy | 100.0% | 100.0% | **100.0%** |
+| 테스트 문장 | 500개 | 1,100개 | **1,100개** |
+| 처리 속도 | ~238K tok/sec | ~680K tok/sec | **~680K tok/sec** |
+| 메모리 사용량 | ~150MB | ~150MB | **~34MB (-77%)** |
+| Clippy 경고 | - | - | **0 warnings** |
 
-### 📦 설치 방법
+### 설치 방법
 
 ```bash
 # Rust
@@ -35,19 +34,21 @@ pip install mecab-ko-python
 npm install mecab-ko-wasm
 
 # Docker
-docker pull hephaex/mecab-ko:0.6.0
+docker pull ghcr.io/hephaex/mecab-ko:latest
 ```
 
 ## 주요 특징
 
 - **순수 Rust 구현** - `#![deny(unsafe_code)]`로 메모리 안전성 보장
-- **고성능** - 제로카피 파싱, 효율적인 Viterbi 알고리즘 (~3.7M 문자/초)
+- **고성능** - SIMD 가속 Viterbi 알고리즘, ~680K tokens/sec
 - **크로스 플랫폼** - Linux, macOS, Windows, WebAssembly 지원
 - **다양한 바인딩** - Python (PyO3), Node.js (N-API), WebAssembly
 - **한국어 최적화** - 띄어쓰기 보정, 자모 처리, 종성 기반 분석
-- **사용자 사전** - 사용자 정의 단어 추가 및 핫리로드
+- **메모리 효율** - LazyEntries로 ~34MB 메모리 사용 (기존 대비 -77%)
+- **사용자 사전** - 사용자 정의 단어 추가 지원
 - **KoNLPy 호환** - KoNLPy의 Mecab API 대체 가능
-- **세종 코퍼스 호환** - 복합 태그 분리 모드 지원 (v0.3.1+)
+- **세종 코퍼스 호환** - 복합 태그 분리 모드 지원
+- **검색엔진 통합** - Elasticsearch 8.x / OpenSearch 3.x 플러그인
 
 ## 빠른 시작
 
@@ -150,26 +151,7 @@ async function analyze() {
 analyze();
 ```
 
-## v0.6.0 새로운 기능
-
-### SIMD 가속 Viterbi 알고리즘
-- 8개 이상 노드에서 SIMD 벡터화 적용
-- Hot path 인라인 최적화
-- 처리량 283% 향상 (238K → 680K tokens/sec)
-
-### 확장된 테스트 데이터셋
-- 1,100문장 (4개 도메인: 뉴스, 소설, SNS, 기술문서)
-- 100% Token Accuracy 유지
-- Gold standard 자동 생성 도구 추가
-
-### 멀티플랫폼 배포
-- Python wheels: Linux, macOS, Windows (x86_64/ARM64)
-- Docker 이미지: CLI + FastAPI 서버
-- GitHub Pages 문서 사이트
-
----
-
-## v0.3.1 기능
+## 기능
 
 ### 세종 코퍼스 호환 모드
 
@@ -244,7 +226,10 @@ mecab-ko/
 ├── data/               # 사전 데이터
 ├── docs/               # 문서
 │   ├── examples/       # 예제 코드
+│   ├── research/       # 연구 자료
 │   └── project/        # 프로젝트 계획/진행
+├── search-plugins/     # Elasticsearch/OpenSearch 플러그인
+├── docker/             # Docker 설정
 ├── scripts/            # 빌드/유틸리티 스크립트
 ├── legacy/             # 레거시 C++ 코드
 └── .github/            # CI/CD 설정
@@ -258,11 +243,15 @@ mecab-ko/
 | `mecab-ko-core` | 핵심 엔진 (Lattice, Viterbi, Tokenizer) | [![crates.io](https://img.shields.io/crates/v/mecab-ko-core.svg)](https://crates.io/crates/mecab-ko-core) |
 | `mecab-ko-dict` | 사전 관리 (Trie, Matrix, 사용자 사전) | [![crates.io](https://img.shields.io/crates/v/mecab-ko-dict.svg)](https://crates.io/crates/mecab-ko-dict) |
 | `mecab-ko-hangul` | 한글 유틸리티 (자모 분리/결합) | [![crates.io](https://img.shields.io/crates/v/mecab-ko-hangul.svg)](https://crates.io/crates/mecab-ko-hangul) |
-| `mecab-ko-cli` | 명령줄 인터페이스 | - |
 | `mecab-ko-dict-builder` | 사전 컴파일 도구 | [![crates.io](https://img.shields.io/crates/v/mecab-ko-dict-builder.svg)](https://crates.io/crates/mecab-ko-dict-builder) |
+| `mecab-ko-cli` | 명령줄 인터페이스 | - |
 | `mecab-ko-wasm` | WebAssembly 바인딩 | [![npm](https://img.shields.io/npm/v/mecab-ko-wasm.svg)](https://www.npmjs.com/package/mecab-ko-wasm) |
 | `mecab-ko-python` | Python 바인딩 (PyO3) | - |
-| `mecab-ko-elasticsearch` | Elasticsearch/Nori 호환 | - |
+| `mecab-ko-node` | Node.js 바인딩 (N-API) | - |
+| `mecab-ko-elasticsearch` | Elasticsearch/OpenSearch 호환 (JNI) | - |
+| `mecab-ko-dict-validator` | 사전 검증 도구 | - |
+| `mecab-ko-dict-sync` | 사전 동기화 | - |
+| `mecab-ko-profiler` | 성능/메모리 프로파일러 | - |
 
 ## CLI 사용법
 
@@ -288,21 +277,16 @@ mecab evaluate --input test.tsv --dicdir ./dict-output --sejong
 
 ## 성능
 
-### 벤치마크 결과 (v0.3.1)
-
-| 입력 크기 | 처리 시간 | 처리 속도 |
-|----------|----------|----------|
-| 짧은 텍스트 (11자) | 3.55µs | 3.7M 문자/초 |
-| 중간 텍스트 (67자) | 22.13µs | 3.0M 문자/초 |
-
-### KPI
+### KPI (v0.6.0 기준)
 
 | 지표 | 목표 | 현재 |
 |------|------|------|
-| 토큰화 속도 | ~150K 단어/초 | ~238K 단어/초 ✅ |
-| 콜드 스타트 | < 200ms | 0.13ms ✅ |
-| 메모리 사용량 | < 150MB | ~150MB ✅ |
-| Token Accuracy | 80%+ | 81.0% ✅ |
+| Token Accuracy | 95%+ | **100.0%** (1,100문장) |
+| 토큰화 속도 | ~150K 단어/초 | **~680K 단어/초** |
+| 콜드 스타트 | < 200ms | **0.13ms** |
+| 메모리 사용량 | < 100MB | **~34MB** (LazyEntries) |
+| Clippy 경고 | 0 | **0 warnings** |
+| 보안 취약점 | 0 | **0 vulnerabilities** |
 
 ## 품사 태그 (세종 코퍼스)
 
@@ -330,7 +314,7 @@ mecab evaluate --input test.tsv --dicdir ./dict-output --sejong
 ### 필수 요구사항
 
 - Rust 1.75 이상
-- Python 바인딩: Python 3.8+ 및 maturin
+- Python 바인딩: Python 3.9+ 및 maturin
 - Node.js 바인딩: Node.js 18+ 및 npm
 - WASM: wasm-pack
 
@@ -373,18 +357,19 @@ cargo run -p mecab-ko-dict-builder -- build \
 
 ## 로드맵
 
-### 현재 버전 (v0.3.1)
-- ✅ 세종 코퍼스 호환 모드
-- ✅ N-best 경로 탐색
-- ✅ 분석 모드 (명사/동사/원형 추출)
-- ✅ 토큰화 캐싱
-- ✅ Lattice 시각화
+### v0.6.0 (현재 릴리스)
+- ✅ SIMD 가속 Viterbi 알고리즘 (283% 성능 향상)
+- ✅ 1,100문장 테스트셋, 100% Token Accuracy
+- ✅ 멀티플랫폼 배포 (crates.io, PyPI, npm, Docker)
+- ✅ 세종 코퍼스 호환 모드, N-best 경로 탐색
 
-### 향후 계획 (v0.4.0)
-- 📋 mecab-ko-dic v3.0 (100만+ 엔트리)
-- 📋 정확도 50%+ 달성
-- 📋 신조어 자동 수집 파이프라인
-- 📋 실시간 어미 분리
+### v0.7.0 (개발 중)
+- ✅ LazyEntries 메모리 최적화 (150MB → 34MB, -77%)
+- ✅ 메모리 프로파일러 (jemalloc-ctl 연동)
+- ✅ 신조어 자동 수집 파이프라인
+- ✅ Clippy zero warnings, 보안 취약점 제로
+- 📋 사용자 사전 확장 (도메인 오버레이, 핫리로드)
+- 📋 Elasticsearch 8.x / OpenSearch 3.x 플러그인
 
 ## 기여하기
 
