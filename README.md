@@ -19,7 +19,6 @@ MeCab-Ko는 [은전한닢 프로젝트](https://bitbucket.org/eunjeon/mecab-ko)�
 | 테스트 문장 | 500개 | 1,100개 | **1,100개** |
 | 처리 속도 | ~238K tok/sec | ~680K tok/sec | **~680K tok/sec** |
 | 메모리 사용량 | ~150MB | ~150MB | **~34MB (-77%)** |
-| Clippy 경고 | - | - | **0 warnings** |
 
 ### 설치 방법
 
