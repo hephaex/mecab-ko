@@ -685,6 +685,7 @@ impl UnknownHandler {
         text: &str,
         start_pos: usize,
         has_dict_entry: bool,
+        has_space_before: impl Fn(usize) -> bool,
     ) -> Vec<UnknownCandidate> {
         // Avoid allocating a Vec<char> by working directly with char indices
         // in the UTF-8 string.  We compute byte offsets alongside char counts.
@@ -728,6 +729,10 @@ impl UnknownHandler {
 
             for c in suffix.chars() {
                 if self.category_map.get_category(c) != category_id {
+                    break;
+                }
+                // 공백 경계에서 그룹 끊기 (첫 문자 제외)
+                if char_count > 0 && has_space_before(start_pos + char_count) {
                     break;
                 }
                 byte_end += c.len_utf8();
@@ -859,7 +864,9 @@ impl UnknownHandler {
         has_dict_entry: bool,
     ) -> usize {
         let text = lattice.text();
-        let candidates = self.generate_candidates(text, start_pos, has_dict_entry);
+        let candidates = self.generate_candidates(text, start_pos, has_dict_entry, |pos| {
+            lattice.has_space_at(pos)
+        });
         let mut count = 0;
 
         for candidate in candidates {
@@ -881,6 +888,18 @@ impl UnknownHandler {
 #[allow(clippy::unwrap_used, clippy::needless_collect)]
 mod tests {
     use super::*;
+
+    impl UnknownHandler {
+        /// 테스트용: 공백 없는 텍스트에 대한 후보 생성
+        fn generate_candidates_no_space(
+            &self,
+            text: &str,
+            start_pos: usize,
+            has_dict_entry: bool,
+        ) -> Vec<UnknownCandidate> {
+            self.generate_candidates(text, start_pos, has_dict_entry, |_| false)
+        }
+    }
 
     #[test]
     fn test_category_map_default() {
@@ -926,7 +945,7 @@ mod tests {
         let handler = UnknownHandler::korean_default();
 
         // 한글 미등록어: GROUP=true, LENGTH=2
-        let candidates = handler.generate_candidates("가나다라", 0, false);
+        let candidates = handler.generate_candidates_no_space("가나다라", 0, false);
 
         // 최대 2글자까지 생성
         assert!(!candidates.is_empty());
@@ -940,7 +959,7 @@ mod tests {
         let handler = UnknownHandler::korean_default();
 
         // 알파벳 미등록어: GROUP=true, LENGTH=0 (무제한)
-        let candidates = handler.generate_candidates("ABC", 0, false);
+        let candidates = handler.generate_candidates_no_space("ABC", 0, false);
 
         // "A", "AB", "ABC" 모두 생성
         let surfaces: Vec<_> = candidates.iter().map(|c| c.surface.as_str()).collect();
@@ -954,11 +973,11 @@ mod tests {
         let handler = UnknownHandler::korean_default();
 
         // 한글은 INVOKE=false이므로 사전 엔트리가 있으면 생성 안 함
-        let candidates = handler.generate_candidates("가나다", 0, true);
+        let candidates = handler.generate_candidates_no_space("가나다", 0, true);
         assert!(candidates.is_empty());
 
         // 알파벳은 INVOKE=true이므로 사전 엔트리가 있어도 생성
-        let candidates = handler.generate_candidates("ABC", 0, true);
+        let candidates = handler.generate_candidates_no_space("ABC", 0, true);
         assert!(!candidates.is_empty());
     }
 
@@ -970,11 +989,11 @@ mod tests {
         let text = "가ABC";
 
         // 위치 0 (한글)
-        let candidates = handler.generate_candidates(text, 0, false);
+        let candidates = handler.generate_candidates_no_space(text, 0, false);
         assert!(candidates.iter().all(|c| c.category_id == HANGUL_CATEGORY));
 
         // 위치 1 (알파벳)
-        let candidates = handler.generate_candidates(text, 1, false);
+        let candidates = handler.generate_candidates_no_space(text, 1, false);
         assert!(candidates.iter().all(|c| c.category_id == ALPHA_CATEGORY));
     }
 
@@ -1137,7 +1156,7 @@ mod tests {
         let handler = UnknownHandler::korean_default();
 
         // Test proper noun
-        let candidates = handler.generate_candidates("Apple", 0, false);
+        let candidates = handler.generate_candidates_no_space("Apple", 0, false);
         assert!(!candidates.is_empty());
 
         // Check that at least one candidate has ProperNoun pattern
@@ -1159,7 +1178,7 @@ mod tests {
         let handler = UnknownHandler::korean_default();
 
         // Test abbreviations like API, HTTP
-        let candidates = handler.generate_candidates("API", 0, false);
+        let candidates = handler.generate_candidates_no_space("API", 0, false);
         assert!(!candidates.is_empty());
 
         // All uppercase - could be proper noun or plain
@@ -1171,7 +1190,7 @@ mod tests {
     fn test_generate_candidates_camel_case() {
         let handler = UnknownHandler::korean_default();
 
-        let candidates = handler.generate_candidates("iPhone", 0, false);
+        let candidates = handler.generate_candidates_no_space("iPhone", 0, false);
         assert!(!candidates.is_empty());
 
         // Check for CamelCase pattern
@@ -1186,7 +1205,7 @@ mod tests {
         let handler = UnknownHandler::korean_default();
 
         // Test unknown Korean word
-        let candidates = handler.generate_candidates("테스트", 0, false);
+        let candidates = handler.generate_candidates_no_space("테스트", 0, false);
         assert!(!candidates.is_empty());
 
         // Should have HANGUL category
