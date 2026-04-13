@@ -365,8 +365,12 @@ cargo run -p mecab-ko-dict-builder -- build \
 ### v0.7.0 (개발 중)
 - ✅ LazyEntries 메모리 최적화 (150MB → 34MB, -77%)
 - ✅ 메모리 프로파일러 (jemalloc-ctl 연동)
-- ✅ 신조어 자동 수집 파이프라인
 - ✅ Clippy zero warnings, 보안 취약점 제로
+- ✅ 도메인 사전 자동 수집 파이프라인
+  - 신조어: 국립국어원 우리말샘 API 연동, 주간/월간 자동 수집 → PR
+  - 뉴스 NNP: 뉴스 고유명사(인명/지명/단체명) 주간 자동 갱신, LLM 검증
+  - IT 용어: 283K건 도메인 사전 운영 중
+  - CI 검증 게이트: CSV 포맷·품사·중복·인코딩 자동 검증
 - 📋 사용자 사전 확장 (도메인 오버레이, 핫리로드)
 - 📋 Elasticsearch 8.x / OpenSearch 3.x 플러그인
 

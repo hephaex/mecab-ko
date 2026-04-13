@@ -1,0 +1,177 @@
+name: Domain Dictionary Validation
+
+on:
+  pull_request:
+    paths:
+      - 'data/domain-dic/**'
+  push:
+    paths:
+      - 'data/domain-dic/**'
+    branches:
+      - 'dict/**'
+
+env:
+  EXPECTED_FIELDS_DEFAULT: 13
+  EXPECTED_FIELDS_NEWS: 12
+
+jobs:
+  validate:
+    name: Validate Domain Dictionary
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Detect changed CSV files
+        id: changed
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            FILES=$(git diff --name-only --diff-filter=ACMR \
+              ${{ github.event.pull_request.base.sha }} \
+              ${{ github.event.pull_request.head.sha }} \
+              -- 'data/domain-dic/**/*.csv' | tr '\n' ' ')
+          else
+            FILES=$(git diff --name-only --diff-filter=ACMR HEAD~1 \
+              -- 'data/domain-dic/**/*.csv' 2>/dev/null | tr '\n' ' ')
+          fi
+
+          if [ -z "$FILES" ]; then
+            echo "No CSV files changed"
+            echo "has_csv=false" >> $GITHUB_OUTPUT
+          else
+            echo "Changed CSV files: $FILES"
+            echo "has_csv=true" >> $GITHUB_OUTPUT
+            echo "files=$FILES" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Validate CSV format
+        if: steps.changed.outputs.has_csv == 'true'
+        run: |
+          echo "## Domain Dictionary Validation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          TOTAL_ERRORS=0
+          TOTAL_ENTRIES=0
+
+          for CSV_FILE in ${{ steps.changed.outputs.files }}; do
+            [ ! -f "$CSV_FILE" ] && continue
+
+            FILENAME=$(basename "$CSV_FILE")
+            DIRNAME=$(dirname "$CSV_FILE" | sed 's|data/domain-dic/||')
+            echo "### $DIRNAME/$FILENAME" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            ERRORS=0
+            ENTRIES=0
+            LINE_NUM=0
+
+            # Determine expected field count based on directory
+            if echo "$CSV_FILE" | grep -q "domain-dic/news/"; then
+              EXPECTED_FIELDS=$EXPECTED_FIELDS_NEWS
+            else
+              EXPECTED_FIELDS=$EXPECTED_FIELDS_DEFAULT
+            fi
+
+            while IFS= read -r line; do
+              LINE_NUM=$((LINE_NUM + 1))
+
+              # Skip comments and empty lines
+              [[ "$line" =~ ^# ]] && continue
+              [ -z "$line" ] && continue
+
+              ENTRIES=$((ENTRIES + 1))
+
+              # Count fields
+              FIELD_COUNT=$(echo "$line" | awk -F',' '{print NF}')
+              if [ "$FIELD_COUNT" -ne "$EXPECTED_FIELDS" ]; then
+                echo "::error file=$CSV_FILE,line=$LINE_NUM::Expected $EXPECTED_FIELDS fields, got $FIELD_COUNT"
+                ERRORS=$((ERRORS + 1))
+              fi
+
+              # Validate POS tag (field 5)
+              POS=$(echo "$line" | cut -d',' -f5)
+              case "$POS" in
+                NNG|NNP|NNB|NP|NR|VV|VA|VX|VCP|VCN|MAG|MAJ|MM|IC|JKS|JKC|JKG|JKO|JKB|JKV|JKQ|JX|JC|EP|EF|EC|ETN|ETM|XPN|XSN|XSV|XSA|XR|SF|SE|SS|SP|SO|SW|SH|SL|SN|\*)
+                  ;;
+                *)
+                  echo "::warning file=$CSV_FILE,line=$LINE_NUM::Unknown POS tag: $POS"
+                  ERRORS=$((ERRORS + 1))
+                  ;;
+              esac
+
+              # Validate cost range (field 4)
+              COST=$(echo "$line" | cut -d',' -f4)
+              if [ "$COST" -lt -32000 ] 2>/dev/null || [ "$COST" -gt 0 ] 2>/dev/null; then
+                echo "::warning file=$CSV_FILE,line=$LINE_NUM::Cost out of range: $COST (expected -32000 to 0)"
+                ERRORS=$((ERRORS + 1))
+              fi
+
+            done < "$CSV_FILE"
+
+            TOTAL_ENTRIES=$((TOTAL_ENTRIES + ENTRIES))
+            TOTAL_ERRORS=$((TOTAL_ERRORS + ERRORS))
+
+            # Check duplicates within file
+            DUPLICATES=$(grep -v '^#' "$CSV_FILE" | grep -v '^$' | cut -d',' -f1 | sort | uniq -d | wc -l | tr -d ' ')
+
+            echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Entries | $ENTRIES |" >> $GITHUB_STEP_SUMMARY
+            echo "| Errors | $ERRORS |" >> $GITHUB_STEP_SUMMARY
+            echo "| Duplicates | $DUPLICATES |" >> $GITHUB_STEP_SUMMARY
+
+            if [ "$DUPLICATES" -gt 0 ]; then
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**Duplicate surfaces:**" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              grep -v '^#' "$CSV_FILE" | grep -v '^$' | cut -d',' -f1 | sort | uniq -d | head -20 >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              TOTAL_ERRORS=$((TOTAL_ERRORS + DUPLICATES))
+            fi
+
+            if [ "$ERRORS" -eq 0 ] && [ "$DUPLICATES" -eq 0 ]; then
+              echo "| Status | Pass |" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "| Status | **FAIL** |" >> $GITHUB_STEP_SUMMARY
+            fi
+            echo "" >> $GITHUB_STEP_SUMMARY
+          done
+
+          # News-specific validation: all entries should be NNP
+          for CSV_FILE in ${{ steps.changed.outputs.files }}; do
+            if echo "$CSV_FILE" | grep -q "domain-dic/news/"; then
+              NON_NNP=$(grep -v '^#' "$CSV_FILE" 2>/dev/null | grep -v '^$' | cut -d',' -f5 | grep -v '^NNP$' | wc -l | tr -d ' ')
+              if [ "$NON_NNP" -gt 0 ]; then
+                echo "::warning file=$CSV_FILE::News dictionary has $NON_NNP non-NNP entries"
+                echo "**Warning**: $NON_NNP non-NNP entries in news dictionary" >> $GITHUB_STEP_SUMMARY
+              fi
+            fi
+          done
+
+          echo "## Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Total Entries | $TOTAL_ENTRIES |" >> $GITHUB_STEP_SUMMARY
+          echo "| Total Errors | $TOTAL_ERRORS |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "$TOTAL_ERRORS" -gt 0 ]; then
+            echo "**Result: FAIL** ($TOTAL_ERRORS errors found)" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "**Result: PASS**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Check encoding
+        if: steps.changed.outputs.has_csv == 'true'
+        run: |
+          for CSV_FILE in ${{ steps.changed.outputs.files }}; do
+            [ ! -f "$CSV_FILE" ] && continue
+            ENCODING=$(file -bi "$CSV_FILE" | grep -oP 'charset=\K[^ ]+')
+            if [ "$ENCODING" != "utf-8" ] && [ "$ENCODING" != "us-ascii" ]; then
+              echo "::error file=$CSV_FILE::Expected UTF-8 encoding, got $ENCODING"
+              exit 1
+            fi
+          done
+          echo "Encoding check passed"
