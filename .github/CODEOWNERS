@@ -4,6 +4,9 @@
 # Domain dictionaries - news
 data/domain-dic/news/ @hephaex
 
+# Domain dictionaries - government agencies
+data/domain-dic/government/ @hephaex
+
 # Domain dictionaries - IT terms
 data/domain-dic/it-terms/ @hephaex
 

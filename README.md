@@ -264,6 +264,9 @@ mecab --wakati "한국어 형태소 분석"
 # 사용자 사전
 mecab --user-dict custom.csv "신조어 테스트"
 
+# 도메인 사전 (관보 기관명)
+mecab --user-dict data/domain-dic/government/agencies.csv "국토교통부가 환경부와 협의했다"
+
 # REPL 모드
 mecab --repl
 
@@ -369,6 +372,7 @@ cargo run -p mecab-ko-dict-builder -- build \
 - ✅ 도메인 사전 자동 수집 파이프라인
   - 신조어: 국립국어원 우리말샘 API 연동, 주간/월간 자동 수집 → PR
   - 뉴스 NNP: 뉴스 고유명사(인명/지명/단체명) 주간 자동 갱신, LLM 검증
+  - 관보 기관명: 대한민국 관보 12.8만건에서 503건 정부기관 NNP 추출
   - IT 용어: 283K건 도메인 사전 운영 중
   - CI 검증 게이트: CSV 포맷·품사·중복·인코딩 자동 검증
 - 📋 사용자 사전 확장 (도메인 오버레이, 핫리로드)

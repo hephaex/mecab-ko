@@ -13,6 +13,7 @@ on:
 env:
   EXPECTED_FIELDS_DEFAULT: 13
   EXPECTED_FIELDS_NEWS: 12
+  EXPECTED_FIELDS_GOVERNMENT: 12
 
 jobs:
   validate:
@@ -68,6 +69,8 @@ jobs:
             # Determine expected field count based on directory
             if echo "$CSV_FILE" | grep -q "domain-dic/news/"; then
               EXPECTED_FIELDS=$EXPECTED_FIELDS_NEWS
+            elif echo "$CSV_FILE" | grep -q "domain-dic/government/"; then
+              EXPECTED_FIELDS=$EXPECTED_FIELDS_GOVERNMENT
             else
               EXPECTED_FIELDS=$EXPECTED_FIELDS_DEFAULT
             fi
@@ -137,13 +140,14 @@ jobs:
             echo "" >> $GITHUB_STEP_SUMMARY
           done
 
-          # News-specific validation: all entries should be NNP
+          # NNP-only validation: news and government dictionaries should only contain NNP
           for CSV_FILE in ${{ steps.changed.outputs.files }}; do
-            if echo "$CSV_FILE" | grep -q "domain-dic/news/"; then
+            if echo "$CSV_FILE" | grep -qE "domain-dic/(news|government)/"; then
+              DICT_TYPE=$(echo "$CSV_FILE" | grep -oP 'domain-dic/\K[^/]+')
               NON_NNP=$(grep -v '^#' "$CSV_FILE" 2>/dev/null | grep -v '^$' | cut -d',' -f5 | grep -v '^NNP$' | wc -l | tr -d ' ')
               if [ "$NON_NNP" -gt 0 ]; then
-                echo "::warning file=$CSV_FILE::News dictionary has $NON_NNP non-NNP entries"
-                echo "**Warning**: $NON_NNP non-NNP entries in news dictionary" >> $GITHUB_STEP_SUMMARY
+                echo "::warning file=$CSV_FILE::${DICT_TYPE} dictionary has $NON_NNP non-NNP entries"
+                echo "**Warning**: $NON_NNP non-NNP entries in ${DICT_TYPE} dictionary" >> $GITHUB_STEP_SUMMARY
               fi
             fi
           done
