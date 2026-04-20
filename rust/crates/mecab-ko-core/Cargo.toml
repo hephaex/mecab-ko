@@ -38,6 +38,8 @@ simd = ["mecab-ko-dict/simd"]
 simd-dict = ["simd"]
 # Enable zstd compression support (disabled for WASM)
 zstd = ["mecab-ko-dict/zstd"]
+# Enable wait-free hot-reload based on ArcSwap (passthrough to mecab-ko-dict)
+hot-reload-v2 = ["mecab-ko-dict/hot-reload-v2"]
 # Exposes test_utils module for external test crates that need full-dict helpers.
 test-utils = []
 

@@ -41,6 +41,9 @@ use crate::trie::Trie;
 use crate::user_dict::UserDictionary;
 use crate::{Dictionary, Entry};
 
+#[cfg(feature = "hot-reload-v2")]
+use crate::hot_reload_v2::HotReloadDictV2;
+
 /// 기본 사전 디렉토리 경로 (환경변수가 없을 때)
 const DEFAULT_DICDIR_PATHS: &[&str] = &[
     "/usr/local/lib/mecab/dic/mecab-ko-dic",
@@ -75,6 +78,9 @@ pub struct SystemDictionary {
     entry_store: Arc<dyn EntryStore>,
     /// 사용자 사전 (선택)
     user_dict: Option<Arc<UserDictionary>>,
+    /// Wait-free hot-reload dictionary (선택, feature-gated)
+    #[cfg(feature = "hot-reload-v2")]
+    hot_reload: Option<Arc<HotReloadDictV2>>,
 }
 
 /// 사전 엔트리 (내부 표현)
@@ -312,6 +318,8 @@ impl SystemDictionary {
             matrix,
             entry_store,
             user_dict: None,
+            #[cfg(feature = "hot-reload-v2")]
+            hot_reload: None,
         })
     }
 
@@ -378,6 +386,8 @@ impl SystemDictionary {
             matrix,
             entry_store,
             user_dict: None,
+            #[cfg(feature = "hot-reload-v2")]
+            hot_reload: None,
         })
     }
 
@@ -696,6 +706,35 @@ impl SystemDictionary {
         self.user_dict.as_deref()
     }
 
+    /// Hot-reload v2 사전 설정 (빌더 패턴)
+    ///
+    /// # Arguments
+    ///
+    /// * `hr` - `HotReloadDictV2` 인스턴스
+    #[cfg(feature = "hot-reload-v2")]
+    #[must_use]
+    pub fn with_hot_reload(mut self, hr: Arc<HotReloadDictV2>) -> Self {
+        self.hot_reload = Some(hr);
+        self
+    }
+
+    /// Hot-reload v2 사전 설정 (in-place)
+    ///
+    /// # Arguments
+    ///
+    /// * `hr` - `HotReloadDictV2` 인스턴스
+    #[cfg(feature = "hot-reload-v2")]
+    pub fn set_hot_reload(&mut self, hr: Arc<HotReloadDictV2>) {
+        self.hot_reload = Some(hr);
+    }
+
+    /// Hot-reload v2 사전 참조 반환
+    #[cfg(feature = "hot-reload-v2")]
+    #[must_use]
+    pub const fn hot_reload(&self) -> Option<&Arc<HotReloadDictV2>> {
+        self.hot_reload.as_ref()
+    }
+
     /// 인덱스로 엔트리 조회
     ///
     /// # Arguments
@@ -735,6 +774,25 @@ impl SystemDictionary {
                 results.push((entry, byte_len));
             }
         }
+
+        // Hot-reload v2: merge domain overlay entries from the current snapshot.
+        #[cfg(feature = "hot-reload-v2")]
+        if let Some(hr) = &self.hot_reload {
+            let snapshot = hr.load();
+            let domain_entries = snapshot.domain_stack.common_prefix_search(text);
+            for user_entry in domain_entries {
+                let byte_len = user_entry.surface.len();
+                let dict_entry = Arc::new(DictEntry::new(
+                    &user_entry.surface,
+                    user_entry.left_id,
+                    user_entry.right_id,
+                    user_entry.cost,
+                    &user_entry.feature,
+                ));
+                results.push((dict_entry, byte_len));
+            }
+        }
+
         Ok(results)
     }
 
@@ -780,6 +838,20 @@ impl SystemDictionary {
             results.extend(user_entries.iter().map(|e| e.to_entry()));
         }
 
+        // Hot-reload v2: merge domain overlay entries from the current snapshot.
+        #[cfg(feature = "hot-reload-v2")]
+        if let Some(hr) = &self.hot_reload {
+            let snapshot = hr.load();
+            let domain_entries = snapshot.domain_stack.lookup(surface);
+            results.extend(domain_entries.iter().map(|ue| Entry {
+                surface: ue.surface.clone(),
+                left_id: ue.left_id,
+                right_id: ue.right_id,
+                cost: ue.cost,
+                feature: ue.feature.clone(),
+            }));
+        }
+
         results
     }
 
@@ -798,6 +870,8 @@ impl SystemDictionary {
             matrix,
             entry_store: Arc::new(EagerStore::new(entries)),
             user_dict: None,
+            #[cfg(feature = "hot-reload-v2")]
+            hot_reload: None,
         }
     }
 }
@@ -970,6 +1044,8 @@ mod tests {
             matrix,
             entry_store: Arc::new(EagerStore::new(dict_entries)),
             user_dict: None,
+            #[cfg(feature = "hot-reload-v2")]
+            hot_reload: None,
         }
     }
 
@@ -1211,6 +1287,8 @@ mod tests {
             matrix,
             entry_store: Arc::new(EagerStore::new(dict_entries)),
             user_dict: None,
+            #[cfg(feature = "hot-reload-v2")]
+            hot_reload: None,
         };
 
         // "가" 검색 → 2개 엔트리 반환
