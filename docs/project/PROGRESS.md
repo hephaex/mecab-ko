@@ -1,6 +1,46 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-20 (Sprint 68 완료)
+## 마지막 업데이트: 2026-04-21 (Sprint 69 완료)
+
+### ✅ Sprint 69 - Integration & Verification
+
+**목표:** 세 트랙 병렬 — 검색 플러그인 E2E, Hot-reload v2 Tokenizer 통합, npm 릴리스 파이프라인
+
+| Task | Description | Status |
+|------|-------------|--------|
+| S69-01 | Gradle wrapper 생성 (8.10) | ✅ 완료 |
+| S69-02 | OpenSearch 3.x Settings API 수정 | ✅ 완료 |
+| S69-03 | JNI 네이티브 빌드 (darwin-arm64, 801KB) | ✅ 완료 |
+| S69-04 | SystemDictionary + HotReloadDictV2 통합 | ✅ 완료 |
+| S69-05 | common_prefix_search/lookup ArcSwap 경로 | ✅ 완료 |
+| S69-06 | Hot-reload 통합 테스트 (9 tests) | ✅ 완료 |
+| S69-07 | napi-rs 3.x 로컬 빌드 (macOS arm64) | ✅ 완료 |
+| S69-08 | npm publish 워크플로우 작성 | ✅ 완료 |
+| S69-09 | Sprint 기록 | ✅ 완료 |
+
+---
+
+#### Track A: 검색 플러그인 (2026-04-21)
+- Gradle 8.10 wrapper 생성 (`gradlew`, `gradle-wrapper.jar`)
+- OpenSearch 3.x API 마이그레이션: `configFile()→configDir()`, `getAsArray()→getAsList()`, `Plugin(Settings)` 생성자
+- JNI: `cargo build --release -p mecab-ko-elasticsearch --features jni-bindings` → 801KB dylib
+- **블로커**: JDK 17 미설치로 Java 컴파일 미검증
+
+#### Track B: Hot-reload v2 Tokenizer 통합 (2026-04-21)
+- `dictionary.rs`: `hot_reload: Option<Arc<HotReloadDictV2>>` 필드 + builder/setter/accessor
+- `common_prefix_search()` / `lookup_combined()`: 도메인 스택 결과 자동 병합
+- `mecab-ko-core/Cargo.toml`: `hot-reload-v2` feature passthrough
+- 통합 테스트 9건: 도메인 항목 검색, 업데이트 가시성, 롤백, 다중 도메인
+- 137 tests pass (with feature), 121 tests pass (without feature)
+
+#### Track C: npm 릴리스 파이프라인 (2026-04-21)
+- 로컬 빌드: `napi build --platform` 성공 (3.4MB debug .node)
+- `getVersion()` → "0.7.0", `morphs('안녕하세요')` → `['안녕', '하', '세요']`
+- `.github/workflows/npm-publish.yml`: 5 플랫폼 빌드 + napi artifacts + provenance
+- `index.js`/`index.d.ts` napi-rs 3.x 재생성 커밋
+- **알려진 이슈**: tokenize() 빈 배열 7건 — core 사전 로딩 문제 (바인딩 무관)
+
+---
 
 ### ✅ Sprint 68 - v0.7.0 Ecosystem Expansion
 

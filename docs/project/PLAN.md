@@ -1,9 +1,34 @@
 # 현재 스프린트: 다음 스프린트 계획 예정
 
-v0.7.0 릴리스 완료 후 다음 스프린트 방향:
-- napi-rs 3.x 마이그레이션 후속 (npm 릴리스 검증)
-- Hot-reload v2 통합 (Tokenizer 파이프라인 연결)
-- 검색 플러그인 E2E 검증 (Gradle wrapper 커밋 후)
+Sprint 69 완료. 다음 방향:
+- JDK 17 설치 후 검색 플러그인 Gradle 컴파일 검증
+- Hot-reload v2 CLI 통합 (mecab-ko-cli에서 --hot-reload 플래그)
+- npm 실제 배포 테스트 (dry-run → npm-v0.7.0 태그)
+- core tokenize() 빈 배열 이슈 디버깅 (Node 바인딩 테스트 7건 실패 원인)
+
+---
+
+# ✅ 완료된 스프린트: Phase 35 - Sprint 69 (Integration & Verification)
+
+## 🎯 Sprint 69 목표
+세 트랙 병렬: 검색 플러그인 E2E, Hot-reload v2 Tokenizer 통합, npm 릴리스 파이프라인
+
+## Sprint 69 작업 목록 (9/9) ✅
+
+### Track A: 검색 플러그인 E2E
+- [x] S69-01: Gradle wrapper 생성 및 커밋 ✅
+- [x] S69-02: OpenSearch 3.x Settings import 수정 + Java 코드 컴파일 검증 ✅
+- [x] S69-03: JNI 네이티브 바인딩 빌드 + native/ 배치 자동화 ✅
+
+### Track B: Hot-reload v2 Tokenizer 통합
+- [x] S69-04: SystemDictionary에 HotReloadDictV2 옵션 통합 ✅
+- [x] S69-05: Tokenizer의 사전 lookup 경로를 ArcSwap 스냅샷으로 전환 ✅
+- [x] S69-06: Hot-reload E2E 통합 테스트 (9 tests pass) ✅
+
+### Track C: npm 릴리스 파이프라인
+- [x] S69-07: napi-rs 3.x 로컬 빌드 검증 (macOS arm64, 24/31 pass) ✅
+- [x] S69-08: npm prepublish 워크플로우 작성 (GitHub Actions) ✅
+- [x] S69-09: PLAN.md/PROGRESS.md Sprint 69 기록 ✅
 
 ---
 
