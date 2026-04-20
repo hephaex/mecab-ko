@@ -3,41 +3,50 @@ name: npm Publish
 on:
   push:
     tags:
-      - 'v*'
+      - 'npm-v*'
   workflow_dispatch:
     inputs:
       dry_run:
         description: 'Dry run (do not publish)'
         required: false
-        default: 'false'
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
 
 env:
-  PACKAGE_NAME: "@mecab-ko/node"
-  NODE_VERSION: "20"
+  PACKAGE_NAME: '@mecab-ko/node'
+  NODE_VERSION: '20'
+  # napi build runs from the crate directory
+  CRATE_DIR: rust/crates/mecab-ko-node
 
 concurrency:
   group: npm-publish-${{ github.ref }}
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   build:
-    name: Build on ${{ matrix.settings.os }} (${{ matrix.settings.target }})
-    runs-on: ${{ matrix.settings.os }}
+    name: Build - ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        settings:
+        include:
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
           - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
-            use-cross: true
-          - os: macos-14
-            target: x86_64-apple-darwin
-          - os: macos-14
-            target: aarch64-apple-darwin
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
+            cross: true
 
     steps:
       - name: Checkout code
@@ -51,70 +60,53 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.settings.target }}
-
-      - name: Install cross (for aarch64 Linux)
-        if: matrix.settings.use-cross
-        run: cargo install cross --git https://github.com/cross-rs/cross
+          targets: ${{ matrix.target }}
 
       - name: Install dependencies
-        working-directory: rust/crates/mecab-ko-node
+        working-directory: ${{ env.CRATE_DIR }}
         run: npm ci
 
-      - name: Set up Python (for PyO3)
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Build native module (cross)
-        if: matrix.settings.use-cross
-        working-directory: rust
+      # aarch64-linux cross-compilation needs the gcc cross toolchain
+      - name: Install aarch64 cross toolchain (Linux)
+        if: matrix.cross
         run: |
-          cross build --release --target ${{ matrix.settings.target }} -p mecab-ko-node
-          cp target/${{ matrix.settings.target }}/release/libmecab_ko_node.so crates/mecab-ko-node/mecab-ko-node.linux-arm64-gnu.node || true
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
 
       - name: Build native module
-        if: "!matrix.settings.use-cross"
-        working-directory: rust
-        run: |
-          cargo build --release --target ${{ matrix.settings.target }} -p mecab-ko-node
-          # Copy the built library to the expected location
-          cd crates/mecab-ko-node
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            cp ../../target/${{ matrix.settings.target }}/release/mecab_ko_node.dll mecab-ko-node.win32-x64-msvc.node
-          elif [ "${{ runner.os }}" = "macOS" ]; then
-            if [ "${{ matrix.settings.target }}" = "aarch64-apple-darwin" ]; then
-              cp ../../target/${{ matrix.settings.target }}/release/libmecab_ko_node.dylib mecab-ko-node.darwin-arm64.node
-            else
-              cp ../../target/${{ matrix.settings.target }}/release/libmecab_ko_node.dylib mecab-ko-node.darwin-x64.node
-            fi
-          else
-            cp ../../target/${{ matrix.settings.target }}/release/libmecab_ko_node.so mecab-ko-node.linux-x64-gnu.node
-          fi
-        shell: bash
+        working-directory: ${{ env.CRATE_DIR }}
+        run: >
+          npx napi build
+          --platform
+          --release
+          --manifest-path ./Cargo.toml
+          --target ${{ matrix.target }}
+        env:
+          # Cross-compilation linker for aarch64-linux
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: ${{ matrix.cross && 'aarch64-linux-gnu-gcc' || '' }}
 
       - name: List built artifacts
-        working-directory: rust/crates/mecab-ko-node
-        run: ls -la *.node 2>/dev/null || echo "No .node files found"
+        working-directory: ${{ env.CRATE_DIR }}
+        run: ls -la *.node
         shell: bash
 
-      - name: Upload artifacts
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: bindings-${{ matrix.settings.target }}
-          path: rust/crates/mecab-ko-node/*.node
+          name: bindings-${{ matrix.target }}
+          path: ${{ env.CRATE_DIR }}/*.node
           if-no-files-found: error
-          retention-days: 5
+          retention-days: 7
 
   test:
-    name: Test on ${{ matrix.os }} (Node ${{ matrix.node-version }})
+    name: Test - ${{ matrix.os }} (Node ${{ matrix.node }})
     needs: [build]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-14, windows-latest]
-        node-version: ["18", "20", "22"]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: ['18', '20', '22']
 
     steps:
       - name: Checkout code
@@ -123,35 +115,35 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ matrix.node }}
 
-      - name: Download all artifacts
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          path: rust/crates/mecab-ko-node
+          path: ${{ env.CRATE_DIR }}
           pattern: bindings-*
           merge-multiple: true
 
       - name: List artifacts
-        working-directory: rust/crates/mecab-ko-node
-        run: ls -la *.node 2>/dev/null || echo "No .node files"
+        working-directory: ${{ env.CRATE_DIR }}
+        run: ls -la *.node 2>/dev/null || echo "No matching .node file for this platform"
         shell: bash
 
       - name: Install dependencies
-        working-directory: rust/crates/mecab-ko-node
+        working-directory: ${{ env.CRATE_DIR }}
         run: npm ci
 
       - name: Run tests
-        working-directory: rust/crates/mecab-ko-node
+        working-directory: ${{ env.CRATE_DIR }}
         run: npm test
         continue-on-error: true
 
   publish:
     name: Publish to npm
-    needs: [build]
+    needs: [build, test]
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       id-token: write
 
     steps:
@@ -164,31 +156,81 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Install dependencies
+        working-directory: ${{ env.CRATE_DIR }}
+        run: npm ci
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: rust/crates/mecab-ko-node
+          path: ${{ env.CRATE_DIR }}/artifacts
           pattern: bindings-*
           merge-multiple: true
 
-      - name: List artifacts
-        working-directory: rust/crates/mecab-ko-node
-        run: ls -la *.node
+      - name: List downloaded artifacts
+        run: ls -la ${{ env.CRATE_DIR }}/artifacts/
+        shell: bash
 
-      - name: Install dependencies
-        working-directory: rust/crates/mecab-ko-node
-        run: npm ci
+      # napi artifacts moves .node files into npm/ platform package dirs
+      - name: Collect platform artifacts
+        working-directory: ${{ env.CRATE_DIR }}
+        run: npx napi artifacts --artifacts-dir artifacts
+
+      # napi prepublish generates per-platform package.json in npm/ dirs
+      - name: Prepare platform packages
+        working-directory: ${{ env.CRATE_DIR }}
+        run: npx napi prepublish -t npm
+
+      - name: List platform packages
+        working-directory: ${{ env.CRATE_DIR }}
+        run: |
+          echo "=== npm/ directory ==="
+          ls -la npm/ 2>/dev/null || echo "No npm/ directory"
+          for dir in npm/*/; do
+            echo "--- $dir ---"
+            ls -la "$dir" 2>/dev/null
+          done
+        shell: bash
 
       - name: Publish (dry run)
-        if: github.event.inputs.dry_run == 'true'
-        working-directory: rust/crates/mecab-ko-node
-        run: npm publish --dry-run --access public
+        if: >
+          github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.dry_run == 'true'
+        working-directory: ${{ env.CRATE_DIR }}
+        run: |
+          echo "=== Dry run: main package ==="
+          npm publish --dry-run --access public
+          echo ""
+          echo "=== Dry run: platform packages ==="
+          for dir in npm/*/; do
+            if [ -f "$dir/package.json" ]; then
+              echo "--- $dir ---"
+              (cd "$dir" && npm publish --dry-run --access public) || true
+            fi
+          done
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish
-        if: github.event.inputs.dry_run != 'true' && startsWith(github.ref, 'refs/tags/')
-        working-directory: rust/crates/mecab-ko-node
-        run: npm publish --access public
+      - name: Publish platform packages
+        if: >
+          startsWith(github.ref, 'refs/tags/npm-v') &&
+          (github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run != 'true')
+        working-directory: ${{ env.CRATE_DIR }}
+        run: |
+          for dir in npm/*/; do
+            if [ -f "$dir/package.json" ]; then
+              echo "Publishing $dir ..."
+              (cd "$dir" && npm publish --access public --provenance) || true
+            fi
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish main package
+        if: >
+          startsWith(github.ref, 'refs/tags/npm-v') &&
+          (github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run != 'true')
+        working-directory: ${{ env.CRATE_DIR }}
+        run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
