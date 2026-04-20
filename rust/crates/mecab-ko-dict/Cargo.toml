@@ -25,6 +25,7 @@ zstd = { workspace = true, optional = true }
 compact_str = { workspace = true, optional = true }
 notify = "6.1"
 crossbeam-channel = "0.5"
+arc-swap = { version = "1", optional = true }
 
 [features]
 default = ["zstd"]
@@ -33,6 +34,8 @@ simd = []
 zstd = ["dep:zstd"]
 # Enable compact string support for reduced memory usage
 compact-strings = ["dep:compact_str"]
+# Enable wait-free hot-reload based on ArcSwap
+hot-reload-v2 = ["dep:arc-swap"]
 
 [dev-dependencies]
 criterion.workspace = true

@@ -119,6 +119,14 @@ jobs:
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
+      - name: Generate Gradle wrapper (if missing)
+        working-directory: search-plugins
+        run: |
+          if [ ! -f gradlew ]; then
+            gradle wrapper --gradle-version=8.10 --distribution-type=bin
+          fi
+          chmod +x gradlew
+
       - name: Build plugin
         working-directory: search-plugins
         run: ./gradlew :elasticsearch:bundlePlugin --no-daemon
@@ -159,6 +167,14 @@ jobs:
         uses: gradle/gradle-build-action@v3
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+
+      - name: Generate Gradle wrapper (if missing)
+        working-directory: search-plugins
+        run: |
+          if [ ! -f gradlew ]; then
+            gradle wrapper --gradle-version=8.10 --distribution-type=bin
+          fi
+          chmod +x gradlew
 
       - name: Build plugin
         working-directory: search-plugins

@@ -34,6 +34,7 @@
 )]
 
 pub mod dictionary;
+pub mod domain;
 pub mod entry_store;
 pub mod file_watcher;
 pub mod hot_reload;
@@ -43,6 +44,9 @@ pub mod matrix;
 pub mod string_pool;
 pub mod trie;
 pub mod user_dict;
+
+#[cfg(feature = "hot-reload-v2")]
+pub mod hot_reload_v2;
 
 pub use dictionary::{DictEntry, DictionaryLoader, LoadOptions, SystemDictionary};
 pub use entry_store::{EagerStore, EntryStore, LazyStore};

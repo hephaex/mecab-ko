@@ -1,6 +1,69 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-02 (Sprint 67 완료)
+## 마지막 업데이트: 2026-04-20 (Sprint 68 완료)
+
+### ✅ Sprint 68 - v0.7.0 Ecosystem Expansion
+
+**목표:** 검색 플러그인 빌드 검증, napi-rs 3.x 마이그레이션, 사전 핫리로드, 릴리스 문서
+
+| Task | Description | Status |
+|------|-------------|--------|
+| S68-01 | Search plugins Gradle 빌드 검증 | ✅ 완료 |
+| S68-02 | Search plugins CI/CD 워크플로우 | ✅ 완료 |
+| S68-03 | napi-rs 3.x 마이그레이션 리서치 | ✅ 완료 |
+| S68-04 | napi-rs 3.x 업그레이드 구현 | ✅ 완료 |
+| S68-05 | 도메인 오버레이 사전 설계 | ✅ 완료 |
+| S68-06 | 핫리로드 프로토타입 (ArcSwap + notify) | ✅ 완료 |
+| S68-07 | v0.7.0 마이그레이션 가이드 업데이트 | ✅ 완료 |
+| S68-08 | v0.7.0 릴리스 블로그 포스트 작성 | ✅ 완료 |
+| S68-09 | PLAN.md/PROGRESS.md Sprint 68 기록 | ✅ 완료 |
+
+---
+
+#### S68-01: Search plugins Gradle 빌드 검증 (2026-04-20)
+- `search-plugins/` 디렉토리 구조 점검 (common/elasticsearch/opensearch 모듈)
+- Gradle 빌드 블로커 식별: Gradle wrapper 부재, native/ 하위 빈 디렉토리, OpenSearch 3.x Settings 패키지 이름 변경
+- 빌드 준비 상태 25% → 워크플로우에서 wrapper 자동 생성으로 보강
+
+#### S68-02: Search plugins CI/CD 워크플로우 (2026-04-20)
+- `.github/workflows/search-plugins.yml` 검증 (346줄)
+- 5개 플랫폼 native 빌드 (linux-x64/arm64, darwin-x64/arm64, windows-x64)
+- Gradle wrapper 자동 생성 스텝 추가 (gradle wrapper --gradle-version=8.10)
+- ES 8.11-8.15, OS 3.0.0 Docker 통합 테스트
+
+#### S68-03: napi-rs 3.x 마이그레이션 리서치 (2026-04-20)
+- `docs/research/napi-rs-3x-migration.md` 작성
+- napi 3.8.5 안정, @napi-rs/cli 3.6.2, napi-build는 2.x 안정 라인 유지
+- mecab-ko-node는 ThreadsafeFunction/JsValue 미사용 → SMALL effort, LOW risk
+
+#### S68-04: napi-rs 3.x 업그레이드 구현 (2026-04-20)
+- Cargo.toml: `napi = "3"`, `napi-derive = "3"`, `napi-build = "2.3"`
+- package.json: `binaryName` 필드, flat `targets` 배열, `--manifest-path`, `@napi-rs/cli ^3.6.2`
+- Rust 소스 변경 0건, 3/3 unit 테스트 통과, 전체 workspace 빌드 통과
+
+#### S68-05: 도메인 오버레이 사전 설계 (2026-04-20)
+- `rust/crates/mecab-ko-dict/src/domain.rs` 신규 (DomainId, DomainDictionary, DomainStack)
+- 우선순위 기반 다중 UserDictionary 스택
+- `add_domain` / `remove_domain` / `lookup_ordered` API
+
+#### S68-06: 핫리로드 프로토타입 ArcSwap + notify (2026-04-20)
+- `rust/crates/mecab-ko-dict/src/hot_reload_v2.rs` 신규 (feature-gated `hot-reload-v2`)
+- `arc-swap = "1.9"` 의존성 추가, wait-free 읽기 경로
+- 114 tests passed (기존 107 + 신규 7), clippy clean
+
+#### S68-07: v0.7.0 마이그레이션 가이드 업데이트 (2026-04-20)
+- `docs/MIGRATION_v0.7.md` 메모리 수치 정정 (~130MB → ~34MB, -77%)
+- 섹션 9 (바이너리 다운로드), 10 (rustls-tls), 11 (Python 3.8 EOL) 추가
+
+#### S68-08: v0.7.0 릴리스 블로그 포스트 (2026-04-20)
+- `docs/blog/2026-04-20-v070-release.md` 신규
+- LazyEntries 딥다이브 (가변 길이 인코딩, 120MB → 34MB)
+- 5 플랫폼 릴리스 바이너리 안내
+
+#### S68-09: PLAN.md/PROGRESS.md Sprint 68 기록 (2026-04-20)
+- 현재 문서 업데이트 완료
+
+---
 
 ### ✅ Sprint 67 - 보안 및 의존성 정리
 
