@@ -10,6 +10,7 @@
 **순수 Rust로 작성된 고성능 한국어 형태소 분석기**
 
 MeCab-Ko는 [은전한닢 프로젝트](https://bitbucket.org/eunjeon/mecab-ko)의 MeCab-Ko 한국어 형태소 분석기를 Rust로 재구현한 프로젝트입니다. 
+
 메모리 안전성, 크로스 플랫폼 지원(WebAssembly 포함), Python/Node.js/브라우저 바인딩을 제공합니다.
 
 ## 주요 성과
