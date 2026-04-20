@@ -103,14 +103,10 @@ jobs:
       - name: Build CLI release (cross)
         if: matrix.target == 'aarch64-unknown-linux-gnu'
         run: cross build --manifest-path rust/Cargo.toml --release --target ${{ matrix.target }} --bin mecab
-        env:
-          RUSTFLAGS: "-C target-cpu=generic"
 
       - name: Build CLI release (native)
         if: matrix.target != 'aarch64-unknown-linux-gnu'
         run: cargo build --manifest-path rust/Cargo.toml --release --target ${{ matrix.target }} --bin mecab
-        env:
-          RUSTFLAGS: "-C target-cpu=generic"
 
       - name: Create release assets directory
         run: mkdir -p release-assets
