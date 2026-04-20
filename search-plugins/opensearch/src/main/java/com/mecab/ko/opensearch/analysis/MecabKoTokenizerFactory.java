@@ -10,8 +10,8 @@ import org.opensearch.index.IndexSettings;
 import org.opensearch.index.analysis.AbstractTokenizerFactory;
 
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -68,10 +68,10 @@ public class MecabKoTokenizerFactory extends AbstractTokenizerFactory {
         String decompoundModeStr = settings.get("decompound_mode", "none");
         this.decompoundMode = DecompoundMode.fromString(decompoundModeStr);
 
-        // Parse user dictionary path
+        // Parse user dictionary path (OpenSearch 3.x: configDir replaces configFile)
         String userDictStr = settings.get("user_dictionary");
         if (userDictStr != null && !userDictStr.isEmpty()) {
-            Path dictPath = env.configFile().resolve(userDictStr);
+            Path dictPath = env.configDir().resolve(userDictStr);
             if (dictPath.toFile().exists()) {
                 this.userDictionaryPath = dictPath;
             } else {
@@ -82,16 +82,17 @@ public class MecabKoTokenizerFactory extends AbstractTokenizerFactory {
             this.userDictionaryPath = null;
         }
 
-        // Parse stoptags
-        String[] stoptagsArray = settings.getAsArray("stoptags", null);
-        if (stoptagsArray != null) {
-            this.stoptags = new HashSet<>(Arrays.asList(stoptagsArray));
+        // Parse stoptags (OpenSearch 3.x: getAsList replaces getAsArray)
+        List<String> stoptagsList = settings.getAsList("stoptags");
+        if (!stoptagsList.isEmpty()) {
+            this.stoptags = new HashSet<>(stoptagsList);
         } else {
             this.stoptags = null;
         }
 
         // Parse output_unknown_unigrams
-        this.outputUnknownUnigrams = settings.getAsBoolean("output_unknown_unigrams", false);
+        this.outputUnknownUnigrams = Boolean.TRUE.equals(
+            settings.getAsBoolean("output_unknown_unigrams", false));
 
         logger.info("Created MeCab-Ko tokenizer factory '{}' with mode={}, userDict={}, stoptags={}, unknownUnigrams={}",
                     name, decompoundMode,

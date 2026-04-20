@@ -10,8 +10,8 @@ import org.opensearch.index.IndexSettings;
 import org.opensearch.index.analysis.AbstractIndexAnalyzerProvider;
 
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -57,19 +57,20 @@ public class MecabKoAnalyzerProvider extends AbstractIndexAnalyzerProvider<Analy
         Path userDictPath = null;
         String userDictStr = settings.get("user_dictionary");
         if (userDictStr != null && !userDictStr.isEmpty()) {
-            userDictPath = env.configFile().resolve(userDictStr);
+            userDictPath = env.configDir().resolve(userDictStr);
             if (!userDictPath.toFile().exists()) {
                 logger.warn("User dictionary not found: {}", userDictPath);
                 userDictPath = null;
             }
         }
 
-        // Parse stoptags
-        String[] stoptagsArray = settings.getAsArray("stoptags", DEFAULT_STOPTAGS);
-        Set<String> stoptags = new HashSet<>(Arrays.asList(stoptagsArray));
+        // Parse stoptags (OpenSearch 3.x: getAsList replaces getAsArray)
+        List<String> stoptagsList = settings.getAsList("stoptags", List.of(DEFAULT_STOPTAGS));
+        Set<String> stoptags = new HashSet<>(stoptagsList);
 
         // Parse output_unknown_unigrams
-        boolean outputUnknownUnigrams = settings.getAsBoolean("output_unknown_unigrams", false);
+        boolean outputUnknownUnigrams = Boolean.TRUE.equals(
+            settings.getAsBoolean("output_unknown_unigrams", false));
 
         logger.info("Creating MeCab-Ko analyzer '{}' with mode={}, stoptags={}, userDict={}",
                     name, decompoundMode, stoptags,

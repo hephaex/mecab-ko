@@ -6,6 +6,7 @@ import com.mecab.ko.opensearch.analysis.MecabKoTokenizerFactory;
 import com.mecab.ko.search.jni.NativeLibraryLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.opensearch.common.settings.Settings;
 import org.opensearch.index.analysis.AnalyzerProvider;
 import org.opensearch.index.analysis.TokenFilterFactory;
 import org.opensearch.index.analysis.TokenizerFactory;
@@ -69,8 +70,10 @@ public class MecabKoPlugin extends Plugin implements AnalysisPlugin {
     /**
      * Plugin constructor.
      * Loads native library on plugin initialization.
+     *
+     * @param settings node-level settings (OpenSearch 3.x requires Settings parameter)
      */
-    public MecabKoPlugin() {
+    public MecabKoPlugin(Settings settings) {
         logger.info("Initializing MeCab-Ko OpenSearch Plugin");
         try {
             NativeLibraryLoader.load();

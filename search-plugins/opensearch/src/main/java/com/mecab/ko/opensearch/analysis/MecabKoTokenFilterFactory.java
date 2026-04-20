@@ -9,8 +9,8 @@ import org.opensearch.env.Environment;
 import org.opensearch.index.IndexSettings;
 import org.opensearch.index.analysis.AbstractTokenFilterFactory;
 
-import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -80,9 +80,9 @@ public class MecabKoTokenFilterFactory extends AbstractTokenFilterFactory {
         this.filterType = filterType;
 
         if (filterType == FilterType.PART_OF_SPEECH) {
-            // Parse stoptags for POS filter
-            String[] stoptagsArray = settings.getAsArray("stoptags", DEFAULT_STOPTAGS);
-            this.stoptags = new HashSet<>(Arrays.asList(stoptagsArray));
+            // Parse stoptags for POS filter (OpenSearch 3.x: getAsList replaces getAsArray)
+            List<String> stoptagsList = settings.getAsList("stoptags", List.of(DEFAULT_STOPTAGS));
+            this.stoptags = new HashSet<>(stoptagsList);
             logger.info("Created MeCab-Ko POS filter '{}' with stoptags={}",
                         name, stoptags);
         } else {
