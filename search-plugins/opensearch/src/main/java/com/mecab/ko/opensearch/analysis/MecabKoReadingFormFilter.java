@@ -1,5 +1,6 @@
 package com.mecab.ko.opensearch.analysis;
 
+import com.mecab.ko.search.core.ReadingFormAttribute;
 import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
@@ -11,18 +12,20 @@ import java.io.IOException;
  * Token filter that converts Korean text to reading form (pronunciation)
  * for OpenSearch/Lucene 10.x.
  *
- * <p>This filter attempts to convert Hanja (한자) and other special forms
- * to their Korean pronunciation. For tokens that don't have a reading form,
- * the original surface form is kept.
+ * <p>This filter replaces the surface form of a token with its reading form
+ * (pronunciation) when one is available. Reading forms are produced by the
+ * native MeCab-Ko analyzer during tokenization and carried through the token
+ * stream via {@link ReadingFormAttribute}.
  *
- * <p>Note: Full reading form conversion requires integration with the
- * native MeCab-Ko library's reading feature. This implementation provides
- * the framework for that integration.
+ * <p>Common use cases include converting Hanja (한자) to their Korean
+ * pronunciation. Tokens that do not have a reading form, or whose reading
+ * form matches the surface form, are left unchanged.
  */
 public class MecabKoReadingFormFilter extends TokenFilter {
 
     private final CharTermAttribute termAttribute = addAttribute(CharTermAttribute.class);
     private final KeywordAttribute keywordAttribute = addAttribute(KeywordAttribute.class);
+    private final ReadingFormAttribute readingAttribute = addAttribute(ReadingFormAttribute.class);
 
     /**
      * Create reading form filter.
@@ -44,32 +47,17 @@ public class MecabKoReadingFormFilter extends TokenFilter {
             return true;
         }
 
-        // Get current term
-        String term = termAttribute.toString();
+        // Get reading form from the attribute set by the tokenizer
+        String reading = readingAttribute.getReading();
 
-        // Get reading form from native library (if available)
-        String reading = getReadingForm(term);
-
-        // Replace with reading form if different
-        if (reading != null && !reading.isEmpty() && !reading.equals(term)) {
-            termAttribute.setEmpty().append(reading);
+        // Replace with reading form if it differs from the surface form
+        if (reading != null && !reading.isEmpty()) {
+            String term = termAttribute.toString();
+            if (!reading.equals(term)) {
+                termAttribute.setEmpty().append(reading);
+            }
         }
 
         return true;
-    }
-
-    /**
-     * Get reading form for a term.
-     *
-     * <p>This method calls into the native library to retrieve
-     * the reading form from MeCab-Ko's analysis.
-     *
-     * @param term original term
-     * @return reading form or null if not available
-     */
-    private String getReadingForm(String term) {
-        // TODO: Integrate with native library for reading form conversion
-        // This would call NativeAnalyzer.getReadingForm(term) when implemented
-        return null;
     }
 }

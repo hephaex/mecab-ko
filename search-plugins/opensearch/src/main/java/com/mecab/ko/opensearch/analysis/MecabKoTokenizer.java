@@ -2,6 +2,7 @@ package com.mecab.ko.opensearch.analysis;
 
 import com.mecab.ko.search.core.DecompoundMode;
 import com.mecab.ko.search.core.MecabKoTokenizerBase;
+import com.mecab.ko.search.core.ReadingFormAttribute;
 import com.mecab.ko.search.core.TokenInfo;
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
@@ -26,6 +27,7 @@ public class MecabKoTokenizer extends Tokenizer {
     private final OffsetAttribute offsetAtt = addAttribute(OffsetAttribute.class);
     private final PositionIncrementAttribute posIncrAtt = addAttribute(PositionIncrementAttribute.class);
     private final TypeAttribute typeAtt = addAttribute(TypeAttribute.class);
+    private final ReadingFormAttribute readingAtt = addAttribute(ReadingFormAttribute.class);
 
     /**
      * Create tokenizer with default settings.
@@ -116,6 +118,7 @@ public class MecabKoTokenizer extends Tokenizer {
             offsetAtt.setOffset(token.getStartOffset(), token.getEndOffset());
             posIncrAtt.setPositionIncrement(token.getPositionIncrement());
             typeAtt.setType(token.getPosTag());
+            readingAtt.setReading(token.getReading());
             return true;
         }
     }
