@@ -15,7 +15,7 @@ description = "Korean National Institute dictionary API client for MeCab-Ko"
 
 [dependencies]
 # HTTP client
-reqwest = { version = "0.12", features = ["json"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 
 # Async runtime
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
