@@ -15,6 +15,7 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
+  RELEASE_TAG: ${{ github.ref_name != 'main' && github.ref_name || format('v{0}', github.event.inputs.tag) }}
 
 jobs:
   create-release:
@@ -27,7 +28,7 @@ jobs:
       - name: Extract changelog for this version
         id: changelog
         run: |
-          TAG="${{ github.ref_name || format('v{0}', github.event.inputs.tag) }}"
+          TAG="${{ env.RELEASE_TAG }}"
           VERSION="${TAG#v}"
           if [ -f CHANGELOG.md ]; then
             BODY=$(awk "/^## \[${VERSION}\]/{found=1; next} /^## \[/{if(found) exit} found{print}" CHANGELOG.md)
@@ -45,8 +46,8 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name || format('v{0}', github.event.inputs.tag) }}
-          name: Release ${{ github.ref_name || github.event.inputs.tag }}
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: Release ${{ env.RELEASE_TAG }}
           body: ${{ steps.changelog.outputs.body }}
           draft: false
           prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
@@ -131,7 +132,7 @@ jobs:
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name || format('v{0}', github.event.inputs.tag) }}
+          tag_name: ${{ env.RELEASE_TAG }}
           files: |
             release-assets/${{ matrix.asset_name }}.tar.gz
             release-assets/${{ matrix.asset_name }}.zip
