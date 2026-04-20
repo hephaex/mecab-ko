@@ -57,7 +57,7 @@ docker pull ghcr.io/hephaex/mecab-ko:latest
 
 ```toml
 [dependencies]
-mecab-ko = "0.6"
+mecab-ko = "0.7"
 ```
 
 ```rust
@@ -279,7 +279,7 @@ mecab evaluate --input test.tsv --dicdir ./dict-output --sejong
 
 ## 성능
 
-### KPI (v0.6.0 기준)
+### KPI (v0.7.0 기준)
 
 | 지표 | 목표 | 현재 |
 |------|------|------|
