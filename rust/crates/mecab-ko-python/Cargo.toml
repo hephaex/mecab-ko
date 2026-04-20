@@ -21,7 +21,7 @@ test = false  # Skip lib tests for cdylib (PyO3 requires Python runtime)
 doc = false   # Skip docs to avoid filename collision with root mecab-ko crate
 
 [dependencies]
-mecab-ko-core = { version = "0.6.0", path = "../mecab-ko-core" }
+mecab-ko-core = { version = "0.7.0", path = "../mecab-ko-core" }
 pyo3 = { workspace = true }
 parking_lot = "0.12"
 
