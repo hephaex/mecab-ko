@@ -89,7 +89,7 @@ jobs:
           targets: ${{ matrix.target }}
 
       - name: Install cross (for cross-compilation)
-        if: matrix.target != 'x86_64-pc-windows-msvc' && matrix.target != 'x86_64-apple-darwin' && matrix.target != 'aarch64-apple-darwin'
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
         run: cargo install cross
 
       - name: Cache cargo build
@@ -100,7 +100,14 @@ jobs:
           restore-keys: |
             ${{ matrix.os }}-cargo-release-${{ matrix.target }}-
 
-      - name: Build CLI release
+      - name: Build CLI release (cross)
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: cross build --manifest-path rust/Cargo.toml --release --target ${{ matrix.target }} --bin mecab
+        env:
+          RUSTFLAGS: "-C target-cpu=generic"
+
+      - name: Build CLI release (native)
+        if: matrix.target != 'aarch64-unknown-linux-gnu'
         run: cargo build --manifest-path rust/Cargo.toml --release --target ${{ matrix.target }} --bin mecab
         env:
           RUSTFLAGS: "-C target-cpu=generic"
