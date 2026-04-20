@@ -1,6 +1,6 @@
 {
   "name": "@mecab-ko/node",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Node.js bindings for MeCab-Ko Korean morphological analyzer",
   "main": "index.js",
   "types": "index.d.ts",
@@ -26,21 +26,18 @@
     "README.md"
   ],
   "napi": {
-    "name": "mecab-ko-node",
-    "triples": {
-      "defaults": true,
-      "additional": [
-        "x86_64-apple-darwin",
-        "aarch64-apple-darwin",
-        "x86_64-pc-windows-msvc",
-        "x86_64-unknown-linux-gnu",
-        "aarch64-unknown-linux-gnu"
-      ]
-    }
+    "binaryName": "mecab-ko-node",
+    "targets": [
+      "x86_64-apple-darwin",
+      "aarch64-apple-darwin",
+      "x86_64-pc-windows-msvc",
+      "x86_64-unknown-linux-gnu",
+      "aarch64-unknown-linux-gnu"
+    ]
   },
   "scripts": {
-    "build": "napi build --platform --release --cargo-name mecab-ko-node",
-    "build:debug": "napi build --platform --cargo-name mecab-ko-node",
+    "build": "napi build --platform --release --manifest-path ./Cargo.toml",
+    "build:debug": "napi build --platform --manifest-path ./Cargo.toml",
     "build:all": "./scripts/build-all.sh",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -53,7 +50,7 @@
     "example:ts": "npx tsx examples/typescript-example.ts"
   },
   "devDependencies": {
-    "@napi-rs/cli": "^2.18.0",
+    "@napi-rs/cli": "^3.6.2",
     "@types/node": "^20.10.0",
     "typescript": "^5.3.0",
     "vitest": "^1.1.0"

@@ -22,13 +22,13 @@ doc = false  # Skip docs for Node.js bindings (FFI crate, not meant for Rust doc
 [dependencies]
 mecab-ko-core = { version = "0.7.0", path = "../mecab-ko-core" }
 # napi-rs for Node.js bindings
-napi = "2.16"
-napi-derive = "2.16"
+napi = "3"
+napi-derive = "3"
 # Thread-safe locking
 parking_lot = "0.12"
 
 [build-dependencies]
-napi-build = "2.1"
+napi-build = "2.3"
 
 # Override workspace lints for FFI code
 [lints.rust]
