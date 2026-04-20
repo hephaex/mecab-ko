@@ -13,8 +13,8 @@ MeCab-Ko는 [은전한닢 프로젝트](https://bitbucket.org/eunjeon/mecab-ko)�
 
 ## 주요 성과
 
-| 지표 | v0.5.0 | v0.6.0 | v0.7.0-dev |
-|------|--------|--------|------------|
+| 지표 | v0.5.0 | v0.6.0 | v0.7.0 |
+|------|--------|--------|--------|
 | Token Accuracy | 100.0% | 100.0% | **100.0%** |
 | 테스트 문장 | 500개 | 1,100개 | **1,100개** |
 | 처리 속도 | ~238K tok/sec | ~680K tok/sec | **~680K tok/sec** |
@@ -359,13 +359,13 @@ cargo run -p mecab-ko-dict-builder -- build \
 
 ## 로드맵
 
-### v0.6.0 (현재 릴리스)
+### v0.6.0
 - ✅ SIMD 가속 Viterbi 알고리즘 (283% 성능 향상)
 - ✅ 1,100문장 테스트셋, 100% Token Accuracy
 - ✅ 멀티플랫폼 배포 (crates.io, PyPI, npm, Docker)
 - ✅ 세종 코퍼스 호환 모드, N-best 경로 탐색
 
-### v0.7.0 (개발 중)
+### v0.7.0 (현재 릴리스)
 - ✅ LazyEntries 메모리 최적화 (150MB → 34MB, -77%)
 - ✅ 메모리 프로파일러 (jemalloc-ctl 연동)
 - ✅ Clippy zero warnings, 보안 취약점 제로
