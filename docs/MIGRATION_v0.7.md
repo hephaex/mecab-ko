@@ -11,7 +11,7 @@ v0.7.0부터 `LoadOptions::default()`는 **LazyEntries 모드**를 기본으로 
 | 버전 | 기본 로딩 모드 | 메모리 사용량 |
 |------|----------------|---------------|
 | v0.6.x | Eager (전체 로드) | ~150MB |
-| v0.7.0 | Lazy (지연 로드) | ~130MB |
+| v0.7.0 | Lazy (지연 로드) | **~34MB (-77%)** |
 
 **기존 동작 유지 방법:**
 
@@ -140,7 +140,7 @@ pub struct LoadOptions {
 - **초기화**: 빠름 (인덱스만 로드)
 - **첫 조회**: 느림 (디스크에서 로드)
 - **이후 조회**: 빠름 (LRU 캐시)
-- **메모리**: 낮음 (~130MB)
+- **메모리**: 낮음 (**~34MB**, 기존 대비 -77%)
 - **용도**: 배치 처리, 메모리 제한 환경
 
 ### 6. 코드 예제
@@ -246,15 +246,70 @@ let opts = LoadOptions {
 };
 ```
 
+### 9. 사전 배포본 (GitHub Releases)
+
+v0.7.0부터 GitHub Releases에 5개 플랫폼의 사전 빌드 바이너리가 제공됩니다.
+
+#### 다운로드 URL 패턴
+
+```
+https://github.com/hephaex/mecab-ko/releases/download/v0.7.0/<asset>
+```
+
+| 플랫폼 | 아셋 파일명 |
+|--------|-------------|
+| Linux x86_64 | `mecab-ko-x86_64-linux-gnu.tar.gz` |
+| Linux ARM64 | `mecab-ko-aarch64-linux-gnu.tar.gz` |
+| macOS x86_64 | `mecab-ko-x86_64-darwin.tar.gz` |
+| macOS ARM64 (Apple Silicon) | `mecab-ko-aarch64-darwin.tar.gz` |
+| Windows x86_64 | `mecab-ko-x86_64-windows-msvc.zip` |
+
+#### 설치 예시 (Linux x86_64)
+
+```bash
+curl -LO https://github.com/hephaex/mecab-ko/releases/download/v0.7.0/mecab-ko-x86_64-linux-gnu.tar.gz
+tar xzf mecab-ko-x86_64-linux-gnu.tar.gz
+chmod +x mecab-ko-x86_64-linux-gnu
+./mecab-ko-x86_64-linux-gnu --version
+```
+
+---
+
+### 10. mecab-ko-dict-sync: TLS 백엔드 변경
+
+`mecab-ko-dict-sync` 크레이트가 `native-tls`에서 `rustls-tls`로 전환되었습니다.
+
+**변경 배경**: RUSTSEC-2026-0049 (rustls-webpki CRL 취약점) 패치 이후 rustls 스택을 완전히 통일하여 OpenSSL 런타임 의존성을 제거했습니다.
+
+**영향 범위**: `mecab-ko-dict-sync`를 직접 의존하는 경우에만 해당됩니다.
+
+```toml
+# v0.6.x (Cargo.toml)
+reqwest = { version = "0.12", features = ["json", "native-tls"] }
+
+# v0.7.0 (Cargo.toml) - rustls-tls로 변경됨
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+```
+
+OpenSSL 런타임이 없는 컨테이너 환경(Alpine, distroless)에서 동작합니다. `native-tls` 기반 커스텀 reqwest 설정을 사용하는 경우 `rustls-tls`로 교체하세요.
+
+---
+
+### 11. Python 지원 버전 안내
+
+Python 3.8은 2024년 10월 공식 EOL에 도달했습니다. v0.7.0 테스트 매트릭스는 3.8을 포함하지만, 다음 마이너 릴리스(v0.8.0 예정)에서 **최소 버전이 3.9로 상향**될 예정입니다.
+
+**권장 조치**: Python 3.9 이상으로 업그레이드하세요.
+
 ---
 
 ## 버전 히스토리
 
 | 버전 | 날짜 | 주요 변경 |
 |------|------|-----------|
-| v0.7.0 | 2026-03-21 | LazyEntries 기본 활성화, EntryStore 추상화 |
-| v0.6.0 | 2026-03-19 | Eager 로딩 기본, LazyEntries 옵션 |
+| v0.7.0 | 2026-04-20 | LazyEntries 기본 활성화 (-77% 메모리), 5-플랫폼 바이너리, rustls-tls 전환, 사전 파이프라인 |
+| v0.6.0 | 2025-12-01 | Eager 로딩 기본, LazyEntries 옵션 |
 
 ---
 
-문의사항은 GitHub Issues에 등록해 주세요: https://github.com/user/mecab-ko/issues
+문의사항은 GitHub Issues에 등록해 주세요: https://github.com/hephaex/mecab-ko/issues
