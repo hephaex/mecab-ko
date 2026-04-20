@@ -10,6 +10,9 @@ on:
         description: 'Tag to release (without v prefix)'
         required: true
 
+permissions:
+  contents: write
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -17,32 +20,33 @@ jobs:
   create-release:
     name: Create Release
     runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
-      release_id: ${{ steps.create_release.outputs.id }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Generate changelog
+      - name: Extract changelog for this version
         id: changelog
         run: |
+          TAG="${{ github.ref_name || format('v{0}', github.event.inputs.tag) }}"
+          VERSION="${TAG#v}"
           if [ -f CHANGELOG.md ]; then
-            echo "body<<EOF" >> $GITHUB_OUTPUT
-            head -50 CHANGELOG.md >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
+            BODY=$(awk "/^## \[${VERSION}\]/{found=1; next} /^## \[/{if(found) exit} found{print}" CHANGELOG.md)
+            if [ -z "$BODY" ]; then
+              BODY="See commit history for changes"
+            fi
           else
-            echo "body=See commit history for changes" >> $GITHUB_OUTPUT
+            BODY="See commit history for changes"
           fi
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          echo "$BODY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name || format('v{0}', github.event.inputs.tag) }}
-          release_name: Release ${{ github.ref_name || github.event.inputs.tag }}
+          name: Release ${{ github.ref_name || github.event.inputs.tag }}
           body: ${{ steps.changelog.outputs.body }}
           draft: false
           prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
@@ -121,27 +125,13 @@ jobs:
           powershell Compress-Archive -Path ${{ matrix.asset_name }}.exe -DestinationPath ${{ matrix.asset_name }}.zip
           dir
 
-      - name: Upload Linux/macOS asset
-        if: runner.os != 'Windows'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
         with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./release-assets/${{ matrix.asset_name }}.tar.gz
-          asset_name: ${{ matrix.asset_name }}.tar.gz
-          asset_content_type: application/gzip
-
-      - name: Upload Windows asset
-        if: runner.os == 'Windows'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./release-assets/${{ matrix.asset_name }}.zip
-          asset_name: ${{ matrix.asset_name }}.zip
-          asset_content_type: application/zip
+          tag_name: ${{ github.ref_name || format('v{0}', github.event.inputs.tag) }}
+          files: |
+            release-assets/${{ matrix.asset_name }}.tar.gz
+            release-assets/${{ matrix.asset_name }}.zip
 
   publish-crates:
     name: Publish to crates.io
