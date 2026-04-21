@@ -30,6 +30,10 @@ serde.workspace = true
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
 indicatif.workspace = true
 
+[features]
+# Enable wait-free hot-reload for domain dictionaries (ArcSwap-based)
+hot-reload-v2 = ["mecab-ko-core/hot-reload-v2"]
+
 [dev-dependencies]
 tempfile.workspace = true
 

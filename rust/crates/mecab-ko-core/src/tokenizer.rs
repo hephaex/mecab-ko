@@ -331,6 +331,19 @@ impl Tokenizer {
         self.dictionary.set_user_dictionary(user_dict);
     }
 
+    /// Hot-reload v2 사전 설정 (in-place)
+    ///
+    /// 이미 생성된 토크나이저에 `HotReloadDictV2` 인스턴스를 설정합니다.
+    /// 도메인 사전의 동적 리로드를 활성화합니다.
+    ///
+    /// # Arguments
+    ///
+    /// * `hr` - `HotReloadDictV2` 인스턴스
+    #[cfg(feature = "hot-reload-v2")]
+    pub fn set_hot_reload(&mut self, hr: std::sync::Arc<mecab_ko_dict::hot_reload_v2::HotReloadDictV2>) {
+        self.dictionary.set_hot_reload(hr);
+    }
+
     /// 띄어쓰기 패널티 설정
     ///
     /// # Arguments

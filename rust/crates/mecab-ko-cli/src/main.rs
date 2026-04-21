@@ -447,6 +447,16 @@ struct Args {
     #[arg(long, value_name = "ITERATIONS")]
     benchmark: Option<usize>,
 
+    /// 도메인 사전 핫 리로드 활성화 (파일 변경 시 자동 갱신)
+    #[cfg(feature = "hot-reload-v2")]
+    #[arg(long = "hot-reload")]
+    hot_reload: bool,
+
+    /// 도메인 사전 파일 경로 (여러 개 지정 가능, CSV 형식)
+    #[cfg(feature = "hot-reload-v2")]
+    #[arg(long = "domain-dict", value_name = "PATH")]
+    domain_dicts: Vec<PathBuf>,
+
     /// 입력 파일 (여러 개 지정 가능, 배치 처리용)
     #[arg(short = 'i', long = "input-file")]
     input_files: Vec<PathBuf>,
@@ -707,6 +717,10 @@ struct AnalysisContext {
     tokenizer: RefCell<Tokenizer>,
     #[allow(dead_code)]
     user_dict: Option<UserDictionary>,
+    /// Keep the hot-reload instance alive for the lifetime of the context.
+    #[cfg(feature = "hot-reload-v2")]
+    #[allow(dead_code)]
+    hot_reload: Option<std::sync::Arc<mecab_ko_dict::hot_reload_v2::HotReloadDictV2>>,
     args: Args,
 }
 
@@ -763,9 +777,66 @@ impl AnalysisContext {
             None
         };
 
+        // Hot-reload v2: 도메인 ���전 로드 및 파일 감시 설정
+        #[cfg(feature = "hot-reload-v2")]
+        let hot_reload = if args.domain_dicts.is_empty() {
+            None
+        } else {
+            use mecab_ko_dict::domain::{DomainId, DomainStack};
+            use mecab_ko_dict::hot_reload_v2::HotReloadDictV2;
+            use std::sync::Arc;
+
+            let mut stack = DomainStack::new();
+
+            for (i, path) in args.domain_dicts.iter().enumerate() {
+                let mut dict = UserDictionary::new();
+                dict.load_from_csv(path).with_context(|| {
+                    format!("Failed to load domain dictionary: {}", path.display())
+                })?;
+
+                let domain_name = path
+                    .file_stem()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or("unknown")
+                    .to_string();
+
+                let entry_count = dict.len();
+                // Priority: order of --domain-dict arguments (first = highest priority)
+                #[allow(clippy::cast_possible_truncation)]
+                let priority = i as u8;
+
+                stack.add_domain(
+                    DomainId(domain_name.clone()),
+                    priority,
+                    Arc::new(dict),
+                    Some(path.clone()),
+                );
+
+                if !args.quiet {
+                    eprintln!(
+                        "Loaded domain dictionary '{domain_name}': {entry_count} entries (priority {priority})"
+                    );
+                }
+            }
+
+            let hr = Arc::new(HotReloadDictV2::new(stack));
+            tokenizer.set_hot_reload(Arc::clone(&hr));
+
+            if args.hot_reload && !args.quiet {
+                let count = args.domain_dicts.len();
+                eprintln!(
+                    "Hot-reload enabled: watching {count} domain dictionaries for changes"
+                );
+            }
+
+            Some(hr)
+        };
+
         Ok(Self {
             tokenizer: RefCell::new(tokenizer),
             user_dict,
+            #[cfg(feature = "hot-reload-v2")]
+            hot_reload,
             args,
         })
     }
