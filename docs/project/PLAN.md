@@ -1,10 +1,24 @@
-# 현재 스프린트: 다음 스프린트 계획 예정
+# ✅ 완료된 스프린트: Phase 36 - Sprint 70 (Verification Only — 코드 작성 0)
 
-Sprint 69 완료. 다음 방향:
-- JDK 17 설치 후 검색 플러그인 Gradle 컴파일 검증
-- Hot-reload v2 CLI 통합 (mecab-ko-cli에서 --hot-reload 플래그)
-- npm 실제 배포 테스트 (dry-run → npm-v0.7.0 태그)
-- core tokenize() 빈 배열 이슈 디버깅 (Node 바인딩 테스트 7건 실패 원인)
+## 🎯 Sprint 70 목표
+외부 의존 검증만 수행. 새 코드 작성 없이 기존 구현의 실제 동작 확인.
+
+## Sprint 70 작업 목록 (5/5) ✅
+
+### V1: Java/Gradle 검증
+- [x] S70-01: JDK 21 설치 + Gradle 3 errors 수정 + BUILD SUCCESSFUL ✅
+
+### V2: Node 사전 로딩 검증
+- [x] S70-02: MECAB_DICDIR 설정 후 Node 31/31 테스트 통과 확인 ✅
+
+### V3: npm 배포 dry-run
+- [x] S70-03: `npm publish --dry-run` → @mecab-ko/node@0.7.0 tarball 7.2kB ✅
+
+### V4: Hot-reload E2E
+- [x] S70-04: CLI `--domain-dict` → 도메인 사전 토큰 결과 변경 확인 ✅
+
+### V5: 최종 정리
+- [x] S70-05: 검증 결과 기록 + 블로커 0건 ✅
 
 ---
 

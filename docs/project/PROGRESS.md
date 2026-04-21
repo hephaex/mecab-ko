@@ -1,6 +1,57 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-21 (Sprint 69 완료)
+## 마지막 업데이트: 2026-04-21 (Sprint 70 완료)
+
+### ✅ Sprint 70 - External Dependency Verification (코드 작성 0, 검증 전용)
+
+**목표:** Sprint 68-69에서 누적된 외부 의존 검증 부채 해결
+
+| Task | Description | Status | Result |
+|------|-------------|--------|--------|
+| S70-01 | Gradle compile (ES 8.x + OS 3.x) | ✅ 완료 | JDK 21 설치, 3 errors 수정 후 BUILD SUCCESSFUL |
+| S70-02 | Node tests with full dictionary | ✅ 완료 | 31/31 PASS (MECAB_DICDIR 설정) |
+| S70-03 | npm publish --dry-run | ✅ 완료 | @mecab-ko/node@0.7.0, 7.2kB tarball |
+| S70-04 | CLI --hot-reload --domain-dict E2E | ✅ 완료 | 도메인 사전 로드 + 토큰 결과 검증 |
+| S70-05 | 결과 기록 | ✅ 완료 | |
+
+---
+
+#### 검증 상세
+
+**S70-01: Gradle Compile**
+- JDK 17 + JDK 21 설치 (brew)
+- 발견된 오류 3종:
+  1. `common/` 모듈에 Lucene dependency 누락 → `compileOnly("lucene-core:9.8.0")` 추가
+  2. `protected` 메서드를 cross-package에서 호출 → `public`으로 변경
+  3. ES 8.x API: `getAsArray()→getAsList()`, constructor `(IndexSettings, String, Settings)→(String, Settings)`
+  4. OpenSearch 3.x: JDK 21 필요 → `sourceCompatibility = JavaVersion.VERSION_21`
+- 결과: `:common:compileJava` + `:elasticsearch:compileJava` + `:opensearch:compileJava` 모두 BUILD SUCCESSFUL
+- 커밋: `3762a0f`
+
+**S70-02: Node Tests**
+- `MECAB_DICDIR=/Users/mare/Simon/mecab-ko/data/dict-output` 설정 시 31/31 PASS
+- mini-dict fallback 경고 작동 확인 (MECAB_DICDIR 미설정 시)
+
+**S70-03: npm publish --dry-run**
+- `@mecab-ko/node@0.7.0` tarball 생성 성공 (7.2kB)
+- 파일 구성: README.md, index.d.ts, index.js, package.json
+- platform binary 경고 (expected — CI에서 cross-compile 후 포함됨)
+
+**S70-04: CLI Hot-reload + Domain Dict E2E**
+- `mecab --domain-dict /tmp/test_domain.csv "뤼이드가..."` 실행
+- Without domain dict: "뤼이드" → "뤼" + "이드" (분리)
+- With domain dict `뤼이드,NNP,-5000`: "뤼이드" → "뤼이드/NNP" (단일 토큰)
+- 도메인 사전이 Viterbi lattice에 정상 반영됨을 확인
+
+#### 잔여 블로커: 없음
+
+Sprint 68-69에서 식별된 모든 외부 의존 검증 항목이 해결됨.
+- ~~JDK 미설치~~ → JDK 17+21 설치 완료
+- ~~Gradle 컴파일 미검증~~ → 3모듈 모두 PASS
+- ~~npm dry-run 미실행~~ → tarball 생성 확인
+- ~~도메인 사전 E2E 미테스트~~ ��� 토큰 ��과 변경 검증 완료
+
+---
 
 ### ✅ Sprint 69 - Integration & Verification
 
