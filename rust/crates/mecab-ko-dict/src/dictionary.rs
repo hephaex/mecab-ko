@@ -927,17 +927,33 @@ impl DictionaryLoader {
             }
         }
 
-        // 테스트 환경: workspace의 test-fixtures/mini-dict 탐색
+        // 테스트/개발 환경: workspace의 test-fixtures/mini-dict 탐색
+        // WARNING: This is a sparse test dictionary with only ~21 entries and a
+        // 25x25 connection matrix.  Words not in the mini-dict return empty token
+        // arrays because the unknown handler uses context IDs up to 3565, which
+        // exceed the matrix dimensions and produce i32::MAX connection costs,
+        // causing the Viterbi backward pass to return no path.
+        // This fallback must NOT be used for production Node.js/Python builds;
+        // ensure MECAB_DICDIR is set or the full dictionary is installed.
         {
             let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
             let test_dict = manifest_dir.join("../../test-fixtures/mini-dict");
             if test_dict.is_dir() {
+                eprintln!(
+                    "[mecab-ko WARNING] No system dictionary found; falling back to sparse \
+                    test dictionary at '{}'. Most Korean words will NOT be tokenized. \
+                    Set MECAB_DICDIR to a full mecab-ko-dic installation path.",
+                    test_dict.display()
+                );
                 return Ok(test_dict);
             }
         }
 
         Err(DictError::Format(
-            "Dictionary directory not found. Set MECAB_DICDIR environment variable or install mecab-ko-dic to default location".to_string(),
+            "Dictionary directory not found. Set MECAB_DICDIR environment variable or \
+            install mecab-ko-dic to one of: /usr/local/lib/mecab/dic/mecab-ko-dic, \
+            /usr/lib/mecab/dic/mecab-ko-dic, /opt/mecab/dic/mecab-ko-dic, \
+            ./dic/mecab-ko-dic".to_string(),
         ))
     }
 
