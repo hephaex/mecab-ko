@@ -68,7 +68,7 @@ public abstract class MecabKoFilterBase {
      * @param posTag POS tag to check
      * @return true if the tag should be filtered out
      */
-    protected boolean shouldFilter(String posTag) {
+    public boolean shouldFilter(String posTag) {
         if (posTag == null || posTag.isEmpty()) {
             return false; // Keep tokens without POS tags
         }

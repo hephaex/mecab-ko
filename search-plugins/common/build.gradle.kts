@@ -3,6 +3,9 @@ plugins {
 }
 
 dependencies {
+    // Lucene (provided by ES/OS at runtime)
+    compileOnly("org.apache.lucene:lucene-core:9.8.0")
+
     // JSON processing
     api("com.fasterxml.jackson.core:jackson-core:2.15.3")
     api("com.fasterxml.jackson.core:jackson-databind:2.15.3")

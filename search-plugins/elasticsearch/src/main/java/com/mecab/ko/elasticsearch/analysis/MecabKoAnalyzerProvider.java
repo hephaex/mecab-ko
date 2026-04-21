@@ -12,6 +12,7 @@ import org.elasticsearch.index.analysis.AbstractIndexAnalyzerProvider;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -47,7 +48,7 @@ public class MecabKoAnalyzerProvider extends AbstractIndexAnalyzerProvider<Analy
                                     Environment env,
                                     String name,
                                     Settings settings) {
-        super(indexSettings, name, settings);
+        super(name, settings);
 
         // Parse decompound mode
         String decompoundModeStr = settings.get("decompound_mode", "none");
@@ -65,8 +66,8 @@ public class MecabKoAnalyzerProvider extends AbstractIndexAnalyzerProvider<Analy
         }
 
         // Parse stoptags
-        String[] stoptagsArray = settings.getAsArray("stoptags", DEFAULT_STOPTAGS);
-        Set<String> stoptags = new HashSet<>(Arrays.asList(stoptagsArray));
+        List<String> stoptagsList = settings.getAsList("stoptags", Arrays.asList(DEFAULT_STOPTAGS));
+        Set<String> stoptags = new HashSet<>(stoptagsList);
 
         // Parse output_unknown_unigrams
         boolean outputUnknownUnigrams = settings.getAsBoolean("output_unknown_unigrams", false);

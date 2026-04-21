@@ -10,8 +10,8 @@ import org.elasticsearch.index.IndexSettings;
 import org.elasticsearch.index.analysis.AbstractTokenizerFactory;
 
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -83,9 +83,9 @@ public class MecabKoTokenizerFactory extends AbstractTokenizerFactory {
         }
 
         // Parse stoptags
-        String[] stoptagsArray = settings.getAsArray("stoptags", null);
-        if (stoptagsArray != null) {
-            this.stoptags = new HashSet<>(Arrays.asList(stoptagsArray));
+        List<String> stoptagsList = settings.getAsList("stoptags");
+        if (!stoptagsList.isEmpty()) {
+            this.stoptags = new HashSet<>(stoptagsList);
         } else {
             this.stoptags = null;
         }

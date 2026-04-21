@@ -56,7 +56,7 @@ public abstract class MecabKoTokenizerBase {
      *
      * @throws RuntimeException if initialization fails
      */
-    protected void initializeAnalyzer() {
+    public void initializeAnalyzer() {
         String configJson = buildConfigJson();
         analyzerHandle = NativeAnalyzer.createAnalyzer(configJson);
         if (analyzerHandle == 0) {
@@ -198,7 +198,7 @@ public abstract class MecabKoTokenizerBase {
      *
      * @return true if a token was processed, false if no more tokens
      */
-    protected boolean processNextToken() {
+    public boolean processNextToken() {
         if (tokenIterator == null || !tokenIterator.hasNext()) {
             return false;
         }
@@ -213,7 +213,7 @@ public abstract class MecabKoTokenizerBase {
      * @param input input reader
      * @throws IOException if reset fails
      */
-    protected void resetTokenizer(Reader input) throws IOException {
+    public void resetTokenizer(Reader input) throws IOException {
         inputText = readInputText(input);
         List<TokenInfo> tokens = tokenize(inputText);
         tokenIterator = tokens.iterator();
@@ -224,14 +224,14 @@ public abstract class MecabKoTokenizerBase {
      *
      * @return final offset
      */
-    protected int getFinalOffset() {
+    public int getFinalOffset() {
         return inputText != null ? inputText.length() : 0;
     }
 
     /**
      * Close the tokenizer and release resources.
      */
-    protected void closeTokenizer() {
+    public void closeTokenizer() {
         if (analyzerHandle != 0) {
             NativeAnalyzer.destroyAnalyzer(analyzerHandle);
             analyzerHandle = 0;
