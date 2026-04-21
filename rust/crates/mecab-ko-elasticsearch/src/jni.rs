@@ -48,18 +48,24 @@ use crate::error::Error;
 use jni::objects::{JClass, JObject, JString};
 use jni::sys::{jboolean, jlong, jstring};
 use jni::JNIEnv;
+use parking_lot::RwLock;
+use std::collections::HashMap;
+use std::sync::atomic::{AtomicI64, Ordering};
 use std::sync::{Arc, Mutex};
 
-/// Analyzer 핸들 타입
-type AnalyzerHandle = Arc<Mutex<NoriAnalyzer>>;
+/// 핸들 ID 생성기 (monotonically increasing, raw pointer 노출 없음)
+static NEXT_HANDLE: AtomicI64 = AtomicI64::new(1);
 
-/// 핸들 관리 컨테이너
-static ANALYZER_HANDLES: once_cell::sync::Lazy<Mutex<Vec<AnalyzerHandle>>> =
-    once_cell::sync::Lazy::new(|| Mutex::new(Vec::new()));
+/// Analyzer 핸들 레지스트리
+///
+/// `RwLock<HashMap>` 기반으로 동시 읽기를 허용하면서 삽입/삭제 시에만 write lock.
+/// 각 analyzer는 `Arc`로 감싸져 있어 lookup 후 clone하면 map lock을 즉시 해제 가능.
+static ANALYZERS: once_cell::sync::Lazy<RwLock<HashMap<i64, Arc<Mutex<NoriAnalyzer>>>>> =
+    once_cell::sync::Lazy::new(|| RwLock::new(HashMap::new()));
 
 /// 사전 경로 저장소
-static DICTIONARY_PATH: once_cell::sync::Lazy<Mutex<String>> =
-    once_cell::sync::Lazy::new(|| Mutex::new(String::new()));
+static DICTIONARY_PATH: once_cell::sync::Lazy<RwLock<String>> =
+    once_cell::sync::Lazy::new(|| RwLock::new(String::new()));
 
 /// Analyzer 생성
 ///
@@ -97,13 +103,10 @@ fn create_analyzer_impl(env: &mut JNIEnv, config_json: &JString) -> Result<jlong
     let config: AnalyzerConfig = serde_json::from_str(&config_str)?;
     let analyzer = NoriAnalyzer::new(config)?;
 
+    let handle_id = NEXT_HANDLE.fetch_add(1, Ordering::Relaxed);
     let handle = Arc::new(Mutex::new(analyzer));
-    let handle_id = handle.as_ref() as *const _ as jlong;
 
-    ANALYZER_HANDLES
-        .lock()
-        .map_err(|e| Error::jni(format!("Failed to lock handle store: {e}")))?
-        .push(handle);
+    ANALYZERS.write().insert(handle_id, handle);
 
     Ok(handle_id)
 }
@@ -142,12 +145,15 @@ fn analyze_text_impl(env: &mut JNIEnv, handle: jlong, text: &JString) -> Result<
         .map_err(|e| Error::jni(format!("Failed to get text string: {e}")))?
         .into();
 
-    // SAFETY: handle은 create_analyzer에서 생성된 유효한 포인터
-    #[allow(unsafe_code)]
-    let analyzer_mutex = unsafe { &*(handle as *const Mutex<NoriAnalyzer>) };
+    // Read lock으로 Arc clone 후 즉시 해제 -- 최소 contention
+    let analyzer_arc = ANALYZERS
+        .read()
+        .get(&handle)
+        .cloned()
+        .ok_or_else(|| Error::jni(format!("Invalid or already destroyed analyzer handle: {handle}")))?;
 
     let tokens = {
-        let guard = analyzer_mutex
+        let guard = analyzer_arc
             .lock()
             .map_err(|e| Error::jni(format!("Failed to lock analyzer: {e}")))?;
         guard.analyze(&text_str)?
@@ -183,13 +189,13 @@ pub extern "system" fn Java_com_mecab_ko_search_jni_NativeAnalyzer_destroyAnalyz
 }
 
 fn destroy_analyzer_impl(handle: jlong) -> Result<(), Error> {
-    ANALYZER_HANDLES
-        .lock()
-        .map_err(|e| Error::jni(format!("Failed to lock handle store: {e}")))?
-        .retain(|h| {
-            let h_id = h.as_ref() as *const _ as jlong;
-            h_id != handle
-        });
+    let removed = ANALYZERS.write().remove(&handle);
+
+    if removed.is_none() {
+        return Err(Error::jni(format!(
+            "Invalid or already destroyed analyzer handle: {handle}"
+        )));
+    }
 
     Ok(())
 }
@@ -253,9 +259,7 @@ pub extern "system" fn Java_com_mecab_ko_search_jni_NativeAnalyzer_getDictionary
     env: JNIEnv,
     _class: JClass,
 ) -> jstring {
-    let path = DICTIONARY_PATH
-        .lock()
-        .map_or_else(|_| String::new(), |p| p.clone());
+    let path = DICTIONARY_PATH.read().clone();
     env.new_string(path)
         .map_or_else(|_| JObject::null().into_raw() as jstring, JString::into_raw)
 }
@@ -293,9 +297,7 @@ fn set_dictionary_path_impl(env: &mut JNIEnv, path: &JString) -> Result<(), Erro
         .map_err(|e| Error::jni(format!("Failed to get path string: {e}")))?
         .into();
 
-    *DICTIONARY_PATH
-        .lock()
-        .map_err(|e| Error::jni(format!("Failed to lock dictionary path: {e}")))? = path_str;
+    *DICTIONARY_PATH.write() = path_str;
 
     Ok(())
 }
@@ -330,5 +332,31 @@ mod tests {
         let deserialized: std::result::Result<Token, serde_json::Error> =
             serde_json::from_str(&json.unwrap());
         assert!(deserialized.is_ok());
+    }
+
+    #[test]
+    fn test_handle_id_monotonically_increases() {
+        let id1 = NEXT_HANDLE.fetch_add(1, Ordering::Relaxed);
+        let id2 = NEXT_HANDLE.fetch_add(1, Ordering::Relaxed);
+        assert!(id2 > id1, "Handle IDs must be monotonically increasing");
+    }
+
+    #[test]
+    fn test_destroy_invalid_handle_returns_error() {
+        let result = destroy_analyzer_impl(i64::MAX);
+        assert!(result.is_err());
+        let err_msg = format!("{}", result.unwrap_err());
+        assert!(
+            err_msg.contains("Invalid or already destroyed"),
+            "Expected 'Invalid or already destroyed' in error message, got: {err_msg}"
+        );
+    }
+
+    #[test]
+    fn test_dictionary_path_read_write() {
+        let test_path = "/tmp/test_dict_path_jni_registry";
+        *DICTIONARY_PATH.write() = test_path.to_string();
+        let read_back = DICTIONARY_PATH.read().clone();
+        assert_eq!(read_back, test_path);
     }
 }
