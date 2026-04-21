@@ -9,12 +9,24 @@ members = [
     "crates/mecab-ko-dict-sync",
     "crates/mecab-ko-hangul",
     "crates/mecab-ko-cli",
-    "crates/mecab-ko-python",
-    "crates/mecab-ko-wasm",
-    "crates/mecab-ko-node",
     "crates/mecab-ko-elasticsearch",
     "crates/mecab-ko-profiler",
     "crates/benchmarks",
+]
+# FFI crates excluded from default workspace build:
+# Each requires a platform-specific toolchain and cannot link with plain `cargo build`.
+#   - mecab-ko-python: needs maturin + Python dev headers (PyO3 extension-module)
+#   - mecab-ko-wasm: needs wasm-pack + wasm32-unknown-unknown target
+#   - mecab-ko-node: needs napi-rs + Node.js
+# Build individually:
+#   maturin develop          (in crates/mecab-ko-python/)
+#   wasm-pack build          (in crates/mecab-ko-wasm/)
+#   npm run build            (in crates/mecab-ko-node/)
+# CI coverage: .github/workflows/ffi-tests.yml
+exclude = [
+    "crates/mecab-ko-python",
+    "crates/mecab-ko-wasm",
+    "crates/mecab-ko-node",
 ]
 
 [workspace.package]
