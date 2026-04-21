@@ -953,7 +953,8 @@ impl DictionaryLoader {
             "Dictionary directory not found. Set MECAB_DICDIR environment variable or \
             install mecab-ko-dic to one of: /usr/local/lib/mecab/dic/mecab-ko-dic, \
             /usr/lib/mecab/dic/mecab-ko-dic, /opt/mecab/dic/mecab-ko-dic, \
-            ./dic/mecab-ko-dic".to_string(),
+            ./dic/mecab-ko-dic"
+                .to_string(),
         ))
     }
 
@@ -1112,7 +1113,9 @@ mod tests {
         let dict = create_test_dictionary();
 
         // "가방에" 검색 -> "가", "가방" 매칭
-        let results = dict.common_prefix_search("가방에").expect("search should work");
+        let results = dict
+            .common_prefix_search("가방에")
+            .expect("search should work");
         assert_eq!(results.len(), 2);
 
         let surfaces: Vec<_> = results.iter().map(|(e, _)| e.surface.as_str()).collect();
@@ -1127,7 +1130,9 @@ mod tests {
         let text = "나가다";
         let start = "나".len(); // 3 bytes
 
-        let results = dict.common_prefix_search_at(text, start).expect("search should work");
+        let results = dict
+            .common_prefix_search_at(text, start)
+            .expect("search should work");
         assert_eq!(results.len(), 2); // "가", "가다"
 
         let surfaces: Vec<_> = results.iter().map(|(e, _)| e.surface.as_str()).collect();

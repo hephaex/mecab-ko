@@ -318,21 +318,21 @@ fn test_wakati_basic() {
     let mut tokenizer = create_tokenizer();
     let result = tokenizer.wakati("안녕하세요");
     // May or may not return tokens depending on dictionary
-    println!("Wakati result: {:?}", result);
+    println!("Wakati result: {result:?}");
 }
 
 #[test]
 fn test_morphs_basic() {
     let mut tokenizer = create_tokenizer();
     let result = tokenizer.morphs("안녕하세요");
-    println!("Morphs result: {:?}", result);
+    println!("Morphs result: {result:?}");
 }
 
 #[test]
 fn test_pos_basic() {
     let mut tokenizer = create_tokenizer();
     let result = tokenizer.pos("안녕하세요");
-    println!("POS result: {:?}", result);
+    println!("POS result: {result:?}");
     // Each result should be (surface, pos) tuple
     for (surface, pos) in &result {
         assert!(!surface.is_empty());
@@ -380,8 +380,10 @@ fn test_lattice_stats_after_tokenization() {
     tokenizer.tokenize("안녕하세요");
     let stats = tokenizer.lattice_stats();
 
-    println!("Lattice stats - total_nodes: {}, char_length: {}",
-             stats.total_nodes, stats.char_length);
+    println!(
+        "Lattice stats - total_nodes: {}, char_length: {}",
+        stats.total_nodes, stats.char_length
+    );
 }
 
 // ========================================
@@ -439,7 +441,7 @@ fn test_many_consecutive_calls() {
     let mut tokenizer = create_tokenizer();
 
     for i in 0..100 {
-        let text = format!("테스트 {}", i);
+        let text = format!("테스트 {i}");
         let _ = tokenizer.tokenize(&text);
     }
 

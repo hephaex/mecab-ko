@@ -298,7 +298,8 @@ impl MmapDictionary {
                 return Err(DictError::Format(
                     "entries.bin is in SystemDictionary format (MKED/MKE2). \
                      MmapDictionary uses a different format. \
-                     Falling back to CSV.".to_string()
+                     Falling back to CSV."
+                        .to_string(),
                 ));
             }
         }

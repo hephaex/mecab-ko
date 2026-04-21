@@ -458,11 +458,17 @@ impl<'a> LatticeViz<'a> {
             if !ending.is_empty() || !starting.is_empty() {
                 writeln!(output, "Position {pos}:").ok();
                 if !ending.is_empty() {
-                    let names: Vec<_> = ending.iter().map(|n| format!("{}({})", n.surface, n.id)).collect();
+                    let names: Vec<_> = ending
+                        .iter()
+                        .map(|n| format!("{}({})", n.surface, n.id))
+                        .collect();
                     writeln!(output, "  Ending: {}", names.join(", ")).ok();
                 }
                 if !starting.is_empty() {
-                    let names: Vec<_> = starting.iter().map(|n| format!("{}({})", n.surface, n.id)).collect();
+                    let names: Vec<_> = starting
+                        .iter()
+                        .map(|n| format!("{}({})", n.surface, n.id))
+                        .collect();
                     writeln!(output, "  Starting: {}", names.join(", ")).ok();
                 }
             }

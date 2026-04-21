@@ -25,11 +25,9 @@ fn bench_loading_mode_init(c: &mut Criterion) {
     // Eager 모드 (전체 메모리 로드)
     group.bench_function("eager_load", |b| {
         b.iter(|| {
-            let dict = SystemDictionary::load_with_options(
-                get_dicdir(),
-                LoadOptions::speed_optimized(),
-            )
-            .expect("Failed to load dictionary");
+            let dict =
+                SystemDictionary::load_with_options(get_dicdir(), LoadOptions::speed_optimized())
+                    .expect("Failed to load dictionary");
             black_box(dict);
         });
     });
@@ -37,11 +35,8 @@ fn bench_loading_mode_init(c: &mut Criterion) {
     // Lazy 모드 (메모리 최적화)
     group.bench_function("lazy_load", |b| {
         b.iter(|| {
-            let dict = SystemDictionary::load_with_options(
-                get_dicdir(),
-                LoadOptions::default(),
-            )
-            .expect("Failed to load dictionary");
+            let dict = SystemDictionary::load_with_options(get_dicdir(), LoadOptions::default())
+                .expect("Failed to load dictionary");
             black_box(dict);
         });
     });
@@ -49,11 +44,9 @@ fn bench_loading_mode_init(c: &mut Criterion) {
     // Memory optimized 모드 (mmap + lazy)
     group.bench_function("memory_optimized_load", |b| {
         b.iter(|| {
-            let dict = SystemDictionary::load_with_options(
-                get_dicdir(),
-                LoadOptions::memory_optimized(),
-            )
-            .expect("Failed to load dictionary");
+            let dict =
+                SystemDictionary::load_with_options(get_dicdir(), LoadOptions::memory_optimized())
+                    .expect("Failed to load dictionary");
             black_box(dict);
         });
     });
@@ -70,14 +63,13 @@ fn bench_first_lookup(c: &mut Criterion) {
     group.bench_function("eager_first_lookup", |b| {
         b.iter_batched(
             || {
-                SystemDictionary::load_with_options(
-                    get_dicdir(),
-                    LoadOptions::speed_optimized(),
-                )
-                .expect("Failed to load dictionary")
+                SystemDictionary::load_with_options(get_dicdir(), LoadOptions::speed_optimized())
+                    .expect("Failed to load dictionary")
             },
             |dict| {
-                let results = dict.common_prefix_search(black_box("한국어")).unwrap_or_default();
+                let results = dict
+                    .common_prefix_search(black_box("한국어"))
+                    .unwrap_or_default();
                 black_box(results);
             },
             criterion::BatchSize::LargeInput,
@@ -88,14 +80,13 @@ fn bench_first_lookup(c: &mut Criterion) {
     group.bench_function("lazy_first_lookup", |b| {
         b.iter_batched(
             || {
-                SystemDictionary::load_with_options(
-                    get_dicdir(),
-                    LoadOptions::default(),
-                )
-                .expect("Failed to load dictionary")
+                SystemDictionary::load_with_options(get_dicdir(), LoadOptions::default())
+                    .expect("Failed to load dictionary")
             },
             |dict| {
-                let results = dict.common_prefix_search(black_box("한국어")).unwrap_or_default();
+                let results = dict
+                    .common_prefix_search(black_box("한국어"))
+                    .unwrap_or_default();
                 black_box(results);
             },
             criterion::BatchSize::LargeInput,
@@ -122,11 +113,9 @@ fn bench_warm_lookup(c: &mut Criterion) {
 
     // Eager 모드
     {
-        let dict = SystemDictionary::load_with_options(
-            get_dicdir(),
-            LoadOptions::speed_optimized(),
-        )
-        .expect("Failed to load dictionary");
+        let dict =
+            SystemDictionary::load_with_options(get_dicdir(), LoadOptions::speed_optimized())
+                .expect("Failed to load dictionary");
 
         // 워밍업
         for word in &words {
@@ -136,7 +125,9 @@ fn bench_warm_lookup(c: &mut Criterion) {
         group.bench_function("eager_warm_lookup", |b| {
             b.iter(|| {
                 for word in &words {
-                    let results = dict.common_prefix_search(black_box(*word)).unwrap_or_default();
+                    let results = dict
+                        .common_prefix_search(black_box(*word))
+                        .unwrap_or_default();
                     black_box(results);
                 }
             });
@@ -145,11 +136,8 @@ fn bench_warm_lookup(c: &mut Criterion) {
 
     // Lazy 모드
     {
-        let dict = SystemDictionary::load_with_options(
-            get_dicdir(),
-            LoadOptions::default(),
-        )
-        .expect("Failed to load dictionary");
+        let dict = SystemDictionary::load_with_options(get_dicdir(), LoadOptions::default())
+            .expect("Failed to load dictionary");
 
         // 워밍업
         for word in &words {
@@ -159,7 +147,9 @@ fn bench_warm_lookup(c: &mut Criterion) {
         group.bench_function("lazy_warm_lookup", |b| {
             b.iter(|| {
                 for word in &words {
-                    let results = dict.common_prefix_search(black_box(*word)).unwrap_or_default();
+                    let results = dict
+                        .common_prefix_search(black_box(*word))
+                        .unwrap_or_default();
                     black_box(results);
                 }
             });
@@ -178,16 +168,16 @@ fn bench_cache_efficiency(c: &mut Criterion) {
 
     // Eager 모드
     {
-        let dict = SystemDictionary::load_with_options(
-            get_dicdir(),
-            LoadOptions::speed_optimized(),
-        )
-        .expect("Failed to load dictionary");
+        let dict =
+            SystemDictionary::load_with_options(get_dicdir(), LoadOptions::speed_optimized())
+                .expect("Failed to load dictionary");
 
         group.bench_function("eager_repeat_100", |b| {
             b.iter(|| {
                 for _ in 0..100 {
-                    let results = dict.common_prefix_search(black_box(word)).unwrap_or_default();
+                    let results = dict
+                        .common_prefix_search(black_box(word))
+                        .unwrap_or_default();
                     black_box(results);
                 }
             });
@@ -196,16 +186,15 @@ fn bench_cache_efficiency(c: &mut Criterion) {
 
     // Lazy 모드 (캐시 크기 기본값)
     {
-        let dict = SystemDictionary::load_with_options(
-            get_dicdir(),
-            LoadOptions::default(),
-        )
-        .expect("Failed to load dictionary");
+        let dict = SystemDictionary::load_with_options(get_dicdir(), LoadOptions::default())
+            .expect("Failed to load dictionary");
 
         group.bench_function("lazy_repeat_100", |b| {
             b.iter(|| {
                 for _ in 0..100 {
-                    let results = dict.common_prefix_search(black_box(word)).unwrap_or_default();
+                    let results = dict
+                        .common_prefix_search(black_box(word))
+                        .unwrap_or_default();
                     black_box(results);
                 }
             });
@@ -227,7 +216,9 @@ fn bench_cache_efficiency(c: &mut Criterion) {
         group.bench_function("lazy_small_cache_repeat_100", |b| {
             b.iter(|| {
                 for _ in 0..100 {
-                    let results = dict.common_prefix_search(black_box(word)).unwrap_or_default();
+                    let results = dict
+                        .common_prefix_search(black_box(word))
+                        .unwrap_or_default();
                     black_box(results);
                 }
             });
@@ -245,21 +236,15 @@ fn bench_multiple_instances(c: &mut Criterion) {
     // Eager 모드 3개 인스턴스
     group.bench_function("eager_3_instances", |b| {
         b.iter(|| {
-            let d1 = SystemDictionary::load_with_options(
-                get_dicdir(),
-                LoadOptions::speed_optimized(),
-            )
-            .expect("Failed");
-            let d2 = SystemDictionary::load_with_options(
-                get_dicdir(),
-                LoadOptions::speed_optimized(),
-            )
-            .expect("Failed");
-            let d3 = SystemDictionary::load_with_options(
-                get_dicdir(),
-                LoadOptions::speed_optimized(),
-            )
-            .expect("Failed");
+            let d1 =
+                SystemDictionary::load_with_options(get_dicdir(), LoadOptions::speed_optimized())
+                    .expect("Failed");
+            let d2 =
+                SystemDictionary::load_with_options(get_dicdir(), LoadOptions::speed_optimized())
+                    .expect("Failed");
+            let d3 =
+                SystemDictionary::load_with_options(get_dicdir(), LoadOptions::speed_optimized())
+                    .expect("Failed");
             black_box((d1, d2, d3));
         });
     });
@@ -267,21 +252,12 @@ fn bench_multiple_instances(c: &mut Criterion) {
     // Lazy 모드 3개 인스턴스
     group.bench_function("lazy_3_instances", |b| {
         b.iter(|| {
-            let d1 = SystemDictionary::load_with_options(
-                get_dicdir(),
-                LoadOptions::default(),
-            )
-            .expect("Failed");
-            let d2 = SystemDictionary::load_with_options(
-                get_dicdir(),
-                LoadOptions::default(),
-            )
-            .expect("Failed");
-            let d3 = SystemDictionary::load_with_options(
-                get_dicdir(),
-                LoadOptions::default(),
-            )
-            .expect("Failed");
+            let d1 = SystemDictionary::load_with_options(get_dicdir(), LoadOptions::default())
+                .expect("Failed");
+            let d2 = SystemDictionary::load_with_options(get_dicdir(), LoadOptions::default())
+                .expect("Failed");
+            let d3 = SystemDictionary::load_with_options(get_dicdir(), LoadOptions::default())
+                .expect("Failed");
             black_box((d1, d2, d3));
         });
     });
@@ -289,21 +265,15 @@ fn bench_multiple_instances(c: &mut Criterion) {
     // Memory optimized 모드 3개 인스턴스 (mmap 공유)
     group.bench_function("mmap_3_instances", |b| {
         b.iter(|| {
-            let d1 = SystemDictionary::load_with_options(
-                get_dicdir(),
-                LoadOptions::memory_optimized(),
-            )
-            .expect("Failed");
-            let d2 = SystemDictionary::load_with_options(
-                get_dicdir(),
-                LoadOptions::memory_optimized(),
-            )
-            .expect("Failed");
-            let d3 = SystemDictionary::load_with_options(
-                get_dicdir(),
-                LoadOptions::memory_optimized(),
-            )
-            .expect("Failed");
+            let d1 =
+                SystemDictionary::load_with_options(get_dicdir(), LoadOptions::memory_optimized())
+                    .expect("Failed");
+            let d2 =
+                SystemDictionary::load_with_options(get_dicdir(), LoadOptions::memory_optimized())
+                    .expect("Failed");
+            let d3 =
+                SystemDictionary::load_with_options(get_dicdir(), LoadOptions::memory_optimized())
+                    .expect("Failed");
             black_box((d1, d2, d3));
         });
     });

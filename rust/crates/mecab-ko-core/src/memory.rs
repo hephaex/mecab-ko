@@ -168,24 +168,15 @@ impl Default for PosTagInterner {
 /// 일반적인 품사 태그 (세종 품사 체계 + `MeCab` 확장)
 const COMMON_POS_TAGS: &[&str] = &[
     // 체언
-    "NNG", "NNP", "NNB", "NR", "NP",
-    // 용언
-    "VV", "VA", "VX", "VCP", "VCN",
-    // 수식언
-    "MM", "MAG", "MAJ",
-    // 독립언
-    "IC",
-    // 관계언
-    "JKS", "JKC", "JKG", "JKO", "JKB", "JKV", "JKQ", "JX", "JC",
-    // 의존형태
-    "EP", "EF", "EC", "ETN", "ETM", "XPN", "XSN", "XSV", "XSA", "XR",
-    // 기호
-    "SF", "SE", "SS", "SP", "SO", "SL", "SH", "SN", "SW",
-    // 분석 불능
-    "NA",
-    // Unknown
-    "UNK", "UNKNOWN",
-    // 기타 확장
+    "NNG", "NNP", "NNB", "NR", "NP", // 용언
+    "VV", "VA", "VX", "VCP", "VCN", // 수식언
+    "MM", "MAG", "MAJ", // 독립언
+    "IC",  // 관계언
+    "JKS", "JKC", "JKG", "JKO", "JKB", "JKV", "JKQ", "JX", "JC", // 의존형태
+    "EP", "EF", "EC", "ETN", "ETM", "XPN", "XSN", "XSV", "XSA", "XR", // 기호
+    "SF", "SE", "SS", "SP", "SO", "SL", "SH", "SN", "SW", // 분석 불능
+    "NA", // Unknown
+    "UNK", "UNKNOWN", // 기타 확장
     "*", "NNBC",
 ];
 
@@ -423,7 +414,7 @@ mod tests {
         let stats = interner.stats();
         assert!(stats.unique_tags > 0);
         assert!(stats.intern_calls > 200); // 초기화 + 200
-        // 초기화 시 ~45개 태그가 미스로 카운트되므로 히트율은 ~0.8
+                                           // 초기화 시 ~45개 태그가 미스로 카운트되므로 히트율은 ~0.8
         assert!(stats.hit_rate > 0.75, "hit_rate: {}", stats.hit_rate);
     }
 
@@ -437,7 +428,10 @@ mod tests {
         let idx2 = cache.intern("NNG,*,T,테스트,*,*,*,*");
         assert_eq!(idx1, idx2);
 
-        assert_eq!(cache.resolve(idx1.unwrap()), Some("NNG,*,T,테스트,*,*,*,*".to_string()));
+        assert_eq!(
+            cache.resolve(idx1.unwrap()),
+            Some("NNG,*,T,테스트,*,*,*,*".to_string())
+        );
     }
 
     #[test]
@@ -457,7 +451,7 @@ mod tests {
             lattice_bytes: 10 * 1024,
             pool_bytes: 5 * 1024,
             cache_bytes: 20 * 1024,
-            interner_bytes: 1 * 1024,
+            interner_bytes: 1024,
             token_bytes: 2 * 1024,
         };
 

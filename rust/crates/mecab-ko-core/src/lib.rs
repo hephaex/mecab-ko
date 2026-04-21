@@ -159,9 +159,12 @@ pub mod viterbi;
 #[cfg(feature = "async")]
 pub mod async_tokenizer;
 
-pub use batch::{
-    BatchTokenizer, LargeFileProcessor, LargeFileProgress, ParallelStreamProcessor,
+pub use analysis_mode::{
+    extract_adjectives, extract_content_words, extract_lemmas, extract_nouns, extract_verbs,
+    AnalysisMode, AnalyzedToken, AnalyzerConfig, LemmatizationMode, PosFilter,
 };
+pub use batch::{BatchTokenizer, LargeFileProcessor, LargeFileProgress, ParallelStreamProcessor};
+pub use cache::{CacheConfig, CacheStats, CachedToken, CachingTokenizer, TokenCache};
 pub use error::{Error, Result};
 pub use evaluate::{
     evaluate_dataset, evaluate_dataset_sejong, evaluate_tokens, EvaluateError, EvaluationResult,
@@ -169,6 +172,14 @@ pub use evaluate::{
 };
 pub use kiwi_compat::{from_kiwi_tag, to_kiwi_tag, KiwiPosTag, KiwiToken};
 pub use lattice::{Lattice, Node, NodeBuilder, NodeType};
+pub use lattice_viz::{
+    lattice_to_dot, lattice_to_html, lattice_to_json, lattice_to_text, LatticeViz, VizFormat,
+    VizOptions,
+};
+pub use memory::{
+    estimate_tokens_memory, FeatureCache, InternerStats, MemoryStats, PosTagInterner,
+};
+pub use nbest::{ImprovedNbestSearcher, NbestPath, NbestResult};
 pub use nori_compat::{
     mecab_to_nori_tag, nori_to_mecab_tag, DecompoundMode, NoriAnalyzer, NoriToken, NoriTokenizer,
     WordType,
@@ -185,20 +196,7 @@ pub use streaming::{
 };
 pub use tokenizer::{Token, Tokenizer};
 pub use unknown::{CharCategoryMap, UnknownDictionary, UnknownHandler};
-pub use analysis_mode::{
-    extract_adjectives, extract_content_words, extract_lemmas, extract_nouns, extract_verbs,
-    AnalysisMode, AnalyzedToken, AnalyzerConfig, LemmatizationMode, PosFilter,
-};
-pub use nbest::{ImprovedNbestSearcher, NbestPath, NbestResult};
 pub use viterbi::{ConnectionCost, NbestSearcher, SpacePenalty, ViterbiSearcher};
-pub use lattice_viz::{
-    lattice_to_dot, lattice_to_html, lattice_to_json, lattice_to_text, LatticeViz, VizFormat,
-    VizOptions,
-};
-pub use cache::{CacheConfig, CacheStats, CachedToken, CachingTokenizer, TokenCache};
-pub use memory::{
-    estimate_tokens_memory, FeatureCache, InternerStats, MemoryStats, PosTagInterner,
-};
 
 #[cfg(feature = "async")]
 pub use async_tokenizer::{AsyncStreamingTokenizer, AsyncTokenizer};

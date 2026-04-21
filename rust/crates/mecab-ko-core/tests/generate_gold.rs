@@ -15,8 +15,7 @@ fn generate_gold_standards() {
         .unwrap_or(std::path::Path::new("."));
 
     let dict_path = project_root.join("data/mecab-ko-dic-2.1.1-20180720");
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     // 사용자 사전 로드
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
@@ -171,7 +170,6 @@ fn generate_gold_standards() {
         "파견이 이루어졌습니다",
         "복귀가 확정됐다",
         "귀환이 완료됐습니다",
-
         // ============ 소설/문학 도메인 (140문장) ============
         "바람이 멈췄다",
         "하늘이 어두워졌다",
@@ -310,7 +308,6 @@ fn generate_gold_standards() {
         "소리가 커졌다",
         "소리가 작아졌다",
         "소리가 멈췄다",
-
         // ============ SNS/일상 도메인 (140문장) ============
         "보고 싶어요",
         "고마워요",
@@ -450,7 +447,6 @@ fn generate_gold_standards() {
         "저게 힘들어요",
         "전화할게요",
         "메시지 보낼게요",
-
         // ============ 기술/IT 도메인 (140문장) ============
         "데이터를 저장했습니다",
         "파일을 업로드했습니다",
@@ -589,7 +585,6 @@ fn generate_gold_standards() {
         "데이터구조를 변경했습니다",
         "API를 설계했습니다",
         "엔드포인트를 추가했습니다",
-
         // ============ 추가 도메인 확장 (40문장) ============
         // 날씨/계절
         "날씨가 좋아졌습니다",
@@ -602,7 +597,6 @@ fn generate_gold_standards() {
         "건조해졌습니다",
         "봄이 왔습니다",
         "여름이 시작됐습니다",
-
         // 음식/요리
         "음식이 완성됐습니다",
         "요리가 맛있습니다",
@@ -614,7 +608,6 @@ fn generate_gold_standards() {
         "계산을 완료했습니다",
         "영수증을 받았습니다",
         "팁을 남겼습니다",
-
         // 건강/운동
         "운동을 시작했습니다",
         "운동을 마쳤습니다",
@@ -626,7 +619,6 @@ fn generate_gold_standards() {
         "병원에 갔습니다",
         "검사를 받았습니다",
         "진단이 나왔습니다",
-
         // 학습/교육
         "공부를 시작했습니다",
         "공부를 마쳤습니다",
@@ -647,6 +639,6 @@ fn generate_gold_standards() {
         let tokens = tokenizer.tokenize(sentence);
         let sejong_tokens = converter.convert_tokens(&tokens);
         let gold = converter.format_sejong(&sejong_tokens);
-        println!("{}\t{}", sentence, gold);
+        println!("{sentence}\t{gold}");
     }
 }

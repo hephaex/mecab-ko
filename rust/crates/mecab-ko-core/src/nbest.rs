@@ -91,12 +91,7 @@ impl NbestPath {
     #[must_use]
     pub fn pos_tags<'a>(&'a self, lattice: &'a Lattice) -> Vec<&'a str> {
         self.nodes(lattice)
-            .map(|n| {
-                n.feature
-                    .split(',')
-                    .next()
-                    .unwrap_or_default()
-            })
+            .map(|n| n.feature.split(',').next().unwrap_or_default())
             .collect()
     }
 }
@@ -289,11 +284,7 @@ impl ImprovedNbestSearcher {
     /// # Returns
     ///
     /// N-best 검색 결과
-    pub fn search<C: ConnectionCost>(
-        &self,
-        lattice: &mut Lattice,
-        conn_cost: &C,
-    ) -> NbestResult {
+    pub fn search<C: ConnectionCost>(&self, lattice: &mut Lattice, conn_cost: &C) -> NbestResult {
         if lattice.node_count() <= 2 {
             // BOS, EOS만 있는 경우
             return NbestResult::default();
@@ -340,11 +331,7 @@ impl ImprovedNbestSearcher {
 
             // 이 위치에서 끝나는 노드들의 정보
             ending_data.clear();
-            ending_data.extend(
-                lattice
-                    .nodes_ending_at(pos)
-                    .map(|n| (n.id, n.right_id)),
-            );
+            ending_data.extend(lattice.nodes_ending_at(pos).map(|n| (n.id, n.right_id)));
 
             for &node_id in &starting_ids {
                 let (left_id, word_cost, has_space) = {
@@ -709,7 +696,7 @@ mod tests {
         assert!(results.len() >= 2);
 
         // 비용이 오름차순으로 정렬되어야 함
-        let costs: Vec<i32> = results.iter().map(|p| p.cost()).collect();
+        let costs: Vec<i32> = results.iter().map(super::NbestPath::cost).collect();
         for i in 1..costs.len() {
             assert!(costs[i] >= costs[i - 1]);
         }

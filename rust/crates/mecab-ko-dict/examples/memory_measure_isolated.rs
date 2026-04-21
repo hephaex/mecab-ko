@@ -1,9 +1,9 @@
 //! 격리된 메모리 측정 (단일 모드만 테스트)
 //!
 //! Usage:
-//!   MODE=eager cargo run --example memory_measure_isolated --release
-//!   MODE=lazy cargo run --example memory_measure_isolated --release
-//!   MODE=memory cargo run --example memory_measure_isolated --release
+//!   MODE=eager cargo run --example `memory_measure_isolated` --release
+//!   MODE=lazy cargo run --example `memory_measure_isolated` --release
+//!   MODE=memory cargo run --example `memory_measure_isolated` --release
 
 use mecab_ko_dict::dictionary::{LoadOptions, SystemDictionary};
 use std::env;
@@ -32,7 +32,7 @@ fn format_bytes(bytes: usize) -> String {
     } else if bytes >= 1024 {
         format!("{:.1} KB", bytes as f64 / 1024.0)
     } else {
-        format!("{} B", bytes)
+        format!("{bytes} B")
     }
 }
 
@@ -46,7 +46,7 @@ fn main() {
 
     let initial_mem = get_memory_usage().unwrap_or(0);
     println!("=== {} 모드 메모리 측정 ===", mode.to_uppercase());
-    println!("사전: {}", dict_path);
+    println!("사전: {dict_path}");
     println!("초기 메모리: {}", format_bytes(initial_mem));
     println!();
 
@@ -65,14 +65,28 @@ fn main() {
             let after_load_mem = get_memory_usage().unwrap_or(0);
             let mem_increase = after_load_mem.saturating_sub(initial_mem);
 
-            println!("로드 시간: {:?}", load_time);
+            println!("로드 시간: {load_time:?}");
             println!("엔트리 수: {}", dict.entry_count());
-            println!("메모리: {} (증가분: {})", format_bytes(after_load_mem), format_bytes(mem_increase));
+            println!(
+                "메모리: {} (증가분: {})",
+                format_bytes(after_load_mem),
+                format_bytes(mem_increase)
+            );
             println!();
 
             // 조회 테스트
-            let queries = ["안녕하세요", "한국어", "형태소", "분석기", "테스트",
-                          "대한민국", "서울시", "프로그래밍", "인공지능", "데이터"];
+            let queries = [
+                "안녕하세요",
+                "한국어",
+                "형태소",
+                "분석기",
+                "테스트",
+                "대한민국",
+                "서울시",
+                "프로그래밍",
+                "인공지능",
+                "데이터",
+            ];
 
             // Cold 조회
             let cold_start = Instant::now();
@@ -91,8 +105,8 @@ fn main() {
             let after_lookup_mem = get_memory_usage().unwrap_or(0);
 
             println!("조회 성능:");
-            println!("  Cold (5회): {:?}", cold_time);
-            println!("  Warm (5회): {:?}", warm_time);
+            println!("  Cold (5회): {cold_time:?}");
+            println!("  Warm (5회): {warm_time:?}");
             println!("  조회 후 메모리: {}", format_bytes(after_lookup_mem));
 
             // 대량 조회
@@ -103,7 +117,7 @@ fn main() {
                 }
             }
             let bulk_time = bulk_start.elapsed();
-            println!("  대량 조회 (10,000회): {:?}", bulk_time);
+            println!("  대량 조회 (10,000회): {bulk_time:?}");
 
             drop(dict);
             std::thread::sleep(std::time::Duration::from_millis(100));
@@ -111,7 +125,7 @@ fn main() {
             println!("\n해제 후 메모리: {}", format_bytes(final_mem));
         }
         Err(e) => {
-            println!("로드 실패: {}", e);
+            println!("로드 실패: {e}");
         }
     }
 }

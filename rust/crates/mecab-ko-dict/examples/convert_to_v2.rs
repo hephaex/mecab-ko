@@ -1,6 +1,6 @@
 //! entries.bin v1 포맷을 v2 포맷으로 변환
 //!
-//! Usage: DICT_PATH=/path/to/dict cargo run --example convert_to_v2 --release
+//! Usage: `DICT_PATH=/path/to/dict` cargo run --example `convert_to_v2` --release
 
 use mecab_ko_dict::dictionary::{LoadOptions, SystemDictionary};
 use mecab_ko_dict::LazyEntries;
@@ -23,7 +23,7 @@ fn main() {
         .expect("사전 로드 실패");
 
     let entry_count = dict.entry_count();
-    println!("   엔트리 수: {}", entry_count);
+    println!("   엔트리 수: {entry_count}");
 
     // 모든 엔트리 수집
     println!("2. 엔트리 수집...");
@@ -47,9 +47,18 @@ fn main() {
     let v2_size = std::fs::metadata(&v2_path).map(|m| m.len()).unwrap_or(0);
 
     println!("\n=== 결과 ===");
-    println!("v1 (entries.bin): {:.1} MB", v1_size as f64 / 1024.0 / 1024.0);
-    println!("v2 (entries_v2.bin): {:.1} MB", v2_size as f64 / 1024.0 / 1024.0);
-    println!("크기 차이: {:.1}%", (v2_size as f64 / v1_size as f64 - 1.0) * 100.0);
+    println!(
+        "v1 (entries.bin): {:.1} MB",
+        v1_size as f64 / 1024.0 / 1024.0
+    );
+    println!(
+        "v2 (entries_v2.bin): {:.1} MB",
+        v2_size as f64 / 1024.0 / 1024.0
+    );
+    println!(
+        "크기 차이: {:.1}%",
+        (v2_size as f64 / v1_size as f64 - 1.0) * 100.0
+    );
 
     // v2 검증
     println!("\n4. v2 포맷 검증...");

@@ -116,7 +116,9 @@ pub use reporter::{ProfilingReport, ReportFormat};
 pub use stats::{ComponentStats, DetailedStats, StatsCollector};
 
 #[cfg(feature = "jemalloc")]
-pub use jemalloc_profiler::{JemallocDelta, JemallocError, JemallocGuard, JemallocProfiler, JemallocStats};
+pub use jemalloc_profiler::{
+    JemallocDelta, JemallocError, JemallocGuard, JemallocProfiler, JemallocStats,
+};
 
 #[cfg(feature = "profilers")]
 pub use dict_profiler::DictProfiler;

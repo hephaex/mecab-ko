@@ -386,7 +386,10 @@ impl AnalyzerConfig {
 
         // 품사 필터
         match self.mode {
-            AnalysisMode::Full | AnalysisMode::SurfaceOnly | AnalysisMode::Lemmatized | AnalysisMode::PosTagsOnly => true,
+            AnalysisMode::Full
+            | AnalysisMode::SurfaceOnly
+            | AnalysisMode::Lemmatized
+            | AnalysisMode::PosTagsOnly => true,
             AnalysisMode::NounsOnly => {
                 token.pos.starts_with("NN")
                     || token.pos.starts_with("NR")
@@ -394,9 +397,7 @@ impl AnalyzerConfig {
             }
             AnalysisMode::VerbsOnly => token.pos == "VV",
             AnalysisMode::AdjectivesOnly => token.pos == "VA",
-            AnalysisMode::PredicatesOnly => {
-                token.pos == "VV" || token.pos == "VA"
-            }
+            AnalysisMode::PredicatesOnly => token.pos == "VV" || token.pos == "VA",
             AnalysisMode::ContentWordsOnly => {
                 token.pos.starts_with("NN")
                     || token.pos.starts_with("NR")
@@ -405,11 +406,10 @@ impl AnalyzerConfig {
                     || token.pos == "VA"
                     || token.pos.starts_with("MA")
             }
-            AnalysisMode::Custom => {
-                self.pos_filter
-                    .as_ref()
-                    .map_or(true, |f| f.matches(&token.pos))
-            }
+            AnalysisMode::Custom => self
+                .pos_filter
+                .as_ref()
+                .map_or(true, |f| f.matches(&token.pos)),
         }
     }
 
@@ -424,9 +424,7 @@ impl AnalyzerConfig {
                     token.surface.clone()
                 }
             }
-            LemmatizationMode::All => {
-                token.lemma.clone().unwrap_or_else(|| token.surface.clone())
-            }
+            LemmatizationMode::All => token.lemma.clone().unwrap_or_else(|| token.surface.clone()),
         };
 
         AnalyzedToken {
@@ -574,9 +572,7 @@ mod tests {
 
     #[test]
     fn test_pos_filter_exclude() {
-        let filter = PosFilter::new()
-            .include_prefix("N")
-            .exclude_tag("NNB");
+        let filter = PosFilter::new().include_prefix("N").exclude_tag("NNB");
 
         assert!(filter.matches("NNG"));
         assert!(filter.matches("NNP"));
@@ -690,21 +686,19 @@ mod tests {
 
     #[test]
     fn test_lemmatization_mode() {
-        let tokens = vec![
-            Token {
-                surface: "먹었".to_string(),
-                pos: "VV".to_string(),
-                start_pos: 0,
-                end_pos: 2,
-                start_byte: 0,
-                end_byte: 6,
-                reading: Some("먹".to_string()),
-                lemma: Some("먹다".to_string()),
-                cost: 0,
-                features: String::new(),
-                normalized: None,
-            },
-        ];
+        let tokens = vec![Token {
+            surface: "먹었".to_string(),
+            pos: "VV".to_string(),
+            start_pos: 0,
+            end_pos: 2,
+            start_byte: 0,
+            end_byte: 6,
+            reading: Some("먹".to_string()),
+            lemma: Some("먹다".to_string()),
+            cost: 0,
+            features: String::new(),
+            normalized: None,
+        }];
 
         // 원형 복원 없음
         let config = AnalyzerConfig::new(AnalysisMode::Full);

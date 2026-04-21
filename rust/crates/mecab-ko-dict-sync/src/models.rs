@@ -266,8 +266,7 @@ mod tests {
 
     #[test]
     fn test_dict_entry_with_reading() {
-        let entry = DictEntry::new("123", "愛", "명사", "사랑")
-            .with_reading("애");
+        let entry = DictEntry::new("123", "愛", "명사", "사랑").with_reading("애");
         assert_eq!(entry.reading, Some("애".to_string()));
     }
 

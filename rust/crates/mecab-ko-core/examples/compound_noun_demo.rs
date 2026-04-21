@@ -19,13 +19,22 @@ fn main() {
     // Test cases demonstrating different compound noun patterns
     let test_cases = vec![
         ("형태소분석", "Basic compound: morpheme + analysis"),
-        ("자연언어처리", "Three-part compound: natural + language + processing"),
+        (
+            "자연언어처리",
+            "Three-part compound: natural + language + processing",
+        ),
         ("대한민국", "Proper noun compound: Korea"),
-        ("국립국어원", "Sino-Korean compound: National Institute of Korean Language"),
+        (
+            "국립국어원",
+            "Sino-Korean compound: National Institute of Korean Language",
+        ),
         ("학교운동장", "Mixed jongseong: school + playground"),
         ("학생들", "Suffix pattern: student + plural marker"),
         ("신도시", "Prefix pattern: new + city"),
-        ("형태소분석기", "Complex compound: morpheme + analysis + tool"),
+        (
+            "형태소분석기",
+            "Complex compound: morpheme + analysis + tool",
+        ),
     ];
 
     // Create tokenizer with different decompound modes

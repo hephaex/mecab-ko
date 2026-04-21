@@ -287,7 +287,7 @@ fn bench_nbest_search(c: &mut Criterion) {
     group.finish();
 }
 
-/// 개선된 N-best 탐색 성능 (ImprovedNbestSearcher)
+/// 개선된 N-best 탐색 성능 (`ImprovedNbestSearcher`)
 fn bench_improved_nbest_search(c: &mut Criterion) {
     let matrix = create_test_matrix();
 

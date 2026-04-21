@@ -290,12 +290,7 @@ mod tests {
             make_dict(&[("x", "NNG", 0), ("y", "NNG", 0)]),
             None,
         );
-        stack.add_domain(
-            DomainId("b".into()),
-            1,
-            make_dict(&[("z", "NNG", 0)]),
-            None,
-        );
+        stack.add_domain(DomainId("b".into()), 1, make_dict(&[("z", "NNG", 0)]), None);
 
         let listing = stack.list_domains();
         // Sorted by priority: b(1) then a(2)

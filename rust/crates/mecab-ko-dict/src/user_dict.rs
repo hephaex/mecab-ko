@@ -34,22 +34,14 @@ use crate::Entry;
 /// 유효한 품사 태그 목록 (세종 품사 태그)
 const VALID_POS_TAGS: &[&str] = &[
     // 체언
-    "NNG", "NNP", "NNB", "NR", "NP",
-    // 용언
-    "VV", "VA", "VX", "VCP", "VCN",
-    // 관형사/부사/감탄사
-    "MM", "MAG", "MAJ", "IC",
-    // 조사
-    "JKS", "JKC", "JKG", "JKO", "JKB", "JKV", "JKQ", "JX", "JC",
-    // 어미
-    "EP", "EF", "EC", "ETN", "ETM",
-    // 접두사/접미사
-    "XPN", "XSN", "XSV", "XSA", "XR",
-    // 기호
-    "SF", "SE", "SS", "SP", "SO", "SW",
-    // 외국어/한자/숫자
-    "SL", "SH", "SN",
-    // 분석불능
+    "NNG", "NNP", "NNB", "NR", "NP", // 용언
+    "VV", "VA", "VX", "VCP", "VCN", // 관형사/부사/감탄사
+    "MM", "MAG", "MAJ", "IC", // 조사
+    "JKS", "JKC", "JKG", "JKO", "JKB", "JKV", "JKQ", "JX", "JC", // 어미
+    "EP", "EF", "EC", "ETN", "ETM", // 접두사/접미사
+    "XPN", "XSN", "XSV", "XSA", "XR", // 기호
+    "SF", "SE", "SS", "SP", "SO", "SW", // 외국어/한자/숫자
+    "SL", "SH", "SN", // 분석불능
     "NA",
 ];
 
@@ -151,13 +143,13 @@ pub fn estimate_pos(surface: &str) -> &'static str {
 fn is_hangul(c: char) -> bool {
     ('\u{AC00}'..='\u{D7A3}').contains(&c) || // 완성형 한글
     ('\u{1100}'..='\u{11FF}').contains(&c) || // 한글 자모
-    ('\u{3130}'..='\u{318F}').contains(&c)    // 호환용 자모
+    ('\u{3130}'..='\u{318F}').contains(&c) // 호환용 자모
 }
 
 /// 한자 문자 여부 확인
 fn is_hanja(c: char) -> bool {
     ('\u{4E00}'..='\u{9FFF}').contains(&c) || // CJK 통합 한자
-    ('\u{3400}'..='\u{4DBF}').contains(&c)    // CJK 확장 A
+    ('\u{3400}'..='\u{4DBF}').contains(&c) // CJK 확장 A
 }
 
 /// 사전 검증 결과
@@ -484,10 +476,16 @@ impl UserDictionary {
         // 확장 포맷: left_id, right_id 지원 (5번째, 6번째 필드)
         if parts.len() >= 6 && !parts[4].trim().is_empty() && !parts[5].trim().is_empty() {
             let left_id = parts[4].trim().parse::<u16>().map_err(|_| {
-                DictError::Format(format!("Invalid left_id at line {}: {}", line_num, parts[4]))
+                DictError::Format(format!(
+                    "Invalid left_id at line {}: {}",
+                    line_num, parts[4]
+                ))
             })?;
             let right_id = parts[5].trim().parse::<u16>().map_err(|_| {
-                DictError::Format(format!("Invalid right_id at line {}: {}", line_num, parts[5]))
+                DictError::Format(format!(
+                    "Invalid right_id at line {}: {}",
+                    line_num, parts[5]
+                ))
             })?;
             self.add_entry_with_ids(surface, pos, cost, left_id, right_id, reading);
         } else {
@@ -744,9 +742,7 @@ impl UserDictionary {
     /// # Errors
     ///
     /// 파일을 읽을 수 없는 경우 에러를 반환합니다.
-    pub fn check_csv_duplicates<P: AsRef<Path>>(
-        path: P,
-    ) -> Result<Vec<(usize, String, String)>> {
+    pub fn check_csv_duplicates<P: AsRef<Path>>(path: P) -> Result<Vec<(usize, String, String)>> {
         let file = std::fs::File::open(path.as_ref()).map_err(DictError::Io)?;
         let reader = BufReader::new(file);
 
@@ -1235,8 +1231,10 @@ mod tests {
         dict.add_entry("챗GPT", "NNP", None, None); // 시스템에 없음
         dict.add_entry("바나나", "NNG", None, None); // 시스템에 있음
 
-        let system_surfaces: HashSet<String> =
-            ["사과", "바나나", "포도"].iter().map(|s| s.to_string()).collect();
+        let system_surfaces: HashSet<String> = ["사과", "바나나", "포도"]
+            .iter()
+            .map(|s| (*s).to_string())
+            .collect();
 
         let conflicts = dict.check_system_conflicts(&system_surfaces);
         assert_eq!(conflicts.len(), 2);

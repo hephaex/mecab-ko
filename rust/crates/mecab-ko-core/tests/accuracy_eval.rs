@@ -12,8 +12,7 @@ use mecab_ko_dict::UserDictionary;
 #[test]
 fn test_full_accuracy_evaluation() {
     // 프로젝트 루트 경로 계산
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
@@ -21,36 +20,35 @@ fn test_full_accuracy_evaluation() {
         .unwrap_or(std::path::Path::new("."));
 
     // 사전 경로 설정
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     // 사용자 사전 로드
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
-        println!("Loaded user dictionary: {:?}", user_dict_path);
+        println!("Loaded user dictionary: {user_dict_path:?}");
     }
 
     // 테스트 데이터셋 로드
-    let eval_path = std::env::var("MECAB_EVAL_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/eval/sample.tsv")
-                .to_string_lossy()
-                .to_string()
-        });
+    let eval_path = std::env::var("MECAB_EVAL_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/eval/sample.tsv")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let dataset = TestDataset::from_tsv(&eval_path)
-        .expect("Failed to load test dataset");
+    let dataset = TestDataset::from_tsv(&eval_path).expect("Failed to load test dataset");
 
     println!("\n=== 정확도 평가 시작 ===");
     println!("테스트 문장 수: {}", dataset.len());
@@ -75,29 +73,28 @@ fn test_ec_error_analysis() {
     use mecab_ko_core::sejong::SejongConverter;
 
     // 프로젝트 루트 경로 계산
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     // 사용자 사전 로드
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
@@ -138,9 +135,14 @@ fn test_ec_error_analysis() {
             passed += 1;
         }
         let match_status = if is_match { "✓" } else { "✗" };
-        println!("{} \"{}\": {} (예상: {})", match_status, input, result, expected);
+        println!("{match_status} \"{input}\": {result} (예상: {expected})");
     }
-    println!("\n통과: {}/{} ({:.1}%)", passed, total, passed as f64 / total as f64 * 100.0);
+    println!(
+        "\n통과: {}/{} ({:.1}%)",
+        passed,
+        total,
+        f64::from(passed) / total as f64 * 100.0
+    );
 }
 
 /// ETM 에러 패턴 디버깅
@@ -149,29 +151,28 @@ fn test_etm_error_analysis() {
     use mecab_ko_core::sejong::SejongConverter;
 
     // 프로젝트 루트 경로 계산
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     // 사용자 사전 로드
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
@@ -213,9 +214,14 @@ fn test_etm_error_analysis() {
             passed += 1;
         }
         let match_status = if is_match { "✓" } else { "✗" };
-        println!("{} \"{}\": {} (예상: {})", match_status, input, result, expected);
+        println!("{match_status} \"{input}\": {result} (예상: {expected})");
     }
-    println!("\n통과: {}/{} ({:.1}%)", passed, total, passed as f64 / total as f64 * 100.0);
+    println!(
+        "\n통과: {}/{} ({:.1}%)",
+        passed,
+        total,
+        f64::from(passed) / total as f64 * 100.0
+    );
 }
 
 /// EF 에러 패턴 디버깅
@@ -224,29 +230,28 @@ fn test_ef_error_analysis() {
     use mecab_ko_core::sejong::SejongConverter;
 
     // 프로젝트 루트 경로 계산
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     // 사용자 사전 로드
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
@@ -274,7 +279,7 @@ fn test_ef_error_analysis() {
         // 어요/아요 종결
         ("먹어요", "먹/VV 어요/EF"),
         ("가요", "가/VV 아요/EF"),
-        ("해요", "하/VV 어요/EF"),  // 하+여요 = 해요, 세종 코퍼스 표준
+        ("해요", "하/VV 어요/EF"), // 하+여요 = 해요, 세종 코퍼스 표준
         ("봐요", "보/VV 아요/EF"),
         // ㄹ게요/ㄹ까요 종결
         ("할게요", "하/VV ㄹ게요/EF"),
@@ -302,14 +307,22 @@ fn test_ef_error_analysis() {
             passed += 1;
         }
         let match_status = if is_match { "✓" } else { "✗" };
-        println!("{} \"{}\": {} (예상: {})", match_status, input, result, expected);
+        println!("{match_status} \"{input}\": {result} (예상: {expected})");
         // 실패시 MeCab 원본 출력
         if !is_match {
-            let mecab_output: Vec<String> = tokens.iter().map(|t| format!("{}/{}", t.surface, t.pos)).collect();
-            println!("   MeCab 원본: {:?}", mecab_output);
+            let mecab_output: Vec<String> = tokens
+                .iter()
+                .map(|t| format!("{}/{}", t.surface, t.pos))
+                .collect();
+            println!("   MeCab 원본: {mecab_output:?}");
         }
     }
-    println!("\n통과: {}/{} ({:.1}%)", passed, total, passed as f64 / total as f64 * 100.0);
+    println!(
+        "\n통과: {}/{} ({:.1}%)",
+        passed,
+        total,
+        f64::from(passed) / total as f64 * 100.0
+    );
 }
 
 /// ETN 에러 패턴 디버깅
@@ -318,29 +331,28 @@ fn test_etn_error_analysis() {
     use mecab_ko_core::sejong::SejongConverter;
 
     // 프로젝트 루트 경로 계산
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     // 사용자 사전 로드
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
@@ -383,9 +395,14 @@ fn test_etn_error_analysis() {
             passed += 1;
         }
         let match_status = if is_match { "✓" } else { "✗" };
-        println!("{} \"{}\": {} (예상: {})", match_status, input, result, expected);
+        println!("{match_status} \"{input}\": {result} (예상: {expected})");
     }
-    println!("\n통과: {}/{} ({:.1}%)", passed, total, passed as f64 / total as f64 * 100.0);
+    println!(
+        "\n통과: {}/{} ({:.1}%)",
+        passed,
+        total,
+        f64::from(passed) / total as f64 * 100.0
+    );
 }
 
 /// XSV 에러 패턴 디버깅
@@ -394,29 +411,28 @@ fn test_xsv_error_analysis() {
     use mecab_ko_core::sejong::SejongConverter;
 
     // 프로젝트 루트 경로 계산
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     // 사용자 사전 로드
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
@@ -449,9 +465,14 @@ fn test_xsv_error_analysis() {
             passed += 1;
         }
         let match_status = if is_match { "✓" } else { "✗" };
-        println!("{} \"{}\": {} (예상: {})", match_status, input, result, expected);
+        println!("{match_status} \"{input}\": {result} (예상: {expected})");
     }
-    println!("\n통과: {}/{} ({:.1}%)", passed, total, passed as f64 / total as f64 * 100.0);
+    println!(
+        "\n통과: {}/{} ({:.1}%)",
+        passed,
+        total,
+        f64::from(passed) / total as f64 * 100.0
+    );
 }
 
 /// VCP 에러 패턴 디버깅
@@ -460,29 +481,28 @@ fn test_vcp_error_analysis() {
     use mecab_ko_core::sejong::SejongConverter;
 
     // 프로젝트 루트 경로 계산
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     // 사용자 사전 로드
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
@@ -513,9 +533,14 @@ fn test_vcp_error_analysis() {
             passed += 1;
         }
         let match_status = if is_match { "✓" } else { "✗" };
-        println!("{} \"{}\": {} (예상: {})", match_status, input, result, expected);
+        println!("{match_status} \"{input}\": {result} (예상: {expected})");
     }
-    println!("\n통과: {}/{} ({:.1}%)", passed, total, passed as f64 / total as f64 * 100.0);
+    println!(
+        "\n통과: {}/{} ({:.1}%)",
+        passed,
+        total,
+        f64::from(passed) / total as f64 * 100.0
+    );
 }
 
 /// NNG 에러 패턴 디버깅 - 틀린 사례 분석
@@ -525,44 +550,42 @@ fn test_nng_error_analysis() {
     use mecab_ko_core::sejong::SejongConverter;
 
     // 프로젝트 루트 경로 계산
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     // 사용자 사전 로드
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
 
     let converter = SejongConverter::new();
 
-    let eval_path = std::env::var("MECAB_EVAL_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/eval/sample.tsv")
-                .to_string_lossy()
-                .to_string()
-        });
+    let eval_path = std::env::var("MECAB_EVAL_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/eval/sample.tsv")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let dataset = TestDataset::from_tsv(&eval_path)
-        .expect("Failed to load test dataset");
+    let dataset = TestDataset::from_tsv(&eval_path).expect("Failed to load test dataset");
 
     // NNG 에러 수집
     println!("\n=== NNG 에러 분석 (샘플 10개) ===");
@@ -608,29 +631,28 @@ fn test_xpn_error_analysis() {
     use mecab_ko_core::sejong::SejongConverter;
 
     // 프로젝트 루트 경로 계산
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     // 사용자 사전 로드
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
@@ -670,9 +692,14 @@ fn test_xpn_error_analysis() {
             passed += 1;
         }
         let match_status = if is_match { "✓" } else { "✗" };
-        println!("{} \"{}\": {} (예상: {})", match_status, input, result, expected);
+        println!("{match_status} \"{input}\": {result} (예상: {expected})");
     }
-    println!("\n통과: {}/{} ({:.1}%)", passed, total, passed as f64 / total as f64 * 100.0);
+    println!(
+        "\n통과: {}/{} ({:.1}%)",
+        passed,
+        total,
+        f64::from(passed) / total as f64 * 100.0
+    );
 }
 
 /// NNB 에러 패턴 디버깅
@@ -681,29 +708,28 @@ fn test_nnb_error_analysis() {
     use mecab_ko_core::sejong::SejongConverter;
 
     // 프로젝트 루트 경로 계산
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     // 사용자 사전 로드
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
@@ -747,9 +773,14 @@ fn test_nnb_error_analysis() {
             passed += 1;
         }
         let match_status = if is_match { "✓" } else { "✗" };
-        println!("{} \"{}\": {} (예상: {})", match_status, input, result, expected);
+        println!("{match_status} \"{input}\": {result} (예상: {expected})");
     }
-    println!("\n통과: {}/{} ({:.1}%)", passed, total, passed as f64 / total as f64 * 100.0);
+    println!(
+        "\n통과: {}/{} ({:.1}%)",
+        passed,
+        total,
+        f64::from(passed) / total as f64 * 100.0
+    );
 }
 
 /// EC 에러 패턴 sample.tsv에서 분석
@@ -758,43 +789,41 @@ fn test_ec_sample_errors() {
     use mecab_ko_core::evaluate::TestDataset;
     use mecab_ko_core::sejong::SejongConverter;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
 
     let converter = SejongConverter::new();
 
-    let eval_path = std::env::var("MECAB_EVAL_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/eval/sample.tsv")
-                .to_string_lossy()
-                .to_string()
-        });
+    let eval_path = std::env::var("MECAB_EVAL_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/eval/sample.tsv")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let dataset = TestDataset::from_tsv(&eval_path)
-        .expect("Failed to load test dataset");
+    let dataset = TestDataset::from_tsv(&eval_path).expect("Failed to load test dataset");
 
     println!("\n=== EC 에러 분석 (sample.tsv) ===");
     let mut error_count = 0;
@@ -828,7 +857,7 @@ fn test_ec_sample_errors() {
             }
         }
     }
-    println!("EC 오류 총 {}개 발견", error_count);
+    println!("EC 오류 총 {error_count}개 발견");
 }
 
 /// JKS 에러 패턴 sample.tsv에서 분석
@@ -837,43 +866,41 @@ fn test_jks_sample_errors() {
     use mecab_ko_core::evaluate::TestDataset;
     use mecab_ko_core::sejong::SejongConverter;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
 
     let converter = SejongConverter::new();
 
-    let eval_path = std::env::var("MECAB_EVAL_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/eval/sample.tsv")
-                .to_string_lossy()
-                .to_string()
-        });
+    let eval_path = std::env::var("MECAB_EVAL_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/eval/sample.tsv")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let dataset = TestDataset::from_tsv(&eval_path)
-        .expect("Failed to load test dataset");
+    let dataset = TestDataset::from_tsv(&eval_path).expect("Failed to load test dataset");
 
     println!("\n=== JKS 에러 분석 (sample.tsv) ===");
     let mut error_count = 0;
@@ -907,7 +934,7 @@ fn test_jks_sample_errors() {
             }
         }
     }
-    println!("JKS 오류 총 {}개 발견", error_count);
+    println!("JKS 오류 총 {error_count}개 발견");
 }
 
 /// MAG 에러 패턴 sample.tsv에서 분석
@@ -916,43 +943,41 @@ fn test_mag_sample_errors() {
     use mecab_ko_core::evaluate::TestDataset;
     use mecab_ko_core::sejong::SejongConverter;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
 
     let converter = SejongConverter::new();
 
-    let eval_path = std::env::var("MECAB_EVAL_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/eval/sample.tsv")
-                .to_string_lossy()
-                .to_string()
-        });
+    let eval_path = std::env::var("MECAB_EVAL_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/eval/sample.tsv")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let dataset = TestDataset::from_tsv(&eval_path)
-        .expect("Failed to load test dataset");
+    let dataset = TestDataset::from_tsv(&eval_path).expect("Failed to load test dataset");
 
     println!("\n=== MAG 에러 분석 (sample.tsv) ===");
     let mut error_count = 0;
@@ -986,7 +1011,7 @@ fn test_mag_sample_errors() {
             }
         }
     }
-    println!("MAG 오류 총 {}개 발견", error_count);
+    println!("MAG 오류 총 {error_count}개 발견");
 }
 
 /// EF 에러 패턴 sample.tsv에서 분석
@@ -995,43 +1020,41 @@ fn test_ef_sample_errors() {
     use mecab_ko_core::evaluate::TestDataset;
     use mecab_ko_core::sejong::SejongConverter;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
 
     let converter = SejongConverter::new();
 
-    let eval_path = std::env::var("MECAB_EVAL_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/eval/sample.tsv")
-                .to_string_lossy()
-                .to_string()
-        });
+    let eval_path = std::env::var("MECAB_EVAL_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/eval/sample.tsv")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let dataset = TestDataset::from_tsv(&eval_path)
-        .expect("Failed to load test dataset");
+    let dataset = TestDataset::from_tsv(&eval_path).expect("Failed to load test dataset");
 
     println!("\n=== EF 에러 분석 (sample.tsv) ===");
     let mut error_count = 0;
@@ -1065,7 +1088,7 @@ fn test_ef_sample_errors() {
             }
         }
     }
-    println!("EF 오류 총 {}개 발견", error_count);
+    println!("EF 오류 총 {error_count}개 발견");
 }
 
 /// VX 에러 패턴 sample.tsv에서 분석
@@ -1074,43 +1097,41 @@ fn test_vx_sample_errors() {
     use mecab_ko_core::evaluate::TestDataset;
     use mecab_ko_core::sejong::SejongConverter;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
 
     let converter = SejongConverter::new();
 
-    let eval_path = std::env::var("MECAB_EVAL_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/eval/sample.tsv")
-                .to_string_lossy()
-                .to_string()
-        });
+    let eval_path = std::env::var("MECAB_EVAL_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/eval/sample.tsv")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let dataset = TestDataset::from_tsv(&eval_path)
-        .expect("Failed to load test dataset");
+    let dataset = TestDataset::from_tsv(&eval_path).expect("Failed to load test dataset");
 
     println!("\n=== VX 에러 분석 (sample.tsv) ===");
     let mut error_count = 0;
@@ -1144,7 +1165,7 @@ fn test_vx_sample_errors() {
             }
         }
     }
-    println!("VX 오류 총 {}개 발견", error_count);
+    println!("VX 오류 총 {error_count}개 발견");
 }
 
 /// XSV 에러 패턴 sample.tsv에서 분석
@@ -1153,43 +1174,41 @@ fn test_xsv_sample_errors() {
     use mecab_ko_core::evaluate::TestDataset;
     use mecab_ko_core::sejong::SejongConverter;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
 
     let converter = SejongConverter::new();
 
-    let eval_path = std::env::var("MECAB_EVAL_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/eval/sample.tsv")
-                .to_string_lossy()
-                .to_string()
-        });
+    let eval_path = std::env::var("MECAB_EVAL_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/eval/sample.tsv")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let dataset = TestDataset::from_tsv(&eval_path)
-        .expect("Failed to load test dataset");
+    let dataset = TestDataset::from_tsv(&eval_path).expect("Failed to load test dataset");
 
     println!("\n=== XSV 에러 분석 (sample.tsv) ===");
     let mut error_count = 0;
@@ -1223,49 +1242,47 @@ fn test_xsv_sample_errors() {
             }
         }
     }
-    println!("XSV 오류 총 {}개 발견", error_count);
+    println!("XSV 오류 총 {error_count}개 발견");
 }
 
 /// 특정 품사별 정확도 검증
 #[test]
 fn test_pos_accuracy_breakdown() {
     // 프로젝트 루트 경로 계산
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     // 사용자 사전 로드
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
 
-    let eval_path = std::env::var("MECAB_EVAL_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/eval/sample.tsv")
-                .to_string_lossy()
-                .to_string()
-        });
+    let eval_path = std::env::var("MECAB_EVAL_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/eval/sample.tsv")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let dataset = TestDataset::from_tsv(&eval_path)
-        .expect("Failed to load test dataset");
+    let dataset = TestDataset::from_tsv(&eval_path).expect("Failed to load test dataset");
 
     let result = evaluate_dataset_sejong(&mut tokenizer, &dataset);
 
@@ -1293,28 +1310,27 @@ fn test_pos_accuracy_breakdown() {
 fn test_vx_pattern_debug() {
     use mecab_ko_core::sejong::SejongConverter;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
@@ -1337,17 +1353,20 @@ fn test_vx_pattern_debug() {
     println!("\n=== VX 패턴 디버깅 ===");
     for (input, expected) in test_cases {
         let tokens = tokenizer.tokenize(input);
-        let mecab_output: Vec<String> = tokens.iter().map(|t| format!("{}/{}", t.surface, t.pos)).collect();
+        let mecab_output: Vec<String> = tokens
+            .iter()
+            .map(|t| format!("{}/{}", t.surface, t.pos))
+            .collect();
 
         let sejong_tokens = converter.convert_tokens(&tokens);
         let result = converter.format_sejong(&sejong_tokens);
 
         let is_match = result == expected;
         let match_status = if is_match { "✓" } else { "✗" };
-        println!("{} \"{}\"", match_status, input);
-        println!("   MeCab:  {:?}", mecab_output);
-        println!("   Sejong: {}", result);
-        println!("   예상:   {}", expected);
+        println!("{match_status} \"{input}\"");
+        println!("   MeCab:  {mecab_output:?}");
+        println!("   Sejong: {result}");
+        println!("   예상:   {expected}");
         println!();
     }
 }
@@ -1358,29 +1377,28 @@ fn test_ep_error_analysis() {
     use mecab_ko_core::sejong::SejongConverter;
 
     // 프로젝트 루트 경로 계산
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     // 사용자 사전 로드
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
@@ -1415,7 +1433,10 @@ fn test_ep_error_analysis() {
     let total = test_cases.len();
     for (input, expected) in test_cases {
         let tokens = tokenizer.tokenize(input);
-        let mecab_output: Vec<String> = tokens.iter().map(|t| format!("{}/{}", t.surface, t.pos)).collect();
+        let mecab_output: Vec<String> = tokens
+            .iter()
+            .map(|t| format!("{}/{}", t.surface, t.pos))
+            .collect();
 
         let sejong_tokens = converter.convert_tokens(&tokens);
         let result = converter.format_sejong(&sejong_tokens);
@@ -1425,13 +1446,18 @@ fn test_ep_error_analysis() {
             passed += 1;
         }
         let match_status = if is_match { "✓" } else { "✗" };
-        println!("{} \"{}\"", match_status, input);
-        println!("   MeCab:  {:?}", mecab_output);
-        println!("   Sejong: {}", result);
-        println!("   예상:   {}", expected);
+        println!("{match_status} \"{input}\"");
+        println!("   MeCab:  {mecab_output:?}");
+        println!("   Sejong: {result}");
+        println!("   예상:   {expected}");
         println!();
     }
-    println!("통과: {}/{} ({:.1}%)", passed, total, passed as f64 / total as f64 * 100.0);
+    println!(
+        "통과: {}/{} ({:.1}%)",
+        passed,
+        total,
+        f64::from(passed) / total as f64 * 100.0
+    );
 }
 
 /// EF 오류 케이스 상세 분석
@@ -1439,28 +1465,27 @@ fn test_ep_error_analysis() {
 fn test_ef_error_cases_detailed() {
     use mecab_ko_core::sejong::SejongConverter;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
@@ -1485,7 +1510,10 @@ fn test_ef_error_cases_detailed() {
     let total = test_cases.len();
     for (input, expected) in test_cases {
         let tokens = tokenizer.tokenize(input);
-        let mecab_output: Vec<String> = tokens.iter().map(|t| format!("{}/{}", t.surface, t.pos)).collect();
+        let mecab_output: Vec<String> = tokens
+            .iter()
+            .map(|t| format!("{}/{}", t.surface, t.pos))
+            .collect();
 
         let sejong_tokens = converter.convert_tokens(&tokens);
         let result = converter.format_sejong(&sejong_tokens);
@@ -1495,13 +1523,18 @@ fn test_ef_error_cases_detailed() {
             passed += 1;
         }
         let match_status = if is_match { "✓" } else { "✗" };
-        println!("{} \"{}\"", match_status, input);
-        println!("   MeCab:  {:?}", mecab_output);
-        println!("   Sejong: {}", result);
-        println!("   예상:   {}", expected);
+        println!("{match_status} \"{input}\"");
+        println!("   MeCab:  {mecab_output:?}");
+        println!("   Sejong: {result}");
+        println!("   예상:   {expected}");
         println!();
     }
-    println!("통과: {}/{} ({:.1}%)", passed, total, passed as f64 / total as f64 * 100.0);
+    println!(
+        "통과: {}/{} ({:.1}%)",
+        passed,
+        total,
+        f64::from(passed) / total as f64 * 100.0
+    );
 }
 
 /// VCP 에러 패턴 sample.tsv에서 분석
@@ -1510,43 +1543,41 @@ fn test_vcp_sample_errors() {
     use mecab_ko_core::evaluate::TestDataset;
     use mecab_ko_core::sejong::SejongConverter;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
 
     let converter = SejongConverter::new();
 
-    let eval_path = std::env::var("MECAB_EVAL_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/eval/sample.tsv")
-                .to_string_lossy()
-                .to_string()
-        });
+    let eval_path = std::env::var("MECAB_EVAL_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/eval/sample.tsv")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let dataset = TestDataset::from_tsv(&eval_path)
-        .expect("Failed to load test dataset");
+    let dataset = TestDataset::from_tsv(&eval_path).expect("Failed to load test dataset");
 
     println!("\n=== VCP 에러 분석 (sample.tsv) ===");
     let mut error_count = 0;
@@ -1574,13 +1605,16 @@ fn test_vcp_sample_errors() {
                     println!("  정답: {}/VCP → 예측: {}", gold.surface, pred);
 
                     // 전체 예측 결과 출력
-                    let pred_all: Vec<String> = sejong_tokens.iter()
+                    let pred_all: Vec<String> = sejong_tokens
+                        .iter()
                         .map(|t| format!("{}/{}", t.surface, t.pos))
                         .collect();
                     println!("  예측 전체: {}", pred_all.join(" "));
 
                     // 정답 전체 출력
-                    let gold_all: Vec<String> = sentence.tokens.iter()
+                    let gold_all: Vec<String> = sentence
+                        .tokens
+                        .iter()
                         .map(|t| format!("{}/{}", t.surface, t.pos))
                         .collect();
                     println!("  정답 전체: {}", gold_all.join(" "));
@@ -1593,7 +1627,7 @@ fn test_vcp_sample_errors() {
             }
         }
     }
-    println!("VCP 오류 총 {}개 발견", error_count);
+    println!("VCP 오류 총 {error_count}개 발견");
 }
 
 /// VV 에러 패턴 sample.tsv에서 분석
@@ -1602,43 +1636,41 @@ fn test_vv_sample_errors() {
     use mecab_ko_core::evaluate::TestDataset;
     use mecab_ko_core::sejong::SejongConverter;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
 
     let converter = SejongConverter::new();
 
-    let eval_path = std::env::var("MECAB_EVAL_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/eval/sample.tsv")
-                .to_string_lossy()
-                .to_string()
-        });
+    let eval_path = std::env::var("MECAB_EVAL_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/eval/sample.tsv")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let dataset = TestDataset::from_tsv(&eval_path)
-        .expect("Failed to load test dataset");
+    let dataset = TestDataset::from_tsv(&eval_path).expect("Failed to load test dataset");
 
     println!("\n=== VV 에러 분석 (sample.tsv) ===");
     let mut error_count = 0;
@@ -1672,7 +1704,7 @@ fn test_vv_sample_errors() {
             }
         }
     }
-    println!("VV 오류 총 {}개 발견", error_count);
+    println!("VV 오류 총 {error_count}개 발견");
 }
 
 /// Sprint 41: XSV 오류 문장 상세 분석
@@ -1680,31 +1712,30 @@ fn test_vv_sample_errors() {
 fn test_xsv_debug_sentences() {
     use mecab_ko_core::sejong::SejongConverter;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
-        println!("Loaded user dictionary: {:?}", user_dict_path);
+        println!("Loaded user dictionary: {user_dict_path:?}");
     }
 
     let converter = SejongConverter::new();
@@ -1766,12 +1797,15 @@ fn test_xsv_debug_sentences() {
         let sejong_tokens = converter.convert_tokens(&tokens);
         let result = converter.format_sejong(&sejong_tokens);
 
-        println!("\n문장: {}", input);
-        println!("  예상: {}", expected);
-        println!("  결과: {}", result);
+        println!("\n문장: {input}");
+        println!("  예상: {expected}");
+        println!("  결과: {result}");
         println!("  MeCab 원본:");
         for tok in &tokens {
-            println!("    {} / {} | features: {}", tok.surface, tok.pos, tok.features);
+            println!(
+                "    {} / {} | features: {}",
+                tok.surface, tok.pos, tok.features
+            );
         }
         println!("  Sejong 변환 후:");
         for tok in &sejong_tokens {
@@ -1788,28 +1822,27 @@ fn test_xsv_debug_sentences() {
 fn test_h_irregular_adjective_ec() {
     use mecab_ko_core::sejong::SejongConverter;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
@@ -1819,9 +1852,18 @@ fn test_h_irregular_adjective_ec() {
     // ㅎ불규칙 형용사 테스트
     let test_cases = [
         // sample.tsv 기준
-        ("하얗다 하얘 하얗으면", "하얗/VA 다/EF 하얗/VA 아/EF 하얗/VA 으면/EC"),
-        ("까맣다 까매 까맣으면", "까맣/VA 다/EF 까맣/VA 아/EF 까맣/VA 으면/EC"),
-        ("노랗다 노래 노랗으면", "노랗/VA 다/EF 노랗/VA 아/EF 노랗/VA 으면/EC"),
+        (
+            "하얗다 하얘 하얗으면",
+            "하얗/VA 다/EF 하얗/VA 아/EF 하얗/VA 으면/EC",
+        ),
+        (
+            "까맣다 까매 까맣으면",
+            "까맣/VA 다/EF 까맣/VA 아/EF 까맣/VA 으면/EC",
+        ),
+        (
+            "노랗다 노래 노랗으면",
+            "노랗/VA 다/EF 노랗/VA 아/EF 노랗/VA 으면/EC",
+        ),
         // 단일 어절
         ("하얗으면", "하얗/VA 으면/EC"),
         ("까맣으면", "까맣/VA 으면/EC"),
@@ -1833,9 +1875,9 @@ fn test_h_irregular_adjective_ec() {
         let sejong_tokens = converter.convert_tokens(&tokens);
         let result = converter.format_sejong(&sejong_tokens);
 
-        println!("\n문장: {}", input);
-        println!("  예상: {}", expected);
-        println!("  결과: {}", result);
+        println!("\n문장: {input}");
+        println!("  예상: {expected}");
+        println!("  결과: {result}");
         println!("  MeCab 원본:");
         for tok in &tokens {
             println!("    {} / {} | {}", tok.surface, tok.pos, tok.features);
@@ -1851,28 +1893,27 @@ fn test_h_irregular_adjective_ec() {
 fn test_specific_sentence_debug() {
     use mecab_ko_core::sejong::SejongConverter;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
@@ -1895,15 +1936,30 @@ fn test_specific_sentence_debug() {
         // NNG 토큰화 오류 디버깅 (sample.tsv: 있/VV 어요/EF)
         ("내일 시간 있어요", "내일/NNG 시간/NNG 있/VV 어요/EF"),
         // "주말" 오류 분석
-        ("주말에 영화 보러 갈래", "주말/NNG 에/JKB 영화/NNG 보/VV 러/EC 가/VV ㄹ래/EF"),
+        (
+            "주말에 영화 보러 갈래",
+            "주말/NNG 에/JKB 영화/NNG 보/VV 러/EC 가/VV ㄹ래/EF",
+        ),
         // "갈등" 오류 분석
-        ("갈등이 심화됐다", "갈등/NNG 이/JKS 심화/NNG 되/XSV 었/EP 다/EF"),
+        (
+            "갈등이 심화됐다",
+            "갈등/NNG 이/JKS 심화/NNG 되/XSV 었/EP 다/EF",
+        ),
         // "전망" 오류 분석
-        ("기온이 영하로 떨어질 전망입니다", "기온/NNG 이/JKS 영하/NNG 로/JKB 떨어지/VV ㄹ/ETM 전망/NNG 이/VCP 습니다/EF"),
+        (
+            "기온이 영하로 떨어질 전망입니다",
+            "기온/NNG 이/JKS 영하/NNG 로/JKB 떨어지/VV ㄹ/ETM 전망/NNG 이/VCP 습니다/EF",
+        ),
         // "진행하고" 오류 분석
-        ("협력하여 진행하고 있다", "협력/NNG 하/XSV 어/EC 진행/NNG 하/XSV 고/EC 있/VX 다/EF"),
+        (
+            "협력하여 진행하고 있다",
+            "협력/NNG 하/XSV 어/EC 진행/NNG 하/XSV 고/EC 있/VX 다/EF",
+        ),
         // "호출하여" 오류 분석 - sample.tsv 기준
-        ("API를 호출하여 결과를 받았다", "API/SL 를/JKO 호출/NNG 하/XSV 어/EC 결과/NNG 를/JKO 받/VV 았/EP 다/EF"),
+        (
+            "API를 호출하여 결과를 받았다",
+            "API/SL 를/JKO 호출/NNG 하/XSV 어/EC 결과/NNG 를/JKO 받/VV 았/EP 다/EF",
+        ),
         // JKB 테스트 케이스 추가
         ("어디서 만날까요", "어디/NP 에서/JKB 만나/VV ㄹ까요/EF"),
         ("예상보다 높았다", "예상/NNG 보다/JKB 높/VA 았/EP 다/EF"),
@@ -1912,7 +1968,10 @@ fn test_specific_sentence_debug() {
         // "되었는데" 테스트
         ("되었는데 그동안", "되/VV 었/EP 는데/EC 그동안/NNG"),
         // "코드 리뷰" 테스트
-        ("코드 리뷰를 진행했다", "코드/NNG 리뷰/NNG 를/JKO 진행/NNG 하/XSV 았/EP 다/EF"),
+        (
+            "코드 리뷰를 진행했다",
+            "코드/NNG 리뷰/NNG 를/JKO 진행/NNG 하/XSV 았/EP 다/EF",
+        ),
         // ㅂ불규칙 동사 분석
         ("줍다 주워 주우면", "줍/VV 다/EF 줍/VV 어/EF 줍/VV 으면/EC"),
         // ㅂ불규칙 형용사 분석
@@ -1923,11 +1982,20 @@ fn test_specific_sentence_debug() {
         // "해" 분해: "하/VV 어/EC"
         ("해 보았다", "하/VV 어/EC 보/VX 았/EP 다/EF"),
         // ㅂ불규칙 형용사 "무겁다" 분석
-        ("무겁다 무거워 무거우면", "무겁/VA 다/EF 무겁/VA 어/EF 무겁/VA 으면/EC"),
+        (
+            "무겁다 무거워 무거우면",
+            "무겁/VA 다/EF 무겁/VA 어/EF 무겁/VA 으면/EC",
+        ),
         // ㄹ탈락 "이르다" 분석
-        ("이르다 일러 이르면", "이르/VV 다/EF 이르/VV 어/EF 이르/VV 면/EC"),
+        (
+            "이르다 일러 이르면",
+            "이르/VV 다/EF 이르/VV 어/EF 이르/VV 면/EC",
+        ),
         // ㅎ불규칙 "노랗다" 분석
-        ("노랗다 노래 노랗으면", "노랗/VA 다/EF 노랗/VA 아/EF 노랗/VA 으면/EC"),
+        (
+            "노랗다 노래 노랗으면",
+            "노랗/VA 다/EF 노랗/VA 아/EF 노랗/VA 으면/EC",
+        ),
         // "있으며" 패턴 (VX + 으며/EC)
         ("진행하고 있으며", "진행/NNG 하/XSV 고/EC 있/VX 으며/EC"),
     ];
@@ -1938,16 +2006,22 @@ fn test_specific_sentence_debug() {
         let sejong_tokens = converter.convert_tokens(&tokens);
         let result = converter.format_sejong(&sejong_tokens);
 
-        println!("\n문장: {}", input);
-        println!("  예상: {}", expected);
-        println!("  결과: {}", result);
+        println!("\n문장: {input}");
+        println!("  예상: {expected}");
+        println!("  결과: {result}");
         println!("  MeCab 원본:");
         for tok in &tokens {
-            println!("    {} / {} [{}-{}] | {}", tok.surface, tok.pos, tok.start_pos, tok.end_pos, tok.features);
+            println!(
+                "    {} / {} [{}-{}] | {}",
+                tok.surface, tok.pos, tok.start_pos, tok.end_pos, tok.features
+            );
         }
         println!("  Sejong 변환:");
         for tok in &sejong_tokens {
-            println!("    {} / {} [{}-{}]", tok.surface, tok.pos, tok.start_pos, tok.end_pos);
+            println!(
+                "    {} / {} [{}-{}]",
+                tok.surface, tok.pos, tok.start_pos, tok.end_pos
+            );
         }
     }
 }
@@ -1955,31 +2029,30 @@ fn test_specific_sentence_debug() {
 /// EP 샘플 오류 분석
 #[test]
 fn test_ep_sample_errors() {
-    use mecab_ko_core::sejong::SejongConverter;
     use mecab_ko_core::evaluate::TestDataset;
+    use mecab_ko_core::sejong::SejongConverter;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
@@ -1987,15 +2060,16 @@ fn test_ep_sample_errors() {
     let converter = SejongConverter::new();
 
     let eval_path = project_root.join("data/eval/sample.tsv");
-    let dataset = TestDataset::from_tsv(&eval_path)
-        .expect("Failed to load test dataset");
+    let dataset = TestDataset::from_tsv(&eval_path).expect("Failed to load test dataset");
 
     println!("\n=== EP 포함 문장 오류 분석 ===");
     let mut ep_errors: Vec<(String, String, String)> = Vec::new();
 
     for sentence in &dataset.sentences {
         // expected 재구성
-        let expected: String = sentence.tokens.iter()
+        let expected: String = sentence
+            .tokens
+            .iter()
             .map(|t| format!("{}/{}", t.surface, t.pos))
             .collect::<Vec<_>>()
             .join(" ");
@@ -2017,9 +2091,9 @@ fn test_ep_sample_errors() {
     println!("EP 포함 오류 문장 수: {}\n", ep_errors.len());
 
     for (input, expected, result) in &ep_errors {
-        println!("입력: {}", input);
-        println!("예상: {}", expected);
-        println!("결과: {}", result);
+        println!("입력: {input}");
+        println!("예상: {expected}");
+        println!("결과: {result}");
 
         // 토큰별 비교
         let exp_tokens: Vec<&str> = expected.split_whitespace().collect();
@@ -2031,7 +2105,7 @@ fn test_ep_sample_errors() {
             let exp = exp_tokens.get(i).unwrap_or(&"MISSING");
             let res = res_tokens.get(i).unwrap_or(&"MISSING");
             if exp != res {
-                println!("  [{}] 예상: {} → 결과: {}", i, exp, res);
+                println!("  [{i}] 예상: {exp} → 결과: {res}");
             }
         }
         println!("---");
@@ -2043,28 +2117,27 @@ fn test_ep_sample_errors() {
 fn test_d_irregular_verb() {
     use mecab_ko_core::sejong::SejongConverter;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
@@ -2074,9 +2147,18 @@ fn test_d_irregular_verb() {
     // ㄷ불규칙 동사 테스트
     let test_cases = [
         // sample.tsv 기준
-        ("걷다 걸어 걸으면 걷는", "걷/VV 다/EF 걷/VV 어/EF 걷/VV 으면/EC 걷/VV 는/ETM"),
-        ("듣다 들어 들으면 듣는", "듣/VV 다/EF 듣/VV 어/EF 듣/VV 으면/EC 듣/VV 는/ETM"),
-        ("묻다 물어 물으면 묻는", "묻/VV 다/EF 묻/VV 어/EF 묻/VV 으면/EC 묻/VV 는/ETM"),
+        (
+            "걷다 걸어 걸으면 걷는",
+            "걷/VV 다/EF 걷/VV 어/EF 걷/VV 으면/EC 걷/VV 는/ETM",
+        ),
+        (
+            "듣다 들어 들으면 듣는",
+            "듣/VV 다/EF 듣/VV 어/EF 듣/VV 으면/EC 듣/VV 는/ETM",
+        ),
+        (
+            "묻다 물어 물으면 묻는",
+            "묻/VV 다/EF 묻/VV 어/EF 묻/VV 으면/EC 묻/VV 는/ETM",
+        ),
     ];
 
     println!("\n=== ㄷ불규칙 동사 분석 ===");
@@ -2085,9 +2167,9 @@ fn test_d_irregular_verb() {
         let sejong_tokens = converter.convert_tokens(&tokens);
         let result = converter.format_sejong(&sejong_tokens);
 
-        println!("\n문장: {}", input);
-        println!("  예상: {}", expected);
-        println!("  결과: {}", result);
+        println!("\n문장: {input}");
+        println!("  예상: {expected}");
+        println!("  결과: {result}");
         println!("  MeCab 원본:");
         for tok in &tokens {
             println!("    {} / {} | {}", tok.surface, tok.pos, tok.features);
@@ -2104,43 +2186,41 @@ fn test_list_all_mismatches() {
     use mecab_ko_core::sejong::SejongConverter;
 
     // 프로젝트 루트 경로 계산
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
 
     let converter = SejongConverter::new();
 
-    let eval_path = std::env::var("MECAB_EVAL_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/eval/sample.tsv")
-                .to_string_lossy()
-                .to_string()
-        });
+    let eval_path = std::env::var("MECAB_EVAL_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/eval/sample.tsv")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let dataset = TestDataset::from_tsv(&eval_path)
-        .expect("Failed to load test dataset");
+    let dataset = TestDataset::from_tsv(&eval_path).expect("Failed to load test dataset");
 
     println!("\n=== 틀린 문장 목록 ===\n");
     let mut mismatch_count = 0;
@@ -2151,7 +2231,9 @@ fn test_list_all_mismatches() {
         let result = converter.format_sejong(&sejong_tokens);
 
         // Gold 형식으로 변환
-        let expected: String = sentence.tokens.iter()
+        let expected: String = sentence
+            .tokens
+            .iter()
             .map(|t| format!("{}/{}", t.surface, t.pos))
             .collect::<Vec<_>>()
             .join(" ");
@@ -2159,8 +2241,8 @@ fn test_list_all_mismatches() {
         if result.trim() != expected.trim() {
             mismatch_count += 1;
             println!("{}. 문장: {}", mismatch_count, sentence.text);
-            println!("   예상: {}", expected);
-            println!("   결과: {}", result);
+            println!("   예상: {expected}");
+            println!("   결과: {result}");
 
             // MeCab 원본 출력
             println!("   MeCab:");
@@ -2171,9 +2253,12 @@ fn test_list_all_mismatches() {
         }
     }
 
-    println!("\n총 틀린 문장: {} / {} ({:.1}%)",
-        mismatch_count, dataset.sentences.len(),
-        (dataset.sentences.len() - mismatch_count) as f64 / dataset.sentences.len() as f64 * 100.0);
+    println!(
+        "\n총 틀린 문장: {} / {} ({:.1}%)",
+        mismatch_count,
+        dataset.sentences.len(),
+        (dataset.sentences.len() - mismatch_count) as f64 / dataset.sentences.len() as f64 * 100.0
+    );
 }
 
 /// CI/CD Accuracy Gate: 95%+ 정확도 요구
@@ -2182,8 +2267,7 @@ fn test_list_all_mismatches() {
 #[test]
 fn test_accuracy_gate() {
     // 프로젝트 루트 경로 계산
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
@@ -2191,35 +2275,34 @@ fn test_accuracy_gate() {
         .unwrap_or(std::path::Path::new("."));
 
     // 사전 경로 설정
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     // 사용자 사전 로드
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path)
+        user_dict
+            .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
         tokenizer.set_user_dict(user_dict);
     }
 
     // 테스트 데이터셋 로드
-    let eval_path = std::env::var("MECAB_EVAL_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/eval/sample.tsv")
-                .to_string_lossy()
-                .to_string()
-        });
+    let eval_path = std::env::var("MECAB_EVAL_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/eval/sample.tsv")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let dataset = TestDataset::from_tsv(&eval_path)
-        .expect("Failed to load test dataset");
+    let dataset = TestDataset::from_tsv(&eval_path).expect("Failed to load test dataset");
 
     println!("\n=== CI/CD Accuracy Gate ===");
     println!("테스트 문장 수: {}", dataset.len());
@@ -2229,8 +2312,11 @@ fn test_accuracy_gate() {
 
     // 결과 출력 (CI에서 파싱용)
     let accuracy_percent = result.token_accuracy * 100.0;
-    println!("Token Accuracy: {:.1}", accuracy_percent);
-    println!("Sentence Accuracy: {:.1}%", result.sentence_accuracy * 100.0);
+    println!("Token Accuracy: {accuracy_percent:.1}");
+    println!(
+        "Sentence Accuracy: {:.1}%",
+        result.sentence_accuracy * 100.0
+    );
     println!("F1 Score: {:.3}", result.f1_score);
 
     // 95% 정확도 게이트
@@ -2242,31 +2328,33 @@ fn test_accuracy_gate() {
         ACCURACY_THRESHOLD * 100.0
     );
 
-    println!("ACCURACY GATE PASSED: {:.1}% >= {:.0}%", accuracy_percent, ACCURACY_THRESHOLD * 100.0);
+    println!(
+        "ACCURACY GATE PASSED: {:.1}% >= {:.0}%",
+        accuracy_percent,
+        ACCURACY_THRESHOLD * 100.0
+    );
 }
 
 /// Sprint 65: 검증 데이터셋 정확도 게이트
 ///
-/// 수작업 검증된 sprint58_verified.tsv 데이터셋에 대한 정확도 검증
+/// 수작업 검증된 `sprint58_verified.tsv` 데이터셋에 대한 정확도 검증
 #[test]
 fn test_accuracy_gate_verified() {
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .unwrap_or_else(|_| ".".to_string());
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap_or(std::path::Path::new("."));
 
-    let dict_path = std::env::var("MECAB_DIC_PATH")
-        .unwrap_or_else(|_| {
-            project_root.join("data/mecab-ko-dic-2.1.1-20180720")
-                .to_string_lossy()
-                .to_string()
-        });
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path)
-        .expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     let eval_path = project_root.join("data/eval/sprint58_verified.tsv");
     if !eval_path.exists() {
@@ -2283,8 +2371,11 @@ fn test_accuracy_gate_verified() {
     let result = evaluate_dataset_sejong(&mut tokenizer, &dataset);
 
     let accuracy_percent = result.token_accuracy * 100.0;
-    println!("Token Accuracy: {:.1}%", accuracy_percent);
-    println!("Sentence Accuracy: {:.1}%", result.sentence_accuracy * 100.0);
+    println!("Token Accuracy: {accuracy_percent:.1}%");
+    println!(
+        "Sentence Accuracy: {:.1}%",
+        result.sentence_accuracy * 100.0
+    );
     println!("F1 Score: {:.3}", result.f1_score);
 
     const VERIFIED_THRESHOLD: f64 = 0.90;
@@ -2295,5 +2386,9 @@ fn test_accuracy_gate_verified() {
         VERIFIED_THRESHOLD * 100.0
     );
 
-    println!("VERIFIED ACCURACY GATE PASSED: {:.1}% >= {:.0}%", accuracy_percent, VERIFIED_THRESHOLD * 100.0);
+    println!(
+        "VERIFIED ACCURACY GATE PASSED: {:.1}% >= {:.0}%",
+        accuracy_percent,
+        VERIFIED_THRESHOLD * 100.0
+    );
 }

@@ -19,8 +19,7 @@ use std::simd::{
     cmp::{SimdOrd, SimdPartialOrd},
     i32x8,
     num::SimdInt,
-    u16x16, u16x8, Simd,
-    Select,
+    u16x16, u16x8, Select, Simd,
 };
 
 /// SIMD 레인 크기 (i32x8 사용)
@@ -255,11 +254,7 @@ pub fn simd_min_across_8(a: &[i32; 8], b: &[i32; 8]) -> [i32; 8] {
 /// 이 함수는 8레인 SIMD를 사용하여 연접 비용을 조회합니다.
 #[inline]
 #[allow(dead_code)]
-fn batch_lookup_generic_8(
-    matrix: &DenseMatrix,
-    right_ids: &[u16],
-    left_ids: &[u16],
-) -> Vec<i32> {
+fn batch_lookup_generic_8(matrix: &DenseMatrix, right_ids: &[u16], left_ids: &[u16]) -> Vec<i32> {
     const LANES: usize = 8;
     let len = right_ids.len().min(left_ids.len());
     let mut result = Vec::with_capacity(len);

@@ -42,7 +42,7 @@ fn main() {
                 println!();
             }
             current_section = line.to_string();
-            println!("{}", line);
+            println!("{line}");
             continue;
         }
 
@@ -52,6 +52,6 @@ fn main() {
         let result = converter.format_sejong(&sejong_tokens);
 
         // TSV 형식 출력
-        println!("{}\t{}", line, result);
+        println!("{line}\t{result}");
     }
 }

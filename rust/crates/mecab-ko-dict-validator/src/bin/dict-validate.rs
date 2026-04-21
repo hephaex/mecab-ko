@@ -300,7 +300,9 @@ fn generate_analysis_output(
 
                     if args.fix {
                         output.push_str("\n자동 수정 제안:\n");
-                        output.push_str("───────────────────────────────────────────────────────────\n");
+                        output.push_str(
+                            "───────────────────────────────────────────────────────────\n",
+                        );
 
                         if analysis.consistency_issues.duplicate_entries > 0 {
                             output.push_str("  중복 제거: 중복된 엔트리를 제거하세요.\n");
@@ -314,9 +316,12 @@ fn generate_analysis_output(
 
                         if !analysis.cost_distribution.outliers.is_empty() {
                             output.push_str("  비용 조정: 이상치 비용 값을 검토하고 적절한 범위로 조정하세요.\n");
-                            output.push_str(&format!("    권장 범위: {} ~ {}\n\n",
-                                analysis.cost_distribution.mean as i32 - (analysis.cost_distribution.std_dev as i32 * 2),
-                                analysis.cost_distribution.mean as i32 + (analysis.cost_distribution.std_dev as i32 * 2)
+                            output.push_str(&format!(
+                                "    권장 범위: {} ~ {}\n\n",
+                                analysis.cost_distribution.mean as i32
+                                    - (analysis.cost_distribution.std_dev as i32 * 2),
+                                analysis.cost_distribution.mean as i32
+                                    + (analysis.cost_distribution.std_dev as i32 * 2)
                             ));
                         }
                     }
@@ -328,7 +333,10 @@ fn generate_analysis_output(
                 }
             }
         } else {
-            warn!("No entries available for analysis in {}", report.file_path.display());
+            warn!(
+                "No entries available for analysis in {}",
+                report.file_path.display()
+            );
         }
     }
 

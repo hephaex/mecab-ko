@@ -245,10 +245,13 @@ impl TokenCache {
         }
 
         let access = self.access_counter.fetch_add(1, Ordering::Relaxed);
-        entries.insert(key, CacheEntry {
-            tokens,
-            last_access: access,
-        });
+        entries.insert(
+            key,
+            CacheEntry {
+                tokens,
+                last_access: access,
+            },
+        );
     }
 
     /// 캐시 조회 또는 계산 후 삽입
@@ -429,7 +432,7 @@ mod tests {
             start_byte: 0,
             end_byte: 9,
         }];
-        cache.insert(key, tokens.clone());
+        cache.insert(key, tokens);
 
         // 조회
         let cached = cache.get(key).unwrap();

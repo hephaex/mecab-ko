@@ -304,12 +304,7 @@ mod tests {
                         let mut d = UserDictionary::new();
                         d.add_entry(format!("단어{i}"), "NNG", Some(-1000), None);
                         let mut s = DomainStack::new();
-                        s.add_domain(
-                            DomainId("t".into()),
-                            0,
-                            Arc::new(d),
-                            None,
-                        );
+                        s.add_domain(DomainId("t".into()), 0, Arc::new(d), None);
                         s
                     });
                 }

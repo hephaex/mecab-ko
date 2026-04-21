@@ -353,8 +353,13 @@ impl ViterbiSearcher {
         // SIMD 최적화: 8개 이상의 이전 노드가 있으면 SIMD 사용
         #[cfg(feature = "simd")]
         if ending_nodes.len() >= 8 {
-            let (best_cost, best_prev) =
-                simd::simd_update_node_cost(lattice, conn_cost, node_id, ending_nodes, &self.space_penalty);
+            let (best_cost, best_prev) = simd::simd_update_node_cost(
+                lattice,
+                conn_cost,
+                node_id,
+                ending_nodes,
+                &self.space_penalty,
+            );
             if let Some(node) = lattice.node_mut(node_id) {
                 node.total_cost = best_cost;
                 node.prev_node_id = best_prev;

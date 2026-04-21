@@ -358,36 +358,22 @@ impl DictAnalyzer {
 fn get_sejong_pos_tags() -> Vec<&'static str> {
     vec![
         // 체언 (Nominals)
-        "NNG", "NNP", "NNB", "NP", "NR",
-        // 용언 (Predicates)
-        "VV", "VA", "VX", "VCP", "VCN",
-        // 관형사 (Determiners)
-        "MM",
-        // 부사 (Adverbs)
-        "MAG", "MAJ",
-        // 감탄사 (Interjections)
-        "IC",
-        // 조사 (Particles)
+        "NNG", "NNP", "NNB", "NP", "NR", // 용언 (Predicates)
+        "VV", "VA", "VX", "VCP", "VCN", // 관형사 (Determiners)
+        "MM",  // 부사 (Adverbs)
+        "MAG", "MAJ", // 감탄사 (Interjections)
+        "IC",  // 조사 (Particles)
         "JKS", "JKC", "JKG", "JKO", "JKB", "JKV", "JKQ", "JX", "JC",
         // 선어말어미 (Pre-final endings)
-        "EP",
-        // 어말어미 (Final endings)
-        "EF", "EC", "ETN", "ETM",
-        // 접두사 (Prefixes)
-        "XPN",
-        // 접미사 (Suffixes)
-        "XSN", "XSV", "XSA",
-        // 어근 (Roots)
-        "XR",
-        // 부호 (Symbols)
-        "SF", "SE", "SSO", "SSC", "SC", "SY",
-        // 외국어 (Foreign words)
-        "SL",
-        // 한자 (Chinese characters)
-        "SH",
-        // 숫자 (Numbers)
-        "SN",
-        // 기타 (Others)
+        "EP", // 어말어미 (Final endings)
+        "EF", "EC", "ETN", "ETM", // 접두사 (Prefixes)
+        "XPN", // 접미사 (Suffixes)
+        "XSN", "XSV", "XSA", // 어근 (Roots)
+        "XR",  // 부호 (Symbols)
+        "SF", "SE", "SSO", "SSC", "SC", "SY", // 외국어 (Foreign words)
+        "SL", // 한자 (Chinese characters)
+        "SH", // 숫자 (Numbers)
+        "SN", // 기타 (Others)
         "UNA", "NNBC", "NA", "NV", "NF",
     ]
 }
@@ -680,7 +666,7 @@ mod tests {
     #[test]
     fn test_std_dev_calculation() {
         let values = vec![2, 4, 4, 4, 5, 5, 7, 9];
-        let mean = values.iter().sum::<i32>() as f64 / values.len() as f64;
+        let mean = f64::from(values.iter().sum::<i32>()) / values.len() as f64;
         let std_dev = DictAnalyzer::calculate_std_dev(&values, mean);
         assert!((std_dev - 2.0).abs() < 0.1);
     }
@@ -699,7 +685,7 @@ mod tests {
         values.push(1000); // Clear outlier
         values.sort_unstable();
 
-        let mean = values.iter().sum::<i32>() as f64 / values.len() as f64;
+        let mean = f64::from(values.iter().sum::<i32>()) / values.len() as f64;
         let std_dev = DictAnalyzer::calculate_std_dev(&values, mean);
         let outliers = DictAnalyzer::detect_outliers(&values, mean, std_dev);
 

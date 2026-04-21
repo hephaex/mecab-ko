@@ -12,7 +12,7 @@ use std::time::Instant;
 
 static SETUP: Once = Once::new();
 
-/// entries.bin v2 형식 생성 (LazyEntries 호환)
+/// entries.bin v2 형식 생성 (`LazyEntries` 호환)
 fn ensure_entries_bin() -> PathBuf {
     SETUP.call_once(|| {
         let mini_dict_path = get_mini_dict_path();
@@ -38,7 +38,10 @@ fn ensure_entries_bin() -> PathBuf {
         if !entries.is_empty() {
             // LazyEntries v2 형식으로 저장
             LazyEntries::save_entries(&entries, &entries_bin).expect("save entries.bin v2");
-            println!("Created entries.bin (v2 format) with {} entries", entries.len());
+            println!(
+                "Created entries.bin (v2 format) with {} entries",
+                entries.len()
+            );
         }
     });
 
@@ -73,48 +76,54 @@ fn test_eager_vs_lazy_loading_characteristics() {
 
     // Eager 로딩
     let eager_start = Instant::now();
-    let eager_dict = SystemDictionary::load_with_options(&dict_path, LoadOptions::speed_optimized())
-        .expect("load eager");
+    let eager_dict =
+        SystemDictionary::load_with_options(&dict_path, LoadOptions::speed_optimized())
+            .expect("load eager");
     let eager_load_time = eager_start.elapsed();
     let eager_entry_count = eager_dict.entry_count();
 
     println!("Eager Loading:");
-    println!("  - Load time: {:?}", eager_load_time);
-    println!("  - Entry count: {}", eager_entry_count);
+    println!("  - Load time: {eager_load_time:?}");
+    println!("  - Entry count: {eager_entry_count}");
 
     // 첫 번째 조회
     let eager_lookup_start = Instant::now();
     let _ = eager_dict.common_prefix_search("안녕");
     let eager_first_lookup = eager_lookup_start.elapsed();
-    println!("  - First lookup: {:?}", eager_first_lookup);
+    println!("  - First lookup: {eager_first_lookup:?}");
 
     // Lazy 로딩
     let lazy_start = Instant::now();
-    let lazy_dict = SystemDictionary::load_with_options(&dict_path, LoadOptions::default())
-        .expect("load lazy");
+    let lazy_dict =
+        SystemDictionary::load_with_options(&dict_path, LoadOptions::default()).expect("load lazy");
     let lazy_load_time = lazy_start.elapsed();
     let lazy_entry_count = lazy_dict.entry_count();
 
     println!("\nLazy Loading:");
-    println!("  - Load time: {:?}", lazy_load_time);
-    println!("  - Entry count: {}", lazy_entry_count);
+    println!("  - Load time: {lazy_load_time:?}");
+    println!("  - Entry count: {lazy_entry_count}");
 
     // 첫 번째 조회 (디스크에서 로드)
     let lazy_lookup_start = Instant::now();
     let _ = lazy_dict.common_prefix_search("안녕");
     let lazy_first_lookup = lazy_lookup_start.elapsed();
-    println!("  - First lookup: {:?}", lazy_first_lookup);
+    println!("  - First lookup: {lazy_first_lookup:?}");
 
     // 두 번째 조회 (캐시됨)
     let lazy_cached_start = Instant::now();
     let _ = lazy_dict.common_prefix_search("안녕");
     let lazy_cached_lookup = lazy_cached_start.elapsed();
-    println!("  - Cached lookup: {:?}", lazy_cached_lookup);
+    println!("  - Cached lookup: {lazy_cached_lookup:?}");
 
     // 기본 검증
-    assert_eq!(eager_entry_count, lazy_entry_count, "Entry count should match");
-    assert!(lazy_load_time <= eager_load_time || eager_entry_count < 100,
-        "Lazy loading should be faster or similar for small dicts");
+    assert_eq!(
+        eager_entry_count, lazy_entry_count,
+        "Entry count should match"
+    );
+    assert!(
+        lazy_load_time <= eager_load_time || eager_entry_count < 100,
+        "Lazy loading should be faster or similar for small dicts"
+    );
 
     println!("\n=== Test Passed ===");
 }
@@ -126,21 +135,40 @@ fn test_load_options_variants() {
 
     // 기본값 (LazyEntries 활성화)
     let default_opts = LoadOptions::default();
-    assert!(default_opts.use_lazy_entries, "Default should enable lazy entries");
-    assert_eq!(default_opts.lazy_cache_size, Some(10000), "Default cache size should be 10000");
+    assert!(
+        default_opts.use_lazy_entries,
+        "Default should enable lazy entries"
+    );
+    assert_eq!(
+        default_opts.lazy_cache_size,
+        Some(10000),
+        "Default cache size should be 10000"
+    );
 
     // 속도 최적화 (Eager)
     let speed_opts = LoadOptions::speed_optimized();
-    assert!(!speed_opts.use_lazy_entries, "Speed optimized should disable lazy entries");
+    assert!(
+        !speed_opts.use_lazy_entries,
+        "Speed optimized should disable lazy entries"
+    );
 
     // 메모리 최적화
     let memory_opts = LoadOptions::memory_optimized();
-    assert!(memory_opts.use_lazy_entries, "Memory optimized should enable lazy entries");
-    assert!(memory_opts.use_mmap_matrix, "Memory optimized should enable mmap matrix");
+    assert!(
+        memory_opts.use_lazy_entries,
+        "Memory optimized should enable lazy entries"
+    );
+    assert!(
+        memory_opts.use_mmap_matrix,
+        "Memory optimized should enable mmap matrix"
+    );
 
     // 호환성 eager()
     let eager_opts = LoadOptions::eager();
-    assert!(!eager_opts.use_lazy_entries, "eager() should disable lazy entries");
+    assert!(
+        !eager_opts.use_lazy_entries,
+        "eager() should disable lazy entries"
+    );
 
     // 모든 옵션으로 로드 가능 확인
     let _ = SystemDictionary::load_with_options(&dict_path, default_opts)
@@ -185,12 +213,12 @@ fn test_entry_store_abstraction() {
     let dict_path = get_mini_dict_path();
 
     // Eager 모드
-    let eager_dict = SystemDictionary::load_with_options(&dict_path, LoadOptions::eager())
-        .expect("load eager");
+    let eager_dict =
+        SystemDictionary::load_with_options(&dict_path, LoadOptions::eager()).expect("load eager");
 
     // Lazy 모드
-    let lazy_dict = SystemDictionary::load_with_options(&dict_path, LoadOptions::default())
-        .expect("load lazy");
+    let lazy_dict =
+        SystemDictionary::load_with_options(&dict_path, LoadOptions::default()).expect("load lazy");
 
     // 동일한 결과 반환 확인
     for i in 0..eager_dict.entry_count().min(10) {
@@ -212,7 +240,7 @@ fn test_entry_store_abstraction() {
     }
 }
 
-/// 테스트 후 정리 (z_cleanup으로 시작하여 마지막에 실행)
+/// 테스트 후 정리 (`z_cleanup으로` 시작하여 마지막에 실행)
 #[test]
 fn z_cleanup_entries_bin() {
     cleanup_entries_bin();

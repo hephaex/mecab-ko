@@ -1,4 +1,4 @@
-use mecab_ko_core::evaluate::{TestDataset, evaluate_dataset_sejong, GoldSentence, GoldToken};
+use mecab_ko_core::evaluate::{evaluate_dataset_sejong, TestDataset};
 use mecab_ko_core::sejong::SejongConverter;
 use mecab_ko_core::tokenizer::Tokenizer;
 use std::path::PathBuf;
@@ -20,11 +20,11 @@ fn main() {
                 println!("Loaded user dictionary\n");
             }
             Err(e) => {
-                eprintln!("Failed to load user dictionary: {}", e);
+                eprintln!("Failed to load user dictionary: {e}");
             }
         }
     } else {
-        eprintln!("User dictionary not found: {:?}", user_dict_path);
+        eprintln!("User dictionary not found: {user_dict_path:?}");
     }
 
     // sample.tsv 평가
@@ -35,7 +35,10 @@ fn main() {
 
         println!("=== Sample.tsv 평가 결과 ===");
         println!("Token Accuracy: {:.1}%", result.token_accuracy * 100.0);
-        println!("Sentence Accuracy: {:.1}%", result.sentence_accuracy * 100.0);
+        println!(
+            "Sentence Accuracy: {:.1}%",
+            result.sentence_accuracy * 100.0
+        );
         println!("POS Accuracy: {:.1}%", result.pos_accuracy * 100.0);
         println!("F1 Score: {:.3}", result.f1_score);
         println!();
@@ -48,8 +51,14 @@ fn main() {
         for (pos, stats) in pos_vec.iter().take(15) {
             if stats.gold_count >= 3 {
                 let errors = stats.gold_count.saturating_sub(stats.correct);
-                println!("{:6} {:5.1}% ({:3}/{:3}) errors={}",
-                    pos, stats.accuracy * 100.0, stats.correct, stats.gold_count, errors);
+                println!(
+                    "{:6} {:5.1}% ({:3}/{:3}) errors={}",
+                    pos,
+                    stats.accuracy * 100.0,
+                    stats.correct,
+                    stats.gold_count,
+                    errors
+                );
             }
         }
         println!();
@@ -61,7 +70,9 @@ fn main() {
             let tokens = tokenizer.tokenize(&sentence.text);
             let sejong = converter.convert_tokens(&tokens);
             let pred_str = converter.format_sejong(&sejong);
-            let gold_str: String = sentence.tokens.iter()
+            let gold_str: String = sentence
+                .tokens
+                .iter()
                 .map(|t| format!("{}/{}", t.surface, t.pos))
                 .collect::<Vec<_>>()
                 .join(" ");
@@ -70,9 +81,9 @@ fn main() {
             }
         }
         for (text, gold, pred) in failures.iter().take(10) {
-            println!("Text: '{}'", text);
-            println!("  Gold: {}", gold);
-            println!("  Pred: {}", pred);
+            println!("Text: '{text}'");
+            println!("  Gold: {gold}");
+            println!("  Pred: {pred}");
             println!();
         }
     }
@@ -86,8 +97,10 @@ fn main() {
             let entries = ud.lookup(surface);
             println!("'{}' in user dict: {} entries", surface, entries.len());
             for e in entries {
-                println!("  pos={}, cost={}, left_id={}, right_id={}",
-                    e.pos, e.cost, e.left_id, e.right_id);
+                println!(
+                    "  pos={}, cost={}, left_id={}, right_id={}",
+                    e.pos, e.cost, e.left_id, e.right_id
+                );
             }
         }
     }
@@ -98,9 +111,14 @@ fn main() {
     let lattice = tokenizer.tokenize_to_lattice("신중한");
     println!("Lattice for '신중한':");
     for node in lattice.nodes() {
-        println!("  start={} end={} surface='{}' cost={} pos='{}'",
-            node.start_pos, node.end_pos, node.surface, node.word_cost,
-            node.feature.split(',').next().unwrap_or("?"));
+        println!(
+            "  start={} end={} surface='{}' cost={} pos='{}'",
+            node.start_pos,
+            node.end_pos,
+            node.surface,
+            node.word_cost,
+            node.feature.split(',').next().unwrap_or("?")
+        );
     }
     println!();
 
@@ -118,19 +136,22 @@ fn main() {
     println!("=== 디버깅 케이스 ===");
     for (text, expected) in debug_cases {
         let tokens = tokenizer.tokenize(text);
-        println!("--- '{}' ---", text);
+        println!("--- '{text}' ---");
         println!("MeCab tokens:");
         for t in &tokens {
-            println!("  surface='{}' pos='{}' features='{}'", t.surface, t.pos, t.features);
+            println!(
+                "  surface='{}' pos='{}' features='{}'",
+                t.surface, t.pos, t.features
+            );
         }
 
         let sejong_tokens = converter.convert_tokens(&tokens);
         let result = converter.format_sejong(&sejong_tokens);
 
         let status = if result == expected { "✓" } else { "✗" };
-        println!("{} 결과: {}", status, result);
+        println!("{status} 결과: {result}");
         if result != expected {
-            println!("   예상: {}", expected);
+            println!("   예상: {expected}");
         }
         println!();
     }

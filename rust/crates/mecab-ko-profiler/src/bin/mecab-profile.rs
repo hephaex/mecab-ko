@@ -709,9 +709,7 @@ fn compare_baseline(
     }
 
     // --- Print report ---
-    let had_regression = metrics
-        .iter()
-        .any(|m| m.is_regression(threshold_pct));
+    let had_regression = metrics.iter().any(|m| m.is_regression(threshold_pct));
 
     if verbose || had_regression {
         eprintln!();
@@ -830,8 +828,7 @@ fn run_baseline_action(
                 eprintln!("{}", "Running profiling for baseline...".cyan());
             }
 
-            let (stats, _) =
-                profile_benchmark(&name, iterations, dict_path, None, verbose)?;
+            let (stats, _) = profile_benchmark(&name, iterations, dict_path, None, verbose)?;
 
             save_baseline_file(&stats, &baseline_path, verbose)?;
 
@@ -851,8 +848,7 @@ fn run_baseline_action(
                 eprintln!("{}", "Running profiling for comparison...".cyan());
             }
 
-            let (stats, _) =
-                profile_benchmark(&name, iterations, dict_path, None, verbose)?;
+            let (stats, _) = profile_benchmark(&name, iterations, dict_path, None, verbose)?;
 
             let had_regression = compare_baseline(&baseline_path, &stats, threshold, true)?;
 

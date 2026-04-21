@@ -58,7 +58,6 @@ impl DecompoundMode {
     }
 }
 
-
 /// 분석기 설정
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AnalyzerConfig {

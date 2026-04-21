@@ -146,11 +146,11 @@ fn analyze_text_impl(env: &mut JNIEnv, handle: jlong, text: &JString) -> Result<
         .into();
 
     // Read lock으로 Arc clone 후 즉시 해제 -- 최소 contention
-    let analyzer_arc = ANALYZERS
-        .read()
-        .get(&handle)
-        .cloned()
-        .ok_or_else(|| Error::jni(format!("Invalid or already destroyed analyzer handle: {handle}")))?;
+    let analyzer_arc = ANALYZERS.read().get(&handle).cloned().ok_or_else(|| {
+        Error::jni(format!(
+            "Invalid or already destroyed analyzer handle: {handle}"
+        ))
+    })?;
 
     let tokens = {
         let guard = analyzer_arc

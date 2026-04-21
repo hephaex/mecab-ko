@@ -71,6 +71,7 @@ impl EagerStore {
 
     /// 내부 엔트리 참조 반환 (테스트용)
     #[cfg(test)]
+    #[must_use]
     pub fn entries(&self) -> &[Arc<DictEntry>] {
         &self.entries
     }
@@ -78,16 +79,13 @@ impl EagerStore {
 
 impl EntryStore for EagerStore {
     fn get(&self, index: u32) -> Result<Arc<DictEntry>> {
-        self.entries
-            .get(index as usize)
-            .cloned()
-            .ok_or_else(|| {
-                DictError::Format(format!(
-                    "entry index out of bounds: {} >= {}",
-                    index,
-                    self.entries.len()
-                ))
-            })
+        self.entries.get(index as usize).cloned().ok_or_else(|| {
+            DictError::Format(format!(
+                "entry index out of bounds: {} >= {}",
+                index,
+                self.entries.len()
+            ))
+        })
     }
 
     fn get_entries_at(&self, first_index: u32, surface: &str) -> Result<Vec<Arc<DictEntry>>> {

@@ -113,8 +113,8 @@ fn main() {
     // 기본 동사 활용형 생성
     for (stem, pos, irregular_type) in HIGH_FREQ_VERBS {
         let verb = VerbEntry {
-            stem: stem.to_string(),
-            pos: pos.to_string(),
+            stem: (*stem).to_string(),
+            pos: (*pos).to_string(),
             irregular_type: *irregular_type,
             base_cost: -500, // 기본 비용
         };

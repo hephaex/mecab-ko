@@ -313,13 +313,7 @@ fn test_e2e_sequential_tokenizations() {
     let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
 
     // Use words from the mini-dict so this works without a full dictionary
-    let test_cases = vec![
-        "안녕",
-        "감사",
-        "한국어",
-        "사람",
-        "나",
-    ];
+    let test_cases = vec!["안녕", "감사", "한국어", "사람", "나"];
 
     for (i, input) in test_cases.iter().enumerate() {
         let tokens = tokenizer.tokenize(input);
@@ -399,10 +393,7 @@ fn test_e2e_mixed_korean_english() {
     for input in test_cases {
         let tokens = tokenizer.tokenize(input);
 
-        assert!(
-            !tokens.is_empty(),
-            "Should tokenize Korean text: '{input}'"
-        );
+        assert!(!tokens.is_empty(), "Should tokenize Korean text: '{input}'");
 
         println!("Input: {input}");
         println!("Tokens:");

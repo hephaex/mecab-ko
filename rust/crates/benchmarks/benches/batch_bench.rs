@@ -321,20 +321,16 @@ fn bench_sequential_vs_parallel(c: &mut Criterion) {
         group.throughput(Throughput::Bytes(total_bytes as u64));
 
         // 순차 처리
-        group.bench_with_input(
-            BenchmarkId::new("sequential", size),
-            &texts,
-            |b, texts| {
-                b.iter(|| {
-                    let mut results = Vec::new();
-                    for text in texts {
-                        let tokens = tokenizer.tokenize(black_box(text));
-                        results.push(tokens);
-                    }
-                    black_box(results)
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("sequential", size), &texts, |b, texts| {
+            b.iter(|| {
+                let mut results = Vec::new();
+                for text in texts {
+                    let tokens = tokenizer.tokenize(black_box(text));
+                    results.push(tokens);
+                }
+                black_box(results)
+            });
+        });
 
         // 병렬 처리 (BatchTokenizer)
         group.bench_with_input(

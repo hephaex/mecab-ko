@@ -35,10 +35,7 @@ fn test_system_dictionary_integration() {
                 dict.entry_count() > 0,
                 "entries.csv exists but no entries loaded"
             );
-            println!(
-                "Loaded {} entries from mini dictionary",
-                dict.entry_count()
-            );
+            println!("Loaded {} entries from mini dictionary", dict.entry_count());
 
             // 엔트리 내용 검증 (첫 번째 엔트리가 "안녕"인지 확인)
             let entry = dict.get_entry(0).expect("should have first entry");

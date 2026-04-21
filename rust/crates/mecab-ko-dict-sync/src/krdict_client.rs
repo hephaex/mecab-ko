@@ -152,9 +152,7 @@ impl KrDictClient {
             return match status.as_u16() {
                 401 | 403 => Err(SyncError::InvalidApiKey),
                 429 => Err(SyncError::RateLimitExceeded),
-                _ => Err(SyncError::api_error(format!(
-                    "HTTP {status}: {body}"
-                ))),
+                _ => Err(SyncError::api_error(format!("HTTP {status}: {body}"))),
             };
         }
 
@@ -223,9 +221,7 @@ impl KrDictClient {
                 404 => Err(SyncError::api_error(format!(
                     "Entry not found: {target_code}"
                 ))),
-                _ => Err(SyncError::api_error(format!(
-                    "HTTP {status}: {body}"
-                ))),
+                _ => Err(SyncError::api_error(format!("HTTP {status}: {body}"))),
             };
         }
 

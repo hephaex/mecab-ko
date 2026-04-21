@@ -144,9 +144,9 @@ impl LazyEntries {
 
         // 매직 넘버 검증
         let mut magic = [0u8; 4];
-        cursor.read_exact(&mut magic).map_err(|e| {
-            DictError::Format(format!("entries.bin v2: failed to read magic: {e}"))
-        })?;
+        cursor
+            .read_exact(&mut magic)
+            .map_err(|e| DictError::Format(format!("entries.bin v2: failed to read magic: {e}")))?;
         if &magic != LAZY_ENTRIES_MAGIC {
             return Err(DictError::Format(
                 "entries.bin v2: invalid magic number (expected MKE2)".into(),
@@ -164,9 +164,9 @@ impl LazyEntries {
         }
 
         // 엔트리 수
-        let count = cursor.read_u32::<LittleEndian>().map_err(|e| {
-            DictError::Format(format!("entries.bin v2: failed to read count: {e}"))
-        })?;
+        let count = cursor
+            .read_u32::<LittleEndian>()
+            .map_err(|e| DictError::Format(format!("entries.bin v2: failed to read count: {e}")))?;
 
         // 인덱스 테이블 오프셋
         let index_offset = cursor.read_u64::<LittleEndian>().map_err(|e| {
@@ -278,8 +278,8 @@ impl LazyEntries {
     fn load_entry_from_disk(&self, index: u32) -> Result<DictEntry> {
         let offset = self.get_entry_offset(index)?;
 
-        let offset_usize = usize::try_from(offset)
-            .map_err(|_| DictError::Format("offset overflow".into()))?;
+        let offset_usize =
+            usize::try_from(offset).map_err(|_| DictError::Format("offset overflow".into()))?;
 
         if offset_usize >= self.mmap.len() {
             return Err(DictError::Format(format!(

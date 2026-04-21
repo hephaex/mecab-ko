@@ -106,7 +106,7 @@ fn main() {
                 .iter()
                 .filter(|e| {
                     let freq = e.frequency.unwrap_or(0);
-                    freq >= 100 && freq < 1000
+                    (100..1000).contains(&freq)
                 })
                 .count();
             let low_priority = entries

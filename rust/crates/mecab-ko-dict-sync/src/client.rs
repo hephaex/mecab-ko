@@ -117,17 +117,15 @@ impl OpenDictClient {
             return match status.as_u16() {
                 401 | 403 => Err(SyncError::InvalidApiKey),
                 429 => Err(SyncError::RateLimitExceeded),
-                _ => Err(SyncError::api_error(format!(
-                    "HTTP {status}: {body}"
-                ))),
+                _ => Err(SyncError::api_error(format!("HTTP {status}: {body}"))),
             };
         }
 
         let text = response.text().await?;
 
         // Parse JSON response
-        let search_response: SearchResponse = serde_json::from_str(&text)
-            .map_err(SyncError::parse_error)?;
+        let search_response: SearchResponse =
+            serde_json::from_str(&text).map_err(SyncError::parse_error)?;
 
         Ok(search_response
             .channel
@@ -188,9 +186,7 @@ impl OpenDictClient {
                 404 => Err(SyncError::api_error(format!(
                     "Entry not found: {target_code}"
                 ))),
-                _ => Err(SyncError::api_error(format!(
-                    "HTTP {status}: {body}"
-                ))),
+                _ => Err(SyncError::api_error(format!("HTTP {status}: {body}"))),
             };
         }
 
@@ -198,8 +194,7 @@ impl OpenDictClient {
 
         // For now, parse as basic detail (simplified version)
         // Full parsing would require detailed XML/JSON schema
-        let detail: DictDetail = serde_json::from_str(&text)
-            .map_err(SyncError::parse_error)?;
+        let detail: DictDetail = serde_json::from_str(&text).map_err(SyncError::parse_error)?;
 
         Ok(detail)
     }
@@ -260,8 +255,8 @@ impl OpenDictClient {
         }
 
         let text = response.text().await?;
-        let search_response: SearchResponse = serde_json::from_str(&text)
-            .map_err(SyncError::parse_error)?;
+        let search_response: SearchResponse =
+            serde_json::from_str(&text).map_err(SyncError::parse_error)?;
 
         Ok(search_response
             .channel

@@ -555,8 +555,8 @@ impl LargeFileProcessor {
         let sentence_delimiters = ['.', '!', '?', '。', '．', '\n'];
 
         for line in reader.lines() {
-            let line = line
-                .map_err(|e| crate::Error::Analysis(format!("Failed to read line: {e}")))?;
+            let line =
+                line.map_err(|e| crate::Error::Analysis(format!("Failed to read line: {e}")))?;
 
             bytes_processed += line.len() + 1; // +1 for newline
             pending_text.push_str(&line);
@@ -803,8 +803,7 @@ mod tests {
             let second_start: String = chunks[1].chars().take(2).collect();
             assert_eq!(
                 first_end, second_start,
-                "Overlap should match: {} vs {}",
-                first_end, second_start
+                "Overlap should match: {first_end} vs {second_start}"
             );
         }
     }
@@ -839,7 +838,7 @@ mod tests {
         let chunks = BatchTokenizer::split_into_chunks(text, 4);
 
         // 분할은 되어야 함
-        assert!(chunks.len() >= 1);
+        assert!(!chunks.is_empty());
     }
 
     #[test]

@@ -1,6 +1,6 @@
 //! 실제 사전으로 메모리 사용량 측정
 //!
-//! Usage: DICT_PATH=/path/to/dict cargo run --example memory_measure --release
+//! Usage: `DICT_PATH=/path/to/dict` cargo run --example `memory_measure` --release
 
 use mecab_ko_dict::dictionary::{LoadOptions, SystemDictionary};
 use std::env;
@@ -29,7 +29,7 @@ fn format_bytes(bytes: usize) -> String {
     } else if bytes >= 1024 {
         format!("{:.1} KB", bytes as f64 / 1024.0)
     } else {
-        format!("{} B", bytes)
+        format!("{bytes} B")
     }
 }
 
@@ -40,7 +40,7 @@ fn main() {
     });
 
     println!("=== mecab-ko 메모리 사용량 측정 ===\n");
-    println!("사전 경로: {}\n", dict_path);
+    println!("사전 경로: {dict_path}\n");
 
     // 초기 메모리
     let initial_mem = get_memory_usage().unwrap_or(0);
@@ -49,16 +49,21 @@ fn main() {
     // 1. Eager 모드 측정
     println!("--- Eager 모드 (LoadOptions::speed_optimized()) ---");
     let eager_start = Instant::now();
-    let eager_dict = SystemDictionary::load_with_options(&dict_path, LoadOptions::speed_optimized());
+    let eager_dict =
+        SystemDictionary::load_with_options(&dict_path, LoadOptions::speed_optimized());
     let eager_load_time = eager_start.elapsed();
 
     match eager_dict {
         Ok(dict) => {
             let eager_mem = get_memory_usage().unwrap_or(0);
             let eager_mem_delta = eager_mem.saturating_sub(initial_mem);
-            println!("  로드 시간: {:?}", eager_load_time);
+            println!("  로드 시간: {eager_load_time:?}");
             println!("  엔트리 수: {}", dict.entry_count());
-            println!("  메모리 사용: {} (증가분: {})", format_bytes(eager_mem), format_bytes(eager_mem_delta));
+            println!(
+                "  메모리 사용: {} (증가분: {})",
+                format_bytes(eager_mem),
+                format_bytes(eager_mem_delta)
+            );
 
             // 조회 테스트
             let lookup_start = Instant::now();
@@ -72,7 +77,7 @@ fn main() {
             drop(dict);
         }
         Err(e) => {
-            println!("  로드 실패: {}", e);
+            println!("  로드 실패: {e}");
         }
     }
 
@@ -91,9 +96,13 @@ fn main() {
         Ok(dict) => {
             let lazy_mem = get_memory_usage().unwrap_or(0);
             let lazy_mem_delta = lazy_mem.saturating_sub(after_drop_mem);
-            println!("  로드 시간: {:?}", lazy_load_time);
+            println!("  로드 시간: {lazy_load_time:?}");
             println!("  엔트리 수: {}", dict.entry_count());
-            println!("  메모리 사용: {} (증가분: {})", format_bytes(lazy_mem), format_bytes(lazy_mem_delta));
+            println!(
+                "  메모리 사용: {} (증가분: {})",
+                format_bytes(lazy_mem),
+                format_bytes(lazy_mem_delta)
+            );
 
             // 첫 번째 조회 (cold cache)
             let cold_start = Instant::now();
@@ -115,7 +124,7 @@ fn main() {
             drop(dict);
         }
         Err(e) => {
-            println!("  로드 실패: {}", e);
+            println!("  로드 실패: {e}");
         }
     }
 
@@ -127,16 +136,21 @@ fn main() {
     // 3. Memory Optimized 모드
     println!("--- Memory Optimized 모드 (mmap + lazy) ---");
     let mem_opt_start = Instant::now();
-    let mem_opt_dict = SystemDictionary::load_with_options(&dict_path, LoadOptions::memory_optimized());
+    let mem_opt_dict =
+        SystemDictionary::load_with_options(&dict_path, LoadOptions::memory_optimized());
     let mem_opt_load_time = mem_opt_start.elapsed();
 
     match mem_opt_dict {
         Ok(dict) => {
             let mem_opt_mem = get_memory_usage().unwrap_or(0);
             let mem_opt_delta = mem_opt_mem.saturating_sub(final_mem);
-            println!("  로드 시간: {:?}", mem_opt_load_time);
+            println!("  로드 시간: {mem_opt_load_time:?}");
             println!("  엔트리 수: {}", dict.entry_count());
-            println!("  메모리 사용: {} (증가분: {})", format_bytes(mem_opt_mem), format_bytes(mem_opt_delta));
+            println!(
+                "  메모리 사용: {} (증가분: {})",
+                format_bytes(mem_opt_mem),
+                format_bytes(mem_opt_delta)
+            );
 
             // 조회 테스트
             let lookup_start = Instant::now();
@@ -150,7 +164,7 @@ fn main() {
             drop(dict);
         }
         Err(e) => {
-            println!("  로드 실패: {}", e);
+            println!("  로드 실패: {e}");
         }
     }
 

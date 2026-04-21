@@ -3,6 +3,7 @@
 //! This module provides shared functionality for integration tests.
 
 #![allow(
+    dead_code,
     clippy::unnecessary_debug_formatting,
     clippy::format_push_string,
     clippy::cast_possible_truncation,

@@ -51,7 +51,10 @@ const COMPOUND_DICT: &[(&str, &[(&str, &str)])] = &[
     ("대법원", &[("대", "XPN"), ("법원", "NNG")]),
     ("헌법재판소", &[("헌법", "NNG"), ("재판소", "NNG")]),
     ("국회의원", &[("국회", "NNG"), ("의원", "NNG")]),
-    ("지방자치단체", &[("지방", "NNG"), ("자치", "NNG"), ("단체", "NNG")]),
+    (
+        "지방자치단체",
+        &[("지방", "NNG"), ("자치", "NNG"), ("단체", "NNG")],
+    ),
     // 교육
     ("대학교", &[("대학", "NNG"), ("교", "NNG")]),
     ("초등학교", &[("초등", "NNG"), ("학교", "NNG")]),
@@ -90,29 +93,29 @@ const COMPOUND_DICT: &[(&str, &[(&str, &str)])] = &[
 /// 확장된 접두사 목록
 const PREFIXES: &[(&str, &str)] = &[
     // 관형 접두사 (XPN)
-    ("신", "XPN"),  // 새: 신제품
-    ("구", "XPN"),  // 옛: 구버전
-    ("총", "XPN"),  // 전체: 총대리
-    ("부", "XPN"),  // 보조: 부사장
-    ("대", "XPN"),  // 큰: 대통령
-    ("소", "XPN"),  // 작은: 소기업
-    ("중", "XPN"),  // 중간: 중기업
-    ("고", "XPN"),  // 높은: 고속도로
-    ("저", "XPN"),  // 낮은: 저소득층
-    ("최", "XPN"),  // 가장: 최고급
-    ("초", "XPN"),  // 처음/매우: 초고속
-    ("준", "XPN"),  // 거의: 준결승
-    ("범", "XPN"),  // 넓은: 범국민
-    ("반", "XPN"),  // 반대: 반정부
-    ("비", "XPN"),  // 아닌: 비공개
-    ("미", "XPN"),  // 아직: 미완성
-    ("재", "XPN"),  // 다시: 재개발
-    ("전", "XPN"),  // 이전: 전대통령
-    ("후", "XPN"),  // 이후: 후배
-    ("무", "XPN"),  // 없는: 무료
-    ("유", "XPN"),  // 있는: 유료
-    ("친", "XPN"),  // 친하다: 친환경
-    ("반", "XPN"),  // 반대: 반환경
+    ("신", "XPN"), // 새: 신제품
+    ("구", "XPN"), // 옛: 구버전
+    ("총", "XPN"), // 전체: 총대리
+    ("부", "XPN"), // 보조: 부사장
+    ("대", "XPN"), // 큰: 대통령
+    ("소", "XPN"), // 작은: 소기업
+    ("중", "XPN"), // 중간: 중기업
+    ("고", "XPN"), // 높은: 고속도로
+    ("저", "XPN"), // 낮은: 저소득층
+    ("최", "XPN"), // 가장: 최고급
+    ("초", "XPN"), // 처음/매우: 초고속
+    ("준", "XPN"), // 거의: 준결승
+    ("범", "XPN"), // 넓은: 범국민
+    ("반", "XPN"), // 반대: 반정부
+    ("비", "XPN"), // 아닌: 비공개
+    ("미", "XPN"), // 아직: 미완성
+    ("재", "XPN"), // 다시: 재개발
+    ("전", "XPN"), // 이전: 전대통령
+    ("후", "XPN"), // 이후: 후배
+    ("무", "XPN"), // 없는: 무료
+    ("유", "XPN"), // 있는: 유료
+    ("친", "XPN"), // 친하다: 친환경
+    ("반", "XPN"), // 반대: 반환경
 ];
 
 /// 확장된 접미사 목록
@@ -1314,8 +1317,8 @@ mod tests {
     fn test_decompound_min_syllable_constraint() {
         // Test that we don't over-decompose short words
         let short_words = vec![
-            ("한글", 2), // Too short, should not decompose
-            ("사과", 2), // Too short, should not decompose
+            ("한글", 2),   // Too short, should not decompose
+            ("사과", 2),   // Too short, should not decompose
             ("바나나", 3), // May decompose
         ];
 
@@ -1339,9 +1342,7 @@ mod tests {
             if len < 3 {
                 assert!(
                     result.is_empty(),
-                    "Words with {} syllables should not decompose: {}",
-                    len,
-                    word
+                    "Words with {len} syllables should not decompose: {word}"
                 );
             }
         }

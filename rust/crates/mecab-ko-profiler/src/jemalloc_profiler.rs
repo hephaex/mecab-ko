@@ -133,8 +133,8 @@ impl JemallocProfiler {
         use std::ffi::CString;
         use tikv_jemalloc_ctl::raw;
 
-        let path_cstr =
-            CString::new(path).map_err(|e| JemallocError::Io(io::Error::new(io::ErrorKind::InvalidInput, e)))?;
+        let path_cstr = CString::new(path)
+            .map_err(|e| JemallocError::Io(io::Error::new(io::ErrorKind::InvalidInput, e)))?;
 
         // prof.dump writes the heap profile to the specified path
         let mib = raw::name_to_mib(b"prof.dump\0")
@@ -171,8 +171,8 @@ impl JemallocProfiler {
     ///
     /// Returns an error if reading fails.
     pub fn arena_count(&self) -> Result<usize, JemallocError> {
-        let narenas =
-            tikv_jemalloc_ctl::arenas::narenas::read().map_err(|e| JemallocError::Ctl(format!("{e:?}")))?;
+        let narenas = tikv_jemalloc_ctl::arenas::narenas::read()
+            .map_err(|e| JemallocError::Ctl(format!("{e:?}")))?;
         Ok(narenas as usize)
     }
 }

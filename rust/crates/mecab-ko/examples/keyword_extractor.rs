@@ -166,7 +166,9 @@ fn print_help() {
     println!("OPTIONS:");
     println!("    -n, --top <N>            Number of keywords to extract (default: 5)");
     println!("    -m, --min-length <LEN>   Minimum keyword length (default: 2)");
-    println!("    -p, --pos <TAGS>         POS tags to include (comma-separated, default: NNG,NNP)");
+    println!(
+        "    -p, --pos <TAGS>         POS tags to include (comma-separated, default: NNG,NNP)"
+    );
     println!("    -d, --dict-path <PATH>   Custom dictionary path");
     println!("    -t, --text <TEXT>        Text to analyze (reads from stdin if not provided)");
     println!("    -h, --help               Print help information");
@@ -183,11 +185,7 @@ fn print_help() {
 }
 
 /// Extract keywords from text
-fn extract_keywords(
-    tokenizer: &mut Tokenizer,
-    text: &str,
-    config: &Config,
-) -> Vec<Keyword> {
+fn extract_keywords(tokenizer: &mut Tokenizer, text: &str, config: &Config) -> Vec<Keyword> {
     // Tokenize and filter by POS tags
     let tokens = tokenizer.tokenize(text);
 
@@ -215,7 +213,8 @@ fn extract_keywords(
 
     // Sort by frequency (descending)
     keywords.sort_by(|a, b| {
-        b.frequency.cmp(&a.frequency)
+        b.frequency
+            .cmp(&a.frequency)
             .then_with(|| a.term.cmp(&b.term)) // Stable sort by term name
     });
 
@@ -257,7 +256,7 @@ fn format_keywords(keywords: &[Keyword]) -> String {
 fn truncate(s: &str, max_len: usize) -> String {
     if s.chars().count() > max_len {
         let truncated: String = s.chars().take(max_len - 1).collect();
-        format!("{}…", truncated)
+        format!("{truncated}…")
     } else {
         s.to_string()
     }
@@ -278,7 +277,7 @@ fn main() {
         match Tokenizer::with_dict(dict_path) {
             Ok(t) => t,
             Err(e) => {
-                eprintln!("Failed to load dictionary from {:?}: {}", dict_path, e);
+                eprintln!("Failed to load dictionary from {dict_path:?}: {e}");
                 std::process::exit(1);
             }
         }
@@ -286,7 +285,7 @@ fn main() {
         match Tokenizer::new() {
             Ok(t) => t,
             Err(e) => {
-                eprintln!("Failed to initialize tokenizer: {}", e);
+                eprintln!("Failed to initialize tokenizer: {e}");
                 eprintln!("Make sure the dictionary is available at the default location.");
                 std::process::exit(1);
             }
@@ -300,7 +299,7 @@ fn main() {
         match read_stdin() {
             Ok(text) => text,
             Err(e) => {
-                eprintln!("Failed to read from stdin: {}", e);
+                eprintln!("Failed to read from stdin: {e}");
                 std::process::exit(1);
             }
         }

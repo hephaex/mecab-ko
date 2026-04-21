@@ -33,3 +33,8 @@ Thumbs.db
 # MeCab dictionary build outputs
 mecab-ko-dic/
 .rustup/
+
+# Gradle
+search-plugins/.gradle/
+search-plugins/*/build/
+

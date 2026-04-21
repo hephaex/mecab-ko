@@ -824,9 +824,7 @@ impl AnalysisContext {
 
             if args.hot_reload && !args.quiet {
                 let count = args.domain_dicts.len();
-                eprintln!(
-                    "Hot-reload enabled: watching {count} domain dictionaries for changes"
-                );
+                eprintln!("Hot-reload enabled: watching {count} domain dictionaries for changes");
             }
 
             Some(hr)
@@ -892,7 +890,9 @@ impl AnalysisContext {
                     // 분해 정보 출력 모드
                     if self.args.decomp {
                         use mecab_ko_core::sejong::SejongConverter;
-                        if let Some(decomp) = SejongConverter::extract_decomposition(&token.features) {
+                        if let Some(decomp) =
+                            SejongConverter::extract_decomposition(&token.features)
+                        {
                             writeln!(writer, "{}\t{}\t[{}]", token.surface, token.pos, decomp)?;
                         } else {
                             writeln!(writer, "{}\t{}\t[-]", token.surface, token.pos)?;
@@ -1029,7 +1029,15 @@ fn main() -> Result<()> {
                 user_dict,
                 sejong,
             } => {
-                run_evaluate(input, *format, output.as_ref(), *verbose, dicdir.as_ref(), user_dict.as_ref(), *sejong)?;
+                run_evaluate(
+                    input,
+                    *format,
+                    output.as_ref(),
+                    *verbose,
+                    dicdir.as_ref(),
+                    user_dict.as_ref(),
+                    *sejong,
+                )?;
             }
             Commands::Sync {
                 source,
@@ -1039,7 +1047,14 @@ fn main() -> Result<()> {
                 output,
                 append,
             } => {
-                run_sync(*source, query, api_key.as_deref(), *max_results, output.as_ref(), *append)?;
+                run_sync(
+                    *source,
+                    query,
+                    api_key.as_deref(),
+                    *max_results,
+                    output.as_ref(),
+                    *append,
+                )?;
             }
             Commands::Collect {
                 keywords,
@@ -1623,11 +1638,9 @@ fn run_sync(
     // Get API key from argument or environment variable based on source
     let api_key = api_key
         .map(String::from)
-        .or_else(|| {
-            match source {
-                DictSource::Opendict => std::env::var("OPENDICT_API_KEY").ok(),
-                DictSource::Krdict => std::env::var("KRDICT_API_KEY").ok(),
-            }
+        .or_else(|| match source {
+            DictSource::Opendict => std::env::var("OPENDICT_API_KEY").ok(),
+            DictSource::Krdict => std::env::var("KRDICT_API_KEY").ok(),
         })
         .ok_or_else(|| {
             let env_var = match source {
@@ -1640,12 +1653,8 @@ fn run_sync(
         })?;
 
     match source {
-        DictSource::Opendict => {
-            run_opendict_sync(&api_key, query, max_results, output, append)
-        }
-        DictSource::Krdict => {
-            run_krdict_sync(&api_key, query, max_results, output, append)
-        }
+        DictSource::Opendict => run_opendict_sync(&api_key, query, max_results, output, append),
+        DictSource::Krdict => run_krdict_sync(&api_key, query, max_results, output, append),
     }
 }
 
@@ -1665,7 +1674,8 @@ fn run_opendict_sync(
     // Create client
     let config = OpenDictConfig::new(api_key).with_max_results(max_results);
 
-    let client = OpenDictClient::new(config).map_err(|e| anyhow::anyhow!("API 클라이언트 생성 실패: {e}"))?;
+    let client = OpenDictClient::new(config)
+        .map_err(|e| anyhow::anyhow!("API 클라이언트 생성 실패: {e}"))?;
 
     // Run async search
     let runtime = tokio::runtime::Runtime::new().context("Tokio 런타임 생성 실패")?;
@@ -1760,7 +1770,8 @@ fn run_krdict_sync(
     // Create client
     let config = KrDictConfig::new(api_key).with_max_results(max_results);
 
-    let client = KrDictClient::new(config).map_err(|e| anyhow::anyhow!("API 클라이언트 생성 실패: {e}"))?;
+    let client =
+        KrDictClient::new(config).map_err(|e| anyhow::anyhow!("API 클라이언트 생성 실패: {e}"))?;
 
     // Run async search
     let runtime = tokio::runtime::Runtime::new().context("Tokio 런타임 생성 실패")?;
@@ -1860,7 +1871,11 @@ fn run_benchmark(ctx: &AnalysisContext, iterations: usize) -> Result<()> {
 
     println!("MeCab-Ko Benchmark");
     println!("==================");
-    println!("Input: {} bytes, {} chars", text.len(), text.chars().count());
+    println!(
+        "Input: {} bytes, {} chars",
+        text.len(),
+        text.chars().count()
+    );
     println!("Iterations: {iterations}");
     println!();
 
@@ -2048,11 +2063,9 @@ async fn run_collect_async(
     // Get API key
     let api_key = api_key
         .map(String::from)
-        .or_else(|| {
-            match source {
-                DictSource::Opendict => std::env::var("OPENDICT_API_KEY").ok(),
-                DictSource::Krdict => std::env::var("KRDICT_API_KEY").ok(),
-            }
+        .or_else(|| match source {
+            DictSource::Opendict => std::env::var("OPENDICT_API_KEY").ok(),
+            DictSource::Krdict => std::env::var("KRDICT_API_KEY").ok(),
         })
         .ok_or_else(|| {
             let env_var = match source {
@@ -2065,9 +2078,8 @@ async fn run_collect_async(
         })?;
 
     // Create output file
-    let output_file = File::create(output_path).with_context(|| {
-        format!("출력 파일 생성 실패: {}", output_path.display())
-    })?;
+    let output_file = File::create(output_path)
+        .with_context(|| format!("출력 파일 생성 실패: {}", output_path.display()))?;
     let mut writer = BufWriter::new(output_file);
 
     // Statistics
@@ -2095,12 +2107,8 @@ async fn run_collect_async(
 
         // Search via API
         let entries_result = match source {
-            DictSource::Opendict => {
-                search_opendict(&api_key, keyword, max_per_keyword).await
-            }
-            DictSource::Krdict => {
-                search_krdict(&api_key, keyword, max_per_keyword).await
-            }
+            DictSource::Opendict => search_opendict(&api_key, keyword, max_per_keyword).await,
+            DictSource::Krdict => search_krdict(&api_key, keyword, max_per_keyword).await,
         };
 
         match entries_result {
@@ -2158,7 +2166,11 @@ async fn run_collect_async(
         println!("실패: {failed_keywords}");
         println!("수집된 항목: {total_entries}");
         println!("중복 제거 후: {deduplicated_count}");
-        println!("소요 시간: {}분 {}초", elapsed.as_secs() / 60, elapsed.as_secs() % 60);
+        println!(
+            "소요 시간: {}분 {}초",
+            elapsed.as_secs() / 60,
+            elapsed.as_secs() % 60
+        );
         println!("출력 파일: {}", output_path.display());
     }
 
@@ -2192,8 +2204,8 @@ async fn run_collect_async(
 ///
 /// Returns an error if the file cannot be read
 fn read_keywords_file(path: &PathBuf) -> Result<Vec<String>> {
-    let file = File::open(path)
-        .with_context(|| format!("키워드 파일 열기 실패: {}", path.display()))?;
+    let file =
+        File::open(path).with_context(|| format!("키워드 파일 열기 실패: {}", path.display()))?;
     let reader = BufReader::new(file);
 
     let keywords: Vec<String> = reader
@@ -2243,8 +2255,8 @@ async fn search_krdict(
     use mecab_ko_dict_sync::KrDictClient;
 
     let config = KrDictConfig::new(api_key).with_max_results(max_results);
-    let client = KrDictClient::new(config)
-        .map_err(|e| anyhow::anyhow!("API 클라이언트 생성 실패: {e}"))?;
+    let client =
+        KrDictClient::new(config).map_err(|e| anyhow::anyhow!("API 클라이언트 생성 실패: {e}"))?;
 
     client
         .search(keyword)
@@ -2310,8 +2322,11 @@ fn run_collect_unknown(
     // Initialize tokenizer
     let mut tokenizer = if let Some(dict_path) = dicdir {
         Tokenizer::with_dict(
-            dict_path.to_str().context("Invalid dictionary path encoding")?,
-        ).context("Failed to load dictionary")?
+            dict_path
+                .to_str()
+                .context("Invalid dictionary path encoding")?,
+        )
+        .context("Failed to load dictionary")?
     } else {
         Tokenizer::new().context("Failed to initialize tokenizer")?
     };
@@ -2320,7 +2335,10 @@ fn run_collect_unknown(
     if let Some(user_dict_path) = user_dict_path {
         let mut user_dict = UserDictionary::new();
         user_dict.load_from_csv(user_dict_path).with_context(|| {
-            format!("Failed to load user dictionary: {}", user_dict_path.display())
+            format!(
+                "Failed to load user dictionary: {}",
+                user_dict_path.display()
+            )
         })?;
         tokenizer.set_user_dict(user_dict);
     }
@@ -2344,7 +2362,10 @@ fn run_collect_unknown(
     };
 
     // Process input
-    let process_line = |line: &str, word_counts: &mut HashMap<String, usize>, word_examples: &mut HashMap<String, String>, tokenizer: &mut Tokenizer| {
+    let process_line = |line: &str,
+                        word_counts: &mut HashMap<String, usize>,
+                        word_examples: &mut HashMap<String, String>,
+                        tokenizer: &mut Tokenizer| {
         let tokens = tokenizer.tokenize(line);
         for token in tokens {
             // Check if token is unknown (POS == "UNKNOWN" or empty POS)
@@ -2413,7 +2434,11 @@ fn run_collect_unknown(
         .into_iter()
         .filter(|(_, count)| *count >= min_freq)
         .map(|(word, count)| UnknownWordEntry {
-            example: if with_examples { word_examples.get(&word).cloned() } else { None },
+            example: if with_examples {
+                word_examples.get(&word).cloned()
+            } else {
+                None
+            },
             word,
             count,
         })
@@ -2443,7 +2468,11 @@ fn run_collect_unknown(
                 let example = entry.example.as_deref().unwrap_or("");
                 // Escape CSV fields
                 let escaped_example = example.replace('"', "\"\"");
-                writeln!(writer, "{},{},\"{}\"", entry.word, entry.count, escaped_example)?;
+                writeln!(
+                    writer,
+                    "{},{},\"{}\"",
+                    entry.word, entry.count, escaped_example
+                )?;
             }
         }
         UnknownOutputFormat::Tsv => {
@@ -2454,19 +2483,31 @@ fn run_collect_unknown(
             }
         }
         UnknownOutputFormat::Json => {
-            let json = serde_json::to_string_pretty(&entries)
-                .context("Failed to serialize to JSON")?;
+            let json =
+                serde_json::to_string_pretty(&entries).context("Failed to serialize to JSON")?;
             writeln!(writer, "{json}")?;
         }
         UnknownOutputFormat::Markdown => {
             writeln!(writer, "# 미등록어 후보 목록\n")?;
-            writeln!(writer, "총 {} 개의 미등록어 발견 (최소 빈도: {})\n", entries.len(), min_freq)?;
+            writeln!(
+                writer,
+                "총 {} 개의 미등록어 발견 (최소 빈도: {})\n",
+                entries.len(),
+                min_freq
+            )?;
             writeln!(writer, "| 순위 | 단어 | 빈도 | 예문 |")?;
             writeln!(writer, "|------|------|------|------|")?;
             for (i, entry) in entries.iter().enumerate() {
                 let example = entry.example.as_deref().unwrap_or("-");
                 let escaped_example = example.replace('|', "\\|");
-                writeln!(writer, "| {} | {} | {} | {} |", i + 1, entry.word, entry.count, escaped_example)?;
+                writeln!(
+                    writer,
+                    "| {} | {} | {} | {} |",
+                    i + 1,
+                    entry.word,
+                    entry.count,
+                    escaped_example
+                )?;
             }
         }
     }
@@ -2568,9 +2609,8 @@ fn run_evaluate(
 
     // Output results
     if let Some(output_path) = output_path {
-        let mut file = File::create(output_path).with_context(|| {
-            format!("Failed to create output file: {}", output_path.display())
-        })?;
+        let mut file = File::create(output_path)
+            .with_context(|| format!("Failed to create output file: {}", output_path.display()))?;
         write!(file, "{report}")?;
         eprintln!("결과를 {}에 저장했습니다.", output_path.display());
     } else {
@@ -2616,10 +2656,14 @@ fn run_evaluate(
                 // For sejong mode, compare with converted tokens (with jamo normalization)
                 let sejong_tokens = conv.convert_tokens(&raw_tokens);
                 gold_sentence.tokens.len() == sejong_tokens.len()
-                    && gold_sentence.tokens.iter().zip(&sejong_tokens).all(|(g, p)| {
-                        let normalized_surface = SejongConverter::normalize_jamo(&p.surface);
-                        g.surface == normalized_surface && g.pos == p.pos
-                    })
+                    && gold_sentence
+                        .tokens
+                        .iter()
+                        .zip(&sejong_tokens)
+                        .all(|(g, p)| {
+                            let normalized_surface = SejongConverter::normalize_jamo(&p.surface);
+                            g.surface == normalized_surface && g.pos == p.pos
+                        })
             } else {
                 gold_sentence.tokens.len() == raw_tokens.len()
                     && gold_sentence
@@ -2836,15 +2880,14 @@ mod tests {
 
     #[test]
     fn test_sync_command_basic() {
-        let args = Args::try_parse_from([
-            "mecab-ko",
-            "sync",
-            "--query",
-            "신조어",
-        ])
-        .unwrap();
+        let args = Args::try_parse_from(["mecab-ko", "sync", "--query", "신조어"]).unwrap();
         match args.command {
-            Some(Commands::Sync { query, source, max_results, .. }) => {
+            Some(Commands::Sync {
+                query,
+                source,
+                max_results,
+                ..
+            }) => {
                 assert_eq!(query, "신조어");
                 assert!(matches!(source, DictSource::Opendict));
                 assert_eq!(max_results, 100); // default
@@ -2902,15 +2945,8 @@ mod tests {
 
     #[test]
     fn test_sync_command_krdict_source() {
-        let args = Args::try_parse_from([
-            "mecab-ko",
-            "sync",
-            "-q",
-            "컴퓨터",
-            "--source",
-            "krdict",
-        ])
-        .unwrap();
+        let args = Args::try_parse_from(["mecab-ko", "sync", "-q", "컴퓨터", "--source", "krdict"])
+            .unwrap();
         match args.command {
             Some(Commands::Sync { query, source, .. }) => {
                 assert_eq!(query, "컴퓨터");
@@ -2991,12 +3027,12 @@ mod tests {
 
     #[test]
     fn test_read_keywords_file() {
-        use tempfile::NamedTempFile;
         use std::io::Write;
+        use tempfile::NamedTempFile;
 
         let mut file = NamedTempFile::new().unwrap();
         writeln!(file, "# 주석").unwrap();
-        writeln!(file, "").unwrap();
+        writeln!(file).unwrap();
         writeln!(file, "키워드1").unwrap();
         writeln!(file, "  키워드2  ").unwrap();
         writeln!(file, "# 또 다른 주석").unwrap();

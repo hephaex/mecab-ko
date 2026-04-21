@@ -60,5 +60,12 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "optionalDependencies": {
+    "@mecab-ko/node-darwin-x64": "0.7.0",
+    "@mecab-ko/node-darwin-arm64": "0.7.0",
+    "@mecab-ko/node-win32-x64-msvc": "0.7.0",
+    "@mecab-ko/node-linux-x64-gnu": "0.7.0",
+    "@mecab-ko/node-linux-arm64-gnu": "0.7.0"
   }
 }

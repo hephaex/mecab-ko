@@ -122,7 +122,14 @@ fn main() -> Result<()> {
             encoding,
             verbose,
             no_progress,
-        }) => run_build(&input, &output, compression, &encoding, verbose, no_progress),
+        }) => run_build(
+            &input,
+            &output,
+            compression,
+            &encoding,
+            verbose,
+            no_progress,
+        ),
 
         Some(Commands::Convert {
             dict,
@@ -239,7 +246,12 @@ fn run_build(
     Ok(())
 }
 
-fn run_convert(dict: &PathBuf, output: Option<&std::path::Path>, backup: bool, verbose: bool) -> Result<()> {
+fn run_convert(
+    dict: &PathBuf,
+    output: Option<&std::path::Path>,
+    backup: bool,
+    verbose: bool,
+) -> Result<()> {
     use mecab_ko_dict::dictionary::{LoadOptions, SystemDictionary};
     use mecab_ko_dict::LazyEntries;
 
@@ -261,11 +273,14 @@ fn run_convert(dict: &PathBuf, output: Option<&std::path::Path>, backup: bool, v
             })
             .unwrap_or_else(|_| "????".to_string());
 
-        println!("Current format: {}", match magic.as_str() {
-            "MKED" => "v1 (MKED) - Eager only",
-            "MKE2" => "v2 (MKE2) - LazyEntries supported",
-            _ => "Unknown",
-        });
+        println!(
+            "Current format: {}",
+            match magic.as_str() {
+                "MKED" => "v1 (MKED) - Eager only",
+                "MKE2" => "v2 (MKE2) - LazyEntries supported",
+                _ => "Unknown",
+            }
+        );
 
         if magic == "MKE2" {
             println!("\n이미 v2 포맷입니다. 변환이 필요하지 않습니다.");
@@ -337,8 +352,15 @@ fn run_info(dict: &PathBuf) -> Result<()> {
     println!("Path: {}", dict.display());
 
     // 파일 확인
-    let files = ["sys.dic", "sys.dic.zst", "matrix.bin", "matrix.bin.zst",
-                 "entries.bin", "entries.csv", "unk.bin"];
+    let files = [
+        "sys.dic",
+        "sys.dic.zst",
+        "matrix.bin",
+        "matrix.bin.zst",
+        "entries.bin",
+        "entries.csv",
+        "unk.bin",
+    ];
 
     println!("\nFiles:");
     for file in &files {
@@ -362,11 +384,14 @@ fn run_info(dict: &PathBuf) -> Result<()> {
             })
             .unwrap_or_else(|_| "????".to_string());
 
-        println!("\nentries.bin format: {}", match magic.as_str() {
-            "MKED" => "v1 (MKED) - Eager loading only",
-            "MKE2" => "v2 (MKE2) - LazyEntries supported ✓",
-            _ => "Unknown format",
-        });
+        println!(
+            "\nentries.bin format: {}",
+            match magic.as_str() {
+                "MKED" => "v1 (MKED) - Eager loading only",
+                "MKE2" => "v2 (MKE2) - LazyEntries supported ✓",
+                _ => "Unknown format",
+            }
+        );
 
         if magic == "MKED" {
             println!("  → Run 'convert' command for memory optimization");

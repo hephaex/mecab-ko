@@ -535,14 +535,20 @@ impl InflectGenerator {
             JoinType::HaSpecial => self.apply_hada_special(verb, ending).surface,
         };
 
-        let has_jong = surface.chars().last().is_some_and(|c| has_jongseong(c).unwrap_or(false));
+        let has_jong = surface
+            .chars()
+            .last()
+            .is_some_and(|c| has_jongseong(c).unwrap_or(false));
 
         Some(InflectedForm {
             surface,
             compound_pos: format!("{}+{}", verb.pos, ending.pos),
             cost: verb.base_cost,
             has_jongseong: has_jong,
-            analysis: format!("{}/{}/*+{}/{}/*", verb.stem, verb.pos, ending.surface, ending.pos),
+            analysis: format!(
+                "{}/{}/*+{}/{}/*",
+                verb.stem, verb.pos, ending.surface, ending.pos
+            ),
         })
     }
 
@@ -560,12 +566,16 @@ impl InflectGenerator {
 
         // ㄹ 불규칙: ㄴ, ㅂ, ㅅ 앞에서 ㄹ 탈락
         if irregular_type == IrregularType::LieulIrregular
-            && (first_ending == 'ㄴ' || first_ending == 'ㅂ' || first_ending == 'ㅅ' || first_ending == '는')
+            && (first_ending == 'ㄴ'
+                || first_ending == 'ㅂ'
+                || first_ending == 'ㅅ'
+                || first_ending == '는')
         {
             if let Some(last_char) = stem_chars.last() {
                 if let Some((cho, jung, _jong)) = decompose(*last_char) {
                     if let Some(new_last) = compose(cho, jung, None) {
-                        let mut new_stem: String = stem_chars[..stem_chars.len() - 1].iter().collect();
+                        let mut new_stem: String =
+                            stem_chars[..stem_chars.len() - 1].iter().collect();
                         new_stem.push(new_last);
                         return format!("{new_stem}{ending}");
                     }
@@ -583,7 +593,8 @@ impl InflectGenerator {
                         if let Some(jong) = jamo_to_jongseong(first_ending) {
                             if let Some(combined) = compose(cho, jung, Some(jong)) {
                                 let rest: String = ending_chars[1..].iter().collect();
-                                let new_stem: String = stem_chars[..stem_chars.len() - 1].iter().collect();
+                                let new_stem: String =
+                                    stem_chars[..stem_chars.len() - 1].iter().collect();
                                 return format!("{new_stem}{combined}{rest}");
                             }
                         }
@@ -597,9 +608,19 @@ impl InflectGenerator {
 
     /// 아/어 계열 결합 (모음조화)
     #[allow(clippy::unused_self)]
-    fn join_aeo(&self, stem: &str, ending: &str, irregular_type: IrregularType, last_char: char) -> String {
+    fn join_aeo(
+        &self,
+        stem: &str,
+        ending: &str,
+        irregular_type: IrregularType,
+        last_char: char,
+    ) -> String {
         let vowel_class = get_vowel_class(last_char);
-        let connector = if vowel_class == VowelClass::Yang { "아" } else { "어" };
+        let connector = if vowel_class == VowelClass::Yang {
+            "아"
+        } else {
+            "어"
+        };
 
         // ㅂ 불규칙: ㅂ → 우
         if irregular_type == IrregularType::BiupIrregular {
@@ -670,7 +691,8 @@ impl InflectGenerator {
                                 "러"
                             };
 
-                            let mut new_stem: String = stem_chars[..stem_chars.len() - 2].iter().collect();
+                            let mut new_stem: String =
+                                stem_chars[..stem_chars.len() - 2].iter().collect();
                             new_stem.push(new_second_last);
                             return format!("{new_stem}{connector}{ending}");
                         }
@@ -686,7 +708,7 @@ impl InflectGenerator {
             // 보 + 아 → 봐
             if let Some((cho, jung, _)) = decompose(last_char) {
                 let contracted: Option<char> = match (jung, connector) {
-                    ('ㅏ', "아") => Some(last_char), // 가 + 아 → 가
+                    ('ㅏ', "아") => Some(last_char),          // 가 + 아 → 가
                     ('ㅗ', "아") => compose(cho, 'ㅘ', None), // 오 + 아 → 와
                     ('ㅜ', "어") => compose(cho, 'ㅝ', None), // 우 + 어 → 워
                     ('ㅣ', "어") => compose(cho, 'ㅕ', None), // 이 + 어 → 여
@@ -708,7 +730,13 @@ impl InflectGenerator {
 
     /// 으 계열 결합
     #[allow(clippy::unused_self)]
-    fn join_eu(&self, stem: &str, ending: &str, irregular_type: IrregularType, last_char: char) -> String {
+    fn join_eu(
+        &self,
+        stem: &str,
+        ending: &str,
+        irregular_type: IrregularType,
+        last_char: char,
+    ) -> String {
         // ㄹ 불규칙: 으 앞에서 ㄹ 유지 (받침 있음 취급 안 함)
         if irregular_type == IrregularType::LieulIrregular {
             return format!("{stem}{ending}");
@@ -729,20 +757,29 @@ impl InflectGenerator {
 
         // 하 → 해 변환
         let surface = if ending.join_type == JoinType::AEo {
-            let stem_without_ha: String = stem.chars().take(stem.chars().count().saturating_sub(1)).collect();
+            let stem_without_ha: String = stem
+                .chars()
+                .take(stem.chars().count().saturating_sub(1))
+                .collect();
             format!("{stem_without_ha}해{}", ending.surface)
         } else {
             format!("{stem}{}", ending.surface)
         };
 
-        let has_jong = surface.chars().last().is_some_and(|c| has_jongseong(c).unwrap_or(false));
+        let has_jong = surface
+            .chars()
+            .last()
+            .is_some_and(|c| has_jongseong(c).unwrap_or(false));
 
         InflectedForm {
             surface,
             compound_pos: format!("{}+{}", verb.pos, ending.pos),
             cost: verb.base_cost,
             has_jongseong: has_jong,
-            analysis: format!("{}/{}/*+{}/{}/*", verb.stem, verb.pos, ending.surface, ending.pos),
+            analysis: format!(
+                "{}/{}/*+{}/{}/*",
+                verb.stem, verb.pos, ending.surface, ending.pos
+            ),
         }
     }
 
@@ -982,7 +1019,9 @@ mod tests {
         let forms = gen.generate(&verb);
 
         // "도와" 계열이 생성되어야 함
-        let dowa = forms.iter().find(|f| f.surface.contains("도워") || f.surface.contains("도와"));
+        let dowa = forms
+            .iter()
+            .find(|f| f.surface.contains("도워") || f.surface.contains("도와"));
         assert!(dowa.is_some(), "도와/도워 should be generated");
     }
 
@@ -1037,6 +1076,9 @@ mod tests {
 
         // "갔다" 가 생성되어야 함 (가 + 았 + 다 → 갔다)
         let gatda = forms.iter().find(|f| f.surface == "갔다");
-        assert!(gatda.is_some(), "갔다 should be generated (가았다 contracted)");
+        assert!(
+            gatda.is_some(),
+            "갔다 should be generated (가았다 contracted)"
+        );
     }
 }

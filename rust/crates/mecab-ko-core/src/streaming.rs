@@ -912,7 +912,7 @@ mod tests {
 
         let token_chunks: Vec<_> = iter.collect();
         // 청크들을 수집 (일부 청크는 비어있을 수 있음)
-        let total_tokens: usize = token_chunks.iter().map(|c| c.len()).sum();
+        let total_tokens: usize = token_chunks.iter().map(std::vec::Vec::len).sum();
 
         // ChunkedTokenIterator가 정상 작동하는지 확인
         // mini-dict 환경에서는 토큰 수가 적을 수 있으므로 패닉 없이 완료되면 성공

@@ -878,11 +878,7 @@ impl Lattice {
                 .iter()
                 .map(|v| v.capacity() * 4)
                 .sum::<usize>()
-            + self
-                .ends_at
-                .iter()
-                .map(|v| v.capacity() * 4)
-                .sum::<usize>();
+            + self.ends_at.iter().map(|v| v.capacity() * 4).sum::<usize>();
 
         // char_positions (estimated from char_count)
         let pos_bytes = (self.char_positions.char_count() + 1) * std::mem::size_of::<usize>();

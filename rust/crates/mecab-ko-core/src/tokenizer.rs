@@ -236,8 +236,7 @@ impl Tokenizer {
     pub fn new() -> Result<Self> {
         let dictionary = SystemDictionary::load_default()?;
         let unknown_handler = UnknownHandler::korean_default();
-        let viterbi_searcher =
-            ViterbiSearcher::new();
+        let viterbi_searcher = ViterbiSearcher::new();
 
         // 초기 Lattice 생성 (빈 텍스트)
         let lattice = Lattice::new("");
@@ -266,8 +265,7 @@ impl Tokenizer {
     pub fn with_dict<P: AsRef<Path>>(dict_path: P) -> Result<Self> {
         let dictionary = SystemDictionary::load(dict_path)?;
         let unknown_handler = UnknownHandler::korean_default();
-        let viterbi_searcher =
-            ViterbiSearcher::new();
+        let viterbi_searcher = ViterbiSearcher::new();
 
         let lattice = Lattice::new("");
 
@@ -340,7 +338,10 @@ impl Tokenizer {
     ///
     /// * `hr` - `HotReloadDictV2` 인스턴스
     #[cfg(feature = "hot-reload-v2")]
-    pub fn set_hot_reload(&mut self, hr: std::sync::Arc<mecab_ko_dict::hot_reload_v2::HotReloadDictV2>) {
+    pub fn set_hot_reload(
+        &mut self,
+        hr: std::sync::Arc<mecab_ko_dict::hot_reload_v2::HotReloadDictV2>,
+    ) {
         self.dictionary.set_hot_reload(hr);
     }
 
@@ -808,8 +809,7 @@ mod tests {
         );
 
         let unknown_handler = UnknownHandler::korean_default();
-        let viterbi_searcher =
-            ViterbiSearcher::new();
+        let viterbi_searcher = ViterbiSearcher::new();
         let lattice = Lattice::new("");
 
         Tokenizer {

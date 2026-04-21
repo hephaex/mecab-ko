@@ -34,7 +34,7 @@ use std::collections::HashMap;
 use std::io::{self, Write};
 use std::path::PathBuf;
 
-use mecab_ko::{Tokenizer, Token};
+use mecab_ko::{Token, Tokenizer};
 
 /// Output format for analysis results
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -180,13 +180,13 @@ fn format_table(tokens: &[Token]) -> String {
 fn truncate(s: &str, max_len: usize) -> String {
     if s.chars().count() > max_len {
         let truncated: String = s.chars().take(max_len - 1).collect();
-        format!("{}…", truncated)
+        format!("{truncated}…")
     } else {
         s.to_string()
     }
 }
 
-/// Format tokens as raw MeCab format
+/// Format tokens as raw `MeCab` format
 fn format_raw(tokens: &[Token]) -> String {
     let mut output = String::new();
 
@@ -254,16 +254,19 @@ fn process_command(line: &str, format: &mut OutputFormat) -> Option<()> {
         ":format" => {
             if parts.len() < 2 {
                 println!("Usage: :format <table|raw|json>");
-                println!("Current format: {:?}", format);
+                println!("Current format: {format:?}");
             } else if let Some(new_format) = OutputFormat::from_str(parts[1]) {
                 *format = new_format;
-                println!("Output format changed to: {:?}", format);
+                println!("Output format changed to: {format:?}");
             } else {
                 println!("Invalid format: {}. Available: table, raw, json", parts[1]);
             }
         }
         _ => {
-            println!("Unknown command: {}. Type :help for available commands.", parts[0]);
+            println!(
+                "Unknown command: {}. Type :help for available commands.",
+                parts[0]
+            );
         }
     }
 
@@ -301,7 +304,7 @@ fn run_repl(mut tokenizer: Tokenizer, mut format: OutputFormat) {
         // Analyze text
         let tokens = tokenizer.tokenize(line);
         let output = format_output(&tokens, format);
-        println!("{}", output);
+        println!("{output}");
     }
 }
 
@@ -309,7 +312,7 @@ fn run_repl(mut tokenizer: Tokenizer, mut format: OutputFormat) {
 fn analyze_text(mut tokenizer: Tokenizer, text: &str, format: OutputFormat) {
     let tokens = tokenizer.tokenize(text);
     let output = format_output(&tokens, format);
-    print!("{}", output);
+    print!("{output}");
 }
 
 fn main() {
@@ -320,7 +323,7 @@ fn main() {
         match Tokenizer::with_dict(dict_path) {
             Ok(t) => t,
             Err(e) => {
-                eprintln!("Failed to load dictionary from {:?}: {}", dict_path, e);
+                eprintln!("Failed to load dictionary from {dict_path:?}: {e}");
                 std::process::exit(1);
             }
         }
@@ -328,7 +331,7 @@ fn main() {
         match Tokenizer::new() {
             Ok(t) => t,
             Err(e) => {
-                eprintln!("Failed to initialize tokenizer: {}", e);
+                eprintln!("Failed to initialize tokenizer: {e}");
                 eprintln!("Make sure the dictionary is available at the default location.");
                 std::process::exit(1);
             }
