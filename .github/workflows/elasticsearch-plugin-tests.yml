@@ -4,14 +4,14 @@ on:
   push:
     branches: [ main, master, develop ]
     paths:
-      - 'elasticsearch-plugin/**'
-      - 'rust/**'
+      - 'search-plugins/**'
+      - 'rust/crates/mecab-ko-elasticsearch/**'
       - '.github/workflows/elasticsearch-plugin-tests.yml'
   pull_request:
     branches: [ main, master, develop ]
     paths:
-      - 'elasticsearch-plugin/**'
-      - 'rust/**'
+      - 'search-plugins/**'
+      - 'rust/crates/mecab-ko-elasticsearch/**'
   workflow_dispatch:
 
 env:

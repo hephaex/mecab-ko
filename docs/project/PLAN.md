@@ -1,3 +1,35 @@
+# ✅ 완료된 스프린트: Phase 38 - Sprint 72 (CI 수정 + 코드 품질 + 기술 문서)
+
+## 🎯 Sprint 72 목표
+4개 Track 병렬 실행: CI 워크플로우 잔여 실패 수정, 코드 품질 개선, PLAN 정비, 검증
+
+## Sprint 72 작업 목록
+
+### Track A: 코드 품질 수정
+- [x] S72-01: hot_reload.rs clippy unnecessary_sort_by → sort_by_key(Reverse) ✅
+- [x] S72-02: 50개 placeholder 테스트 #[ignore] 마킹 (556 pass / 51 ignored) ✅
+- [x] S72-03: show_dict_info 실제 구현 (파일 크기, 사용자 사전 목록) + clippy 수정 ✅
+
+### Track B: CI 워크플로우 수정
+- [x] S72-04: ffi-tests.yml — virtualenv 추가, manifest-path 수정 ✅
+- [x] S72-05: ci.yml — rustsec/audit-check-action 제거, RUSTSEC-2024-0436 ignore 제거 ✅
+- [x] S72-06: elasticsearch-plugin-tests.yml — paths 트리거 search-plugins/** 반영 ✅
+- [x] S72-07: dict-build.yml — 사전 데이터 압축 해제 fallback + delete-artifact@v5 ✅
+
+### Track C: 로드맵 정비
+- [x] S72-08: Streaming API → v0.8.0 연기 명시 ✅
+- [x] S72-09: sejong.rs 분할 전략 조사 + 기술 문서 ✅
+- [x] S72-10: Streaming API 설계 조사 + 기술 문서 ✅
+
+### Track D: 검증
+- [x] S72-11: cargo fmt/clippy/test 전체 통과 ✅
+- [x] S72-12: 커밋 + PLAN/PROGRESS 기록 ✅
+
+## Streaming API 연기 공지
+**Streaming API는 v0.8.0으로 연기됩니다.** Viterbi 알고리즘이 전체 문장 컨텍스트를 필요로 하므로 문장 경계 버퍼링 방식의 SentenceReader/AsyncSentenceStream 패턴으로 설계 예정.
+
+---
+
 # ✅ 완료된 스프린트: Phase 37 - Sprint 71 (외부 의존 검증 및 CI 안정화)
 
 ## 🎯 Sprint 71 목표

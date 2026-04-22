@@ -1,6 +1,37 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-23 (Sprint 71 완료)
+## 마지막 업데이트: 2026-04-23 (Sprint 72 완료)
+
+### ✅ Sprint 72 - CI 수정 + 코드 품질 + 기술 문서
+
+**기간**: 2026-04-23
+**목표**: CI 잔여 실패 수정, 코드 품질 개선, 기술 문서 작성
+
+#### 변경 사항
+
+| Track | 작업 | 상태 |
+|-------|------|------|
+| A | hot_reload.rs clippy fix (sort_by→sort_by_key) | ✅ |
+| A | 50개 placeholder 테스트 #[ignore] 마킹 | ✅ |
+| A | show_dict_info 실제 구현 + clippy 수정 | ✅ |
+| B | ffi-tests.yml virtualenv + manifest-path | ✅ |
+| B | ci.yml rustsec action 제거 + stale ignore 제거 | ✅ |
+| B | elasticsearch-plugin-tests.yml paths 수정 | ✅ |
+| B | dict-build.yml 사전 데이터 fallback + artifact@v5 | ✅ |
+| C | Streaming API → v0.8.0 연기 명시 | ✅ |
+| C | sejong.rs 분할 전략 기술 문서 | ✅ |
+| C | Streaming API 설계 기술 문서 | ✅ |
+| D | cargo fmt/clippy/test 전체 통과 | ✅ |
+
+#### 테스트 결과 변화
+- **Before**: 606 passed, 0 ignored (43개 placeholder 포함)
+- **After**: 556 passed, 51 ignored (정직한 카운트)
+
+#### 기술 문서 작성
+- `~/.claude/references/2026-04-23_sejong_rs_splitting_strategy.md`
+- `~/.claude/references/2026-04-23_streaming_api_design.md`
+
+---
 
 ### ✅ Sprint 71 - 외부 의존 검증 및 CI 안정화
 

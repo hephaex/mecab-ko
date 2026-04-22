@@ -1206,13 +1206,59 @@ fn show_dict_info(path: Option<&PathBuf>) {
     println!("MeCab-Ko Dictionary Information");
     println!("================================");
 
-    if let Some(p) = path {
+    let dict_path = path
+        .cloned()
+        .or_else(|| std::env::var("MECAB_DICDIR").ok().map(PathBuf::from));
+
+    if let Some(p) = dict_path {
         println!("Path: {}", p.display());
-        // TODO: 実際の辞書情報を表示
+        if p.exists() {
+            let sys_dic = p.join("sys.dic");
+            let matrix_bin = p.join("matrix.bin");
+            let char_bin = p.join("char.bin");
+            let unk_dic = p.join("unk.dic");
+
+            println!();
+            println!("Files:");
+            for (name, f) in [
+                ("sys.dic", &sys_dic),
+                ("matrix.bin", &matrix_bin),
+                ("char.bin", &char_bin),
+                ("unk.dic", &unk_dic),
+            ] {
+                if f.exists() {
+                    let size = fs::metadata(f).map(|m| m.len()).unwrap_or(0);
+                    println!("  {name:<14} {size:>10} bytes");
+                } else {
+                    println!("  {name:<14} (not found)");
+                }
+            }
+
+            let user_dicts: Vec<_> = fs::read_dir(&p)
+                .into_iter()
+                .flatten()
+                .filter_map(Result::ok)
+                .filter(|e| {
+                    e.path()
+                        .extension()
+                        .is_some_and(|ext| ext == "csv" || ext == "dict")
+                })
+                .collect();
+            if !user_dicts.is_empty() {
+                println!();
+                println!("User dictionaries: {}", user_dicts.len());
+                for d in &user_dicts {
+                    println!("  {}", d.file_name().to_string_lossy());
+                }
+            }
+        } else {
+            println!("  (directory not found)");
+        }
     } else {
-        println!("Path: (default system dictionary)");
+        println!("Path: (no dictionary path configured)");
+        println!();
+        println!("Set MECAB_DICDIR or pass --path to specify dictionary location.");
     }
-    println!("(Dictionary loading not yet implemented)");
 }
 
 /// Prints detailed version information

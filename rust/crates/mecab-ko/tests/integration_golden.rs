@@ -198,6 +198,7 @@ fn test_golden_statistics() {
 
 /// Generate test report
 #[test]
+#[ignore = "placeholder: not yet implemented"]
 fn test_generate_report() {
     // use std::io::Write;
 
@@ -244,6 +245,7 @@ fn test_generate_report() {
 
 /// Update golden test results (USE WITH CAUTION)
 #[test]
+#[ignore = "placeholder: not yet implemented"]
 fn test_update_golden_results() {
     // TODO: Implement golden test update
     // This should only be run manually to update expected results
@@ -280,6 +282,7 @@ fn test_update_golden_results() {
 
 /// Compare with reference implementation (if available)
 #[test]
+#[ignore = "placeholder: not yet implemented"]
 fn test_compare_with_reference() {
     // TODO: If a reference MeCab-Ko implementation is available,
     // compare outputs for regression detection
@@ -335,6 +338,7 @@ mod golden_utils {
 
     /// Utility to find failing golden tests
     #[test]
+    #[ignore = "placeholder: not yet implemented"]
     fn find_failing_tests() {
         // TODO: Identify which tests are failing
         println!("Find failing tests (placeholder)");

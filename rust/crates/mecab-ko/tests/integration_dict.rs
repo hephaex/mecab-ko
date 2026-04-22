@@ -112,6 +112,7 @@ fn test_dictionary_lookup() {
 
 /// Test prefix matching in dictionary
 #[test]
+#[ignore = "placeholder: not yet implemented"]
 fn test_prefix_matching() {
     // TODO: Implement once trie is available
     // let dict = create_test_dictionary();
@@ -129,6 +130,7 @@ fn test_prefix_matching() {
 
 /// Test common word lookup
 #[test]
+#[ignore = "placeholder: not yet implemented"]
 fn test_common_word_lookup() {
     let common_words = vec![
         "안녕", "하다", "이다", "되다", "있다", "없다", "사람", "시간", "일", "년",
@@ -151,6 +153,7 @@ fn test_common_word_lookup() {
 
 /// Test connection cost matrix loading
 #[test]
+#[ignore = "placeholder: not yet implemented"]
 fn test_matrix_loading() {
     // TODO: Implement once matrix is available
     // let matrix_path = get_test_matrix_path();
@@ -165,6 +168,7 @@ fn test_matrix_loading() {
 
 /// Test connection cost retrieval
 #[test]
+#[ignore = "placeholder: not yet implemented"]
 fn test_connection_cost() {
     // TODO: Implement once matrix is available
     // let matrix = create_test_matrix();
@@ -177,6 +181,7 @@ fn test_connection_cost() {
 
 /// Test dense matrix implementation
 #[test]
+#[ignore = "placeholder: not yet implemented"]
 fn test_dense_matrix() {
     // TODO: Implement once dense matrix is available
     // let matrix = DenseMatrix::new(100, 100);
@@ -194,6 +199,7 @@ fn test_dense_matrix() {
 
 /// Test sparse matrix implementation
 #[test]
+#[ignore = "placeholder: not yet implemented"]
 fn test_sparse_matrix() {
     // TODO: Implement once sparse matrix is available
     // let mut builder = SparseMatrixBuilder::new();
@@ -210,6 +216,7 @@ fn test_sparse_matrix() {
 
 /// Test memory-mapped matrix for large dictionaries
 #[test]
+#[ignore = "placeholder: not yet implemented"]
 fn test_mmap_matrix() {
     // TODO: Implement once mmap matrix is available
     // let matrix_path = get_test_matrix_path();
@@ -224,6 +231,7 @@ fn test_mmap_matrix() {
 
 /// Test trie building and searching
 #[test]
+#[ignore = "placeholder: not yet implemented"]
 fn test_trie_build_and_search() {
     // TODO: Implement once trie builder is available
     // let mut builder = TrieBuilder::new();
@@ -247,6 +255,7 @@ fn test_trie_build_and_search() {
 
 /// Test dictionary format version compatibility
 #[test]
+#[ignore = "placeholder: not yet implemented"]
 fn test_dictionary_version() {
     // TODO: Implement once dictionary format is defined
     // let dict_path = get_test_dict_path();
@@ -285,6 +294,7 @@ fn test_feature_parsing() {
 
 /// Test dictionary entry serialization/deserialization
 #[test]
+#[ignore = "placeholder: not yet implemented"]
 fn test_entry_serialization() {
     // TODO: Implement once serialization is available
     // let entry = Entry {
@@ -306,6 +316,7 @@ fn test_entry_serialization() {
 
 /// Test dictionary lookup performance
 #[test]
+#[ignore = "placeholder: not yet implemented"]
 fn test_lookup_performance() {
     // use common::perf;
 
@@ -328,6 +339,7 @@ fn test_lookup_performance() {
 
 /// Test concurrent dictionary access
 #[test]
+#[ignore = "placeholder: not yet implemented"]
 fn test_concurrent_access() {
     // use std::sync::Arc;
     // use std::thread;
@@ -355,6 +367,7 @@ fn test_concurrent_access() {
 
 /// Test dictionary statistics
 #[test]
+#[ignore = "placeholder: not yet implemented"]
 fn test_dictionary_stats() {
     // TODO: Implement once dictionary stats are available
     // let dict = create_test_dictionary();
@@ -377,6 +390,7 @@ mod matrix_tests {
 
     /// Test matrix bounds checking
     #[test]
+    #[ignore = "placeholder: not yet implemented"]
     fn test_matrix_bounds() {
         // TODO: Implement once matrix is available
         // let matrix = create_test_matrix();
@@ -393,6 +407,7 @@ mod matrix_tests {
 
     /// Test matrix memory usage
     #[test]
+    #[ignore = "placeholder: not yet implemented"]
     fn test_matrix_memory_usage() {
         // TODO: Implement once matrix is available
         // let dense = DenseMatrix::new(1000, 1000);
@@ -410,6 +425,7 @@ mod trie_tests {
 
     /// Test trie with Korean text
     #[test]
+    #[ignore = "placeholder: not yet implemented"]
     fn test_trie_korean() {
         // TODO: Implement once trie is available
         // let mut builder = TrieBuilder::new();
@@ -427,6 +443,7 @@ mod trie_tests {
 
     /// Test trie common prefix search
     #[test]
+    #[ignore = "placeholder: not yet implemented"]
     fn test_trie_common_prefix() {
         // TODO: Implement once trie is available
         // let trie = build_test_trie();

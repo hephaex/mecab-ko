@@ -57,11 +57,13 @@ jobs:
           workspaces: rust
 
       - name: Install maturin
-        run: pip install maturin pytest
+        run: |
+          python -m pip install --upgrade pip
+          pip install maturin pytest virtualenv
 
       - name: Build Python bindings
         working-directory: rust/crates/mecab-ko-python
-        run: maturin develop
+        run: maturin develop --manifest-path Cargo.toml
 
       - name: Run Python tests
         working-directory: rust/crates/mecab-ko-python

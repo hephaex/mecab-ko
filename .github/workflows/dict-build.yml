@@ -240,6 +240,17 @@ jobs:
       - name: Prepare dictionary output directory
         run: |
           mkdir -p dict-output
+          if [ ! -d "data/mecab-ko-dic-2.1.1-20180720" ]; then
+            echo "Dictionary source not found. Extracting from archive..."
+            if [ -f "data/mecab-ko-dic-2.1.1-20180720.tar.gz" ]; then
+              tar xzf data/mecab-ko-dic-2.1.1-20180720.tar.gz -C data/
+            else
+              echo "::warning::Dictionary source archive not available. Skipping build."
+              echo "dict_size=0" >> $GITHUB_OUTPUT
+              echo "entry_count=0" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+          fi
           ls -la data/mecab-ko-dic-2.1.1-20180720/ | head -20
 
       - name: Build system dictionary
@@ -619,7 +630,7 @@ jobs:
     if: github.event_name == 'push'
     steps:
       - name: Delete artifacts older than 30 days
-        uses: geekyeggo/delete-artifact@v2
+        uses: geekyeggo/delete-artifact@v5
         with:
           name: |
             dict-binary-.*

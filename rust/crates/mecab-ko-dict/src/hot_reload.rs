@@ -577,7 +577,7 @@ impl HotReloadDictionary {
         drop(history);
         drop(current);
 
-        versions.sort_by(|a, b| b.version.cmp(&a.version));
+        versions.sort_by_key(|v| std::cmp::Reverse(v.version));
 
         Ok(versions)
     }
