@@ -108,7 +108,7 @@ jobs:
         with:
           working-directory: rust/crates/mecab-ko-python
           target: ${{ matrix.target }}
-          args: --release --interpreter 3.8 3.9 3.10 3.11 3.12 3.13
+          args: --release --out dist --interpreter 3.9 3.10 3.11 3.12 3.13
           sccache: 'true'
           manylinux: ${{ matrix.manylinux || 'off' }}
 
@@ -116,14 +116,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ matrix.platform }}-${{ matrix.arch }}
-          path: rust/target/wheels/*.whl
+          path: rust/crates/mecab-ko-python/dist/*.whl
           if-no-files-found: warn
           retention-days: 7
 
       - name: Show build output
         if: always()
         shell: bash
-        run: ls -lh rust/target/wheels/ || echo "No wheels directory found"
+        run: ls -lh rust/crates/mecab-ko-python/dist/ || echo "No dist directory found"
 
   build_sdist:
     name: Build source distribution
@@ -143,13 +143,13 @@ jobs:
 
       - name: Build source distribution
         working-directory: rust/crates/mecab-ko-python
-        run: maturin build --release --sdist
+        run: maturin sdist --out dist
 
       - name: Upload sdist artifact
         uses: actions/upload-artifact@v4
         with:
           name: sdist
-          path: rust/crates/mecab-ko-python/target/wheels/*.tar.gz
+          path: rust/crates/mecab-ko-python/dist/*.tar.gz
           if-no-files-found: warn
           retention-days: 7
 
@@ -162,7 +162,7 @@ jobs:
       matrix:
         include:
           - runner: ubuntu-latest
-            py_version: '3.8'
+            py_version: '3.9'
           - runner: ubuntu-latest
             py_version: '3.12'
           - runner: ubuntu-latest
@@ -309,7 +309,6 @@ jobs:
           echo "" >> /tmp/wheel-report.md
           echo "## Python Versions Supported" >> /tmp/wheel-report.md
           echo "" >> /tmp/wheel-report.md
-          echo "- Python 3.8" >> /tmp/wheel-report.md
           echo "- Python 3.9" >> /tmp/wheel-report.md
           echo "- Python 3.10" >> /tmp/wheel-report.md
           echo "- Python 3.11" >> /tmp/wheel-report.md

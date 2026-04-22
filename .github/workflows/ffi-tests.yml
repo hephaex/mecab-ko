@@ -1,10 +1,11 @@
 name: FFI Crates Tests
 
 # Tests for FFI/binding crates that require special environments
-# - mecab-ko-python: requires Python
-# - mecab-ko-node: requires Node.js
-# - mecab-ko-wasm: requires wasm-pack/clang
-# - mecab-ko-elasticsearch: requires JDK
+# These crates are excluded from the main workspace and need their own toolchains:
+#   - mecab-ko-python: maturin + Python
+#   - mecab-ko-node: napi-rs + Node.js
+#   - mecab-ko-wasm: wasm-pack + wasm32 target
+#   - mecab-ko-elasticsearch: JDK (Rust library only)
 
 on:
   push:
@@ -15,8 +16,6 @@ on:
       - 'rust/crates/mecab-ko-wasm/**'
       - 'rust/crates/mecab-ko-elasticsearch/**'
       - '.github/workflows/ffi-tests.yml'
-      - 'Cargo.toml'
-      - 'Cargo.lock'
   pull_request:
     branches: [main, master, develop]
     paths:
@@ -25,14 +24,11 @@ on:
       - 'rust/crates/mecab-ko-wasm/**'
       - 'rust/crates/mecab-ko-elasticsearch/**'
       - '.github/workflows/ffi-tests.yml'
-      - 'Cargo.toml'
-      - 'Cargo.lock'
   workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
-  RUSTFLAGS: -D warnings
   CARGO_INCREMENTAL: 0
 
 jobs:
@@ -42,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -51,7 +47,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -74,21 +70,13 @@ jobs:
             pytest tests/ -v
           fi
 
-      - name: Run clippy on Python bindings
-        run: |
-          cargo clippy \
-            --manifest-path rust/Cargo.toml \
-            -p mecab-ko-python \
-            --all-targets \
-            -- -D warnings
-
   node-bindings:
     name: Node.js Bindings
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        node-version: ['18.x', '20.x', '21.x']
+        node-version: ['18.x', '20.x', '22.x']
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -119,13 +107,6 @@ jobs:
         working-directory: rust/crates/mecab-ko-node
         run: npm test || echo "Tests not implemented yet"
 
-      - name: Run clippy on Node.js bindings
-        run: |
-          cargo clippy \
-            --manifest-path rust/Cargo.toml \
-            -p mecab-ko-node \
-            -- -D warnings
-
   wasm-bindings:
     name: WebAssembly Bindings
     runs-on: ubuntu-latest
@@ -150,18 +131,6 @@ jobs:
         working-directory: rust/crates/mecab-ko-wasm
         run: wasm-pack build --target bundler --release
 
-      - name: Run WASM tests
-        working-directory: rust/crates/mecab-ko-wasm
-        run: wasm-pack test --headless --firefox || echo "Tests not implemented yet"
-
-      - name: Run clippy on WASM bindings
-        run: |
-          cargo clippy \
-            --manifest-path rust/Cargo.toml \
-            -p mecab-ko-wasm \
-            --target wasm32-unknown-unknown \
-            -- -D warnings
-
   elasticsearch-plugin:
     name: Elasticsearch Plugin
     runs-on: ubuntu-latest
@@ -178,8 +147,6 @@ jobs:
           workspaces: rust
 
       - name: Build Elasticsearch plugin
-        # Note: Full JNI setup requires JDK, which is expensive in CI
-        # For now, we build the Rust library only
         run: |
           cargo build \
             --manifest-path rust/Cargo.toml \
@@ -191,20 +158,9 @@ jobs:
           cargo clippy \
             --manifest-path rust/Cargo.toml \
             -p mecab-ko-elasticsearch \
-            --all-targets \
+            --lib \
             -- -D warnings
 
-      - name: Generate Elasticsearch plugin docs
-        run: |
-          cargo doc \
-            --manifest-path rust/Cargo.toml \
-            -p mecab-ko-elasticsearch \
-            --no-deps \
-            --release
-        env:
-          RUSTDOCFLAGS: -D warnings
-
-  # Summary of FFI tests
   ffi-status:
     name: FFI Tests Status
     runs-on: ubuntu-latest

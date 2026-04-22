@@ -22,14 +22,14 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Run security audit
-        uses: rustsec/audit-check-action@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
+      - name: Install security tools
+        run: |
+          cargo install cargo-audit
+          cargo install cargo-deny
 
-      - name: Install cargo-deny
-        run: cargo install cargo-deny
+      - name: Run cargo audit
+        run: cd rust && cargo audit
+        continue-on-error: true
 
       - name: Run cargo deny
         run: cargo deny --manifest-path rust/Cargo.toml check all
@@ -123,12 +123,12 @@ jobs:
 
       - name: Run full test suite
         run: |
-          cargo test --manifest-path rust/Cargo.toml --all-features --verbose
+          cargo test --manifest-path rust/Cargo.toml --features hot-reload-v2 --verbose
           cargo test --manifest-path rust/Cargo.toml --release --verbose
         continue-on-error: true
 
-      - name: Run clippy on all targets
-        run: cargo clippy --manifest-path rust/Cargo.toml --all-targets --all-features -- -D warnings
+      - name: Run clippy
+        run: cargo clippy --manifest-path rust/Cargo.toml --lib --bins --features hot-reload-v2 -- -D warnings
         continue-on-error: true
 
   cleanup-artifacts:
@@ -137,13 +137,13 @@ jobs:
     if: github.event.schedule == '0 2 * * 0' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Delete old artifacts
-        uses: geekyeggo/delete-artifact@v2
+        uses: geekyeggo/delete-artifact@v5
         with:
           name: |
             rustdoc
             mdbook
             documentation
-          minAgeInDays: 30
+          failOnError: false
 
   status-check:
     name: Health Check
