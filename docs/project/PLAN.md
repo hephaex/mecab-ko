@@ -1,3 +1,25 @@
+# ✅ 완료된 스프린트: Phase 37 - Sprint 71 (외부 의존 검증 및 CI 안정화)
+
+## 🎯 Sprint 71 목표
+외부 의존성 전수 검증, 보안 취약점 패치, CI/CD 워크플로우 4개 수정
+
+## Sprint 71 작업 목록 (7/7) ✅
+
+### P0 (Critical) - 보안 패치
+- [x] S71-01: rustls-webpki 0.103.12→0.103.13 (RUSTSEC-2026-0104) + deny.toml 정리 ✅
+- [x] S71-02: security.yml — defunct rustsec/audit-check-action 제거, cargo audit 직접 실행 ✅
+- [x] S71-03: scheduled.yml — 동일 rustsec action 교체 + clippy --all-features 수정 ✅
+
+### P1 (High) - CI 안정화
+- [x] S71-04: ffi-tests.yml — workspace exclude 크레이트 독립 빌드 구조 전환, Python 3.9+, Node 22 LTS ✅
+- [x] S71-05: python-wheels.yml — maturin --out dist 경로 수정, Python 3.8 제거 ✅
+
+### P2 (Medium) - 유지보수
+- [x] S71-06: Actions 버전 점검 — 이미 v4/v5 최신, Node.js 20 deprecation 2026-06-02까지 유예 ✅
+- [x] S71-07: 로컬 build/clippy/test 통과 확인 + 커밋 + PLAN/PROGRESS 기록 ✅
+
+---
+
 # ✅ 완료된 스프린트: Phase 36 - Sprint 70 (Verification Only — 코드 작성 0)
 
 ## 🎯 Sprint 70 목표

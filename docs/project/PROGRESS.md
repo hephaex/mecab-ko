@@ -1,6 +1,45 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-21 (Sprint 70 완료)
+## 마지막 업데이트: 2026-04-23 (Sprint 71 완료)
+
+### ✅ Sprint 71 - 외부 의존 검증 및 CI 안정화
+
+**기간**: 2026-04-23
+**목표**: 보안 취약점 패치 + CI 워크플로우 4개 수정
+
+#### 발견 및 해결한 문제
+
+| # | 심각도 | 문제 | 해결 |
+|---|--------|------|------|
+| 1 | P0 | RUSTSEC-2026-0104: rustls-webpki CRL 파싱 패닉 (4/22 공개) | cargo update → 0.103.13 |
+| 2 | P0 | rustsec/audit-check-action@v1 리포지토리 404 | cargo audit 직접 실행으로 교체 |
+| 3 | P0 | deny.toml RUSTSEC-2024-0436 ignore 미매치 | ignore 제거 (paste 크레이트 advisory 변경) |
+| 4 | P1 | ffi-tests.yml: workspace exclude 크레이트에 cargo clippy -p 실행 불가 | 각 크레이트 독립 빌드, clippy 제거 |
+| 5 | P1 | python-wheels.yml: maturin 출력 경로 오류 (rust/target/wheels/) | --out dist 명시 |
+| 6 | P2 | Python 3.8 EOL, Node 21 비-LTS | Python 3.9-3.13, Node 22 LTS |
+
+#### 변경 파일 (6개)
+
+- `.github/workflows/security.yml` — rustsec action 제거, audit-check job 통합
+- `.github/workflows/scheduled.yml` — 동일 rustsec 교체, clippy 플래그, delete-artifact v5
+- `.github/workflows/ffi-tests.yml` — 전면 재작성 (독립 빌드 구조)
+- `.github/workflows/python-wheels.yml` — 경로 수정, Python 3.8 제거
+- `rust/Cargo.lock` — rustls-webpki 0.103.12→0.103.13
+- `rust/deny.toml` — stale ignore/license 제거
+
+#### 검증 결과
+
+- `cargo build --features hot-reload-v2`: ✅
+- `cargo clippy --lib --bins --features hot-reload-v2 -- -D warnings`: ✅ (0 warnings)
+- `cargo test --features hot-reload-v2`: ✅ (all pass)
+- `cargo audit`: ✅ (0 vulnerabilities, 1 allowed warning: paste unmaintained)
+- `cargo deny check all`: ✅ (advisories ok, bans ok, licenses ok, sources ok)
+
+#### 커밋
+
+- `6ab3b58` — fix(ci): external dependency verification and CI stabilization
+
+---
 
 ### ✅ Sprint 70 - External Dependency Verification (코드 작성 0, 검증 전용)
 
