@@ -363,8 +363,7 @@ impl BatchTokenizer {
     pub fn available_tokenizers(&self) -> usize {
         self.tokenizer_pool
             .lock()
-            .map(|pool| pool.len())
-            .unwrap_or(0)
+            .map_or(0, |pool| pool.len())
     }
 }
 

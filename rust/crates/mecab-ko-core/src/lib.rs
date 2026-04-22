@@ -191,8 +191,8 @@ pub use pool::{
 pub use pos_tag::PosTag;
 pub use sejong::{EndingRule, SejongConverter, SejongToken};
 pub use streaming::{
-    ChunkedTokenIterator, ProgressCallback, ProgressStreamingTokenizer, StreamingProgress,
-    StreamingTokenizer, TokenStream,
+    ChunkedTokenIterator, ProgressCallback, ProgressStreamingTokenizer, SentenceReader,
+    StreamingProgress, StreamingTokenizer, TokenStream,
 };
 pub use tokenizer::{Token, Tokenizer};
 pub use unknown::{CharCategoryMap, UnknownDictionary, UnknownHandler};

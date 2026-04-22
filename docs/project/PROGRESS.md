@@ -1,6 +1,29 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-23 (Sprint 72 완료)
+## 마지막 업데이트: 2026-04-23 (Sprint 73 완료 — v0.7.1 릴리스)
+
+### ✅ Sprint 73 - v0.7.1 릴리스 + Streaming API
+
+**기간**: 2026-04-23
+**목표**: v0.7.1 버전 범프 + Streaming API 구현
+
+#### 변경 사항
+
+| Track | 작업 | 상태 |
+|-------|------|------|
+| A | workspace version 0.7.0→0.7.1 (13개 Cargo.toml) | ✅ |
+| A | CHANGELOG.md v0.7.1 섹션 | ✅ |
+| A | README + node/README + search-plugins/README 버전 갱신 | ✅ |
+| B | sejong.rs 분할 | ⏭️ v0.8.0 연기 |
+| C | SentenceReader 구현 (문장 경계 감지) | ✅ |
+| C | StreamingTokenizer + TokenStream + ChunkedTokenIterator | ✅ |
+| C | 37개 테스트 (29 unit + 5 integration + 3 doc-test) | ✅ |
+| D | 전체 검증 (1,091 pass / 0 fail / 68 ignored) | ✅ |
+
+#### sejong.rs 분할 연기 사유
+9,718줄 중 7,900줄이 단일 `impl SejongConverter` 블록 안에 있어 단순 파일 이동이 아닌 구조 리팩토링 필요. 기술 문서(`~/.claude/references/2026-04-23_sejong_rs_splitting_strategy.md`)는 완비됨.
+
+---
 
 ### ✅ Sprint 72 - CI 수정 + 코드 품질 + 기술 문서
 

@@ -650,17 +650,13 @@ impl UnknownHandler {
         base_pos: &str,
     ) -> String {
         match pattern {
-            WordPattern::ProperNoun | WordPattern::CamelCase => {
-                // 대문자 시작이나 CamelCase는 고유명사(NNP) 가능성
-                if category_id == ALPHA_CATEGORY {
-                    return "NNP".to_string();
-                }
+            // 대문자 시작이나 CamelCase는 고유명사(NNP) 가능성
+            WordPattern::ProperNoun | WordPattern::CamelCase if category_id == ALPHA_CATEGORY => {
+                return "NNP".to_string();
             }
-            WordPattern::HangulAlphaMix => {
-                // 한글+영문 혼합은 복합명사 가능성
-                if category_id == HANGUL_CATEGORY {
-                    return "NNG".to_string();
-                }
+            // 한글+영문 혼합은 복합명사 가능성
+            WordPattern::HangulAlphaMix if category_id == HANGUL_CATEGORY => {
+                return "NNG".to_string();
             }
             _ => {}
         }

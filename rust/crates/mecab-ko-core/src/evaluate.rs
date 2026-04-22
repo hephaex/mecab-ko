@@ -361,7 +361,7 @@ impl EvaluationResult {
 
         // 품사별 정확도 (상위 15개)
         let mut pos_sorted: Vec<_> = self.pos_stats.iter().collect();
-        pos_sorted.sort_by(|a, b| b.1.gold_count.cmp(&a.1.gold_count));
+        pos_sorted.sort_by_key(|b| std::cmp::Reverse(b.1.gold_count));
 
         if !pos_sorted.is_empty() {
             report.push_str("품사별 정확도:\n");

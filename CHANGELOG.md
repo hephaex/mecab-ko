@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2026-04-23
+
+### Added
+- Streaming API: `SentenceReader` for sentence-level incremental processing
+- `show_dict_info` CLI command with actual file sizes and user dictionary listing
+
+### Changed
+- Marked 50 placeholder tests with `#[ignore]` for honest test counts
+
+### Fixed
+- CI: removed deleted `rustsec/audit-check-action`, stale `RUSTSEC-2024-0436` ignore
+- CI: fixed `dict-build.yml` dictionary data fallback, `delete-artifact@v5`
+- CI: fixed `elasticsearch-plugin-tests.yml` paths trigger
+- CI: fixed `ffi-tests.yml` virtualenv and manifest-path
+- Clippy: `unnecessary_sort_by` in hot_reload.rs
+- Clippy: `single_match_else` and `redundant_closure` in CLI
+
+### Security
+- Updated rustls-webpki 0.103.12 → 0.103.13 (RUSTSEC-2026-0104)
+
 ## [0.7.0] - 2026-04-20
 
 ### Added

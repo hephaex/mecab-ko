@@ -455,7 +455,7 @@ impl NoriTokenizer {
 
         // 긴 접미사부터 검사 (내림차순 정렬)
         let mut sorted_suffixes: Vec<_> = SUFFIXES.iter().collect();
-        sorted_suffixes.sort_by(|a, b| b.0.len().cmp(&a.0.len()));
+        sorted_suffixes.sort_by_key(|b| std::cmp::Reverse(b.0.len()));
 
         for (suffix, suffix_tag) in sorted_suffixes {
             let suffix_chars: Vec<char> = suffix.chars().collect();
@@ -515,7 +515,7 @@ impl NoriTokenizer {
 
         // 긴 접두사부터 검사 (내림차순 정렬)
         let mut sorted_prefixes: Vec<_> = PREFIXES.iter().collect();
-        sorted_prefixes.sort_by(|a, b| b.0.len().cmp(&a.0.len()));
+        sorted_prefixes.sort_by_key(|b| std::cmp::Reverse(b.0.len()));
 
         for (prefix, prefix_tag) in sorted_prefixes {
             let prefix_chars: Vec<char> = prefix.chars().collect();

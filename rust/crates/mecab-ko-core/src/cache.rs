@@ -314,7 +314,7 @@ impl TokenCache {
     /// 현재 캐시 항목 수
     #[must_use]
     pub fn len(&self) -> usize {
-        self.entries.read().map(|e| e.len()).unwrap_or(0)
+        self.entries.read().map_or(0, |e| e.len())
     }
 
     /// 캐시가 비어있는지 확인

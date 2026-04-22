@@ -31,7 +31,7 @@
 //! ```
 
 use std::collections::VecDeque;
-use std::io::{BufRead, BufReader, Read};
+use std::io::{self, BufRead, BufReader, Read};
 
 use crate::tokenizer::{Token, Tokenizer};
 use crate::Result;
@@ -931,5 +931,296 @@ mod tests {
 
         // 버퍼가 있어야 함 (문장 구분자가 없으므로)
         assert!(stream.buffer_len() > 0);
+    }
+}
+
+// ============================================================
+// SentenceReader — BufRead 기반 문장 단위 이터레이터
+// ============================================================
+
+/// Reads from a [`BufRead`] source and yields complete sentences one at a time.
+///
+/// Korean sentence boundaries are detected by:
+/// - Newline characters (`\n`) — always a boundary.
+/// - Sentence-ending punctuation (`.`, `?`, `!`) followed by whitespace or EOF,
+///   **except** when the `.` is between two ASCII digits (decimal numbers such
+///   as `3.14`).
+///
+/// Empty segments (blank lines or whitespace-only spans) are silently skipped.
+///
+/// Because the Viterbi algorithm requires the full sentence context, this is
+/// the minimum granularity for streaming tokenization of large inputs.
+///
+/// # Examples
+///
+/// ```rust
+/// use mecab_ko_core::streaming::SentenceReader;
+/// use std::io::Cursor;
+///
+/// let input = "첫 번째 문장입니다. 두 번째 문장입니다.\n";
+/// let reader = SentenceReader::new(Cursor::new(input));
+/// let sentences: Vec<String> = reader.map(|r| r.unwrap()).collect();
+/// assert_eq!(sentences.len(), 2);
+/// ```
+pub struct SentenceReader<R: BufRead> {
+    reader: R,
+    /// Raw character-level working buffer accumulated from `reader`.
+    buffer: String,
+    /// Completed sentences waiting to be returned by `next()`.
+    queue: std::collections::VecDeque<String>,
+    /// Set to `true` once the underlying reader returns EOF.
+    eof: bool,
+}
+
+impl<R: BufRead> SentenceReader<R> {
+    /// Creates a new `SentenceReader` wrapping `reader`.
+    #[must_use]
+    pub const fn new(reader: R) -> Self {
+        Self {
+            reader,
+            buffer: String::new(),
+            queue: std::collections::VecDeque::new(),
+            eof: false,
+        }
+    }
+
+    /// Drain all complete sentences currently visible in `self.buffer` into
+    /// `self.queue`.  A sentence ends at:
+    ///   1. A `\n` character (stripped from the yielded sentence).
+    ///   2. A `.`, `?`, or `!` that is **not** a decimal point, followed
+    ///      immediately by ASCII whitespace or at the end of the buffer when
+    ///      `eof` is `true`.
+    fn drain_sentences(&mut self) {
+        let chars: Vec<char> = self.buffer.chars().collect();
+        let len = chars.len();
+        let mut start = 0; // start of the current sentence (char index)
+
+        let mut i = 0;
+        while i < len {
+            let ch = chars[i];
+
+            if ch == '\n' {
+                // Rule 1: newline is always a boundary (stripped).
+                let sentence: String = chars[start..i].iter().collect();
+                let trimmed = sentence.trim();
+                if !trimmed.is_empty() {
+                    self.queue.push_back(trimmed.to_string());
+                }
+                start = i + 1;
+                i += 1;
+                continue;
+            }
+
+            if matches!(ch, '.' | '?' | '!') {
+                // Rule 2: sentence-ending punctuation.
+                // Exception: digit '.' digit is a decimal number, not a boundary.
+                if ch == '.' {
+                    let prev_is_digit = i > 0 && chars[i - 1].is_ascii_digit();
+                    let next_is_digit =
+                        i + 1 < len && chars[i + 1].is_ascii_digit();
+                    if prev_is_digit && next_is_digit {
+                        // Decimal number — not a boundary.
+                        i += 1;
+                        continue;
+                    }
+                }
+
+                // Determine whether what follows qualifies as a boundary:
+                //   - EOF reached and this is the last non-whitespace char, OR
+                //   - The very next char is ASCII whitespace (space / tab / newline).
+                //   - Skip any closing punctuation `)`, `]`, `"`, `'` before checking.
+                let mut j = i + 1;
+                while j < len && matches!(chars[j], ')' | ']' | '"' | '\'') {
+                    j += 1;
+                }
+
+                let followed_by_whitespace = j < len && chars[j].is_whitespace();
+                let followed_by_eof = j >= len && self.eof;
+
+                if followed_by_whitespace || followed_by_eof {
+                    // Include the punctuation mark (and any closing chars) in the sentence.
+                    let sentence: String = chars[start..=i].iter().collect();
+                    let trimmed = sentence.trim();
+                    if !trimmed.is_empty() {
+                        self.queue.push_back(trimmed.to_string());
+                    }
+                    // Skip past punctuation + closing chars + the whitespace separator.
+                    start = j;
+                    if j < len && chars[j].is_whitespace() && chars[j] != '\n' {
+                        start = j + 1;
+                        i = j + 1;
+                    } else {
+                        i = j;
+                    }
+                    continue;
+                }
+            }
+
+            i += 1;
+        }
+
+        // At EOF, flush whatever is left in the buffer as the final sentence.
+        if self.eof && start < len {
+            let sentence: String = chars[start..].iter().collect();
+            let trimmed = sentence.trim();
+            if !trimmed.is_empty() {
+                self.queue.push_back(trimmed.to_string());
+            }
+            self.buffer.clear();
+        } else if start > 0 {
+            // Consume the portion of the buffer that has been processed.
+            let byte_offset: usize = chars[..start].iter().map(|c| c.len_utf8()).sum();
+            self.buffer.drain(..byte_offset);
+        }
+    }
+
+    /// Read one more line from the underlying reader.
+    ///
+    /// Returns `Ok(true)` if bytes were read, `Ok(false)` on EOF, and
+    /// `Err(_)` on an I/O error.
+    fn fill_buffer(&mut self) -> io::Result<bool> {
+        let mut line = String::new();
+        let n = self.reader.read_line(&mut line)?;
+        if n == 0 {
+            self.eof = true;
+            Ok(false)
+        } else {
+            self.buffer.push_str(&line);
+            Ok(true)
+        }
+    }
+}
+
+impl<R: BufRead> Iterator for SentenceReader<R> {
+    type Item = io::Result<String>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            // If we already have a sentence ready, return it immediately.
+            if let Some(sentence) = self.queue.pop_front() {
+                return Some(Ok(sentence));
+            }
+
+            // Nothing in the queue and EOF consumed — we are done.
+            if self.eof {
+                return None;
+            }
+
+            // Try to read more data from the reader.
+            if let Err(e) = self.fill_buffer() {
+                return Some(Err(e));
+            }
+
+            // Parse whatever is now in the buffer.
+            self.drain_sentences();
+        }
+    }
+}
+
+#[cfg(test)]
+#[allow(clippy::expect_used)]
+mod sentence_reader_tests {
+    use super::*;
+    use std::io::Cursor;
+
+    #[test]
+    fn test_single_sentence() {
+        let input = "안녕하세요.\n";
+        let reader = SentenceReader::new(Cursor::new(input));
+        let sentences: Vec<_> = reader.map(|r| r.unwrap()).collect();
+        assert_eq!(sentences, vec!["안녕하세요."]);
+    }
+
+    #[test]
+    fn test_multiple_sentences() {
+        let input = "첫 번째 문장입니다. 두 번째 문장입니다.\n";
+        let reader = SentenceReader::new(Cursor::new(input));
+        let sentences: Vec<_> = reader.map(|r| r.unwrap()).collect();
+        assert_eq!(sentences.len(), 2);
+        assert_eq!(sentences[0], "첫 번째 문장입니다.");
+        assert_eq!(sentences[1], "두 번째 문장입니다.");
+    }
+
+    #[test]
+    fn test_newline_boundary() {
+        let input = "줄 하나\n줄 둘\n";
+        let reader = SentenceReader::new(Cursor::new(input));
+        let sentences: Vec<_> = reader.map(|r| r.unwrap()).collect();
+        assert_eq!(sentences, vec!["줄 하나", "줄 둘"]);
+    }
+
+    #[test]
+    fn test_decimal_not_boundary() {
+        let input = "값은 3.14입니다.\n";
+        let reader = SentenceReader::new(Cursor::new(input));
+        let sentences: Vec<_> = reader.map(|r| r.unwrap()).collect();
+        assert_eq!(sentences, vec!["값은 3.14입니다."]);
+    }
+
+    #[test]
+    fn test_question_mark() {
+        let input = "이것은 무엇인가요? 네, 맞습니다.\n";
+        let reader = SentenceReader::new(Cursor::new(input));
+        let sentences: Vec<_> = reader.map(|r| r.unwrap()).collect();
+        assert_eq!(sentences.len(), 2);
+    }
+
+    #[test]
+    fn test_empty_input() {
+        let input = "";
+        let reader = SentenceReader::new(Cursor::new(input));
+        let sentences: Vec<_> = reader.map(|r| r.unwrap()).collect();
+        assert!(sentences.is_empty());
+    }
+
+    #[test]
+    fn test_no_trailing_newline() {
+        let input = "마지막 문장";
+        let reader = SentenceReader::new(Cursor::new(input));
+        let sentences: Vec<_> = reader.map(|r| r.unwrap()).collect();
+        assert_eq!(sentences, vec!["마지막 문장"]);
+    }
+
+    #[test]
+    fn test_multiple_newlines() {
+        let input = "첫째\n\n둘째\n";
+        let reader = SentenceReader::new(Cursor::new(input));
+        let sentences: Vec<_> = reader.map(|r| r.unwrap()).collect();
+        // Empty lines are skipped.
+        assert_eq!(sentences, vec!["첫째", "둘째"]);
+    }
+
+    #[test]
+    fn test_exclamation() {
+        let input = "대단합니다! 정말요?\n";
+        let reader = SentenceReader::new(Cursor::new(input));
+        let sentences: Vec<_> = reader.map(|r| r.unwrap()).collect();
+        assert_eq!(sentences.len(), 2);
+    }
+
+    #[test]
+    fn test_sentence_reader_is_send() {
+        fn assert_send<T: Send>() {}
+        assert_send::<SentenceReader<std::io::Cursor<&[u8]>>>();
+    }
+
+    #[test]
+    fn test_closing_paren_before_whitespace() {
+        // Punctuation followed by closing bracket then space should still split.
+        let input = "문장입니다.) 다음 문장.\n";
+        let reader = SentenceReader::new(Cursor::new(input));
+        let sentences: Vec<_> = reader.map(|r| r.unwrap()).collect();
+        assert_eq!(sentences.len(), 2);
+    }
+
+    #[test]
+    fn test_no_trailing_newline_punctuation() {
+        // Final sentence with punctuation but no newline should still be yielded.
+        let input = "첫째. 둘째.";
+        let reader = SentenceReader::new(Cursor::new(input));
+        let sentences: Vec<_> = reader.map(|r| r.unwrap()).collect();
+        assert_eq!(sentences.len(), 2);
+        assert_eq!(sentences[0], "첫째.");
+        assert_eq!(sentences[1], "둘째.");
     }
 }

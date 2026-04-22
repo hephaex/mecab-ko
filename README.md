@@ -281,7 +281,7 @@ mecab evaluate --input test.tsv --dicdir ./dict-output --sejong
 
 ## 성능
 
-### KPI (v0.7.0 기준)
+### KPI (v0.7.1 기준)
 
 | 지표 | 목표 | 현재 |
 |------|------|------|
@@ -367,7 +367,7 @@ cargo run -p mecab-ko-dict-builder -- build \
 - ✅ 멀티플랫폼 배포 (crates.io, PyPI, npm, Docker)
 - ✅ 세종 코퍼스 호환 모드, N-best 경로 탐색
 
-### v0.7.0 (현재 릴리스)
+### v0.7.1 (현재 릴리스)
 - ✅ LazyEntries 메모리 최적화 (150MB → 34MB, -77%)
 - ✅ 메모리 프로파일러 (jemalloc-ctl 연동)
 - ✅ Clippy zero warnings, 보안 취약점 제로

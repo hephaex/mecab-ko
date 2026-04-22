@@ -1,3 +1,30 @@
+# ✅ 완료된 스프린트: Phase 39 - Sprint 73 (v0.7.1 릴리스 + Streaming API)
+
+## 🎯 Sprint 73 목표
+v0.7.1 릴리스: 버전 범프, Streaming API 구현. sejong.rs 분할은 v0.8.0으로 연기.
+
+## Sprint 73 작업 목록
+
+### Track A: v0.7.1 버전 범프
+- [x] S73-01: workspace version 0.7.0→0.7.1 (Cargo.toml 13개) ✅
+- [x] S73-02: CHANGELOG.md v0.7.1 섹션 추가 ✅
+- [x] S73-03: README.md + node/README.md + search-plugins/README.md 버전 갱신 ✅
+
+### Track B: sejong.rs 분할 → [DEFERRED to v0.8.0]
+9,718줄 단일 impl 블록의 분할은 단일 세션 범위 초과. 기술 문서 완비, v0.8.0에서 실행.
+
+### Track C: Streaming API
+- [x] S73-10: SentenceReader 구현 (문장 경계 감지) ✅
+- [x] S73-11: StreamingTokenizer 구현 (청크 단위 처리) ✅
+- [x] S73-12: 37개 테스트 (29 unit + 5 integration + 3 doc-test) ✅
+
+### Track D: 검증 + 릴리스
+- [x] S73-13: cargo fmt/clippy/test 전체 통과 (1,091 pass / 0 fail / 68 ignored) ✅
+- [x] S73-14: 커밋 + 태그 v0.7.1 ✅
+- [x] S73-15: PLAN/PROGRESS 기록 ✅
+
+---
+
 # ✅ 완료된 스프린트: Phase 38 - Sprint 72 (CI 수정 + 코드 품질 + 기술 문서)
 
 ## 🎯 Sprint 72 목표
