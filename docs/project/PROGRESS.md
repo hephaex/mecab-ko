@@ -1,38 +1,55 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-23 (Sprint 74 진행 — 코드 품질 + 리뷰 이행 검증)
+## 마지막 업데이트: 2026-04-23 (Sprint 75 완료 — CI 통합 + 테스트 확충)
 
-### 🔄 Sprint 74 - 코드 품질 + 리뷰 이행 검증
+### ✅ Sprint 75 - CI 통합 + 테스트 확충 + Actions 업그레이드
+
+**기간**: 2026-04-23
+**목표**: CI 워크플로우 통합, Actions 업그레이드, sejong 테스트 추가, placeholder 정리
+
+#### 5개 에이전트 병렬 실행 결과
+
+| 에이전트 | 작업 | 결과 |
+|----------|------|------|
+| architect | CI 23→14 통합 계획 수립 | 8단계 실행 계획, Phase 1 즉시 실행 |
+| rust-developer | sejong/ 7개 모듈 테스트 추가 | 36개 신규 테스트, 전체 pass |
+| rust-developer | 49개 placeholder 정리 | 25 구현 + 24 삭제, 2 유지 |
+| deployment-engineer | Actions v3→v4/v6 업그레이드 | 11개 액션, 5개 파일, 0 breaking |
+| researcher | reqwest→ureq 실현성 조사 | 비추천 (async 불일치), 대안 제시 |
+
+#### 커밋 내역
+
+| 커밋 | 내용 |
+|------|------|
+| `851e65b` | ci: 11개 GitHub Actions v4/v6 업그레이드 |
+| `90cbcbe` | test: sejong 36개 + placeholder 49개 정리 (1,145 pass) |
+| `ce6d284` | ci: 워크플로우 22→20 Phase 1 통합 |
+
+#### 리뷰 항목 상태 갱신
+
+| 우선순위 | 항목 | Sprint 74 상태 | Sprint 75 상태 |
+|----------|------|---------------|---------------|
+| P1 | CI 워크플로우 통합 | NOT STARTED | Phase 1 완료 (22→20) |
+| P1 | Actions 버전 업그레이드 | NOT STARTED | **DONE** (11개 v4/v6) |
+| P2 | sejong 테스트 커버리지 | GAP IDENTIFIED | **DONE** (7모듈 36테스트) |
+| P2 | placeholder 테스트 정리 | GAP IDENTIFIED | **DONE** (49개 정리) |
+| P2 | reqwest → ureq | NOT STARTED | **CANCELLED** (async 불일치) |
+
+#### 테스트 변화
+
+| 지표 | Sprint 74 | Sprint 75 | 변화 |
+|------|-----------|-----------|------|
+| 총 테스트 | 1,091 | 1,145 | +54 |
+| passed | 1,091 | 1,145 | +54 |
+| ignored | 68 | 18 | -50 |
+| failed | 0 | 0 | 유지 |
+
+---
+
+### ✅ Sprint 74 - 코드 품질 + 리뷰 이행 검증
 
 **기간**: 2026-04-23
 **목표**: 과거 리뷰 미이행 항목 해결, 클리피 제로 워닝, 테스트/CI/의존성 감사
-
-#### 5개 에이전트 병렬 분석 결과
-
-| 에이전트 | 분석 대상 | 핵심 발견 |
-|----------|-----------|-----------|
-| architect | 리뷰 7개 항목 갭 분석 | 5/7 완료, 2개 미이행 (CI 통합, reqwest) |
-| build-error-resolver | Clippy 워크스페이스 | 17개 파일 수정, 0 warnings 달성 |
-| code-reviewer | 테스트 품질 | sejong 8개 서브모듈 직접 테스트 0, corrections.rs 5,759줄 무테스트 |
-| Explore (CI) | 22개 워크플로우 | Docker actions v3→v4 필요, 중복 워크플로우 2쌍 |
-| Explore (deps) | 389 의존성 | 0 취약점, 1 경고 (paste), unsafe 0 (sejong/) |
-
-#### 실행된 조치
-
-| 조치 | 결과 |
-|------|------|
-| Clippy 17개 파일 수정 | 커밋 `225c784` — 0 warnings |
-| 리뷰 항목 상태 매핑 | 5 DONE / 2 OPEN 확인 |
-| Sprint 75+ 로드맵 수립 | CI 통합(P1), 테스트 확충(P2), reqwest 대체(P2) |
-
-#### 미이행 리뷰 항목 (→ Sprint 75-76)
-
-| 우선순위 | 항목 | 상태 | 다음 스프린트 |
-|----------|------|------|-------------|
-| P1 | CI 워크플로우 22→12 통합 | NOT STARTED | Sprint 75 |
-| P2 | reqwest → ureq 의존성 절감 | NOT STARTED | Sprint 76 |
-| P2 | sejong 테스트 커버리지 | GAP IDENTIFIED | Sprint 76 |
-| P2 | 50 placeholder 테스트 정리 | GAP IDENTIFIED | Sprint 76 |
 
 ---
 
