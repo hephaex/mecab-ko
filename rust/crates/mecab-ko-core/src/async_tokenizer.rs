@@ -458,8 +458,7 @@ mod tests {
     async fn test_tokenize_async_single_ascii_char() {
         let tokenizer = AsyncTokenizer::new().await.expect("should create");
         let tokens = tokenizer.tokenize_async("a").await;
-        // With mini-dict the result may be empty; just confirm no panic.
-        let _ = tokens;
+        assert!(tokens.iter().all(|t| !t.surface.is_empty()));
     }
 
     /// Korean text tokenisation — may produce 0 tokens with the mini-dict, but
@@ -468,8 +467,7 @@ mod tests {
     async fn test_tokenize_async_korean_text() {
         let tokenizer = AsyncTokenizer::new().await.expect("should create");
         let tokens = tokenizer.tokenize_async("안녕하세요").await;
-        // The returned value is always a Vec (possibly empty with mini-dict).
-        let _ = tokens;
+        assert!(tokens.iter().all(|t| !t.surface.is_empty()));
     }
 
     /// Multi-byte Korean input with punctuation must not panic.
@@ -478,7 +476,7 @@ mod tests {
         let tokenizer = AsyncTokenizer::new().await.expect("should create");
         // 오늘 날씨가 좋네요 — contains multi-byte UTF-8 characters
         let tokens = tokenizer.tokenize_async("오늘 날씨가 좋네요.").await;
-        let _ = tokens;
+        assert!(tokens.iter().all(|t| !t.surface.is_empty()));
     }
 
     /// Calling tokenize_async twice on the same AsyncTokenizer must work (Mutex
@@ -613,7 +611,7 @@ mod tests {
         let mut guard = tokenizer.get_tokenizer().await;
         // Call the synchronous tokenizer through the guard — must not panic.
         let tokens = guard.tokenize("안녕");
-        let _ = tokens;
+        assert!(tokens.iter().all(|t| !t.surface.is_empty()));
     }
 
     // ---------------------------------------------------------------------------
@@ -660,12 +658,12 @@ mod tests {
         let mut stream = AsyncStreamingTokenizer::new(tokenizer);
 
         // Push text without a sentence delimiter so it stays in the buffer.
-        let _ = stream.process_chunk("버퍼에 남을 텍스트").await;
-        // Buffer should be non-empty now.
+        let tokens = stream.process_chunk("버퍼에 남을 텍스트").await;
+        assert!(tokens.iter().all(|t| !t.surface.is_empty()));
         assert!(!stream.buffer.is_empty(), "buffer should hold unprocessed text");
 
-        // Flush drains it.
-        let _ = stream.flush().await;
+        let flushed = stream.flush().await;
+        assert!(flushed.iter().all(|t| !t.surface.is_empty()));
         assert!(stream.buffer.is_empty(), "flush must clear the buffer");
     }
 
@@ -683,7 +681,7 @@ mod tests {
         let remaining = stream.flush().await;
         // Total token count may be zero with mini-dict, but the pipeline must complete.
         let total = tokens.len() + remaining.len();
-        let _ = total; // outcome is dict-dependent; just verify no panic
+        assert!(tokens.iter().chain(remaining.iter()).all(|t| !t.surface.is_empty()), "all tokens must have non-empty surface (total: {total})");
     }
 
     /// Text with no delimiter must be buffered, not tokenised immediately.
@@ -737,8 +735,10 @@ mod tests {
         let mut stream = AsyncStreamingTokenizer::new(tokenizer);
 
         // Both '.' and '?' are delimiters; the last one ('?') should be the split.
-        let _ = stream.process_chunk("안녕하세요. 괜찮으세요?").await;
-        let _ = stream.flush().await;
+        let tokens = stream.process_chunk("안녕하세요. 괜찮으세요?").await;
+        assert!(tokens.iter().all(|t| !t.surface.is_empty()));
+        let flushed = stream.flush().await;
+        assert!(flushed.iter().all(|t| !t.surface.is_empty()));
     }
 
     /// Japanese full-stop '。' is a multi-byte delimiter — must not panic.
@@ -748,7 +748,9 @@ mod tests {
         let mut stream = AsyncStreamingTokenizer::new(tokenizer);
 
         // '。' is U+3002, encoded as 3 bytes in UTF-8.
-        let _ = stream.process_chunk("テスト。次の文。\n").await;
-        let _ = stream.flush().await;
+        let tokens = stream.process_chunk("テスト。次の文。\n").await;
+        assert!(tokens.iter().all(|t| !t.surface.is_empty()));
+        let flushed = stream.flush().await;
+        assert!(flushed.iter().all(|t| !t.surface.is_empty()));
     }
 }
