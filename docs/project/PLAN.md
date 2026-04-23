@@ -1,3 +1,44 @@
+# ✅ 완료: Phase 44 - Sprint 78 (테스트 커버리지 + CI Phase 3 + 리뷰 수정)
+
+## 🎯 Sprint 78 목표
+CRITICAL 테스트 갭 해소, CI Phase 3 (npm 통합 + composite action), 리뷰 HIGH 즉시 수정
+
+## Sprint 78 작업 목록
+
+### Track A: 테스트 커버리지 강화
+- [x] S78-01: async_tokenizer.rs 30개 테스트 추가 (0→30, CRITICAL gap 해소) ✅
+- [x] S78-02: integration_golden.rs #[ignore] 4개 실제 assertion 구현 ✅
+- [x] S78-03: 리뷰 HIGH — 11개 `let _ =` no-op assertion을 실제 검증으로 교체 ✅
+
+### Track B: CI Phase 3 (18→17)
+- [x] S78-04: npm-publish-wasm.yml → npm-publish.yml 병합 (tag 기반 라우팅) ✅
+- [x] S78-05: composite action `.github/actions/rust-setup/action.yml` 생성 ✅
+- [x] S78-06: ci.yml에 composite action 적용 (proof of concept, 6 jobs) ✅
+
+### Track C: 검증
+- [x] S78-07: 전체 빌드/테스트/클리피 통과 (1,149 pass / 0 fail / 18 ignored) ✅
+- [x] S78-08: 리뷰 에이전트 검증 → HIGH 1건 즉시 수정 ✅
+
+---
+
+## 📋 Sprint 79+ 로드맵
+
+### P1: composite action 전체 적용 (Sprint 79)
+- ci.yml 이외 14개 워크플로우에 rust-setup action 적용
+- e2e-tests.yml + ffi-tests.yml 병합 (17→16)
+- MEDIUM 리뷰: npm-publish tag 라우팅 문서화, 삭제된 파일 참조 정리
+
+### P2: corrections.rs 분할 (Sprint 79-80)
+- 보호 테스트 50개 작성 (8-12시간)
+- 5개 서브함수 추출 (3-4시간)
+
+### P3: v0.8.0 준비 (Sprint 80+)
+- Streaming API async 버전 (tokio feature flag)
+- crates.io v0.7.1 배포
+- test-allocator CI 작업 (12개 ignored 해제)
+
+---
+
 # ✅ 완료: Phase 43 - Sprint 77 (CI Phase 2 + 릴리스 준비 + 분석)
 
 ## 🎯 Sprint 77 목표

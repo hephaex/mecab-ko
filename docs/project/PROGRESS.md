@@ -1,6 +1,43 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-23 (Sprint 77 완료 — CI Phase 2 + 분석)
+## 마지막 업데이트: 2026-04-23 (Sprint 78 완료 — 테스트 + CI Phase 3)
+
+### ✅ Sprint 78 - 테스트 커버리지 + CI Phase 3 + 리뷰 수정
+
+**기간**: 2026-04-23
+**목표**: CRITICAL 테스트 갭 해소, CI Phase 3, 리뷰 HIGH 즉시 수정
+
+#### 4개 에이전트 병렬 실행 + 리뷰 에이전트
+
+| 에이전트 | 작업 | 결과 |
+|----------|------|------|
+| rust-developer | async_tokenizer.rs 30 tests | 0→30, --features async 전부 통과 |
+| rust-developer | golden #[ignore] 4개 구현 | 실제 assertion으로 교체, ignored 해제 |
+| deployment-engineer | npm-publish-wasm 병합 | tag 라우팅 (npm-v*/v*), 18→17 |
+| deployment-engineer | composite action 생성 + ci.yml 적용 | 6 jobs updated |
+| code-reviewer | 리뷰 | HIGH 1건 (no-op assertion) → 즉시 수정 |
+
+#### 커밋 내역
+
+| 커밋 | 내용 |
+|------|------|
+| `df022f8` | test(async): async_tokenizer.rs 30 tests 추가 |
+| `7e7904a` | test(golden): #[ignore] 4개 실제 구현 |
+| `2c4c10d` | ci: npm-publish-wasm → npm-publish 병합 (18→17) |
+| `1ef85b5` | ci: composite rust-setup action + ci.yml 적용 |
+| `f920ef3` | fix(test): 11개 no-op let _ = assertion 교체 |
+
+#### 테스트 변화
+
+| 지표 | Sprint 77 | Sprint 78 | 변화 |
+|------|-----------|-----------|------|
+| 총 테스트 | 1,145 | 1,149 | +4 (golden 해제) |
+| passed | 1,145 | 1,149 | +4 |
+| ignored | 22 | 18 | -4 (golden 구현) |
+| failed | 0 | 0 | 유지 |
+| async tests | 0 (feature gated) | 30 | +30 |
+
+---
 
 ### ✅ Sprint 77 - CI Phase 2 통합 + 릴리스 준비 + 분석
 
