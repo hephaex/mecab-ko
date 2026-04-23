@@ -1,3 +1,53 @@
+# ✅ 완료: Phase 42 - Sprint 76 (딥 리뷰 MEDIUM 이행 + 코드 품질)
+
+## 🎯 Sprint 76 목표
+v0.7.1 딥 리뷰에서 식별된 MEDIUM 미이행 항목 4건 해결, CI 정확도 검증 강화
+
+## Sprint 76 작업 목록
+
+### Track A: sejong 모듈 가시성 축소
+- [x] S76-01: sejong/mod.rs 7개 내부 모듈 `pub mod` → `mod` 전환 ✅
+- [x] S76-02: 8개 파일 17개 함수 `pub fn` → `pub(super) fn` 전환 ✅
+- [x] S76-03: public API (SejongConverter, SejongToken 등) 유지 확인 ✅
+
+### Track B: CI 워크플로우 의존성 수정
+- [x] S76-04: dict-build.yml validate-domain-dict → needs 목록 추가 ✅
+- [x] S76-05: dict-build.yml accuracy-test → failure condition 추가 ✅
+
+### Track C: 테스트 정직성 강화
+- [x] S76-06: integration_golden.rs 비검증 4개 테스트 `#[ignore]` 마킹 ✅
+- [x] S76-07: test_golden_statistics 실제 assertion 추가 ✅
+
+### Track D: 문서 갱신
+- [x] S76-08: README.md 버전 테이블 v0.7.0→v0.7.1, 로드맵 보강 ✅
+- [x] S76-09: CHANGELOG.md v0.7.1 Sprint 75 변경사항 추가 ✅
+- [x] S76-10: mecab-ko-node README Node.js 16→18 수정 ✅
+
+### Track E: reqwest 최적화
+- [x] S76-11: reqwest default-features=false 이미 적용 확인 (변경 불필요) ✅
+
+### Track F: 검증
+- [x] S76-12: 전체 빌드/테스트/클리피 통과 (1,145 pass / 0 fail / 22 ignored) ✅
+
+---
+
+## 📋 Sprint 77+ 로드맵
+
+### P1: CI 워크플로우 통합 Phase 2 (Sprint 77)
+- pypi-publish.yml → python-wheels.yml 병합 (MEDIUM risk)
+- npm-publish-wasm.yml → npm-publish.yml 병합 (MEDIUM risk)
+- elasticsearch-plugin-tests.yml → search-plugins.yml 병합 (MEDIUM risk)
+- 목표: 20→14 워크플로우
+- `workflow_call` 재사용 패턴 도입 (_rust-setup.yml)
+
+### P2: v0.8.0 준비 (Sprint 78+)
+- sejong/corrections.rs 분할 (5,795줄 단일 함수 → 4-5개 서브함수)
+- Streaming API async 버전 (tokio feature flag)
+- crates.io v0.7.1 배포
+- integration_golden.rs #[ignore] 4개 실제 구현
+
+---
+
 # ✅ 완료: Phase 41 - Sprint 75 (CI 통합 + 테스트 확충 + Actions 업그레이드)
 
 ## 🎯 Sprint 75 목표

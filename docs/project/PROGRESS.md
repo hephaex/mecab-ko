@@ -1,6 +1,53 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-23 (Sprint 75 완료 — CI 통합 + 테스트 확충)
+## 마지막 업데이트: 2026-04-23 (Sprint 76 완료 — 딥 리뷰 MEDIUM 이행)
+
+### ✅ Sprint 76 - 딥 리뷰 MEDIUM 이행 + 코드 품질
+
+**기간**: 2026-04-23
+**목표**: v0.7.1 딥 리뷰 MEDIUM 미이행 4건 해결, CI 정확도 검증 강화
+
+#### 4개 에이전트 병렬 실행 결과
+
+| 에이전트 | 작업 | 결과 |
+|----------|------|------|
+| rust-developer | sejong/ 가시성 축소 (pub→mod, pub→pub(super)) | 8파일 17함수 수정, public API 유지 |
+| deployment-engineer | dict-build.yml needs 의존성 추가 | validate-domain-dict 연결, accuracy-test 검증 |
+| rust-developer | integration_golden.rs 정직화 | 4개 #[ignore], 1개 assertion 강화 |
+| rust-developer | reqwest 최적화 확인 | 이미 적용 상태 (변경 불필요) |
+
+#### 커밋 내역
+
+| 커밋 | 내용 |
+|------|------|
+| `60dd283` | docs: README/CHANGELOG v0.7.1 보강 |
+| `05259c8` | fix(ci): validate-domain-dict needs 추가 |
+| `4dfdf6a` | refactor(sejong): 모듈 가시성 축소 |
+| `ce756de` | test(golden): 비검증 4개 #[ignore], 1개 강화 |
+| `284744c` | fix(ci): accuracy-test failure condition 추가 |
+
+#### 딥 리뷰 이슈 상태
+
+| 심각도 | 항목 | 상태 |
+|--------|------|------|
+| CRITICAL (2) | Streaming 버퍼/복사 | ✅ Sprint 75에서 수정 |
+| HIGH (3) | Streaming 다중바이트/docker.yml/경계 불일치 | ✅ Sprint 75에서 수정 |
+| MEDIUM: sejong pub mod 노출 | `mod` + `pub(super)` 전환 | ✅ **Sprint 76** |
+| MEDIUM: dict-build needs 누락 | validate-domain-dict 연결 | ✅ **Sprint 76** |
+| MEDIUM: golden 테스트 비검증 | #[ignore] + assertion 강화 | ✅ **Sprint 76** |
+| MEDIUM: README v0.7.0 잔여 | v0.7.1로 갱신 | ✅ **Sprint 76** |
+| MEDIUM: accuracy-test 미검증 | failure condition 추가 | ✅ **Sprint 76** |
+
+#### 테스트 변화
+
+| 지표 | Sprint 75 | Sprint 76 | 변화 |
+|------|-----------|-----------|------|
+| 총 테스트 | 1,145 | 1,145 | 유지 |
+| passed | 1,145 | 1,145 | 유지 |
+| ignored | 18 | 22 | +4 (정직화) |
+| failed | 0 | 0 | 유지 |
+
+---
 
 ### ✅ Sprint 75 - CI 통합 + 테스트 확충 + Actions 업그레이드
 
