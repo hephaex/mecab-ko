@@ -1,0 +1,45 @@
+name: Rust Setup
+description: Set up Rust toolchain and cache with configurable components and targets
+author: mecab-ko contributors
+
+inputs:
+  toolchain:
+    description: 'Rust toolchain version (stable, beta, nightly, or specific version)'
+    required: false
+    default: 'stable'
+  components:
+    description: 'Space-separated list of components to install (e.g., "rustfmt clippy")'
+    required: false
+    default: ''
+  targets:
+    description: 'Space-separated list of targets to install (e.g., "wasm32-unknown-unknown")'
+    required: false
+    default: ''
+  cache-key:
+    description: 'Optional cache key prefix for workspace-specific caching'
+    required: false
+    default: 'rust'
+  workspaces:
+    description: 'Space-separated list of workspace directories (e.g., "rust")'
+    required: false
+    default: 'rust'
+
+runs:
+  using: composite
+  steps:
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ inputs.toolchain }}
+        components: ${{ inputs.components }}
+        targets: ${{ inputs.targets }}
+
+    - name: Restore cargo cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: ${{ inputs.workspaces }}
+        key: ${{ inputs.cache-key }}
+
+branding:
+  icon: 'download'
+  color: 'orange'

@@ -32,9 +32,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
         with:
+          toolchain: stable
           components: rustfmt
 
       - name: Check formatting
@@ -47,15 +48,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
         with:
+          toolchain: stable
           components: clippy
-
-      - name: Restore cargo cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: rust
 
       - name: Run clippy on library crates
         # Library + binary targets only (tests/examples use unwrap/expect legitimately)
@@ -80,16 +77,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@master
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
         with:
           toolchain: ${{ matrix.rust }}
-
-      - name: Restore cargo cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: rust
-          key: ${{ matrix.rust }}
+          cache-key: ${{ matrix.rust }}
 
       - name: Run tests (debug)
         run: |
@@ -116,13 +108,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Restore cargo cache
-        uses: Swatinem/rust-cache@v2
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
         with:
-          workspaces: rust
+          toolchain: stable
 
       - name: Run profiler test-allocator tests
         run: |
@@ -151,16 +140,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
         with:
+          toolchain: stable
           targets: ${{ matrix.target }}
-
-      - name: Restore cargo cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: rust
-          key: ${{ matrix.os }}
+          cache-key: ${{ matrix.os }}
 
       - name: Build (release)
         run: |
@@ -178,16 +163,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
+        with:
+          toolchain: stable
 
       - name: Install tarpaulin
         run: cargo install cargo-tarpaulin
-
-      - name: Restore cargo cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: rust
 
       - name: Generate coverage
         run: |
