@@ -2,8 +2,6 @@ name: Scheduled Tasks
 
 on:
   schedule:
-    # Daily security check at 00:00 UTC
-    - cron: '0 0 * * *'
     # Weekly comprehensive audit on Sunday at 02:00 UTC
     - cron: '0 2 * * 0'
   workflow_dispatch:
@@ -12,86 +10,6 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  daily-security-audit:
-    name: Daily Security Audit
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Install security tools
-        run: |
-          cargo install cargo-audit
-          cargo install cargo-deny
-
-      - name: Run cargo audit
-        run: cd rust && cargo audit
-        continue-on-error: true
-
-      - name: Run cargo deny
-        run: cargo deny --manifest-path rust/Cargo.toml check all
-        continue-on-error: true
-
-      - name: Create issue on vulnerability found
-        if: failure()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: 'Security: Vulnerability detected in dependencies',
-              body: 'Daily security audit found vulnerabilities. Please check the workflow run for details.',
-              labels: ['security', 'automated']
-            });
-
-  weekly-dependency-update-check:
-    name: Weekly Dependency Check
-    runs-on: ubuntu-latest
-    if: github.event.schedule == '0 2 * * 0' || github.event_name == 'workflow_dispatch'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Check for outdated dependencies
-        run: |
-          cargo install cargo-outdated
-          cargo outdated --manifest-path rust/Cargo.toml --format list > outdated.txt || true
-          cat outdated.txt
-
-      - name: Upload outdated dependencies report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: outdated-dependencies
-          path: outdated.txt
-          retention-days: 7
-
-      - name: Create issue if updates available
-        if: always()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const content = fs.readFileSync('outdated.txt', 'utf8');
-
-            if (content.trim().length > 0) {
-              github.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title: 'Maintenance: Outdated dependencies available',
-                body: '## Outdated Dependencies\n\n```\n' + content + '\n```\n\nPlease review and update as necessary.',
-                labels: ['maintenance', 'automated']
-              });
-            }
-        continue-on-error: true
-
   weekly-compilation-test:
     name: Weekly Comprehensive Test
     runs-on: ${{ matrix.os }}

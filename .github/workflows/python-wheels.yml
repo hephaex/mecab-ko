@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'v*'
     paths:
       - 'rust/crates/mecab-ko-python/**'
       - '.github/workflows/python-wheels.yml'
@@ -26,6 +28,10 @@ on:
         options:
           - pypi
           - testpypi
+      test_pypi:
+        description: 'Publish to TestPyPI instead of PyPI'
+        required: false
+        default: 'false'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -362,13 +368,14 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'release' ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_to_pypi == 'true')
+      startsWith(github.ref, 'refs/tags/v') ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.publish_to_pypi == 'true' || github.event.inputs.test_pypi == 'true'))
     environment:
-      name: ${{ github.event.inputs.pypi_repository || (github.event_name == 'release' && 'pypi') || 'testpypi' }}
-      url: ${{ github.event.inputs.pypi_repository == 'pypi' && 'https://pypi.org/project/mecab-ko-python' || 'https://test.pypi.org/project/mecab-ko-python' }}
+      name: ${{ github.event.inputs.pypi_repository || (github.event_name == 'release' && 'pypi') || (startsWith(github.ref, 'refs/tags/') && 'pypi') || 'testpypi' }}
+      url: ${{ (github.event.inputs.pypi_repository == 'pypi' || github.event_name == 'release' || startsWith(github.ref, 'refs/tags/')) && 'https://pypi.org/project/mecab-ko-python' || 'https://test.pypi.org/project/mecab-ko-python' }}
     permissions:
       id-token: write
-      contents: read
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -389,24 +396,42 @@ jobs:
       - name: Determine PyPI target
         id: pypi_target
         run: |
-          if [ "${{ github.event_name }}" = "release" ]; then
-            echo "repository_url=https://upload.pypi.org/legacy/" >> $GITHUB_OUTPUT
-            echo "repository=pypi" >> $GITHUB_OUTPUT
-          elif [ "${{ github.event.inputs.pypi_repository }}" = "pypi" ]; then
-            echo "repository_url=https://upload.pypi.org/legacy/" >> $GITHUB_OUTPUT
-            echo "repository=pypi" >> $GITHUB_OUTPUT
-          else
+          if [ "${{ github.event.inputs.test_pypi }}" = "true" ] || [ "${{ github.event.inputs.pypi_repository }}" = "testpypi" ]; then
             echo "repository_url=https://test.pypi.org/legacy/" >> $GITHUB_OUTPUT
             echo "repository=testpypi" >> $GITHUB_OUTPUT
+          else
+            echo "repository_url=https://upload.pypi.org/legacy/" >> $GITHUB_OUTPUT
+            echo "repository=pypi" >> $GITHUB_OUTPUT
           fi
 
-      - name: Publish to ${{ steps.pypi_target.outputs.repository }}
+      - name: Publish to TestPyPI
+        if: github.event.inputs.test_pypi == 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          packages-dir: final_dist
+          skip-existing: true
+          verbose: true
+
+      - name: Publish to PyPI
+        if: (github.event.inputs.test_pypi != 'true' && startsWith(github.ref, 'refs/tags/')) || (github.event_name == 'release' && github.event.inputs.test_pypi != 'true') || (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_to_pypi == 'true')
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: final_dist
           repository-url: ${{ steps.pypi_target.outputs.repository_url }}
           verify-metadata: true
           skip-existing: false
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: final_dist/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create release summary
         if: github.event_name == 'release'
@@ -433,6 +458,33 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Test Installation" >> $GITHUB_STEP_SUMMARY
           echo "pip install -i https://test.pypi.org/simple/ mecab-ko-python" >> $GITHUB_STEP_SUMMARY
+
+  verify_pypi:
+    name: Verify PyPI package
+    needs: [publish_to_pypi]
+    if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'release')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Wait for PyPI to update
+        run: sleep 120
+
+      - name: Install from PyPI
+        run: |
+          pip install --upgrade pip
+          pip install mecab-ko-python
+
+      - name: Verify installation
+        run: |
+          python -c "from mecab_ko import Mecab, __version__; print(f'Installed version: {__version__}')"
+          python -c "from mecab_ko import Mecab; mecab = Mecab(); print(mecab.morphs('테스트'))"
+
+      - name: Display package info
+        run: pip show mecab-ko-python
 
   update_release_with_wheels:
     name: Update release with wheel information
