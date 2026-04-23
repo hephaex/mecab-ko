@@ -8,13 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.7.1] - 2026-04-23
 
 ### Added
-- Streaming API: `SentenceReader` for sentence-level incremental processing
+- Streaming API: `SentenceReader`, `StreamingTokenizer`, `TokenStream`, `ChunkedTokenIterator`
+- Buffer overflow protection: `max_buffer_size` (16MB default) for all streaming components
 - `show_dict_info` CLI command with actual file sizes and user dictionary listing
+- sejong/ module: 36 smoke tests across 7 submodules (hangul, tag_map, ending_rules, splitter, lexicon, postprocess, corrections)
 
 ### Changed
-- Marked 50 placeholder tests with `#[ignore]` for honest test counts
+- sejong.rs monolith (9,700 lines) split into 11 submodules
+- CI workflows consolidated: 22 → 20 (neologism-sync, validate-domain-dict merged)
+- 11 GitHub Actions upgraded to latest versions (docker, gradle, maturin, softprops, etc.)
+- Marked 50 placeholder tests with `#[ignore]`, cleaned up 49 dead placeholder tests
+- Streaming `drain_sentences()` rewritten from `Vec<char>` to `char_indices()` byte-offset tracking
 
 ### Fixed
+- Streaming: unbounded buffer growth causing OOM on large inputs without newlines
+- Streaming: `pos + 1` multi-byte delimiter panic (e.g., `。` U+3002, 3 bytes) → `char_indices()` safe
+- Streaming: decimal number split inconsistency between StreamingTokenizer and SentenceReader
+- Docker: `id: build` missing on build-push-action v6 (attestation step failure)
 - CI: removed deleted `rustsec/audit-check-action`, stale `RUSTSEC-2024-0436` ignore
 - CI: fixed `dict-build.yml` dictionary data fallback, `delete-artifact@v5`
 - CI: fixed `elasticsearch-plugin-tests.yml` paths trigger

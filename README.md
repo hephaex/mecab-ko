@@ -15,10 +15,10 @@ MeCab-Ko는 [은전한닢 프로젝트](https://bitbucket.org/eunjeon/mecab-ko)�
 
 ## 주요 성과
 
-| 지표 | v0.5.0 | v0.6.0 | v0.7.0 |
+| 지표 | v0.5.0 | v0.6.0 | v0.7.1 |
 |------|--------|--------|--------|
 | Token Accuracy | 100.0% | 100.0% | **100.0%** |
-| 테스트 문장 | 500개 | 1,100개 | **1,100개** |
+| 테스트 | 500문장 | 1,100문장 | **1,149 pass / 18 ignored** |
 | 처리 속도 | ~238K tok/sec | ~680K tok/sec | **~680K tok/sec** |
 | 메모리 사용량 | ~150MB | ~150MB | **~34MB (-77%)** |
 
@@ -369,7 +369,9 @@ cargo run -p mecab-ko-dict-builder -- build \
 
 ### v0.7.1 (현재 릴리스)
 - ✅ LazyEntries 메모리 최적화 (150MB → 34MB, -77%)
-- ✅ 메모리 프로파일러 (jemalloc-ctl 연동)
+- ✅ Streaming API (SentenceReader, StreamingTokenizer) — 버퍼 상한 16MB, 다중바이트 안전
+- ✅ sejong.rs 9,700줄 → 11개 서브모듈 분할, 36개 smoke test 추가
+- ✅ CI 워크플로우 통합 (22→20), Actions 11개 최신 버전 업그레이드
 - ✅ Clippy zero warnings, 보안 취약점 제로
 - ✅ 도메인 사전 자동 수집 파이프라인
   - 신조어: 국립국어원 우리말샘 API 연동, 주간/월간 자동 수집 → PR

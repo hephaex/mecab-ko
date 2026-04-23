@@ -24,7 +24,7 @@ pnpm add @mecab-ko/node
 
 ## Requirements
 
-- Node.js >= 16
+- Node.js >= 18
 - No external dependencies (MeCab binary not required)
 
 ## Quick Start
@@ -346,7 +346,7 @@ npm test
 ### Prerequisites for Building
 
 - Rust toolchain (>= 1.75)
-- Node.js (>= 16)
+- Node.js (>= 18)
 - Cargo
 
 ## Troubleshooting
