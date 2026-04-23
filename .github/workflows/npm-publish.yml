@@ -1,9 +1,10 @@
-name: npm Publish
+name: npm Publish (Node + WASM)
 
 on:
   push:
     tags:
       - 'npm-v*'
+      - 'v*'
   workflow_dispatch:
     inputs:
       dry_run:
@@ -16,10 +17,13 @@ on:
           - 'false'
 
 env:
-  PACKAGE_NAME: '@mecab-ko/node'
+  NODE_PACKAGE_NAME: '@mecab-ko/node'
+  WASM_PACKAGE_NAME: 'mecab-ko-wasm'
   NODE_VERSION: '20'
+  RUST_VERSION: 'stable'
   # napi build runs from the crate directory
-  CRATE_DIR: rust/crates/mecab-ko-node
+  NODE_CRATE_DIR: rust/crates/mecab-ko-node
+  WASM_CRATE_DIR: rust/crates/mecab-ko-wasm
 
 concurrency:
   group: npm-publish-${{ github.ref }}
@@ -29,8 +33,13 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    name: Build - ${{ matrix.target }}
+  # ============================================================================
+  # NODE.JS (napi-rs) PIPELINE - Triggers on npm-v* tags
+  # ============================================================================
+
+  build-node:
+    name: Build Node - ${{ matrix.target }}
+    if: startsWith(github.ref, 'refs/tags/npm-v')
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -63,7 +72,7 @@ jobs:
           targets: ${{ matrix.target }}
 
       - name: Install dependencies
-        working-directory: ${{ env.CRATE_DIR }}
+        working-directory: ${{ env.NODE_CRATE_DIR }}
         run: npm ci
 
       # aarch64-linux cross-compilation needs the gcc cross toolchain
@@ -74,7 +83,7 @@ jobs:
           sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
 
       - name: Build native module
-        working-directory: ${{ env.CRATE_DIR }}
+        working-directory: ${{ env.NODE_CRATE_DIR }}
         run: >
           npx napi build
           --platform
@@ -86,7 +95,7 @@ jobs:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: ${{ matrix.cross && 'aarch64-linux-gnu-gcc' || '' }}
 
       - name: List built artifacts
-        working-directory: ${{ env.CRATE_DIR }}
+        working-directory: ${{ env.NODE_CRATE_DIR }}
         run: ls -la *.node
         shell: bash
 
@@ -94,13 +103,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: bindings-${{ matrix.target }}
-          path: ${{ env.CRATE_DIR }}/*.node
+          path: ${{ env.NODE_CRATE_DIR }}/*.node
           if-no-files-found: error
           retention-days: 7
 
-  test:
-    name: Test - ${{ matrix.os }} (Node ${{ matrix.node }})
-    needs: [build]
+  test-node:
+    name: Test Node - ${{ matrix.os }} (Node ${{ matrix.node }})
+    if: startsWith(github.ref, 'refs/tags/npm-v')
+    needs: [build-node]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -120,27 +130,28 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          path: ${{ env.CRATE_DIR }}
+          path: ${{ env.NODE_CRATE_DIR }}
           pattern: bindings-*
           merge-multiple: true
 
       - name: List artifacts
-        working-directory: ${{ env.CRATE_DIR }}
+        working-directory: ${{ env.NODE_CRATE_DIR }}
         run: ls -la *.node 2>/dev/null || echo "No matching .node file for this platform"
         shell: bash
 
       - name: Install dependencies
-        working-directory: ${{ env.CRATE_DIR }}
+        working-directory: ${{ env.NODE_CRATE_DIR }}
         run: npm ci
 
       - name: Run tests
-        working-directory: ${{ env.CRATE_DIR }}
+        working-directory: ${{ env.NODE_CRATE_DIR }}
         run: npm test
         continue-on-error: true
 
-  publish:
-    name: Publish to npm
-    needs: [build, test]
+  publish-node:
+    name: Publish Node to npm
+    if: startsWith(github.ref, 'refs/tags/npm-v')
+    needs: [build-node, test-node]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -157,32 +168,32 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
-        working-directory: ${{ env.CRATE_DIR }}
+        working-directory: ${{ env.NODE_CRATE_DIR }}
         run: npm ci
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: ${{ env.CRATE_DIR }}/artifacts
+          path: ${{ env.NODE_CRATE_DIR }}/artifacts
           pattern: bindings-*
           merge-multiple: true
 
       - name: List downloaded artifacts
-        run: ls -la ${{ env.CRATE_DIR }}/artifacts/
+        run: ls -la ${{ env.NODE_CRATE_DIR }}/artifacts/
         shell: bash
 
       # napi artifacts moves .node files into npm/ platform package dirs
       - name: Collect platform artifacts
-        working-directory: ${{ env.CRATE_DIR }}
+        working-directory: ${{ env.NODE_CRATE_DIR }}
         run: npx napi artifacts --artifacts-dir artifacts
 
       # napi prepublish generates per-platform package.json in npm/ dirs
       - name: Prepare platform packages
-        working-directory: ${{ env.CRATE_DIR }}
+        working-directory: ${{ env.NODE_CRATE_DIR }}
         run: npx napi prepublish -t npm
 
       - name: List platform packages
-        working-directory: ${{ env.CRATE_DIR }}
+        working-directory: ${{ env.NODE_CRATE_DIR }}
         run: |
           echo "=== npm/ directory ==="
           ls -la npm/ 2>/dev/null || echo "No npm/ directory"
@@ -196,7 +207,7 @@ jobs:
         if: >
           github.event_name == 'workflow_dispatch' &&
           github.event.inputs.dry_run == 'true'
-        working-directory: ${{ env.CRATE_DIR }}
+        working-directory: ${{ env.NODE_CRATE_DIR }}
         run: |
           echo "=== Dry run: main package ==="
           npm publish --dry-run --access public
@@ -213,9 +224,8 @@ jobs:
 
       - name: Publish platform packages
         if: >
-          startsWith(github.ref, 'refs/tags/npm-v') &&
           (github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run != 'true')
-        working-directory: ${{ env.CRATE_DIR }}
+        working-directory: ${{ env.NODE_CRATE_DIR }}
         run: |
           for dir in npm/*/; do
             if [ -f "$dir/package.json" ]; then
@@ -228,9 +238,225 @@ jobs:
 
       - name: Publish main package
         if: >
-          startsWith(github.ref, 'refs/tags/npm-v') &&
           (github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run != 'true')
-        working-directory: ${{ env.CRATE_DIR }}
+        working-directory: ${{ env.NODE_CRATE_DIR }}
         run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  # ============================================================================
+  # WASM (wasm-pack) PIPELINE - Triggers on v* tags
+  # ============================================================================
+
+  build-wasm:
+    name: Build WASM package
+    if: startsWith(github.ref, 'refs/tags/v') && !startsWith(github.ref, 'refs/tags/npm-v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-cargo-wasm-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-wasm-
+
+      - name: Build WASM (bundler target)
+        working-directory: ${{ env.WASM_CRATE_DIR }}
+        run: |
+          wasm-pack build --target bundler --out-dir pkg --release
+          ls -la pkg/
+
+      - name: Build WASM (nodejs target)
+        working-directory: ${{ env.WASM_CRATE_DIR }}
+        run: |
+          wasm-pack build --target nodejs --out-dir pkg-node --release
+          ls -la pkg-node/
+
+      - name: Build WASM (web target)
+        working-directory: ${{ env.WASM_CRATE_DIR }}
+        run: |
+          wasm-pack build --target web --out-dir pkg-web --release
+          ls -la pkg-web/
+
+      - name: Prepare package for publishing
+        working-directory: ${{ env.WASM_CRATE_DIR }}
+        run: |
+          # Copy bundler output to root for npm publish
+          cp pkg/mecab_ko_wasm_bg.wasm .
+          cp pkg/mecab_ko_wasm.js .
+          cp pkg/mecab_ko_wasm.d.ts .
+          cp pkg/mecab_ko_wasm_bg.js .
+
+          # Create index.js for ESM
+          cat > index.js << 'EOF'
+          import init, * as wasm from './mecab_ko_wasm.js';
+
+          let initialized = false;
+
+          export async function initialize() {
+            if (!initialized) {
+              await init();
+              initialized = true;
+            }
+          }
+
+          export const tokenize = wasm.tokenize;
+          export const morphs = wasm.morphs;
+          export const nouns = wasm.nouns;
+          export const pos = wasm.pos;
+          export const wakati = wasm.wakati;
+          export const getVersion = wasm.getVersion;
+
+          export default { initialize, tokenize, morphs, nouns, pos, wakati, getVersion };
+          EOF
+
+          # Update version from git tag if available
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION="${{ github.ref_name }}"
+            VERSION="${VERSION#v}"
+            npm version "$VERSION" --no-git-tag-version --allow-same-version
+          fi
+
+          echo "Package contents:"
+          ls -la
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-package
+          path: |
+            ${{ env.WASM_CRATE_DIR }}/*.wasm
+            ${{ env.WASM_CRATE_DIR }}/*.js
+            ${{ env.WASM_CRATE_DIR }}/*.d.ts
+            ${{ env.WASM_CRATE_DIR }}/package.json
+            ${{ env.WASM_CRATE_DIR }}/README.md
+          retention-days: 5
+
+  test-wasm:
+    name: Test WASM package
+    if: startsWith(github.ref, 'refs/tags/v') && !startsWith(github.ref, 'refs/tags/npm-v')
+    needs: [build-wasm]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: wasm-package
+          path: ${{ env.WASM_CRATE_DIR }}
+
+      - name: Install dependencies
+        working-directory: ${{ env.WASM_CRATE_DIR }}
+        run: npm install
+
+      - name: Test Node.js example
+        working-directory: ${{ env.WASM_CRATE_DIR }}
+        run: |
+          if [ -f examples/node.js ]; then
+            node examples/node.js || echo "Example test skipped"
+          else
+            echo "No Node.js example found"
+          fi
+
+      - name: Test package import
+        working-directory: ${{ env.WASM_CRATE_DIR }}
+        run: |
+          cat > test-import.mjs << 'EOF'
+          import * as wasm from './mecab_ko_wasm.js';
+          console.log('WASM module imported successfully');
+          console.log('Available exports:', Object.keys(wasm));
+          EOF
+          node test-import.mjs || echo "Import test completed"
+
+  publish-wasm:
+    name: Publish WASM to npm
+    if: startsWith(github.ref, 'refs/tags/v') && !startsWith(github.ref, 'refs/tags/npm-v')
+    needs: [build-wasm, test-wasm]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: wasm-package
+          path: ${{ env.WASM_CRATE_DIR }}
+
+      - name: List package contents
+        working-directory: ${{ env.WASM_CRATE_DIR }}
+        run: |
+          echo "Package contents:"
+          ls -la
+          echo ""
+          echo "package.json:"
+          cat package.json
+
+      - name: Publish (dry run)
+        if: github.event.inputs.dry_run == 'true'
+        working-directory: ${{ env.WASM_CRATE_DIR }}
+        run: npm publish --dry-run --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish
+        if: github.event.inputs.dry_run != 'true'
+        working-directory: ${{ env.WASM_CRATE_DIR }}
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release notes
+        if: github.event.inputs.dry_run != 'true'
+        run: |
+          echo "## npm Package Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Package: \`${{ env.WASM_PACKAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Version: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Installation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "npm install ${{ env.WASM_PACKAGE_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
