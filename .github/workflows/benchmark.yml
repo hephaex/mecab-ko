@@ -56,18 +56,12 @@ jobs:
           fi
         continue-on-error: true
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        if: steps.check-skip.outputs.skip_bench != 'true'
-
-      - name: Cache cargo build
-        uses: actions/cache@v4
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
         if: steps.check-skip.outputs.skip_bench != 'true'
         with:
-          path: rust/target
-          key: ${{ runner.os }}-cargo-bench-check-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-bench-check-
+          toolchain: stable
+          cache-key: bench-check
 
       - name: Check benchmarks compilation
         if: steps.check-skip.outputs.skip_bench != 'true'
@@ -82,16 +76,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache cargo build
-        uses: actions/cache@v4
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
         with:
-          path: rust/target
-          key: ${{ runner.os }}-cargo-bench-run-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-bench-run-
+          toolchain: stable
+          cache-key: bench-run
 
       - name: Run benchmarks
         run: |
@@ -156,16 +145,11 @@ jobs:
         run: |
           git fetch origin ${{ github.base_ref }}
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache cargo build
-        uses: actions/cache@v4
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
         with:
-          path: rust/target
-          key: ${{ runner.os }}-cargo-bench-compare-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-bench-compare-
+          toolchain: stable
+          cache-key: bench-compare
 
       - name: Run benchmarks on base branch
         run: |
@@ -520,16 +504,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache cargo build
-        uses: actions/cache@v4
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
         with:
-          path: rust/target
-          key: ${{ runner.os }}-cargo-bench-extended-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-bench-extended-
+          toolchain: stable
+          cache-key: bench-extended
 
       - name: Run extended benchmarks
         run: |

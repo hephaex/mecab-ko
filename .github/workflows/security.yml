@@ -30,8 +30,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
+        with:
+          toolchain: stable
 
       - name: Install cargo-audit
         run: cargo install cargo-audit
@@ -47,8 +49,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
+        with:
+          toolchain: stable
 
       - name: Install cargo-deny
         run: cargo install cargo-deny
@@ -64,8 +68,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
+        with:
+          toolchain: stable
 
       - name: Install cargo-geiger
         run: cargo install cargo-geiger
@@ -83,18 +89,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
         with:
+          toolchain: stable
           components: clippy
-
-      - name: Cache cargo build
-        uses: actions/cache@v4
-        with:
-          path: rust/target
-          key: ${{ runner.os }}-cargo-clippy-sast-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-clippy-sast-
 
       - name: Run clippy (strict mode)
         run: |
@@ -110,8 +109,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
+        with:
+          toolchain: stable
 
       - name: Check for outdated dependencies
         run: |
@@ -131,8 +132,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
+        with:
+          toolchain: stable
 
       - name: Install cargo-sbom
         run: cargo install cargo-sbom

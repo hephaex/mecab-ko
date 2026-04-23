@@ -59,11 +59,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
           targets: ${{ matrix.target }}
+          cache-key: search-plugins-${{ matrix.artifact }}
 
       - name: Install cross-compilation tools (Linux ARM64)
         if: matrix.cross

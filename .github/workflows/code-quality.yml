@@ -39,15 +39,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Rust nightly
-        uses: dtolnay/rust-toolchain@nightly
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
         with:
+          toolchain: nightly
           components: cargo
-
-      - name: Restore cargo cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: rust
 
       - name: Install cargo-udeps
         run: cargo install cargo-udeps --locked
@@ -72,8 +68,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
+        with:
+          toolchain: stable
 
       - name: Install cargo-outdated
         run: cargo install cargo-outdated
@@ -93,13 +91,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Restore cargo cache
-        uses: Swatinem/rust-cache@v2
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
         with:
-          workspaces: rust
+          toolchain: stable
 
       - name: Install tokei for line counting
         run: cargo install tokei
@@ -129,13 +124,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Restore cargo cache
-        uses: Swatinem/rust-cache@v2
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
         with:
-          workspaces: rust
+          toolchain: stable
 
       - name: Build documentation (fail on warnings)
         run: |

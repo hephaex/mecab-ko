@@ -39,16 +39,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache cargo build
-        uses: actions/cache@v4
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
         with:
-          path: rust/target
-          key: ${{ runner.os }}-cargo-doc-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-doc-
+          toolchain: stable
+          cache-key: doc
 
       - name: Build rustdoc
         run: cargo doc --manifest-path rust/Cargo.toml --no-deps --release

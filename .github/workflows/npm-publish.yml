@@ -66,10 +66,12 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
         with:
+          toolchain: stable
           targets: ${{ matrix.target }}
+          cache-key: npm-node-${{ matrix.target }}
 
       - name: Install dependencies
         working-directory: ${{ env.NODE_CRATE_DIR }}
@@ -263,25 +265,15 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
         with:
-          toolchain: ${{ env.RUST_VERSION }}
+          toolchain: stable
           targets: wasm32-unknown-unknown
+          cache-key: npm-wasm
 
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-
-      - name: Cache cargo registry
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            rust/target
-          key: ${{ runner.os }}-cargo-wasm-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-wasm-
 
       - name: Build WASM (bundler target)
         working-directory: ${{ env.WASM_CRATE_DIR }}
