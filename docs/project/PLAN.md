@@ -1,39 +1,39 @@
-# ✅ 완료: Phase 45 - Sprint 79 (CI 전체 DRY + corrections 보호 테스트)
+# ✅ 완료: Phase 46 - Sprint 80 (corrections 분할 1차 + CI async)
 
-## 🎯 Sprint 79 목표
-Composite action 전체 적용, e2e/ffi 병합 (17→16), stale docs 정리, corrections.rs 보호 테스트
+## 🎯 Sprint 80 목표
+corrections.rs 함수 추출 시작, 보호 테스트 확대, CI async feature test 추가
 
-## Sprint 79 작업 목록
+## Sprint 80 작업 목록
 
-### Track A: CI Phase 4 — composite action 전체 적용
-- [x] S79-01: 14개 워크플로우에 rust-setup action 적용 (45 replacements) ✅
-- [x] S79-02: e2e-tests.yml + ffi-tests.yml → e2e-ffi-tests.yml 병합 (17→16, 10 jobs) ✅
+### Track A: CI async feature test
+- [x] S80-01: ci.yml에 async-tests job 추가 (30 tests, --features async) ✅
+- [x] S80-04: 리뷰 M1 — --nocapture 디버그 플래그 제거 ✅
 
-### Track B: 문서 정비
-- [x] S79-03: RELEASE_CHECKLIST, ci-consolidation-plan에서 삭제된 워크플로우 참조 정리 ✅
+### Track B: corrections.rs 분할 준비
+- [x] S80-02: 보호 테스트 18개 추가 (19→37 total, 18개 correction rule 추가 커버) ✅
+- [x] S80-03: 2개 서브함수 추출 (apply_pos_reclassification, apply_tag_normalization) ✅
 
-### Track C: corrections.rs 분할 준비
-- [x] S79-04: corrections.rs 보호 테스트 11개 작성 (7 기존 + 11 신규 = 19 total) ✅
-
-### Track D: 리뷰 수정
-- [x] S79-05: 리뷰 HIGH 1건 + MEDIUM 2건 즉시 수정 ✅
+### Track C: 리뷰
+- [x] S80-05: 리뷰 APPROVE — CRITICAL 0, HIGH 0, MEDIUM 3 (M1 수정, M2/M3 차기) ✅
 
 ---
 
-## 📋 Sprint 80+ 로드맵
+## 📋 Sprint 81+ 로드맵
 
-### P1: corrections.rs 분할 (Sprint 80)
-- 보호 테스트 39개 추가 (19→50+, 핵심 correction rule 전수 커버)
-- 5개 서브함수 추출 (5,795줄 → 5개 파일)
+### P1: corrections.rs 분할 2차 (Sprint 81)
+- 보호 테스트: tag_normalization 전용 3개 추가 (리뷰 M2)
+- 추가 3-4개 서브함수 추출 (compound noun merge/split, sentence-final, irregular conjugation)
+- 목표: main function 3,000줄 이하
 
-### P2: CI async feature test (Sprint 80)
-- CI에 `cargo test --features async` 작업 추가 (30 tests 현재 CI 미포함)
-- test-allocator CI 작업 추가 (12개 ignored 해제)
+### P2: v0.7.1 배포 + 태그 정리 (Sprint 81)
+- v0.7.1 annotated tag HEAD 재설정
+- crates.io 배포
+- git push (30+ commits ahead)
 
-### P3: v0.8.0 준비 (Sprint 81+)
+### P3: v0.8.0 준비 (Sprint 82+)
 - Streaming API async 버전 (tokio feature flag)
-- crates.io v0.7.1 배포
 - WASM/Node e2e 테스트 WIP 해제
+- corrections.rs 분할 완료 (800줄 이하 목표)
 
 ---
 

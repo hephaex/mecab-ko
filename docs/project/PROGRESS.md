@@ -1,6 +1,57 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-23 (Sprint 79 완료 — CI 전체 DRY + corrections 보호 테스트)
+## 마지막 업데이트: 2026-04-23 (Sprint 80 완료 — corrections 분할 1차 + CI async)
+
+### ✅ Sprint 80 - corrections 분할 1차 + CI async + 리뷰
+
+**기간**: 2026-04-23
+**목표**: corrections.rs 함수 추출 시작, 보호 테스트 확대, CI async feature test
+
+#### 3개 에이전트 병렬 실행 + 리뷰 에이전트
+
+| 에이전트 | 작업 | 결과 |
+|----------|------|------|
+| deployment-engineer | CI async-tests job 추가 | ci.yml + ci-status 의존성 갱신 |
+| rust-developer | corrections 보호 테스트 2차 | 18개 추가 (19→37 total) |
+| rust-pro | corrections 함수 추출 | 2개 서브함수 (9 passes 추출) |
+| code-reviewer | 리뷰 | APPROVE — CRITICAL 0, HIGH 0, M1 수정 |
+
+#### 커밋 내역
+
+| 커밋 | 내용 |
+|------|------|
+| `b40a450` | ci: async feature test job 추가 |
+| `f57a7de` | refactor(corrections): 2개 서브함수 추출 + 18 보호 테스트 |
+| `c0fa618` | fix(ci): --nocapture 디버그 플래그 제거 |
+
+#### 테스트 변화
+
+| 지표 | Sprint 79 | Sprint 80 | 변화 |
+|------|-----------|-----------|------|
+| 총 테스트 | 1,160 | 1,178 | +18 (corrections) |
+| passed | 1,160 | 1,178 | +18 |
+| ignored | 18 | 18 | 유지 |
+| failed | 0 | 0 | 유지 |
+| corrections tests | 19 | 37 | +18 |
+| corrections.rs 줄수 | 5,795 | 6,199 | +404 (테스트+함수) |
+
+#### 추출된 서브함수
+
+| 함수 | 추출 passes | 내용 |
+|------|------------|------|
+| `apply_pos_reclassification_corrections` | 207,208,248,252-254,256 | POS 재분류 (NNG↔NNP, VV↔VA 등) |
+| `apply_tag_normalization_corrections` | 209,223 | 빈 POS 할당, XR→NNG 변환 |
+
+#### 리뷰 결과
+
+| 심각도 | 건수 | 내용 |
+|--------|------|------|
+| CRITICAL | 0 | — |
+| HIGH | 0 | — |
+| MEDIUM | 1/3 | --nocapture 제거 (M2: tag_norm 테스트 부족, M3: 순서 의존성 — 차기) |
+| LOW | 2 | 미수정 (파일 크기, 스타일) |
+
+---
 
 ### ✅ Sprint 79 - CI Phase 4 + corrections 보호 테스트 + 리뷰 수정
 
