@@ -5792,4 +5792,128 @@ mod tests {
         assert_eq!(tokens[0].surface, "어요");
         assert_eq!(tokens[0].pos, "EF");
     }
+
+    // ── 보호 테스트: 빈 입력 무변환 ────────────────────────────────────
+    #[test]
+    fn test_protection_empty_input_unchanged() {
+        let mut tokens: Vec<SejongToken> = vec![];
+        apply_context_corrections(&mut tokens);
+        assert!(tokens.is_empty(), "empty token list must remain empty");
+    }
+
+    // ── 보호 테스트: 200차 밤낮/NNG → 밤/NNG 낮/NNG 분리 ─────────────
+    #[test]
+    fn test_protection_200_bamnak_split() {
+        let mut tokens = vec![tok_at("밤낮", "NNG", 0, 2)];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens.len(), 2, "밤낮 should be split into two tokens");
+        assert_eq!(tokens[0].surface, "밤");
+        assert_eq!(tokens[0].pos, "NNG");
+        assert_eq!(tokens[1].surface, "낮");
+        assert_eq!(tokens[1].pos, "NNG");
+    }
+
+    // ── 보호 테스트: 202차 복합명사 병합 여론+조사 → 여론조사 ───────────
+    #[test]
+    fn test_protection_202_compound_noun_merge() {
+        let mut tokens = vec![
+            tok_at("여론", "NNG", 0, 2),
+            tok_at("조사", "NNG", 2, 4),
+        ];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens.len(), 1, "여론 + 조사 should merge into one token");
+        assert_eq!(tokens[0].surface, "여론조사");
+        assert_eq!(tokens[0].pos, "NNG");
+        assert_eq!(tokens[0].start_pos, 0);
+        assert_eq!(tokens[0].end_pos, 4);
+    }
+
+    // ── 보호 테스트: 207차 부사로 잘못 분석된 진짜/MAG → NNG ────────────
+    #[test]
+    fn test_protection_207_jinja_mag_to_nng() {
+        let mut tokens = vec![tok("진짜", "MAG")];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens[0].pos, "NNG", "진짜/MAG must become NNG");
+        assert_eq!(tokens[0].surface, "진짜");
+    }
+
+    // ── 보호 테스트: 248차 외래어 NNP → NNG 변환 ─────────────────────
+    #[test]
+    fn test_protection_248_foreign_word_nnp_to_nng() {
+        let mut tokens = vec![tok("알고리즘", "NNP")];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens[0].pos, "NNG", "알고리즘/NNP must become NNG");
+    }
+
+    // ── 보호 테스트: 251차 그/NP + 동안/NNG → 그동안/NNG 병합 ───────────
+    #[test]
+    fn test_protection_251_geudongan_merge() {
+        let mut tokens = vec![
+            tok_at("그", "NP", 0, 1),
+            tok_at("동안", "NNG", 1, 3),
+        ];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens.len(), 1, "그 + 동안 should merge into 그동안");
+        assert_eq!(tokens[0].surface, "그동안");
+        assert_eq!(tokens[0].pos, "NNG");
+        assert_eq!(tokens[0].start_pos, 0);
+        assert_eq!(tokens[0].end_pos, 3);
+    }
+
+    // ── 보호 테스트: 253차 의성어 야옹/NNG → IC 변환 ──────────────────
+    #[test]
+    fn test_protection_253_onomatopoeia_yaong_to_ic() {
+        let mut tokens = vec![tok("야옹", "NNG")];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens[0].pos, "IC", "야옹/NNG must become IC");
+        assert_eq!(tokens[0].surface, "야옹");
+    }
+
+    // ── 보호 테스트: 254차 ㅓ요/EF → 어요/EF 표면형 정규화 ─────────────
+    #[test]
+    fn test_protection_254_jamo_eo_yo_normalization() {
+        let mut tokens = vec![tok("ㅓ요", "EF")];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens[0].surface, "어요", "ㅓ요/EF surface must normalize to 어요");
+        assert_eq!(tokens[0].pos, "EF");
+    }
+
+    // ── 보호 테스트: 256차 졸리/VV → VA 변환 ─────────────────────────
+    #[test]
+    fn test_protection_256_jollri_vv_to_va() {
+        let mut tokens = vec![tok("졸리", "VV")];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens[0].pos, "VA", "졸리/VV must become VA");
+        assert_eq!(tokens[0].surface, "졸리");
+    }
+
+    // ── 보호 테스트: 187차 서울특별시/NNP → 서울/NNP 특별시/NNG 분리 ──
+    #[test]
+    fn test_protection_187_seoul_teukbyeolsi_split() {
+        let mut tokens = vec![tok_at("서울특별시", "NNP", 0, 5)];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens.len(), 2, "서울특별시 must be split into two tokens");
+        assert_eq!(tokens[0].surface, "서울");
+        assert_eq!(tokens[0].pos, "NNP");
+        assert_eq!(tokens[1].surface, "특별시");
+        assert_eq!(tokens[1].pos, "NNG");
+    }
+
+    // ── 보호 테스트: 247차 하/XSV + 여/XSN → 어/EC 변환 ─────────────────
+    // 247차는 표면형이 "하"이고 pos가 "XSV"인 경우에만 적용됨.
+    // 문장 중간에 "여/XSN"을 배치하여 문장 끝 EC→EF 보정(8차/161차)이
+    // 간섭하지 않도록 뒤에 추가 토큰을 붙임.
+    #[test]
+    fn test_protection_247_ha_yeo_xsn_to_ec() {
+        let mut tokens = vec![
+            tok("공부", "NNG"),
+            tok("하", "XSV"),
+            tok("여", "XSN"),
+            tok("주", "VX"),    // 뒤에 토큰을 추가해 "여"가 문장 끝이 아니도록 함
+        ];
+        apply_context_corrections(&mut tokens);
+        // 247차 보정: 여/XSN 표면형 → 어, pos → EC
+        assert_eq!(tokens[2].surface, "어", "여/XSN surface must change to 어");
+        assert_eq!(tokens[2].pos, "EC", "여/XSN pos must change to EC");
+    }
 }
