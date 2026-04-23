@@ -5,6 +5,8 @@
 **Current State**: 23 workflows, 7136 lines of YAML  
 **Objective**: Consolidate workflows into a maintainable set using reusable workflows and composition patterns
 
+> **Note (2026-04-23):** This analysis was from Sprint 72-73. Since then: `elasticsearch-plugin-tests.yml` deleted (S77), `pypi-publish.yml` merged into `python-wheels.yml` (S77), `npm-publish-wasm.yml` merged into `npm-publish.yml` (S78), `e2e-tests.yml` + `ffi-tests.yml` merged into `e2e-ffi-tests.yml` (S79). Current workflow count: 16.
+
 ---
 
 ## Executive Summary

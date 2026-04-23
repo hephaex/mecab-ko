@@ -36,8 +36,8 @@ All checks must pass on the `main` branch **before** any version bumps.
 - [ ] **WASM tests** -- `wasm-pack test --headless --firefox` passes in `rust/crates/mecab-ko-wasm/`.
 - [ ] **Python binding smoke test** -- `python -c "from mecab_ko import Mecab; Mecab().morphs('테스트')"` works after building with `maturin develop`.
 - [ ] **Node.js binding smoke test** -- `npm test` passes in `rust/crates/mecab-ko-node/`.
-- [ ] **E2E tests** -- The `e2e-tests.yml` workflow completes successfully.
-- [ ] **Elasticsearch integration tests** -- The `elasticsearch-plugin-tests.yml` workflow completes successfully.
+- [ ] **E2E and FFI tests** -- The `e2e-ffi-tests.yml` workflow completes successfully.
+- [ ] **Elasticsearch integration tests** -- The `search-plugins.yml` workflow completes successfully.
 
 ### 1.3 Documentation
 
@@ -285,7 +285,7 @@ For multi-platform pre-built binaries, the CI release workflow builds for these 
 
 ### 5.2 Automated Publishing (Recommended)
 
-The `pypi-publish.yml` workflow triggers automatically on tag push (`v*`). It performs:
+The `python-wheels.yml` workflow triggers automatically on tag push (`v*`). It performs:
 
 1. Multi-platform wheel builds (Linux x86_64/aarch64, macOS x86_64/ARM64, Windows x86_64).
 2. Source distribution (sdist) build.
@@ -340,7 +340,7 @@ git pull origin main
 # Create annotated tag
 git tag -a v0.1.0 -m "Release v0.1.0 - Initial public release of MeCab-Ko Rust implementation"
 
-# Push tag (triggers release.yml and pypi-publish.yml workflows)
+# Push tag (triggers release.yml and python-wheels.yml workflows)
 git push origin v0.1.0
 ```
 
@@ -427,9 +427,9 @@ The release notes should include:
 | Secret | Where Used | Purpose |
 |--------|-----------|---------|
 | `CARGO_REGISTRY_TOKEN` | `release.yml` | crates.io API token |
-| `GITHUB_TOKEN` | `release.yml`, `pypi-publish.yml` | GitHub Releases, tag operations |
+| `GITHUB_TOKEN` | `release.yml`, `python-wheels.yml` | GitHub Releases, tag operations |
 | `NPM_TOKEN` | npm publish step | npm registry authentication |
-| PyPI trusted publishing | `pypi-publish.yml` | PyPI OIDC-based publishing (no token needed if configured) |
+| PyPI trusted publishing | `python-wheels.yml` | PyPI OIDC-based publishing (no token needed if configured) |
 | `CODECOV_TOKEN` | `ci.yml` | Code coverage upload |
 
 ---
@@ -444,6 +444,6 @@ The release notes should include:
 | `rust/crates/mecab-ko-node/package.json` | Node.js package metadata |
 | `rust/crates/mecab-ko-wasm/package.json` | WASM package metadata |
 | `.github/workflows/release.yml` | GitHub Release + crates.io workflow |
-| `.github/workflows/pypi-publish.yml` | PyPI multi-platform wheel build and publish |
+| `.github/workflows/python-wheels.yml` | PyPI multi-platform wheel build and publish |
 | `.github/workflows/ci.yml` | Full CI pipeline (tests, lint, coverage, audit) |
 | `.github/workflows/security.yml` | Security scanning (audit, deny, geiger, SAST) |
