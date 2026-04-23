@@ -119,8 +119,7 @@ jobs:
           cargo test \
             --manifest-path rust/Cargo.toml \
             -p mecab-ko-core \
-            --features async \
-            -- --nocapture
+            --features async
 
   # Profiler tests with test-allocator (isolated due to global allocator)
   profiler-allocator:
