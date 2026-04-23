@@ -101,10 +101,10 @@ jobs:
 
       - name: Set up QEMU for Linux ARM builds
         if: matrix.platform == 'linux' && matrix.arch == 'aarch64'
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: Build wheels with maturin
-        uses: PyO3/maturin-action@v1
+        uses: PyO3/maturin-action@v2
         with:
           working-directory: rust/crates/mecab-ko-python
           target: ${{ matrix.target }}

@@ -66,7 +66,7 @@ jobs:
           cache: 'gradle'
 
       - name: Set up Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v2
         with:
           toolchain: stable
 
@@ -122,7 +122,7 @@ jobs:
           cache: 'gradle'
 
       - name: Set up Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v2
         with:
           toolchain: stable
 
@@ -155,7 +155,7 @@ jobs:
           cache: 'gradle'
 
       - name: Set up Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v2
         with:
           toolchain: stable
 
@@ -192,7 +192,7 @@ jobs:
           cache: 'gradle'
 
       - name: Set up Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v2
         with:
           toolchain: stable
 
@@ -223,7 +223,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Start Elasticsearch container
         run: |
@@ -252,7 +252,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Set up Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v2
         with:
           toolchain: stable
 
@@ -291,7 +291,7 @@ jobs:
           merge-multiple: true
 
       - name: Publish test summary
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2
         if: always()
         with:
           name: Test Results

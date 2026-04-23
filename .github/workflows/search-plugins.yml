@@ -115,7 +115,7 @@ jobs:
           merge-multiple: true
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v3
+        uses: gradle/actions/setup-gradle@v4
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
@@ -164,7 +164,7 @@ jobs:
           merge-multiple: true
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v3
+        uses: gradle/actions/setup-gradle@v4
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
@@ -353,7 +353,7 @@ jobs:
           path: release
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: release/*.zip
           generate_release_notes: true
