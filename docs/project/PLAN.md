@@ -1,3 +1,46 @@
+# ✅ 완료: Phase 43 - Sprint 77 (CI Phase 2 + 릴리스 준비 + 분석)
+
+## 🎯 Sprint 77 목표
+CI 워크플로우 Phase 2 통합, v0.7.1 태그 재정렬, 테스트/아키텍처 분석
+
+## Sprint 77 작업 목록
+
+### Track A: CI 워크플로우 Phase 2 (20→16)
+- [x] S77-01: elasticsearch-plugin-tests.yml 삭제 (죽은 코드, 존재하지 않는 경로 참조) ✅
+- [x] S77-02: pypi-publish.yml → python-wheels.yml 병합 (tag 트리거 + TestPyPI + verify) ✅
+- [x] S77-03: scheduled.yml 중복 작업 2개 제거 (security audit, dep check) ✅
+- [x] S77-04: audit.sh CI 감사 유틸리티 스크립트 추가 ✅
+
+### Track B: 분석 (행동 정보 수집)
+- [x] S77-05: CI Phase 2 병합 가능성 전수 분석 (16개 파일, 6개 병합 후보) ✅
+- [x] S77-06: 전체 워크플로우 건강 감사 (위험한 녹색, step ID, 권한) ✅
+- [x] S77-07: corrections.rs 분할 전략 분석 (5→5개 서브함수, 13-19시간) ✅
+- [x] S77-08: 테스트 커버리지 갭 분석 (22개 ignored 상세, 0-test 파일 6개) ✅
+
+### Track C: 릴리스 준비
+- [x] S77-09: v0.7.1 태그 HEAD 재정렬 (59ea7c8→a814213, annotated tag) ✅
+
+---
+
+## 📋 Sprint 78+ 로드맵
+
+### P1: CI Phase 3 (Sprint 78) — npm 통합
+- npm-publish-wasm.yml → npm-publish.yml 병합 (MEDIUM risk, 다른 toolchain)
+- Composite action `.github/actions/rust-setup/action.yml` 도입
+- 목표: 16→14 워크플로우
+
+### P2: 테스트 커버리지 강화 (Sprint 78)
+- async_tokenizer.rs 461줄 테스트 추가 (0→N, CRITICAL gap)
+- integration_golden.rs #[ignore] 4개 실제 구현
+- `--features test-allocator` CI 작업 추가 (12개 ignored 해제)
+
+### P3: v0.8.0 준비 (Sprint 79+)
+- corrections.rs 5,795줄 → 5개 서브함수 추출 (same file, 13-19시간)
+- Streaming API async 버전 (tokio feature flag)
+- crates.io v0.7.1 배포
+
+---
+
 # ✅ 완료: Phase 42 - Sprint 76 (딥 리뷰 MEDIUM 이행 + 코드 품질)
 
 ## 🎯 Sprint 76 목표

@@ -1,6 +1,48 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-23 (Sprint 76 완료 — 딥 리뷰 MEDIUM 이행)
+## 마지막 업데이트: 2026-04-23 (Sprint 77 완료 — CI Phase 2 + 분석)
+
+### ✅ Sprint 77 - CI Phase 2 통합 + 릴리스 준비 + 분석
+
+**기간**: 2026-04-23
+**목표**: CI Phase 2 (20→16), v0.7.1 태그 재정렬, 종합 분석
+
+#### 5개 에이전트 병렬 분석 결과
+
+| 에이전트 | 작업 | 결과 |
+|----------|------|------|
+| architect | CI Phase 2 병합 분석 (16파일) | 6개 병합 후보, 실제 16→12 가능 |
+| deployment-engineer | 워크플로우 건강 감사 | MEDIUM 3건 (권한), 위험한 녹색 0건 |
+| rust-developer | corrections.rs 분할 분석 | 5개 서브함수, 13-19시간, 테스트 부족이 주 리스크 |
+| general-purpose | v0.7.1 태그/push 준비도 | 태그 6커밋 뒤, annotated 재생성 필요 |
+| rust-developer | 테스트 갭 분석 | 22 ignored 상세, 6개 0-test 파일, async_tokenizer CRITICAL |
+
+#### 실행된 행동
+
+| 커밋 | 내용 |
+|------|------|
+| `a814213` | ci: Phase 2 통합 (20→16) — 3파일 삭제/병합, 2작업 제거 |
+| — | v0.7.1 태그 HEAD(a814213)로 annotated 재생성 |
+
+#### CI 워크플로우 변화
+
+| 지표 | Sprint 75 | Sprint 76 | Sprint 77 |
+|------|-----------|-----------|-----------|
+| 워크플로우 수 | 20 | 20 | **16** |
+| 위험한 녹색 | 2건 | 0건 | **0건** |
+| 죽은 코드 | 1건 | 1건 | **0건** |
+
+#### 발견된 미래 작업
+
+| 우선순위 | 항목 | Sprint |
+|----------|------|--------|
+| P1 | async_tokenizer.rs 461줄 0 테스트 | 78 |
+| P1 | npm-publish-wasm → npm-publish 병합 | 78 |
+| P2 | integration_golden.rs #[ignore] 4개 구현 | 78 |
+| P2 | test-allocator CI 작업 (12개 ignored 해제) | 78 |
+| P3 | corrections.rs 5→5개 서브함수 (13-19시간) | 79 |
+
+---
 
 ### ✅ Sprint 76 - 딥 리뷰 MEDIUM 이행 + 코드 품질
 
