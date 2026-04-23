@@ -840,7 +840,7 @@ jobs:
           ACCURACY_STATUS="${{ needs.accuracy-test.result }}"
           REPORT_STATUS="${{ needs.generate-report.result }}"
 
-          if [ "$VALIDATE_USER_STATUS" = "failure" ] || [ "$VALIDATE_DOMAIN_STATUS" = "failure" ] || [ "$BUILD_STATUS" = "failure" ] || [ "$TEST_STATUS" = "failure" ] || [ "$REPORT_STATUS" = "failure" ]; then
+          if [ "$VALIDATE_USER_STATUS" = "failure" ] || [ "$VALIDATE_DOMAIN_STATUS" = "failure" ] || [ "$BUILD_STATUS" = "failure" ] || [ "$TEST_STATUS" = "failure" ] || [ "$ACCURACY_STATUS" = "failure" ] || [ "$REPORT_STATUS" = "failure" ]; then
             echo "workflow_status=failed" >> $GITHUB_OUTPUT
             exit 1
           else
