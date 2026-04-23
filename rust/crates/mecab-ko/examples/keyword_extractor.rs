@@ -287,7 +287,10 @@ fn main() {
         |dict_path| match Tokenizer::with_dict(dict_path) {
             Ok(t) => t,
             Err(e) => {
-                eprintln!("Failed to load dictionary from {}: {e}", dict_path.display());
+                eprintln!(
+                    "Failed to load dictionary from {}: {e}",
+                    dict_path.display()
+                );
                 std::process::exit(1);
             }
         },

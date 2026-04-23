@@ -577,10 +577,8 @@ pub fn init_ending_rules() -> Vec<EndingRule> {
     ));
 
     // 관형격조사 (JKG)
-    rules
-        .push(EndingRule::new("NNG+JKG", vec!["의"], vec!["NNG", "JKG"]));
-    rules
-        .push(EndingRule::new("NNP+JKG", vec!["의"], vec!["NNP", "JKG"]));
+    rules.push(EndingRule::new("NNG+JKG", vec!["의"], vec!["NNG", "JKG"]));
+    rules.push(EndingRule::new("NNP+JKG", vec!["의"], vec!["NNP", "JKG"]));
 
     // 호격조사 (JKV)
     rules.push(EndingRule::new(
@@ -625,4 +623,48 @@ pub fn init_ending_rules() -> Vec<EndingRule> {
     ));
 
     rules
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_init_ending_rules_returns_nonempty_list() {
+        let rules = init_ending_rules();
+        assert!(!rules.is_empty(), "ending rules must not be empty");
+    }
+
+    #[test]
+    fn test_init_ending_rules_vv_ef_contains_key_endings() {
+        let rules = init_ending_rules();
+        let vv_ef = rules
+            .iter()
+            .find(|r| r.pos_pattern == "VV+EF")
+            .expect("VV+EF rule must exist");
+        assert_eq!(vv_ef.target_tags, vec!["VV".to_string(), "EF".to_string()]);
+        assert!(
+            vv_ef.endings.contains(&"어요".to_string()),
+            "VV+EF must include 어요"
+        );
+        assert!(
+            vv_ef.endings.contains(&"다".to_string()),
+            "VV+EF must include 다"
+        );
+    }
+
+    #[test]
+    fn test_init_ending_rules_noun_particle_rules_present() {
+        let rules = init_ending_rules();
+        // 명사+주격조사 규칙 존재
+        let jks_rule = rules.iter().find(|r| r.pos_pattern == "NNG+JKS");
+        assert!(jks_rule.is_some(), "NNG+JKS rule must exist");
+        // 명사+목적격조사 규칙: 을/를 포함
+        let jko_rule = rules
+            .iter()
+            .find(|r| r.pos_pattern == "NNG+JKO")
+            .expect("NNG+JKO rule must exist");
+        assert!(jko_rule.endings.contains(&"을".to_string()));
+        assert!(jko_rule.endings.contains(&"를".to_string()));
+    }
 }

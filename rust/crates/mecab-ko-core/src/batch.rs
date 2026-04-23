@@ -361,9 +361,7 @@ impl BatchTokenizer {
     /// 현재 사용 가능한 토크나이저 수
     #[must_use]
     pub fn available_tokenizers(&self) -> usize {
-        self.tokenizer_pool
-            .lock()
-            .map_or(0, |pool| pool.len())
+        self.tokenizer_pool.lock().map_or(0, |pool| pool.len())
     }
 }
 

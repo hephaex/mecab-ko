@@ -31,8 +31,8 @@
 //! // "갔다/VV+EF" -> ["갔/VV", "다/EF"]
 //! ```
 
-pub mod corrections;
 pub mod converter;
+pub mod corrections;
 pub mod ending_rules;
 pub mod hangul;
 pub mod lexicon;

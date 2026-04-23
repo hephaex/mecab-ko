@@ -255,8 +255,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
     .collect();
 
     // 199차: VA 어간 목록 (낮/NNG + 이/JKS 패턴용)
-    let va_stems: std::collections::HashSet<&str> =
-        ["높", "낮", "깊", "넓"].into_iter().collect();
+    let va_stems: std::collections::HashSet<&str> = ["높", "낮", "깊", "넓"].into_iter().collect();
 
     let mut i = 0;
     while i < tokens.len() {
@@ -682,8 +681,8 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
 
             // 다음 토큰이 EF/EC인 경우 현재 토큰은 동사의 어간이므로 조사로 보정하지 않음
             // 예: 어디/NP 가/VV 니/EF -> "가"는 동사 "가다"의 어간
-            let next_is_ending = i + 1 < tokens.len()
-                && (tokens[i + 1].pos == "EF" || tokens[i + 1].pos == "EC");
+            let next_is_ending =
+                i + 1 < tokens.len() && (tokens[i + 1].pos == "EF" || tokens[i + 1].pos == "EC");
 
             // 의문대명사 뒤의 VV는 동사로 유지 (조사가 아님)
             // 예: 어디 가니, 뭐 하니
@@ -692,9 +691,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
             // "께서"는 항상 주격조사 (동사 어간이 될 수 없음)
             let is_definite_particle = curr_surface == "께서";
 
-            if is_definite_particle
-                || (!next_is_ep && !next_is_ending && !prev_is_interrogative)
-            {
+            if is_definite_particle || (!next_is_ep && !next_is_ending && !prev_is_interrogative) {
                 if let Some(&correct_pos) = particle_map.get(curr_surface.as_str()) {
                     corrections.push((i, correct_pos.to_string()));
                 }
@@ -892,10 +889,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
         let next_pos = &tokens[i + 1].pos;
 
         // 합니/VV + 다/EF → 합니다/EF
-        if curr_surface == "합니"
-            && curr_pos == "VV"
-            && next_surface == "다"
-            && next_pos == "EF"
+        if curr_surface == "합니" && curr_pos == "VV" && next_surface == "다" && next_pos == "EF"
         {
             merge_indices.push(i);
         }
@@ -1002,8 +996,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
         let next_pos = &tokens[i + 1].pos;
 
         // 지/NNB + 않/VX → 지/EC + 않/VX
-        if curr_surface == "지" && curr_pos == "NNB" && next_surface == "않" && next_pos == "VX"
-        {
+        if curr_surface == "지" && curr_pos == "NNB" && next_surface == "않" && next_pos == "VX" {
             nnb_to_ec_indices.push(i);
         }
     }
@@ -1058,8 +1051,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
         let next_pos = &tokens[i + 1].pos;
 
         // 하/XSV + 다/EF → 하/VV + 다/EF
-        if curr_surface == "하" && curr_pos == "XSV" && next_surface == "다" && next_pos == "EF"
-        {
+        if curr_surface == "하" && curr_pos == "XSV" && next_surface == "다" && next_pos == "EF" {
             xsv_da_to_vv_indices.push(i);
         }
     }
@@ -1212,9 +1204,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
         let next_pos = &tokens[i + 1].pos;
 
         // NNG + "님의/NNP" 패턴 감지
-        if curr_pos == "NNG"
-            && next_surface == "님의"
-            && (next_pos == "NNP" || next_pos == "NNG")
+        if curr_pos == "NNG" && next_surface == "님의" && (next_pos == "NNP" || next_pos == "NNG")
         {
             honorific_merge_indices.push(i);
         }
@@ -1391,10 +1381,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
         let next_pos = &tokens[i + 1].pos;
 
         // "고/EC + 나서/VV" 패턴
-        if curr_surface == "고"
-            && curr_pos == "EC"
-            && next_surface == "나서"
-            && next_pos == "VV"
+        if curr_surface == "고" && curr_pos == "EC" && next_surface == "나서" && next_pos == "VV"
         {
             gonaseo_merge_indices.push(i);
         }
@@ -1406,9 +1393,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
         tokens[idx] = SejongToken::new("고나서", "EC", start, end);
         tokens.remove(idx + 1);
         // 다음 토큰 "어/EC"도 제거 (있을 경우)
-        if idx + 1 < tokens.len()
-            && tokens[idx + 1].surface == "어"
-            && tokens[idx + 1].pos == "EC"
+        if idx + 1 < tokens.len() && tokens[idx + 1].surface == "어" && tokens[idx + 1].pos == "EC"
         {
             tokens.remove(idx + 1);
         }
@@ -1827,8 +1812,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
         let pos = &tokens[i].pos;
 
         // 마지막 토큰이거나, 다음 토큰이 없는 경우
-        let is_final =
-            i == tokens.len() - 1 || (i + 1 < tokens.len() && tokens[i + 1].pos == "SF");
+        let is_final = i == tokens.len() - 1 || (i + 1 < tokens.len() && tokens[i + 1].pos == "SF");
 
         if is_final && pos == "EC" && surface == "아요" {
             // 이전 토큰이 XSV, VV, VA인지 확인
@@ -1880,8 +1864,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
         let next_pos = &tokens[i + 1].pos;
 
         // NNG + "하고/JC" + VX 패턴
-        if prev_pos == "NNG" && curr_surface == "하고" && curr_pos == "JC" && next_pos == "VX"
-        {
+        if prev_pos == "NNG" && curr_surface == "하고" && curr_pos == "JC" && next_pos == "VX" {
             hago_split_indices.push(i);
         }
     }
@@ -2019,10 +2002,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
         let next_pos = &tokens[i + 1].pos;
 
         // "하/VX + 합니다/EF" 패턴
-        if curr_surface == "하"
-            && curr_pos == "VX"
-            && next_surface == "합니다"
-            && next_pos == "EF"
+        if curr_surface == "하" && curr_pos == "VX" && next_surface == "합니다" && next_pos == "EF"
         {
             vx_delete_indices.push(i);
         }
@@ -2057,8 +2037,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
         let next_pos = tokens[i + 1].pos.clone();
 
         // "하/IC + 지/VX" → "하/VV + 지/EC"
-        if curr_surface == "하" && curr_pos == "IC" && next_surface == "지" && next_pos == "VX"
-        {
+        if curr_surface == "하" && curr_pos == "IC" && next_surface == "지" && next_pos == "VX" {
             tokens[i].pos = "VV".to_string();
             tokens[i + 1].pos = "EC".to_string();
         }
@@ -2317,15 +2296,13 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
         }
 
         // NR + NNG 패턴 중 "구"(舊)는 XPN으로 변환
-        if curr_pos == "NR" && curr_surface == "구" && (next_pos == "NNG" || next_pos == "NNP")
-        {
+        if curr_pos == "NR" && curr_surface == "구" && (next_pos == "NNG" || next_pos == "NNP") {
             tokens[i].pos = "XPN".to_string();
         }
 
         // 51차 보정: "VV + NNG" 패턴 중 접두사 후보는 XPN으로 변환
         // "신/VV 제품/NNG" → "신/XPN 제품/NNG" (신다 동사와 구분)
-        if curr_pos == "VV" && curr_surface == "신" && (next_pos == "NNG" || next_pos == "NNP")
-        {
+        if curr_pos == "VV" && curr_surface == "신" && (next_pos == "NNG" || next_pos == "NNP") {
             tokens[i].pos = "XPN".to_string();
         }
 
@@ -2347,8 +2324,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
     for i in 0..tokens.len() {
         if tokens[i].surface == "있" && tokens[i].pos == "VX" {
             // 앞 토큰이 "고/EC"인지 확인
-            let is_auxiliary =
-                i > 0 && tokens[i - 1].surface == "고" && tokens[i - 1].pos == "EC";
+            let is_auxiliary = i > 0 && tokens[i - 1].surface == "고" && tokens[i - 1].pos == "EC";
             if !is_auxiliary {
                 tokens[i].pos = "VV".to_string();
             }
@@ -2362,9 +2338,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
     while i < tokens.len().saturating_sub(1) {
         // "하/VV + ㅂ니다/EF" 또는 "가/VV + ㅂ니다/EF" 패턴 찾기
         if tokens[i].pos == "VV"
-            && (tokens[i].surface == "하"
-                || tokens[i].surface == "가"
-                || tokens[i].surface == "오")
+            && (tokens[i].surface == "하" || tokens[i].surface == "가" || tokens[i].surface == "오")
             && tokens[i + 1].pos == "EF"
             && tokens[i + 1].surface == "ㅂ니다"
         {
@@ -2570,9 +2544,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
         let curr_pos = tokens[i].pos.clone();
 
         // ETM 뒤의 NNG가 의존명사 목록에 있으면 NNB로 변환
-        if prev_pos == "ETM"
-            && curr_pos == "NNG"
-            && dependent_nouns.contains(curr_surface.as_str())
+        if prev_pos == "ETM" && curr_pos == "NNG" && dependent_nouns.contains(curr_surface.as_str())
         {
             tokens[i].pos = "NNB".to_string();
         }
@@ -2647,8 +2619,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
         let next_pos = &tokens[i + 1].pos;
 
         for (s1, p1, s2, p2, merged) in &compound_noun_merges {
-            if curr_surface == *s1 && curr_pos == *p1 && next_surface == *s2 && next_pos == *p2
-            {
+            if curr_surface == *s1 && curr_pos == *p1 && next_surface == *s2 && next_pos == *p2 {
                 compound_merge_indices.push((i, (*merged).to_string()));
                 break;
             }
@@ -3094,8 +3065,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
     // "적극/NNG + 적/XSN" → "적극적/NNG"
     let mut jeok_merge_indices: Vec<usize> = Vec::new();
     for i in 0..tokens.len().saturating_sub(1) {
-        if tokens[i].pos == "NNG" && tokens[i + 1].pos == "XSN" && tokens[i + 1].surface == "적"
-        {
+        if tokens[i].pos == "NNG" && tokens[i + 1].pos == "XSN" && tokens[i + 1].surface == "적" {
             jeok_merge_indices.push(i);
         }
     }
@@ -3328,8 +3298,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
     // 75차 보정: ㄹ 탈락 동사 기본형 복원 (VV + 세요/EF 패턴)
     // "드/VV + 세요/EF" → "들/VV + 세요/EF" (들다 → 드세요)
     for i in 0..tokens.len().saturating_sub(1) {
-        if tokens[i].pos == "VV" && tokens[i + 1].surface == "세요" && tokens[i + 1].pos == "EF"
-        {
+        if tokens[i].pos == "VV" && tokens[i + 1].surface == "세요" && tokens[i + 1].pos == "EF" {
             // ㄹ 탈락 동사 패턴
             let rieul_verbs = [
                 ("드", "들"), // 들다 → 드세요
@@ -4203,10 +4172,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
             let next_surface = &tokens[i + 1].surface;
             let next_pos = &tokens[i + 1].pos;
 
-            if curr_surface == "고"
-                && curr_pos == "EC"
-                && next_surface == "있"
-                && next_pos == "VV"
+            if curr_surface == "고" && curr_pos == "EC" && next_surface == "있" && next_pos == "VV"
             {
                 tokens[i + 1].pos = "VX".to_string();
             }
@@ -4222,10 +4188,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
             let next_surface = &tokens[i + 1].surface;
             let next_pos = &tokens[i + 1].pos;
 
-            if curr_surface == "지"
-                && curr_pos == "EC"
-                && next_surface == "않"
-                && next_pos == "VV"
+            if curr_surface == "지" && curr_pos == "EC" && next_surface == "않" && next_pos == "VV"
             {
                 tokens[i + 1].pos = "VX".to_string();
             }
@@ -4400,9 +4363,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
         tokens.insert(idx + 1, SejongToken::new("고", "EC", mid, end));
 
         // 다음 토큰의 "있/VA" → "있/VX" 변환
-        if idx + 2 < tokens.len()
-            && tokens[idx + 2].surface == "있"
-            && tokens[idx + 2].pos == "VA"
+        if idx + 2 < tokens.len() && tokens[idx + 2].surface == "있" && tokens[idx + 2].pos == "VA"
         {
             tokens[idx + 2].pos = "VX".to_string();
         }
@@ -4581,8 +4542,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
         let curr_pos = &tokens[i].pos;
 
         // NNG + "다/NNG" 패턴 → VCP 삽입 필요
-        if (prev_pos == "NNG" || prev_pos == "NNP") && curr_surface == "다" && curr_pos == "NNG"
-        {
+        if (prev_pos == "NNG" || prev_pos == "NNP") && curr_surface == "다" && curr_pos == "NNG" {
             // 이전 토큰의 마지막 글자 확인 (받침 있으면 이/VCP, 없으면 다/EF만)
             let prev_surface = &tokens[i - 1].surface;
             if let Some(last_char) = prev_surface.chars().last() {
@@ -5091,10 +5051,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
         }
 
         // 패턴 2: ~다/EF + 고하/VV → 다고/EC + 하/VV
-        if curr_pos == "EF"
-            && curr_surface == "다"
-            && next_surface == "고하"
-            && next_pos == "VV"
+        if curr_pos == "EF" && curr_surface == "다" && next_surface == "고하" && next_pos == "VV"
         {
             // 이 경우 다/EF를 다고/EC로 변경하고, 고하/VV를 하/VV로 변경
             // 별도 처리 필요
@@ -5178,9 +5135,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
         let next_surface = &tokens[i + 1].surface;
 
         // 시/EP + EC(니까, 면 등) 패턴 → EC만 유지
-        if curr_surface == "시"
-            && curr_pos == "EP"
-            && ec_after_si.contains(next_surface.as_str())
+        if curr_surface == "시" && curr_pos == "EP" && ec_after_si.contains(next_surface.as_str())
         {
             remove_si_indices.push(i);
         }
@@ -5340,9 +5295,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
         tokens[idx] = SejongToken::new(&merged_surface, "EC", start, end);
         tokens.remove(idx + 1);
         // 다음 하/XSV → 하/VV (인덱스 조정 후)
-        if idx + 1 < tokens.len()
-            && tokens[idx + 1].surface == "하"
-            && tokens[idx + 1].pos == "XSV"
+        if idx + 1 < tokens.len() && tokens[idx + 1].surface == "하" && tokens[idx + 1].pos == "XSV"
         {
             tokens[idx + 1].pos = "VV".to_string();
         }
@@ -5392,10 +5345,9 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
 
     // 152차: "큰/VA+ETM + 집/NNG" → "큰/XPN + 집/NNG"
     // 관형사형 어미가 붙은 형용사가 접두사처럼 사용될 때
-    let xpn_prefixes: std::collections::HashSet<&str> =
-        ["큰", "작은", "새", "헌", "젊은", "늙은"]
-            .into_iter()
-            .collect();
+    let xpn_prefixes: std::collections::HashSet<&str> = ["큰", "작은", "새", "헌", "젊은", "늙은"]
+        .into_iter()
+        .collect();
 
     for i in 0..tokens.len().saturating_sub(1) {
         if xpn_prefixes.contains(tokens[i].surface.as_str())
@@ -5487,9 +5439,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
     for i in 1..tokens.len() {
         if tokens[i].surface == "다"
             && tokens[i].pos == "NNG"
-            && (tokens[i - 1].pos == "VV"
-                || tokens[i - 1].pos == "VA"
-                || tokens[i - 1].pos == "VX")
+            && (tokens[i - 1].pos == "VV" || tokens[i - 1].pos == "VA" || tokens[i - 1].pos == "VX")
         {
             tokens[i].pos = "EF".to_string();
         }
@@ -5686,8 +5636,7 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
             if ["십", "백", "천", "만"].contains(&second) {
                 let first = tokens[idx].surface.clone();
                 // 일, 이, 삼, 사, 오, 육, 칠, 팔, 구 등 1자리 수사
-                if ["일", "이", "삼", "사", "오", "육", "칠", "팔", "구"]
-                    .contains(&first.as_str())
+                if ["일", "이", "삼", "사", "오", "육", "칠", "팔", "구"].contains(&first.as_str())
                 {
                     // 병합
                     tokens[idx].surface = format!("{first}{second}");
@@ -5755,5 +5704,92 @@ pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
         tokens[len - 2].pos = "NNB".to_string();
         // "아/EF" 제거
         tokens.remove(len - 1);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn tok(surface: &str, pos: &str) -> SejongToken {
+        let end = surface.chars().count();
+        SejongToken::new(surface, pos, 0, end)
+    }
+
+    fn tok_at(surface: &str, pos: &str, start: usize, end: usize) -> SejongToken {
+        SejongToken::new(surface, pos, start, end)
+    }
+
+    // ── 185차 보정: 첫 번째 토큰 하/XSV → VV ────────────────────────────
+    #[test]
+    fn test_correction_185_ha_xsv_to_vv_at_start() {
+        let mut tokens = vec![tok("하", "XSV"), tok("니까", "EC")];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens[0].pos, "VV", "하/XSV at position 0 should become VV");
+    }
+
+    #[test]
+    fn test_correction_185_ha_xsv_not_changed_if_not_first() {
+        // 첫 번째 토큰이 아니면 변환 없음
+        let mut tokens = vec![tok("먹", "VV"), tok("하", "XSV")];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(
+            tokens[1].pos, "XSV",
+            "하/XSV not at position 0 must stay XSV"
+        );
+    }
+
+    // ── 188차 보정: 그래/VV → 그러/VV 표면형 정규화 ────────────────────
+    #[test]
+    fn test_correction_188_geurae_vv_normalized_to_geuro() {
+        let mut tokens = vec![tok("그래", "VV")];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens[0].surface, "그러");
+        assert_eq!(tokens[0].pos, "VV");
+    }
+
+    // ── 193차 보정: ETN 표면형 초성 ㅁ → 호환 ㅁ ────────────────────────
+    #[test]
+    fn test_correction_193_etn_jamo_normalization() {
+        // 초성 ᄆ(U+1106)을 호환 ㅁ(U+3141)으로 정규화
+        let mut tokens = vec![tok("\u{1106}", "ETN")];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens[0].surface, "ㅁ");
+    }
+
+    // ── 194차 보정: 따라/NNB + 서/VV + 어/EC → 따라서/MAG ───────────────
+    #[test]
+    fn test_correction_194_tara_merge_to_tararso() {
+        let mut tokens = vec![
+            tok_at("따라", "NNB", 0, 2),
+            tok_at("서", "VV", 2, 3),
+            tok_at("어", "EC", 3, 4),
+        ];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens.len(), 1);
+        assert_eq!(tokens[0].surface, "따라서");
+        assert_eq!(tokens[0].pos, "MAG");
+    }
+
+    // ── 196차 보정: XPN 복합어 분리 맨손/NNG → 맨/XPN 손/NNG ────────────
+    #[test]
+    fn test_correction_196_xpn_compound_split() {
+        let mut tokens = vec![tok_at("맨손", "NNG", 0, 2)];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens.len(), 2);
+        assert_eq!(tokens[0].surface, "맨");
+        assert_eq!(tokens[0].pos, "XPN");
+        assert_eq!(tokens[1].surface, "손");
+        assert_eq!(tokens[1].pos, "NNG");
+    }
+
+    // ── 255차 보정: 어/EF + 요/JX → 어요/EF 병합 ───────────────────────
+    #[test]
+    fn test_correction_255_eo_yo_merge() {
+        let mut tokens = vec![tok_at("어", "EF", 0, 1), tok_at("요", "JX", 1, 2)];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens.len(), 1);
+        assert_eq!(tokens[0].surface, "어요");
+        assert_eq!(tokens[0].pos, "EF");
     }
 }

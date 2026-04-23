@@ -46,9 +46,7 @@ pub fn apply_vv_seyo_splits(tokens: Vec<SejongToken>) -> Vec<SejongToken> {
         // "할게요", "갈게요" 패턴: MeCab이 "할게/VV + 어요/EF"로 분석한 경우
         // → "하/VV + ㄹ게요/EF"로 변환
         // 할게 = 하(어간) + ㄹ게(어미의 시작), 어요 = 어요(어미의 나머지)
-        if token.pos == "VV"
-            && token.surface.ends_with("게")
-            && token.surface.chars().count() >= 2
+        if token.pos == "VV" && token.surface.ends_with("게") && token.surface.chars().count() >= 2
         {
             let surface = &token.surface;
             // "할게" → 첫 글자 "할"에서 어간 "하" 추출 필요
@@ -86,9 +84,7 @@ pub fn apply_vv_seyo_splits(tokens: Vec<SejongToken>) -> Vec<SejongToken> {
 
         // "할까요", "볼까요" 패턴: MeCab이 "할까/VV + 아요/EF"로 분석한 경우
         // → "하/VV + ㄹ까요/EF"로 변환
-        if token.pos == "VV"
-            && token.surface.ends_with("까")
-            && token.surface.chars().count() >= 2
+        if token.pos == "VV" && token.surface.ends_with("까") && token.surface.chars().count() >= 2
         {
             let surface = &token.surface;
             let chars: Vec<char> = surface.chars().collect();
@@ -755,5 +751,80 @@ pub fn apply_decomposition_corrections(tokens: &mut Vec<SejongToken>) {
         }
 
         i += if matched { 2 } else { 1 };
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn tok(surface: &str, pos: &str) -> SejongToken {
+        let end = surface.chars().count();
+        SejongToken::new(surface, pos, 0, end)
+    }
+
+    fn tok_at(surface: &str, pos: &str, start: usize, end: usize) -> SejongToken {
+        SejongToken::new(surface, pos, start, end)
+    }
+
+    #[test]
+    fn test_apply_vv_seyo_splits_gaseyo() {
+        // "가세요/VV" → "가/VV + 세요/EF"
+        let tokens = vec![tok("가세요", "VV")];
+        let result = apply_vv_seyo_splits(tokens);
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0].surface, "가");
+        assert_eq!(result[0].pos, "VV");
+        assert_eq!(result[1].surface, "세요");
+        assert_eq!(result[1].pos, "EF");
+    }
+
+    #[test]
+    fn test_apply_vv_seyo_splits_passthrough_no_match() {
+        // "가다/VV" 는 변환 없이 그대로
+        let tokens = vec![tok("가다", "VV")];
+        let result = apply_vv_seyo_splits(tokens);
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].surface, "가다");
+    }
+
+    #[test]
+    fn test_apply_token_merges_날씨_pattern() {
+        // 패턴 2: "날/NNG + 씨/EP + 가/EF" → "날씨/NNG + 가/JKS"
+        let mut tokens = vec![
+            tok_at("날", "NNG", 0, 1),
+            tok_at("씨", "EP", 1, 2),
+            tok_at("가", "EF", 2, 3),
+        ];
+        apply_token_merges(&mut tokens);
+        assert_eq!(tokens.len(), 2);
+        assert_eq!(tokens[0].surface, "날씨");
+        assert_eq!(tokens[0].pos, "NNG");
+        assert_eq!(tokens[1].surface, "가");
+        assert_eq!(tokens[1].pos, "JKS");
+    }
+
+    #[test]
+    fn test_apply_token_merges_gada_nng_correction() {
+        // 패턴 8: "가다/NNG" → "가다/VV"
+        let mut tokens = vec![tok("가다", "NNG")];
+        apply_token_merges(&mut tokens);
+        assert_eq!(tokens[0].pos, "VV");
+    }
+
+    #[test]
+    fn test_apply_decomposition_corrections_va_eun_pattern() {
+        // 패턴 2: "좋/VA + 은/ETM + 다/EF" → "좋/VA + 다/EF"
+        let mut tokens = vec![
+            tok_at("좋", "VA", 0, 1),
+            tok_at("은", "ETM", 1, 2),
+            tok_at("다", "EF", 2, 3),
+        ];
+        apply_decomposition_corrections(&mut tokens);
+        assert_eq!(tokens.len(), 2);
+        assert_eq!(tokens[0].surface, "좋");
+        assert_eq!(tokens[0].pos, "VA");
+        assert_eq!(tokens[1].surface, "다");
+        assert_eq!(tokens[1].pos, "EF");
     }
 }

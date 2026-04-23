@@ -1016,8 +1016,7 @@ impl<R: BufRead> SentenceReader<R> {
                 // Exception: digit '.' digit is a decimal number, not a boundary.
                 if ch == '.' {
                     let prev_is_digit = i > 0 && chars[i - 1].is_ascii_digit();
-                    let next_is_digit =
-                        i + 1 < len && chars[i + 1].is_ascii_digit();
+                    let next_is_digit = i + 1 < len && chars[i + 1].is_ascii_digit();
                     if prev_is_digit && next_is_digit {
                         // Decimal number — not a boundary.
                         i += 1;

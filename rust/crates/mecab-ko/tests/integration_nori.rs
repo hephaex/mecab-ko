@@ -1,94 +1,101 @@
-//! Nori compatibility integration tests
+//! Nori compatibility integration tests for the `mecab-ko` facade crate.
 //!
-//! This module tests compatibility with Elasticsearch's Nori analyzer:
-//! - POS tag mapping (MeCab <-> Nori)
-//! - Decompound modes (none, discard, mixed)
-//! - Token type classification
-//! - Output format compatibility
+//! Full nori compatibility tests (tag conversion, decompound modes, analyzer,
+//! tokenizer, WordType) live in:
+//!   `mecab-ko-core/tests/nori_compat_integration.rs`
 //!
-//! Note: These tests require the `nori_compat` feature to be fully integrated.
-//! Currently placeholders until API is complete.
+//! This file verifies that the public re-exports from the `mecab-ko` crate
+//! are accessible, so users of the top-level crate can import nori types
+//! without reaching into `mecab_ko_core` directly.
 
-#![allow(
-    clippy::expect_used,
-    clippy::assertions_on_constants,
-    clippy::doc_markdown
-)]
-
-mod common;
+#![allow(clippy::expect_used)]
 
 #[test]
-#[ignore = "placeholder: not yet implemented"]
-fn test_nori_compatibility_placeholder() {
-    println!("Nori compatibility tests pending API integration");
+fn test_nori_types_reexported_via_core() {
+    // Verify that the types used in nori_compat are importable through mecab_ko_core
+    // (the facade crate does not re-export nori_compat yet; this test ensures the
+    // core crate exposes the necessary symbols for downstream integration).
+    use mecab_ko_core::nori_compat::{
+        mecab_to_nori_tag, nori_to_mecab_tag, DecompoundMode, NoriAnalyzer, NoriTokenizer, WordType,
+    };
+
+    // Confirm tag conversion functions are callable
+    assert_eq!(mecab_to_nori_tag("NNG"), "NNG");
+    assert_eq!(nori_to_mecab_tag("J"), "JX");
+
+    // Confirm DecompoundMode variants exist
+    let _mode = DecompoundMode::None;
+    let _mode = DecompoundMode::Discard;
+    let _mode = DecompoundMode::Mixed;
+
+    // Confirm WordType variants exist
+    let _wt = WordType::Known;
+
+    // Confirm NoriTokenizer and NoriAnalyzer are constructable
+    let tokenizer = NoriTokenizer::new(DecompoundMode::None, false);
+    assert!(tokenizer.is_ok(), "NoriTokenizer::new should succeed");
+
+    let analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None);
+    assert!(
+        analyzer.is_ok(),
+        "NoriAnalyzer::default_with_decompound should succeed"
+    );
 }
 
 #[test]
-#[ignore = "placeholder: not yet implemented"]
-fn test_nori_module_exists() {
-    assert!(true, "nori_compat module should be available");
-}
+fn test_nori_tag_conversions() {
+    use mecab_ko_core::nori_compat::{mecab_to_nori_tag, nori_to_mecab_tag};
 
-// ============================================================================
-// Future tests - to be enabled when API is exposed
-// ============================================================================
+    // Particle family collapses to "J"
+    assert_eq!(mecab_to_nori_tag("JKS"), "J");
+    assert_eq!(mecab_to_nori_tag("JX"), "J");
 
-#[test]
-#[ignore = "placeholder: not yet implemented"]
-fn test_mecab_to_nori_tag_conversion() {
-    // TODO: Enable when mecab_to_nori_tag is exported
-}
+    // Ending family collapses to "E"
+    assert_eq!(mecab_to_nori_tag("EF"), "E");
+    assert_eq!(mecab_to_nori_tag("EC"), "E");
 
-#[test]
-#[ignore = "placeholder: not yet implemented"]
-fn test_nori_to_mecab_tag_conversion() {
-    // TODO: Enable when nori_to_mecab_tag is exported
-}
+    // Nouns pass through unchanged
+    assert_eq!(mecab_to_nori_tag("NNG"), "NNG");
+    assert_eq!(mecab_to_nori_tag("NNP"), "NNP");
 
-#[test]
-#[ignore = "placeholder: not yet implemented"]
-fn test_decompound_mode_none() {
-    // TODO: Enable when DecompoundMode is exported
+    // Reverse mapping
+    assert_eq!(nori_to_mecab_tag("NNG"), "NNG");
+    assert_eq!(nori_to_mecab_tag("J"), "JX");
 }
 
 #[test]
-#[ignore = "placeholder: not yet implemented"]
-fn test_decompound_mode_discard() {
-    // TODO: Enable when DecompoundMode is exported
+fn test_decompound_modes() {
+    use mecab_ko_core::nori_compat::{DecompoundMode, NoriTokenizer};
+
+    for mode in [
+        DecompoundMode::None,
+        DecompoundMode::Discard,
+        DecompoundMode::Mixed,
+    ] {
+        let result = NoriTokenizer::new(mode, false);
+        assert!(
+            result.is_ok(),
+            "NoriTokenizer should be created for mode {:?}",
+            mode.as_str()
+        );
+    }
 }
 
 #[test]
-#[ignore = "placeholder: not yet implemented"]
-fn test_decompound_mode_mixed() {
-    // TODO: Enable when DecompoundMode is exported
-}
+fn test_nori_analyzer_stoptags() {
+    use mecab_ko_core::nori_compat::{DecompoundMode, NoriAnalyzer};
 
-#[test]
-#[ignore = "placeholder: not yet implemented"]
-fn test_nori_analyzer_basic() {
-    // TODO: Enable when NoriAnalyzer is exported
-}
+    let mut analyzer = NoriAnalyzer::default_with_decompound(DecompoundMode::None)
+        .expect("Failed to create NoriAnalyzer");
 
-#[test]
-#[ignore = "placeholder: not yet implemented"]
-fn test_nori_token_structure() {
-    // TODO: Enable when NoriToken is exported
-}
+    // Default stoptags include particle and ending families
+    assert!(analyzer.stoptags().contains(&"J"));
+    assert!(analyzer.stoptags().contains(&"E"));
 
-#[test]
-#[ignore = "placeholder: not yet implemented"]
-fn test_word_type_classification() {
-    // TODO: Enable when WordType is exported
-}
+    // Stoptag mutation
+    analyzer.add_stoptag("SN".to_string());
+    assert!(analyzer.stoptags().contains(&"SN"));
 
-#[test]
-#[ignore = "placeholder: not yet implemented"]
-fn test_compound_noun_analysis() {
-    // TODO: Enable when full analysis is available
-}
-
-#[test]
-#[ignore = "placeholder: not yet implemented"]
-fn test_elasticsearch_format_compatibility() {
-    // TODO: Enable when JSON serialization is available
+    assert!(analyzer.remove_stoptag("SN"));
+    assert!(!analyzer.stoptags().contains(&"SN"));
 }

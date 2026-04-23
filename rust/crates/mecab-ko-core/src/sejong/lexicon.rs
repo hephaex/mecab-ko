@@ -502,3 +502,49 @@ pub fn apply_lexicon_overrides(tokens: &mut [SejongToken]) {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn make_token(surface: &str, pos: &str) -> SejongToken {
+        SejongToken::new(surface, pos, 0, surface.chars().count())
+    }
+
+    #[test]
+    fn test_apply_lexicon_overrides_pronoun_np() {
+        // "나/VV" → "나/NP" (NP 오버라이드)
+        let mut tokens = vec![make_token("나", "VV")];
+        apply_lexicon_overrides(&mut tokens);
+        assert_eq!(tokens[0].pos, "NP");
+    }
+
+    #[test]
+    fn test_apply_lexicon_overrides_adverb_mag() {
+        // "매우/NNG" → "매우/MAG"
+        let mut tokens = vec![make_token("매우", "NNG")];
+        apply_lexicon_overrides(&mut tokens);
+        assert_eq!(tokens[0].pos, "MAG");
+
+        // "항상/VV" → "항상/MAG"
+        let mut tokens2 = vec![make_token("항상", "VV")];
+        apply_lexicon_overrides(&mut tokens2);
+        assert_eq!(tokens2[0].pos, "MAG");
+    }
+
+    #[test]
+    fn test_apply_lexicon_overrides_skips_ep_pos() {
+        // EP 품사는 오버라이드 대상이 아님 — "시/EP" 유지
+        let mut tokens = vec![make_token("시", "EP")];
+        apply_lexicon_overrides(&mut tokens);
+        assert_eq!(tokens[0].pos, "EP", "EP tokens must not be overridden");
+    }
+
+    #[test]
+    fn test_apply_lexicon_overrides_nnp_city() {
+        // "서울/NNG" → "서울/NNP"
+        let mut tokens = vec![make_token("서울", "NNG")];
+        apply_lexicon_overrides(&mut tokens);
+        assert_eq!(tokens[0].pos, "NNP");
+    }
+}

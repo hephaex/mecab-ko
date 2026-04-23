@@ -51,7 +51,7 @@ fn test_batch_large_scale() {
 }
 
 #[test]
-#[ignore = "Requires dictionary installation"]
+#[ignore = "Requires full system dictionary installation (not the mini test dict); run manually after `cargo install mecab-ko-dict`"]
 fn test_batch_vs_sequential() {
     use mecab_ko_core::Tokenizer;
 

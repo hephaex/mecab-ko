@@ -196,100 +196,6 @@ fn test_golden_statistics() {
     }
 }
 
-/// Generate test report
-#[test]
-#[ignore = "placeholder: not yet implemented"]
-fn test_generate_report() {
-    // use std::io::Write;
-
-    // TODO: Implement once tokenizer is available
-    // let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
-    // let files = vec!["basic.json", "nouns.json", "complex.json"];
-    //
-    // let mut report = String::new();
-    // report.push_str("# Golden Test Report\n\n");
-    //
-    // for file in files {
-    //     report.push_str(&format!("\n## {}\n\n", file));
-    //
-    //     let test_cases = load_golden_tests(file).expect("Failed to load tests");
-    //     let mut passed = 0;
-    //     let mut failed = 0;
-    //
-    //     for test_case in test_cases {
-    //         let result = tokenizer.tokenize(&test_case.input);
-    //         let morphs: Vec<String> = result.iter().map(|t| t.surface.clone()).collect();
-    //
-    //         if morphs == test_case.expected_morphs {
-    //             passed += 1;
-    //         } else {
-    //             failed += 1;
-    //             report.push_str(&format!("❌ {}\n", test_case.input));
-    //             report.push_str(&format!("   Expected: {:?}\n", test_case.expected_morphs));
-    //             report.push_str(&format!("   Got:      {:?}\n\n", morphs));
-    //         }
-    //     }
-    //
-    //     report.push_str(&format!("**Results**: {} passed, {} failed\n", passed, failed));
-    // }
-    //
-    // // Write report to file
-    // let report_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("golden_test_report.md");
-    // let mut file = fs::File::create(&report_path).expect("Failed to create report file");
-    // file.write_all(report.as_bytes()).expect("Failed to write report");
-    //
-    // println!("Report generated: {:?}", report_path);
-
-    println!("Generate report test (placeholder)");
-}
-
-/// Update golden test results (USE WITH CAUTION)
-#[test]
-#[ignore = "placeholder: not yet implemented"]
-fn test_update_golden_results() {
-    // TODO: Implement golden test update
-    // This should only be run manually to update expected results
-    // after verifying that the changes are correct
-    //
-    // let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
-    //
-    // for file in ["basic.json", "nouns.json", "complex.json"] {
-    //     let test_cases = load_golden_tests(file).expect("Failed to load tests");
-    //     let mut updated_cases = Vec::new();
-    //
-    //     for mut test_case in test_cases {
-    //         let result = tokenizer.tokenize(&test_case.input);
-    //
-    //         // Update expected results
-    //         test_case.expected_morphs = result.iter().map(|t| t.surface.clone()).collect();
-    //         test_case.expected_pos = result
-    //             .iter()
-    //             .map(|t| (t.surface.clone(), t.pos.clone()))
-    //             .collect();
-    //
-    //         updated_cases.push(test_case);
-    //     }
-    //
-    //     // Write updated results
-    //     let path = golden_path().join(file);
-    //     let json = serde_json::to_string_pretty(&updated_cases)
-    //         .expect("Failed to serialize");
-    //     fs::write(&path, json).expect("Failed to write file");
-    // }
-
-    println!("Golden test update (placeholder - use with caution!)");
-}
-
-/// Compare with reference implementation (if available)
-#[test]
-#[ignore = "placeholder: not yet implemented"]
-fn test_compare_with_reference() {
-    // TODO: If a reference MeCab-Ko implementation is available,
-    // compare outputs for regression detection
-
-    println!("Reference comparison test (placeholder)");
-}
-
 /// Test golden tests are comprehensive
 #[test]
 fn test_golden_coverage() {
@@ -335,14 +241,6 @@ fn test_golden_coverage() {
 #[cfg(test)]
 mod golden_utils {
     use super::*;
-
-    /// Utility to find failing golden tests
-    #[test]
-    #[ignore = "placeholder: not yet implemented"]
-    fn find_failing_tests() {
-        // TODO: Identify which tests are failing
-        println!("Find failing tests (placeholder)");
-    }
 
     /// Utility to validate golden test consistency
     #[test]

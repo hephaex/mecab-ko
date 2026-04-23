@@ -110,162 +110,86 @@ fn test_dictionary_lookup() {
     }
 }
 
-/// Test prefix matching in dictionary
+/// Test connection cost matrix loading from definition reader
 #[test]
-#[ignore = "placeholder: not yet implemented"]
-fn test_prefix_matching() {
-    // TODO: Implement once trie is available
-    // let dict = create_test_dictionary();
-    //
-    // let matches = dict.prefix_match("안녕하세요");
-    // // Should match "안녕", "안녕하", possibly more
-    // assert!(!matches.is_empty(), "Should find prefix matches");
-    //
-    // for m in matches {
-    //     assert!("안녕하세요".starts_with(&m.surface));
-    // }
-
-    println!("Prefix matching test (placeholder)");
-}
-
-/// Test common word lookup
-#[test]
-#[ignore = "placeholder: not yet implemented"]
-fn test_common_word_lookup() {
-    let common_words = vec![
-        "안녕", "하다", "이다", "되다", "있다", "없다", "사람", "시간", "일", "년",
-    ];
-
-    // TODO: Implement once dictionary is available
-    // let dict = create_test_dictionary();
-    //
-    // for word in common_words {
-    //     let entries = dict.lookup(word);
-    //     assert!(!entries.is_empty(),
-    //             "Common word '{}' should be in dictionary", word);
-    // }
-
-    println!(
-        "Common word lookup test prepared: {} words",
-        common_words.len()
-    );
-}
-
-/// Test connection cost matrix loading
-#[test]
-#[ignore = "placeholder: not yet implemented"]
 fn test_matrix_loading() {
-    // TODO: Implement once matrix is available
-    // let matrix_path = get_test_matrix_path();
-    // let matrix = ConnectionMatrix::load(&matrix_path)
-    //     .expect("Failed to load connection matrix");
-    //
-    // assert!(matrix.left_size() > 0);
-    // assert!(matrix.right_size() > 0);
+    use mecab_ko_dict::matrix::{DenseMatrix, Matrix};
+    use std::io::BufReader;
 
-    println!("Matrix loading test (placeholder)");
+    // Minimal matrix.def format: "<lsize> <rsize>\n<right_id> <left_id> <cost>\n..."
+    let def_content = "3 3\n0 0 100\n0 1 200\n1 0 300\n1 2 -50\n2 2 0\n";
+    let reader = BufReader::new(def_content.as_bytes());
+    let matrix = DenseMatrix::from_def_reader(reader).expect("Failed to parse matrix.def");
+
+    assert!(matrix.left_size() > 0, "Matrix should have left entries");
+    assert!(matrix.right_size() > 0, "Matrix should have right entries");
 }
 
-/// Test connection cost retrieval
+/// Test connection cost retrieval from a DenseMatrix
 #[test]
-#[ignore = "placeholder: not yet implemented"]
 fn test_connection_cost() {
-    // TODO: Implement once matrix is available
-    // let matrix = create_test_matrix();
-    //
-    // let cost = matrix.get(100, 200);
-    // assert!(cost.is_finite(), "Cost should be a finite value");
+    use mecab_ko_dict::matrix::{DenseMatrix, Matrix};
 
-    println!("Connection cost test (placeholder)");
+    let mut matrix = DenseMatrix::new(50, 50, 0);
+    matrix.set(10, 20, 500);
+
+    // Matrix::get takes (right_id, left_id)
+    let cost = matrix.get(10, 20);
+    assert_eq!(cost, 500, "Retrieved cost should match the stored value");
 }
 
-/// Test dense matrix implementation
+/// Test dense matrix creation, set, and get
 #[test]
-#[ignore = "placeholder: not yet implemented"]
 fn test_dense_matrix() {
-    // TODO: Implement once dense matrix is available
-    // let matrix = DenseMatrix::new(100, 100);
-    //
-    // // Test setting and getting values
-    // matrix.set(10, 20, 500);
-    // assert_eq!(matrix.get(10, 20), 500);
-    //
-    // // Test bounds
-    // assert_eq!(matrix.left_size(), 100);
-    // assert_eq!(matrix.right_size(), 100);
+    use mecab_ko_dict::matrix::{DenseMatrix, Matrix};
 
-    println!("Dense matrix test (placeholder)");
+    let mut matrix = DenseMatrix::new(100, 100, 0);
+
+    matrix.set(10, 20, 500);
+    assert_eq!(matrix.get(10, 20), 500);
+
+    matrix.set(0, 0, -100);
+    assert_eq!(matrix.get(0, 0), -100);
+
+    assert_eq!(matrix.left_size(), 100, "Left size should be 100");
+    assert_eq!(matrix.right_size(), 100, "Right size should be 100");
 }
 
-/// Test sparse matrix implementation
+/// Test sparse matrix construction from a dense matrix
 #[test]
-#[ignore = "placeholder: not yet implemented"]
 fn test_sparse_matrix() {
-    // TODO: Implement once sparse matrix is available
-    // let mut builder = SparseMatrixBuilder::new();
-    // builder.add(10, 20, 500);
-    // builder.add(15, 25, 600);
-    //
-    // let matrix = builder.build();
-    // assert_eq!(matrix.get(10, 20), 500);
-    // assert_eq!(matrix.get(15, 25), 600);
-    // assert_eq!(matrix.get(0, 0), 0); // Default value
+    use mecab_ko_dict::matrix::{DenseMatrix, Matrix, SparseMatrix};
 
-    println!("Sparse matrix test (placeholder)");
+    let mut dense = DenseMatrix::new(10, 10, 0);
+    dense.set(2, 3, 500);
+    dense.set(4, 5, 600);
+
+    let sparse = SparseMatrix::from_dense(&dense, 0);
+
+    // Stored entries should be accessible via the dense roundtrip
+    let roundtripped = sparse.to_dense();
+    assert_eq!(roundtripped.get(2, 3), 500);
+    assert_eq!(roundtripped.get(4, 5), 600);
+    assert_eq!(roundtripped.get(0, 0), 0, "Default value should be 0");
 }
 
-/// Test memory-mapped matrix for large dictionaries
+/// Test trie building and exact/prefix searching
 #[test]
-#[ignore = "placeholder: not yet implemented"]
-fn test_mmap_matrix() {
-    // TODO: Implement once mmap matrix is available
-    // let matrix_path = get_test_matrix_path();
-    // let matrix = MmapMatrix::open(&matrix_path)
-    //     .expect("Failed to open memory-mapped matrix");
-    //
-    // let cost = matrix.get(0, 0);
-    // assert!(cost.is_finite());
-
-    println!("Memory-mapped matrix test (placeholder)");
-}
-
-/// Test trie building and searching
-#[test]
-#[ignore = "placeholder: not yet implemented"]
 fn test_trie_build_and_search() {
-    // TODO: Implement once trie builder is available
-    // let mut builder = TrieBuilder::new();
-    // builder.insert("안녕", 0);
-    // builder.insert("안녕하세요", 1);
-    // builder.insert("감사", 2);
-    //
-    // let trie = builder.build();
-    //
-    // // Exact match
-    // assert!(trie.contains("안녕"));
-    // assert!(trie.contains("감사"));
-    // assert!(!trie.contains("없는단어"));
-    //
-    // // Prefix match
-    // let matches = trie.prefix_search("안녕하세요");
-    // assert!(matches.len() >= 2); // Should match both "안녕" and "안녕하세요"
+    use mecab_ko_dict::trie::{Trie, TrieBuilder};
 
-    println!("Trie build and search test (placeholder)");
-}
+    let entries = [("안녕", 0u32), ("안녕하세요", 1u32), ("감사", 2u32)];
+    let bytes = TrieBuilder::build(&entries).expect("Failed to build trie");
+    let trie = Trie::from_vec(bytes);
 
-/// Test dictionary format version compatibility
-#[test]
-#[ignore = "placeholder: not yet implemented"]
-fn test_dictionary_version() {
-    // TODO: Implement once dictionary format is defined
-    // let dict_path = get_test_dict_path();
-    // let header = DictionaryHeader::read(&dict_path)
-    //     .expect("Failed to read header");
-    //
-    // assert_eq!(header.magic, b"MECD");
-    // assert_eq!(header.version, 3);
+    // Exact matches
+    assert_eq!(trie.exact_match("안녕"), Some(0));
+    assert_eq!(trie.exact_match("감사"), Some(2));
+    assert_eq!(trie.exact_match("없는단어"), None);
 
-    println!("Dictionary version test (placeholder)");
+    // Prefix search on "안녕하세요" should find "안녕" and "안녕하세요"
+    let matches: Vec<_> = trie.common_prefix_search("안녕하세요").collect();
+    assert!(matches.len() >= 2, "Should find at least 2 prefix matches");
 }
 
 /// Test feature string parsing
@@ -292,168 +216,82 @@ fn test_feature_parsing() {
     }
 }
 
-/// Test dictionary entry serialization/deserialization
-#[test]
-#[ignore = "placeholder: not yet implemented"]
-fn test_entry_serialization() {
-    // TODO: Implement once serialization is available
-    // let entry = Entry {
-    //     surface: "테스트".to_string(),
-    //     left_id: 100,
-    //     right_id: 200,
-    //     cost: 500,
-    //     feature: "NNG,*,F,테스트,*,*,*,*".to_string(),
-    // };
-    //
-    // let bytes = bincode::serialize(&entry).expect("Serialization failed");
-    // let deserialized: Entry = bincode::deserialize(&bytes)
-    //     .expect("Deserialization failed");
-    //
-    // assert_eq!(entry, deserialized);
-
-    println!("Entry serialization test (placeholder)");
-}
-
-/// Test dictionary lookup performance
-#[test]
-#[ignore = "placeholder: not yet implemented"]
-fn test_lookup_performance() {
-    // use common::perf;
-
-    // TODO: Implement once dictionary is available
-    // let dict = create_test_dictionary();
-    // let test_words = vec!["안녕", "하다", "이다", "있다", "없다"];
-    //
-    // let result = perf::measure("Dictionary lookup", 1000, || {
-    //     for word in &test_words {
-    //         dict.lookup(word);
-    //     }
-    // });
-    //
-    // println!("{}", result.format());
-    // // Assert lookup is fast enough (< 100μs per lookup on average)
-    // perf::assert_performance(&result, 100.0);
-
-    println!("Dictionary lookup performance test (placeholder)");
-}
-
-/// Test concurrent dictionary access
-#[test]
-#[ignore = "placeholder: not yet implemented"]
-fn test_concurrent_access() {
-    // use std::sync::Arc;
-    // use std::thread;
-
-    // TODO: Implement once dictionary is thread-safe
-    // let dict = Arc::new(create_test_dictionary());
-    // let mut handles = vec![];
-    //
-    // for i in 0..4 {
-    //     let dict_clone = Arc::clone(&dict);
-    //     let handle = thread::spawn(move || {
-    //         for _ in 0..100 {
-    //             let _ = dict_clone.lookup("안녕");
-    //         }
-    //     });
-    //     handles.push(handle);
-    // }
-    //
-    // for handle in handles {
-    //     handle.join().expect("Thread panicked");
-    // }
-
-    println!("Concurrent access test (placeholder)");
-}
-
-/// Test dictionary statistics
-#[test]
-#[ignore = "placeholder: not yet implemented"]
-fn test_dictionary_stats() {
-    // TODO: Implement once dictionary stats are available
-    // let dict = create_test_dictionary();
-    //
-    // let stats = dict.stats();
-    // assert!(stats.total_entries > 0);
-    // assert!(stats.unique_surfaces > 0);
-    // assert!(stats.avg_entries_per_surface > 0.0);
-    //
-    // println!("Dictionary stats:");
-    // println!("  Total entries: {}", stats.total_entries);
-    // println!("  Unique surfaces: {}", stats.unique_surfaces);
-    // println!("  Avg entries/surface: {:.2}", stats.avg_entries_per_surface);
-
-    println!("Dictionary stats test (placeholder)");
-}
-
 #[cfg(test)]
 mod matrix_tests {
+    use mecab_ko_dict::matrix::{DenseMatrix, Matrix, SparseMatrix};
 
-    /// Test matrix bounds checking
+    /// Test matrix bounds: valid access at corners and interior
     #[test]
-    #[ignore = "placeholder: not yet implemented"]
     fn test_matrix_bounds() {
-        // TODO: Implement once matrix is available
-        // let matrix = create_test_matrix();
-        //
-        // // Valid access
-        // let _ = matrix.get(0, 0);
-        // let _ = matrix.get(matrix.left_size() - 1, matrix.right_size() - 1);
-        //
-        // // Out of bounds should return default or error
-        // // Depending on implementation
+        let mut matrix = DenseMatrix::new(10, 10, 0);
 
-        println!("Matrix bounds test (placeholder)");
+        // Corners
+        matrix.set(0, 0, 1);
+        matrix.set(9, 9, 2);
+        assert_eq!(matrix.get(0, 0), 1);
+        assert_eq!(matrix.get(9, 9), 2);
+
+        // Interior
+        matrix.set(5, 7, 999);
+        assert_eq!(matrix.get(5, 7), 999);
     }
 
-    /// Test matrix memory usage
+    /// Test matrix memory usage reporting
     #[test]
-    #[ignore = "placeholder: not yet implemented"]
     fn test_matrix_memory_usage() {
-        // TODO: Implement once matrix is available
-        // let dense = DenseMatrix::new(1000, 1000);
-        // let sparse = SparseMatrix::new();
-        //
-        // // Dense matrix should use predictable memory
-        // // Sparse matrix should use less for sparse data
+        let dense = DenseMatrix::new(100, 100, 0);
+        let sparse = SparseMatrix::new(100, 100, 0);
 
-        println!("Matrix memory usage test (placeholder)");
+        // Dense matrix memory is predictable: at least lsize * rsize * sizeof(i16) bytes
+        let dense_mem = dense.memory_size();
+        assert!(
+            dense_mem >= 100 * 100 * 2,
+            "Dense matrix should use at least lsize*rsize*2 bytes"
+        );
+
+        // Sparse with no entries should use less than dense
+        let sparse_mem = sparse.memory_size();
+        assert!(
+            sparse_mem < dense_mem,
+            "Empty sparse matrix should be smaller than dense"
+        );
     }
 }
 
 #[cfg(test)]
 mod trie_tests {
+    use mecab_ko_dict::trie::{Trie, TrieBuilder};
 
-    /// Test trie with Korean text
+    /// Test trie exact match with Korean single-syllable entries
     #[test]
-    #[ignore = "placeholder: not yet implemented"]
     fn test_trie_korean() {
-        // TODO: Implement once trie is available
-        // let mut builder = TrieBuilder::new();
-        // builder.insert("가", 0);
-        // builder.insert("각", 1);
-        // builder.insert("간", 2);
-        // builder.insert("갈", 3);
-        //
-        // let trie = builder.build();
-        // assert!(trie.contains("가"));
-        // assert!(trie.contains("갈"));
+        let entries = [("가", 0u32), ("각", 1u32), ("간", 2u32), ("갈", 3u32)];
+        let bytes = TrieBuilder::build(&entries).expect("Failed to build trie");
+        let trie = Trie::from_vec(bytes);
 
-        println!("Trie Korean text test (placeholder)");
+        assert_eq!(trie.exact_match("가"), Some(0));
+        assert_eq!(trie.exact_match("갈"), Some(3));
+        assert_eq!(
+            trie.exact_match("감"),
+            None,
+            "Non-existent key should return None"
+        );
     }
 
-    /// Test trie common prefix search
+    /// Test trie common prefix search over a longer Korean string
     #[test]
-    #[ignore = "placeholder: not yet implemented"]
     fn test_trie_common_prefix() {
-        // TODO: Implement once trie is available
-        // let trie = build_test_trie();
-        //
-        // let text = "안녕하세요반갑습니다";
-        // let prefixes = trie.common_prefix_search(text);
-        //
-        // // Should find all matching prefixes
-        // assert!(!prefixes.is_empty());
+        let entries = [("안녕", 0u32), ("안녕하", 1u32), ("안녕하세요", 2u32)];
+        let bytes = TrieBuilder::build(&entries).expect("Failed to build trie");
+        let trie = Trie::from_vec(bytes);
 
-        println!("Trie common prefix test (placeholder)");
+        let text = "안녕하세요반갑습니다";
+        let prefixes: Vec<_> = trie.common_prefix_search(text).collect();
+
+        assert!(!prefixes.is_empty(), "Should find prefix matches");
+        assert!(
+            prefixes.len() >= 2,
+            "Should find at least '안녕' and '안녕하'"
+        );
     }
 }
