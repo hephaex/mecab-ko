@@ -374,7 +374,7 @@ jobs:
   build-dictionary:
     name: Build Dictionary
     runs-on: ubuntu-latest
-    needs: validate-user-dict
+    needs: [validate-user-dict, validate-domain-dict]
     outputs:
       dict_version: ${{ steps.metadata.outputs.version }}
       dict_size: ${{ steps.build.outputs.dict_size }}
@@ -827,19 +827,20 @@ jobs:
   notify-status:
     name: Workflow Status
     runs-on: ubuntu-latest
-    needs: [validate-user-dict, build-dictionary, tokenize-test, accuracy-test, generate-report]
+    needs: [validate-user-dict, validate-domain-dict, build-dictionary, tokenize-test, accuracy-test, generate-report]
     if: always()
     steps:
       - name: Determine workflow status
         id: status
         run: |
-          VALIDATE_STATUS="${{ needs.validate-user-dict.result }}"
+          VALIDATE_USER_STATUS="${{ needs.validate-user-dict.result }}"
+          VALIDATE_DOMAIN_STATUS="${{ needs.validate-domain-dict.result }}"
           BUILD_STATUS="${{ needs.build-dictionary.result }}"
           TEST_STATUS="${{ needs.tokenize-test.result }}"
           ACCURACY_STATUS="${{ needs.accuracy-test.result }}"
           REPORT_STATUS="${{ needs.generate-report.result }}"
 
-          if [ "$VALIDATE_STATUS" = "failure" ] || [ "$BUILD_STATUS" = "failure" ] || [ "$TEST_STATUS" = "failure" ] || [ "$REPORT_STATUS" = "failure" ]; then
+          if [ "$VALIDATE_USER_STATUS" = "failure" ] || [ "$VALIDATE_DOMAIN_STATUS" = "failure" ] || [ "$BUILD_STATUS" = "failure" ] || [ "$TEST_STATUS" = "failure" ] || [ "$REPORT_STATUS" = "failure" ]; then
             echo "workflow_status=failed" >> $GITHUB_OUTPUT
             exit 1
           else
@@ -855,6 +856,7 @@ jobs:
           | Component | Status |
           |-----------|--------|
           | User Dict Validation | ${{ needs.validate-user-dict.result }} |
+          | Domain Dict Validation | ${{ needs.validate-domain-dict.result }} |
           | Dictionary Build | ${{ needs.build-dictionary.result }} |
           | Tokenization Tests | ${{ needs.tokenize-test.result }} |
           | Accuracy Evaluation | ${{ needs.accuracy-test.result }} |
