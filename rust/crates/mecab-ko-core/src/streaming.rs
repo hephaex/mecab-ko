@@ -55,11 +55,17 @@ pub struct StreamingTokenizer {
 
     /// 전체 처리된 문자 수
     total_chars_processed: usize,
+
+    /// 버퍼 최대 크기 (바이트). 초과 시 강제 flush.
+    max_buffer_size: usize,
 }
 
 impl StreamingTokenizer {
     /// 기본 청크 크기 (8KB)
     pub const DEFAULT_CHUNK_SIZE: usize = 8192;
+
+    /// 기본 버퍼 최대 크기 (16MB)
+    pub const DEFAULT_MAX_BUFFER_SIZE: usize = 16 * 1024 * 1024;
 
     /// 새 스트리밍 토크나이저 생성
     ///
@@ -84,6 +90,7 @@ impl StreamingTokenizer {
             chunk_size: Self::DEFAULT_CHUNK_SIZE,
             sentence_delimiters: vec!['.', '!', '?', '。', '．', '\n'],
             total_chars_processed: 0,
+            max_buffer_size: Self::DEFAULT_MAX_BUFFER_SIZE,
         }
     }
 
@@ -122,21 +129,16 @@ impl StreamingTokenizer {
     ///
     /// 토큰 목록
     pub fn process_chunk(&mut self, chunk: &str) -> Vec<Token> {
-        // 버퍼에 청크 추가
         self.buffer.push_str(chunk);
 
-        // 마지막 문장 구분자 찾기
         let split_pos = self.find_last_sentence_boundary();
 
         if let Some(pos) = split_pos {
-            // 구분자까지의 텍스트 처리
             let to_process = self.buffer[..=pos].to_string();
             let remaining = self.buffer[pos + 1..].to_string();
 
-            // 토큰화
             let mut tokens = self.tokenizer.tokenize(&to_process);
 
-            // 위치 정보 조정 (전체 텍스트 기준)
             for token in &mut tokens {
                 token.start_pos += self.total_chars_processed;
                 token.end_pos += self.total_chars_processed;
@@ -146,23 +148,31 @@ impl StreamingTokenizer {
             self.buffer = remaining;
 
             tokens
+        } else if self.buffer.len() > self.max_buffer_size {
+            self.force_flush_partial()
         } else {
-            // 문장 구분자가 없으면 버퍼가 너무 커질 수 있으므로
-            // 일정 크기 이상이면 강제 처리
-            if self.buffer.len() > self.chunk_size * 2 {
-                self.force_flush_partial()
-            } else {
-                Vec::new()
-            }
+            Vec::new()
         }
     }
 
     /// 마지막 문장 경계 찾기 (역방향 탐색으로 최적화)
+    ///
+    /// Returns the byte index of the last byte of the delimiter character,
+    /// so that `buffer[..=pos]` includes the full delimiter and
+    /// `buffer[pos+1..]` starts at the next character boundary.
     fn find_last_sentence_boundary(&self) -> Option<usize> {
-        // 역방향 탐색으로 첫 번째 발견 시 즉시 반환
+        let bytes = self.buffer.as_bytes();
         for (i, ch) in self.buffer.char_indices().rev() {
             if self.sentence_delimiters.contains(&ch) {
-                return Some(i);
+                // Decimal number exception: digit.digit is not a boundary.
+                if ch == '.' && i > 0 && i + ch.len_utf8() < bytes.len() {
+                    let prev_byte = bytes[i - 1];
+                    let next_byte = bytes[i + ch.len_utf8()];
+                    if prev_byte.is_ascii_digit() && next_byte.is_ascii_digit() {
+                        continue;
+                    }
+                }
+                return Some(i + ch.len_utf8() - 1);
             }
         }
         None
@@ -170,28 +180,22 @@ impl StreamingTokenizer {
 
     /// 문장 경계에서 분할 (단어 중간 분할 방지)
     fn find_safe_split_point(&self, target_pos: usize) -> usize {
-        // target_pos 근처에서 공백이나 문장 부호 찾기
+        // Snap target_pos to a valid char boundary first.
         let mut pos = target_pos.min(self.buffer.len());
-
-        // 뒤로 탐색하여 안전한 분할점 찾기
-        while pos > 0 {
-            if let Some(ch) = self.buffer[..pos].chars().last() {
-                if ch.is_whitespace() || self.sentence_delimiters.contains(&ch) {
-                    // char boundary 확인
-                    if self.buffer.is_char_boundary(pos) {
-                        return pos;
-                    }
-                }
-            }
+        while pos > 0 && !self.buffer.is_char_boundary(pos) {
             pos -= 1;
         }
 
-        // 안전한 분할점이 없으면 char boundary에서 분할
-        let mut safe_pos = target_pos.min(self.buffer.len());
-        while safe_pos > 0 && !self.buffer.is_char_boundary(safe_pos) {
-            safe_pos -= 1;
+        // Walk backwards through valid char boundaries looking for whitespace
+        // or a sentence delimiter.
+        for (byte_idx, ch) in self.buffer[..pos].char_indices().rev() {
+            if ch.is_whitespace() || self.sentence_delimiters.contains(&ch) {
+                return byte_idx + ch.len_utf8();
+            }
         }
-        safe_pos
+
+        // No safe split point found — fall back to the snapped boundary.
+        pos
     }
 
     /// 부분 버퍼 강제 flush (문장 경계가 없을 때)
@@ -920,6 +924,48 @@ mod tests {
     }
 
     #[test]
+    fn test_multibyte_delimiter_no_panic() {
+        let tokenizer = create_test_tokenizer();
+        let mut stream = StreamingTokenizer::new(tokenizer)
+            .with_sentence_delimiters(vec!['.', '!', '?', '。', '．', '\n']);
+
+        // 。 is U+3002 (3 bytes). Previously pos+1 would slice mid-char and panic.
+        let tokens = stream.process_chunk("テスト。次の文。\n");
+        let remaining = stream.flush();
+        let total = tokens.len() + remaining.len();
+        assert!(total > 0 || stream.buffer_len() == 0);
+    }
+
+    #[test]
+    fn test_decimal_number_not_split() {
+        let tokenizer = create_test_tokenizer();
+        let mut stream = StreamingTokenizer::new(tokenizer);
+
+        let tokens = stream.process_chunk("값은 3.14입니다.\n");
+        let remaining = stream.flush();
+        let all: Vec<_> = tokens.into_iter().chain(remaining).collect();
+        // "3.14" should NOT be split at the decimal point.
+        let surfaces: Vec<_> = all.iter().map(|t| t.surface.as_str()).collect();
+        let joined = surfaces.join(" ");
+        assert!(
+            !joined.contains("3 .") && !joined.contains(". 14"),
+            "Decimal was incorrectly split: {joined}"
+        );
+    }
+
+    #[test]
+    fn test_buffer_limit_forces_flush() {
+        let tokenizer = create_test_tokenizer();
+        let mut stream = StreamingTokenizer::new(tokenizer);
+        // Set a tiny max buffer to trigger forced flush
+        stream.max_buffer_size = 32;
+
+        // No delimiter — would grow unbounded without the limit
+        let tokens = stream.process_chunk(&"가".repeat(100));
+        assert!(!tokens.is_empty(), "Buffer limit should force a flush");
+    }
+
+    #[test]
     fn test_safe_split_point() {
         let tokenizer = create_test_tokenizer();
         let stream = StreamingTokenizer::new(tokenizer)
@@ -970,9 +1016,14 @@ pub struct SentenceReader<R: BufRead> {
     queue: std::collections::VecDeque<String>,
     /// Set to `true` once the underlying reader returns EOF.
     eof: bool,
+    /// Maximum buffer size in bytes. Exceeding this triggers a forced flush.
+    max_buffer_size: usize,
 }
 
 impl<R: BufRead> SentenceReader<R> {
+    /// Default maximum buffer size (16 MB).
+    pub const DEFAULT_MAX_BUFFER_SIZE: usize = 16 * 1024 * 1024;
+
     /// Creates a new `SentenceReader` wrapping `reader`.
     #[must_use]
     pub const fn new(reader: R) -> Self {
@@ -981,7 +1032,17 @@ impl<R: BufRead> SentenceReader<R> {
             buffer: String::new(),
             queue: std::collections::VecDeque::new(),
             eof: false,
+            max_buffer_size: Self::DEFAULT_MAX_BUFFER_SIZE,
         }
+    }
+
+    /// Sets the maximum buffer size (bytes). If input accumulates
+    /// beyond this limit without a sentence boundary, the buffer is
+    /// force-flushed as a single sentence to prevent OOM.
+    #[must_use]
+    pub const fn with_max_buffer_size(mut self, size: usize) -> Self {
+        self.max_buffer_size = size;
+        self
     }
 
     /// Drain all complete sentences currently visible in `self.buffer` into
@@ -991,62 +1052,57 @@ impl<R: BufRead> SentenceReader<R> {
     ///      immediately by ASCII whitespace or at the end of the buffer when
     ///      `eof` is `true`.
     fn drain_sentences(&mut self) {
-        let chars: Vec<char> = self.buffer.chars().collect();
-        let len = chars.len();
-        let mut start = 0; // start of the current sentence (char index)
+        // Work with byte indices directly to avoid allocating Vec<char>.
+        let buf = self.buffer.as_str();
+        let indices: Vec<(usize, char)> = buf.char_indices().collect();
+        let len = indices.len();
+        let mut start_char = 0; // char-level index into `indices`
 
         let mut i = 0;
         while i < len {
-            let ch = chars[i];
+            let (_, ch) = indices[i];
 
             if ch == '\n' {
-                // Rule 1: newline is always a boundary (stripped).
-                let sentence: String = chars[start..i].iter().collect();
-                let trimmed = sentence.trim();
+                let start_byte = indices[start_char].0;
+                let end_byte = indices[i].0;
+                let trimmed = buf[start_byte..end_byte].trim();
                 if !trimmed.is_empty() {
                     self.queue.push_back(trimmed.to_string());
                 }
-                start = i + 1;
+                start_char = i + 1;
                 i += 1;
                 continue;
             }
 
             if matches!(ch, '.' | '?' | '!') {
-                // Rule 2: sentence-ending punctuation.
-                // Exception: digit '.' digit is a decimal number, not a boundary.
                 if ch == '.' {
-                    let prev_is_digit = i > 0 && chars[i - 1].is_ascii_digit();
-                    let next_is_digit = i + 1 < len && chars[i + 1].is_ascii_digit();
+                    let prev_is_digit = i > 0 && indices[i - 1].1.is_ascii_digit();
+                    let next_is_digit = i + 1 < len && indices[i + 1].1.is_ascii_digit();
                     if prev_is_digit && next_is_digit {
-                        // Decimal number — not a boundary.
                         i += 1;
                         continue;
                     }
                 }
 
-                // Determine whether what follows qualifies as a boundary:
-                //   - EOF reached and this is the last non-whitespace char, OR
-                //   - The very next char is ASCII whitespace (space / tab / newline).
-                //   - Skip any closing punctuation `)`, `]`, `"`, `'` before checking.
+                let punct_byte_end = indices[i].0 + ch.len_utf8();
+
                 let mut j = i + 1;
-                while j < len && matches!(chars[j], ')' | ']' | '"' | '\'') {
+                while j < len && matches!(indices[j].1, ')' | ']' | '"' | '\'') {
                     j += 1;
                 }
 
-                let followed_by_whitespace = j < len && chars[j].is_whitespace();
+                let followed_by_whitespace = j < len && indices[j].1.is_whitespace();
                 let followed_by_eof = j >= len && self.eof;
 
                 if followed_by_whitespace || followed_by_eof {
-                    // Include the punctuation mark (and any closing chars) in the sentence.
-                    let sentence: String = chars[start..=i].iter().collect();
-                    let trimmed = sentence.trim();
+                    let start_byte = indices[start_char].0;
+                    let trimmed = buf[start_byte..punct_byte_end].trim();
                     if !trimmed.is_empty() {
                         self.queue.push_back(trimmed.to_string());
                     }
-                    // Skip past punctuation + closing chars + the whitespace separator.
-                    start = j;
-                    if j < len && chars[j].is_whitespace() && chars[j] != '\n' {
-                        start = j + 1;
+                    start_char = j;
+                    if j < len && indices[j].1.is_whitespace() && indices[j].1 != '\n' {
+                        start_char = j + 1;
                         i = j + 1;
                     } else {
                         i = j;
@@ -1058,18 +1114,18 @@ impl<R: BufRead> SentenceReader<R> {
             i += 1;
         }
 
-        // At EOF, flush whatever is left in the buffer as the final sentence.
-        if self.eof && start < len {
-            let sentence: String = chars[start..].iter().collect();
-            let trimmed = sentence.trim();
+        if self.eof && start_char < len {
+            let start_byte = indices[start_char].0;
+            let trimmed = buf[start_byte..].trim();
             if !trimmed.is_empty() {
                 self.queue.push_back(trimmed.to_string());
             }
             self.buffer.clear();
-        } else if start > 0 {
-            // Consume the portion of the buffer that has been processed.
-            let byte_offset: usize = chars[..start].iter().map(|c| c.len_utf8()).sum();
+        } else if start_char > 0 && start_char < len {
+            let byte_offset = indices[start_char].0;
             self.buffer.drain(..byte_offset);
+        } else if start_char >= len && !self.eof {
+            self.buffer.clear();
         }
     }
 
@@ -1078,6 +1134,15 @@ impl<R: BufRead> SentenceReader<R> {
     /// Returns `Ok(true)` if bytes were read, `Ok(false)` on EOF, and
     /// `Err(_)` on an I/O error.
     fn fill_buffer(&mut self) -> io::Result<bool> {
+        if self.buffer.len() >= self.max_buffer_size {
+            // Force-flush the entire buffer as a single sentence to prevent OOM.
+            let trimmed = self.buffer.trim().to_string();
+            if !trimmed.is_empty() {
+                self.queue.push_back(trimmed);
+            }
+            self.buffer.clear();
+        }
+
         let mut line = String::new();
         let n = self.reader.read_line(&mut line)?;
         if n == 0 {
@@ -1221,5 +1286,17 @@ mod sentence_reader_tests {
         assert_eq!(sentences.len(), 2);
         assert_eq!(sentences[0], "첫째.");
         assert_eq!(sentences[1], "둘째.");
+    }
+
+    #[test]
+    fn test_buffer_limit_prevents_oom() {
+        // A line with no sentence boundary should eventually be flushed
+        // when buffer exceeds max_buffer_size.
+        let long_line = "가".repeat(200);
+        let reader = SentenceReader::new(Cursor::new(long_line.as_str()))
+            .with_max_buffer_size(64);
+        let sentences: Vec<_> = reader.map(|r| r.unwrap()).collect();
+        // Should produce at least one sentence without hanging or OOM.
+        assert!(!sentences.is_empty());
     }
 }
