@@ -27,7 +27,9 @@ fn golden_path() -> PathBuf {
 }
 
 /// Test basic golden test set
+// TODO: implement golden test assertions once tokenizer integration is complete
 #[test]
+#[ignore = "tokenizer output assertions not yet implemented; only verifies file loading"]
 fn test_golden_basic() {
     let test_cases = load_golden_tests("basic.json").expect("Failed to load basic golden tests");
 
@@ -51,7 +53,9 @@ fn test_golden_basic() {
 }
 
 /// Test nouns golden test set
+// TODO: implement golden test assertions once tokenizer integration is complete
 #[test]
+#[ignore = "tokenizer output assertions not yet implemented; only verifies file loading"]
 fn test_golden_nouns() {
     let test_cases = load_golden_tests("nouns.json").expect("Failed to load nouns golden tests");
 
@@ -84,7 +88,9 @@ fn test_golden_nouns() {
 }
 
 /// Test complex golden test set
+// TODO: implement golden test assertions once tokenizer integration is complete
 #[test]
+#[ignore = "tokenizer output assertions not yet implemented; only verifies file loading"]
 fn test_golden_complex() {
     let test_cases =
         load_golden_tests("complex.json").expect("Failed to load complex golden tests");
@@ -112,7 +118,9 @@ fn test_golden_complex() {
 }
 
 /// Test all golden test files
+// TODO: implement actual tokenizer pass/fail counting; currently a placeholder
 #[test]
+#[ignore = "hardcoded pass rate placeholder does not reflect real tokenizer output"]
 fn test_all_golden_tests() {
     let golden_files = vec!["basic.json", "nouns.json", "complex.json"];
 
@@ -167,32 +175,44 @@ fn test_golden_file_format() {
 }
 
 /// Test golden test statistics
+///
+/// Verifies that each golden file is non-empty and that every test case
+/// carries at least one form of expected output (morphemes or POS pairs).
 #[test]
 fn test_golden_statistics() {
     let files = vec!["basic.json", "nouns.json", "complex.json"];
 
     for file in files {
-        if let Ok(test_cases) = load_golden_tests(file) {
-            let total = test_cases.len();
-            let with_morphs = test_cases
-                .iter()
-                .filter(|tc| !tc.expected_morphs.is_empty())
-                .count();
-            let with_pos = test_cases
-                .iter()
-                .filter(|tc| !tc.expected_pos.is_empty())
-                .count();
-            let with_description = test_cases
-                .iter()
-                .filter(|tc| tc.description.is_some())
-                .count();
+        let test_cases = load_golden_tests(file)
+            .unwrap_or_else(|e| panic!("Failed to load golden test file {file}: {e}"));
 
-            println!("\n{file} statistics:");
-            println!("  Total test cases: {total}");
-            println!("  With morphemes: {with_morphs}");
-            println!("  With POS tags: {with_pos}");
-            println!("  With descriptions: {with_description}");
-        }
+        let total = test_cases.len();
+        assert!(total > 0, "{file}: golden file must contain at least one test case");
+
+        let with_morphs = test_cases
+            .iter()
+            .filter(|tc| !tc.expected_morphs.is_empty())
+            .count();
+        let with_pos = test_cases
+            .iter()
+            .filter(|tc| !tc.expected_pos.is_empty())
+            .count();
+        let with_description = test_cases
+            .iter()
+            .filter(|tc| tc.description.is_some())
+            .count();
+
+        // Every test case must have at least morphemes or POS tags specified
+        assert!(
+            with_morphs > 0 || with_pos > 0,
+            "{file}: all test cases lack both expected_morphs and expected_pos"
+        );
+
+        println!("\n{file} statistics:");
+        println!("  Total test cases: {total}");
+        println!("  With morphemes: {with_morphs}");
+        println!("  With POS tags: {with_pos}");
+        println!("  With descriptions: {with_description}");
     }
 }
 
