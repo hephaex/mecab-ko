@@ -9,7 +9,7 @@ use super::types::SejongToken;
 ///
 /// 체언(NNG, NNP, NP) 뒤의 어미(EF)를 조사로 보정
 #[allow(clippy::too_many_lines)]
-pub fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
+pub(super) fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
     // 185차: 첫 번째 토큰이 "하/XSV"인 경우 VV로 변환
     // "하니까 보니까" = "하/VV 니까/EC 보/VV 니까/EC"
     // 문장 시작 부분의 "하다"는 독립 동사

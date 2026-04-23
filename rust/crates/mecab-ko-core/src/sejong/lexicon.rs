@@ -8,7 +8,7 @@ use super::types::SejongToken;
 ///
 /// 문맥과 관계없이 특정 표면형은 항상 특정 품사로 지정
 #[allow(clippy::too_many_lines)]
-pub fn apply_lexicon_overrides(tokens: &mut [SejongToken]) {
+pub(super) fn apply_lexicon_overrides(tokens: &mut [SejongToken]) {
     // 고빈도 어휘 -> 올바른 품사 매핑
     // 주의: 모호한 어휘(이, 그, 저, 등)는 문맥에 따라 다른 품사가 될 수 있으므로 제외
     let lexicon: HashMap<&str, &str> = [

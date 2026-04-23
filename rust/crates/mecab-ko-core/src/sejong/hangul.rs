@@ -2,7 +2,7 @@
 
 /// 한글 음절에 종성(받침)이 있는지 확인
 #[must_use]
-pub fn has_jongseong(ch: char) -> bool {
+pub(super) fn has_jongseong(ch: char) -> bool {
     let code = ch as u32;
     if (0xAC00..=0xD7A3).contains(&code) {
         (code - 0xAC00) % 28 != 0
@@ -14,7 +14,7 @@ pub fn has_jongseong(ch: char) -> bool {
 /// 한글 음절에서 ㄹ 받침을 제거
 /// 예: 할 → 하, 갈 → 가, 볼 → 보
 #[must_use]
-pub fn remove_jongseong_rieul(ch: char) -> Option<char> {
+pub(super) fn remove_jongseong_rieul(ch: char) -> Option<char> {
     let code = ch as u32;
     if (0xAC00..=0xD7A3).contains(&code) {
         let jongseong = (code - 0xAC00) % 28;
@@ -32,7 +32,7 @@ pub fn remove_jongseong_rieul(ch: char) -> Option<char> {
 /// 한글 음절에서 ㄴ 받침을 제거
 /// 예: 간 → 가, 산 → 사, 온 → 오
 #[must_use]
-pub fn remove_jongseong_nieun(ch: char) -> Option<char> {
+pub(super) fn remove_jongseong_nieun(ch: char) -> Option<char> {
     let code = ch as u32;
     if (0xAC00..=0xD7A3).contains(&code) {
         let jongseong = (code - 0xAC00) % 28;
@@ -50,7 +50,7 @@ pub fn remove_jongseong_nieun(ch: char) -> Option<char> {
 /// 한글 음절에서 ㅂ 받침을 제거
 /// 예: 합 → 하, 갑 → 가, 옵 → 오
 #[must_use]
-pub fn remove_jongseong_bieup(ch: char) -> Option<char> {
+pub(super) fn remove_jongseong_bieup(ch: char) -> Option<char> {
     let code = ch as u32;
     if (0xAC00..=0xD7A3).contains(&code) {
         let jongseong = (code - 0xAC00) % 28;
@@ -67,7 +67,7 @@ pub fn remove_jongseong_bieup(ch: char) -> Option<char> {
 
 /// 한글 음절에서 모음 추출
 #[must_use]
-pub fn extract_vowel(ch: char) -> char {
+pub(super) fn extract_vowel(ch: char) -> char {
     let code = ch as u32;
     if (0xAC00..=0xD7A3).contains(&code) {
         let vowel_idx = ((code - 0xAC00) / 28) % 21;
@@ -84,7 +84,7 @@ pub fn extract_vowel(ch: char) -> char {
 /// 한글 자모 정규화: 종성 자모(U+11xx)를 호환 자모(U+31xx)로 변환
 /// 124차 보정: `MeCab` 출력의 종성 자모를 세종 코퍼스 형식(호환 자모)으로 통일
 #[must_use]
-pub fn normalize_jamo(text: &str) -> String {
+pub(super) fn normalize_jamo(text: &str) -> String {
     let jongseong_to_compat: [(char, char); 27] = [
         ('ᆨ', 'ㄱ'),
         ('ᆩ', 'ㄲ'),

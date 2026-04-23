@@ -32,13 +32,13 @@
 //! ```
 
 pub mod converter;
-pub mod corrections;
-pub mod ending_rules;
-pub mod hangul;
-pub mod lexicon;
-pub mod postprocess;
-pub mod splitter;
-pub mod tag_map;
+mod corrections;
+mod ending_rules;
+mod hangul;
+mod lexicon;
+mod postprocess;
+mod splitter;
+mod tag_map;
 pub mod types;
 
 #[cfg(test)]

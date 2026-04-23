@@ -7,13 +7,13 @@ use super::types::EndingRule;
 
 /// 복합 품사 태그인지 확인 (`+`로 구분된 태그)
 #[must_use]
-pub fn is_compound_tag(pos: &str) -> bool {
+pub(super) fn is_compound_tag(pos: &str) -> bool {
     pos.contains('+')
 }
 
 /// 복합 품사 태그를 분리된 태그 목록으로 변환
 #[must_use]
-pub fn split_compound_tag<S: std::hash::BuildHasher>(
+pub(super) fn split_compound_tag<S: std::hash::BuildHasher>(
     tag_map: &HashMap<String, Vec<String>, S>,
     pos: &str,
 ) -> Vec<String> {
@@ -36,7 +36,7 @@ pub fn split_compound_tag<S: std::hash::BuildHasher>(
 /// # Returns
 /// 분리된 (표면형, 품사) 쌍의 벡터
 #[must_use]
-pub fn split_morpheme<S: std::hash::BuildHasher>(
+pub(super) fn split_morpheme<S: std::hash::BuildHasher>(
     surface: &str,
     pos: &str,
     tag_map: &HashMap<String, Vec<String>, S>,
@@ -744,7 +744,7 @@ fn split_causative_ending(ending: &str) -> (String, String) {
 }
 
 /// 선어말어미와 종결어미 분리
-pub(crate) fn split_prefinal_ending(ending: &str) -> (String, String) {
+pub(super) fn split_prefinal_ending(ending: &str) -> (String, String) {
     // 복합 선어말어미 패턴 (긴 것부터 먼저 매칭)
     // 시제 + 높임: 으셨, 셨, 으시었, 시었
     let compound_prefinal_patterns = [

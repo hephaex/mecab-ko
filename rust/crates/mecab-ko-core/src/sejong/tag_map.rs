@@ -5,7 +5,7 @@ use std::collections::HashMap;
 /// 품사 태그 매핑 테이블 초기화
 #[allow(clippy::too_many_lines)]
 #[must_use]
-pub fn init_tag_map() -> HashMap<String, Vec<String>> {
+pub(super) fn init_tag_map() -> HashMap<String, Vec<String>> {
     let mut map: HashMap<String, Vec<String>> = HashMap::new();
 
     // 동사 + 어미

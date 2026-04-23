@@ -9,7 +9,7 @@ use super::types::SejongToken;
 /// VV + 세요/EF로 분리합니다. (sample.tsv 형식 준수)
 #[must_use]
 #[allow(clippy::needless_pass_by_value)]
-pub fn apply_vv_seyo_splits(tokens: Vec<SejongToken>) -> Vec<SejongToken> {
+pub(super) fn apply_vv_seyo_splits(tokens: Vec<SejongToken>) -> Vec<SejongToken> {
     let mut result = Vec::with_capacity(tokens.len() + 10);
     let mut i = 0;
 
@@ -131,7 +131,7 @@ pub fn apply_vv_seyo_splits(tokens: Vec<SejongToken>) -> Vec<SejongToken> {
 /// 예: "친/VV ᆫ/ETM 구와/NNG" → "친구/NNG 와/JC"
 /// 예: "날/NNG 씨/EP" → "날씨/NNG"
 #[allow(clippy::useless_let_if_seq, clippy::too_many_lines)]
-pub fn apply_token_merges(tokens: &mut Vec<SejongToken>) {
+pub(super) fn apply_token_merges(tokens: &mut Vec<SejongToken>) {
     // 병합 규칙: (패턴, 결과)
     // 패턴: [(surface, pos), ...] - 매칭할 토큰 시퀀스
     // 결과: [(surface, pos), ...] - 병합 결과
@@ -684,7 +684,7 @@ pub fn apply_token_merges(tokens: &mut Vec<SejongToken>) {
 ///
 /// 예: "갔다" → 갔다오/VV + ㄴ/ETM (잘못) → 갔/VV + 다/EF (올바름)
 /// 예: "좋다" → 좋/VA + 은/ETM + 다/EF (잘못) → 좋/VA + 다/EF (올바름)
-pub fn apply_decomposition_corrections(tokens: &mut Vec<SejongToken>) {
+pub(super) fn apply_decomposition_corrections(tokens: &mut Vec<SejongToken>) {
     // "X오/VV + ㄴ/ETM" 패턴을 "X/VV + 다/EF"로 보정
     // 대상: 갔다, 왔다, 봤다, 했다 등 과거형 동사
     let verb_patterns: &[(&str, &str, &str)] = &[

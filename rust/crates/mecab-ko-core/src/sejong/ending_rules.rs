@@ -7,7 +7,7 @@ use super::types::EndingRule;
 /// 품사 패턴별 어미 분리 규칙의 목록을 반환합니다.
 #[allow(clippy::too_many_lines, clippy::vec_init_then_push)]
 #[must_use]
-pub fn init_ending_rules() -> Vec<EndingRule> {
+pub(super) fn init_ending_rules() -> Vec<EndingRule> {
     let mut rules: Vec<EndingRule> = Vec::new();
 
     // 종결어미 (EF) - 확장
