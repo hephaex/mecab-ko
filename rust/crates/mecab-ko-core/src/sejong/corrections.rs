@@ -6235,4 +6235,37 @@ mod tests {
         assert_eq!(tokens[0].surface, "채");
         assert_eq!(tokens[0].pos, "NNB");
     }
+
+    // ── 보호 테스트: 209차 빈 POS + ASCII → SL ───────────────────────────────
+    #[test]
+    fn test_protection_209_empty_pos_ascii_to_sl() {
+        let mut tokens = vec![tok("HELLO", "")];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(
+            tokens[0].pos, "SL",
+            "empty POS for ASCII surface 'HELLO' must become SL (Pass 209)"
+        );
+    }
+
+    // ── 보호 테스트: 209차 빈 POS + 한글 → NNG ───────────────────────────────
+    #[test]
+    fn test_protection_209_empty_pos_korean_to_nng() {
+        let mut tokens = vec![tok("사랑", "")];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(
+            tokens[0].pos, "NNG",
+            "empty POS for Korean surface '사랑' must become NNG (Pass 209)"
+        );
+    }
+
+    // ── 보호 테스트: 223차 XR(어근) → NNG 변환 ───────────────────────────────
+    #[test]
+    fn test_protection_223_xr_to_nng() {
+        let mut tokens = vec![tok("아름답", "XR")];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(
+            tokens[0].pos, "NNG",
+            "XR root token '아름답' must be converted to NNG (Pass 223)"
+        );
+    }
 }
