@@ -1,6 +1,40 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-23 (Sprint 73 완료 — v0.7.1 릴리스)
+## 마지막 업데이트: 2026-04-23 (Sprint 74 진행 — 코드 품질 + 리뷰 이행 검증)
+
+### 🔄 Sprint 74 - 코드 품질 + 리뷰 이행 검증
+
+**기간**: 2026-04-23
+**목표**: 과거 리뷰 미이행 항목 해결, 클리피 제로 워닝, 테스트/CI/의존성 감사
+
+#### 5개 에이전트 병렬 분석 결과
+
+| 에이전트 | 분석 대상 | 핵심 발견 |
+|----------|-----------|-----------|
+| architect | 리뷰 7개 항목 갭 분석 | 5/7 완료, 2개 미이행 (CI 통합, reqwest) |
+| build-error-resolver | Clippy 워크스페이스 | 17개 파일 수정, 0 warnings 달성 |
+| code-reviewer | 테스트 품질 | sejong 8개 서브모듈 직접 테스트 0, corrections.rs 5,759줄 무테스트 |
+| Explore (CI) | 22개 워크플로우 | Docker actions v3→v4 필요, 중복 워크플로우 2쌍 |
+| Explore (deps) | 389 의존성 | 0 취약점, 1 경고 (paste), unsafe 0 (sejong/) |
+
+#### 실행된 조치
+
+| 조치 | 결과 |
+|------|------|
+| Clippy 17개 파일 수정 | 커밋 `225c784` — 0 warnings |
+| 리뷰 항목 상태 매핑 | 5 DONE / 2 OPEN 확인 |
+| Sprint 75+ 로드맵 수립 | CI 통합(P1), 테스트 확충(P2), reqwest 대체(P2) |
+
+#### 미이행 리뷰 항목 (→ Sprint 75-76)
+
+| 우선순위 | 항목 | 상태 | 다음 스프린트 |
+|----------|------|------|-------------|
+| P1 | CI 워크플로우 22→12 통합 | NOT STARTED | Sprint 75 |
+| P2 | reqwest → ureq 의존성 절감 | NOT STARTED | Sprint 76 |
+| P2 | sejong 테스트 커버리지 | GAP IDENTIFIED | Sprint 76 |
+| P2 | 50 placeholder 테스트 정리 | GAP IDENTIFIED | Sprint 76 |
+
+---
 
 ### ✅ Sprint 73 - v0.7.1 릴리스 + Streaming API
 

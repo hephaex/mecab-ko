@@ -1,3 +1,69 @@
+# 🔄 진행 중: Phase 40 - Sprint 74 (코드 품질 + 리뷰 이행 검증)
+
+## 🎯 Sprint 74 목표
+과거 리뷰(2026-04-21 deep review) 미이행 항목 해결, 클리피 워크스페이스 제로 워닝 달성, 테스트 품질 감사
+
+## Sprint 74 작업 목록
+
+### Track A: Clippy Zero Warnings (workspace-wide)
+- [x] S74-01: 17개 파일 clippy 경고 해결 (sort_by_key, map_or, try_from 등) ✅
+- [x] S74-02: sejong/tests.rs 중첩 mod 제거 + 임포트 정리 ✅
+
+### Track B: 과거 리뷰 미이행 항목 감사
+- [x] S74-03: 리뷰 항목 7개 상태 검증 (5 DONE / 2 OPEN) ✅
+  - ✅ DONE: Python linker (workspace exclude), Node tokenize (dict path), JNI unsafe→Arc, hot-reload CLI, sejong split
+  - 🔓 OPEN: CI 워크플로우 통합 (23→12 목표), reqwest→ureq (의존성 100+ 절감)
+
+### Track C: 테스트 품질 감사
+- [x] S74-04: 테스트 커버리지 감사 보고서 작성 ✅
+  - 발견: sejong/ 8개 서브모듈 (8,600줄) 중 직접 테스트 0
+  - 발견: corrections.rs 5,759줄 테스트 없음 (최대 위험)
+  - 발견: 50개 placeholder 테스트 (미구현 assert 없음)
+  - 발견: async_tokenizer.rs 461줄 테스트 없음
+
+### Track D: CI/의존성 감사
+- [x] S74-05: CI 워크플로우 22개 감사 ✅
+  - Docker actions v3 → v4 업그레이드 필요 (4개 워크플로우)
+  - gradle-build-action v3 → v4 필요
+  - softprops/action-gh-release v1/v2 불일치
+  - neologism-sync + neologism-multi-source 중복
+- [x] S74-06: 의존성 보안 감사 ✅
+  - 389개 의존성, 0 취약점, 1 경고 (paste unmaintained)
+  - sejong/ 모듈 unsafe 0건
+  - Feature flag 일관성 확인 완료
+
+### Track E: 검증
+- [ ] S74-07: 전체 빌드/테스트/클리피 통과 확인
+- [ ] S74-08: 커밋 + PLAN/PROGRESS 기록
+
+---
+
+## 📋 Sprint 75+ 로드맵 (리뷰 기반 우선순위)
+
+### P1: CI 워크플로우 통합 (Sprint 75)
+- 22개 → 12-14개 목표
+- `workflow_call` 재사용 패턴 도입
+- Docker actions v3→v4 일괄 업그레이드
+- neologism-sync + neologism-multi-source 통합
+- softprops/action-gh-release v1→v2 통일
+
+### P2: 테스트 커버리지 확충 (Sprint 76)
+- sejong/corrections.rs 회귀 테스트 (최소 10개 시나리오)
+- sejong/splitter.rs + postprocess.rs 단위 테스트
+- 50개 placeholder 테스트 정리 (구현 or 삭제)
+- async_tokenizer.rs 기본 테스트 추가
+
+### P2: reqwest → ureq 의존성 절감 (Sprint 76)
+- mecab-ko-dict-sync에서 reqwest 0.12 → ureq 대체
+- 예상 효과: ~100 transitive deps 절감
+
+### P3: v0.8.0 준비 (Sprint 77+)
+- sejong.rs 분할 완성 (Sprint 73에서 성공 — mod.rs 교체로 이미 완료)
+- Streaming API async 버전 (tokio feature flag)
+- crates.io v0.7.1 배포
+
+---
+
 # ✅ 완료된 스프린트: Phase 39 - Sprint 73 (v0.7.1 릴리스 + Streaming API)
 
 ## 🎯 Sprint 73 목표
