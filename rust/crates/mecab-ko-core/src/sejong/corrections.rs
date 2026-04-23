@@ -305,94 +305,8 @@ pub(super) fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
         i += 1;
     }
 
-    // 207차: 부사로 잘못 분석된 명사 복원
-    // "요즘/MAG" → "요즘/NNG", "진짜/MAG" → "진짜/NNG"
-    // "진짜/VV" → "진짜/NNG" (동사로 분석된 경우도)
-    // sample.tsv에서 NNG로 태깅됨
-    let to_nng_words = ["요즘", "진짜"];
-    for token in tokens.iter_mut() {
-        if (token.pos == "MAG" || token.pos == "VV")
-            && to_nng_words.contains(&token.surface.as_str())
-        {
-            token.pos = "NNG".to_string();
-        }
-    }
-
-    // 208차: 정부 기관명 NNP → NNG
-    // "외교부/NNP" → "외교부/NNG"
-    // sample.tsv에서 NNG로 태깅됨
-    let nnp_to_nng_orgs = ["외교부", "국방부", "통일부", "교육부", "행정부", "대통령실"];
-    for token in tokens.iter_mut() {
-        if token.pos == "NNP" && nnp_to_nng_orgs.contains(&token.surface.as_str()) {
-            token.pos = "NNG".to_string();
-        }
-    }
-
-    // 248차: 외래어 NNP → NNG 변환
-    // "프레임워크/NNP" → "프레임워크/NNG"
-    // "리팩토링/NNP" → "리팩토링/NNG"
-    // sample.tsv에서 NNG로 태깅되는 외래어들
-    let foreign_nnp_to_nng = [
-        "프레임워크",
-        "리팩토링",
-        "알고리즘",
-        "커버리지",
-        "아키텍처",
-        "머신러닝",
-        "컨테이너",
-        "인터페이스",
-        "데이터베이스",
-        "서버",
-        "클라이언트",
-        "프로토콜",
-        "레이어",
-        "모듈",
-        "컴포넌트",
-    ];
-    for token in tokens.iter_mut() {
-        if token.pos == "NNP" && foreign_nnp_to_nng.contains(&token.surface.as_str()) {
-            token.pos = "NNG".to_string();
-        }
-    }
-
-    // 252차: 신조어 NNP → NNG 변환
-    // "킹/NNP" → "킹/NNG" (킹받네, 킹성비 등)
-    // MeCab이 인명으로 분석하지만 실제로는 신조어 접두사
-    let slang_nnp_to_nng = ["킹"];
-    for token in tokens.iter_mut() {
-        if token.pos == "NNP" && slang_nnp_to_nng.contains(&token.surface.as_str()) {
-            token.pos = "NNG".to_string();
-        }
-    }
-
-    // 253차: 의성어 NNG → IC 변환
-    // "야옹/NNG" → "야옹/IC" (고양이 울음소리)
-    // sample.tsv에서 IC로 태깅되는 의성어들
-    let onomatopoeia_to_ic = ["야옹"];
-    for token in tokens.iter_mut() {
-        if token.pos == "NNG" && onomatopoeia_to_ic.contains(&token.surface.as_str()) {
-            token.pos = "IC".to_string();
-        }
-    }
-
-    // 254차: "ㅓ요/EF" → "어요/EF" 표면형 정규화
-    // MeCab decomposition이 "ㅓ요"로 분리하지만 세종 기준은 "어요"
-    // "쉬워요" = "쉽/VA 어요/EF"
-    for token in tokens.iter_mut() {
-        if token.surface == "ㅓ요" && token.pos == "EF" {
-            token.surface = "어요".to_string();
-        }
-    }
-
-    // 256차: "졸리/VV → 졸리/VA" 변환
-    // "졸려요" = "졸리/VA 어요/EF"
-    // MeCab이 VV로 분석하지만 형용사(VA)로 처리
-    let vv_to_va = ["졸리"];
-    for token in tokens.iter_mut() {
-        if token.pos == "VV" && vv_to_va.contains(&token.surface.as_str()) {
-            token.pos = "VA".to_string();
-        }
-    }
+    // 207~256차: POS 재분류 (부사→명사, NNP→NNG, NNG→IC, VV→VA 등)
+    apply_pos_reclassification_corrections(tokens);
 
     // 257차: "VA + ㅁ/ETN + NNG" → "명사화/NNG + NNG" 병합
     // "나쁨 수준" = "나쁨/NNG 수준/NNG"
@@ -476,37 +390,8 @@ pub(super) fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
         i += 1;
     }
 
-    // 209차: 빈 POS → SL (외래어/영문자)
-    // MeCab이 영문자를 빈 품사로 분석하는 경우 SL 태그 부여
-    // "MBTI/" → "MBTI/SL"
-    for token in tokens.iter_mut() {
-        if token.pos.is_empty() {
-            // 영문자로만 구성된 경우 SL 태그 부여
-            let is_alpha = token.surface.chars().all(|c| c.is_ascii_alphabetic());
-            if is_alpha && !token.surface.is_empty() {
-                token.pos = "SL".to_string();
-            } else {
-                // 223차: 한글 의성어/의태어가 빈 POS인 경우 NNG 부여
-                // "왈왈/" → "왈왈/NNG"
-                let is_korean = token.surface.chars().all(|c| {
-                    let code = c as u32;
-                    (0xAC00..=0xD7A3).contains(&code) || (0x3131..=0x318E).contains(&code)
-                });
-                if is_korean && !token.surface.is_empty() {
-                    token.pos = "NNG".to_string();
-                }
-            }
-        }
-    }
-
-    // 223차: XR(어근) → NNG 변환
-    // 의성어/의태어가 XR로 분석되는 경우 NNG로 처리
-    // "멍멍/XR" → "멍멍/NNG"
-    for token in tokens.iter_mut() {
-        if token.pos == "XR" {
-            token.pos = "NNG".to_string();
-        }
-    }
+    // 209~223차: 빈 POS/XR 태그 정규화 (SL, NNG 부여)
+    apply_tag_normalization_corrections(tokens);
 
     // 210차: MAJ → VV + EC 분리 (문맥 기반)
     // "하지만 가지만" → "하/VV 지만/EC 가/VV 지만/EC" (연결어미 패턴)
@@ -5707,6 +5592,144 @@ pub(super) fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
     }
 }
 
+/// 207~256차: 단일 토큰 POS 재분류
+///
+/// - 207차: 부사로 잘못 분석된 명사 복원 (요즘, 진짜)
+/// - 208차: 정부 기관명 NNP → NNG
+/// - 248차: 외래어 NNP → NNG
+/// - 252차: 신조어 NNP → NNG
+/// - 253차: 의성어 NNG → IC
+/// - 254차: 표면형 정규화 ㅓ요/EF → 어요/EF
+/// - 256차: VV → VA (졸리)
+fn apply_pos_reclassification_corrections(tokens: &mut [SejongToken]) {
+    // 207차: 부사로 잘못 분석된 명사 복원
+    // "요즘/MAG" → "요즘/NNG", "진짜/MAG" → "진짜/NNG"
+    // "진짜/VV" → "진짜/NNG" (동사로 분석된 경우도)
+    // sample.tsv에서 NNG로 태깅됨
+    let to_nng_words = ["요즘", "진짜"];
+    for token in tokens.iter_mut() {
+        if (token.pos == "MAG" || token.pos == "VV")
+            && to_nng_words.contains(&token.surface.as_str())
+        {
+            token.pos = "NNG".to_string();
+        }
+    }
+
+    // 208차: 정부 기관명 NNP → NNG
+    // "외교부/NNP" → "외교부/NNG"
+    // sample.tsv에서 NNG로 태깅됨
+    let nnp_to_nng_orgs = ["외교부", "국방부", "통일부", "교육부", "행정부", "대통령실"];
+    for token in tokens.iter_mut() {
+        if token.pos == "NNP" && nnp_to_nng_orgs.contains(&token.surface.as_str()) {
+            token.pos = "NNG".to_string();
+        }
+    }
+
+    // 248차: 외래어 NNP → NNG 변환
+    // "프레임워크/NNP" → "프레임워크/NNG"
+    // "리팩토링/NNP" → "리팩토링/NNG"
+    // sample.tsv에서 NNG로 태깅되는 외래어들
+    let foreign_nnp_to_nng = [
+        "프레임워크",
+        "리팩토링",
+        "알고리즘",
+        "커버리지",
+        "아키텍처",
+        "머신러닝",
+        "컨테이너",
+        "인터페이스",
+        "데이터베이스",
+        "서버",
+        "클라이언트",
+        "프로토콜",
+        "레이어",
+        "모듈",
+        "컴포넌트",
+    ];
+    for token in tokens.iter_mut() {
+        if token.pos == "NNP" && foreign_nnp_to_nng.contains(&token.surface.as_str()) {
+            token.pos = "NNG".to_string();
+        }
+    }
+
+    // 252차: 신조어 NNP → NNG 변환
+    // "킹/NNP" → "킹/NNG" (킹받네, 킹성비 등)
+    // MeCab이 인명으로 분석하지만 실제로는 신조어 접두사
+    let slang_nnp_to_nng = ["킹"];
+    for token in tokens.iter_mut() {
+        if token.pos == "NNP" && slang_nnp_to_nng.contains(&token.surface.as_str()) {
+            token.pos = "NNG".to_string();
+        }
+    }
+
+    // 253차: 의성어 NNG → IC 변환
+    // "야옹/NNG" → "야옹/IC" (고양이 울음소리)
+    // sample.tsv에서 IC로 태깅되는 의성어들
+    let onomatopoeia_to_ic = ["야옹"];
+    for token in tokens.iter_mut() {
+        if token.pos == "NNG" && onomatopoeia_to_ic.contains(&token.surface.as_str()) {
+            token.pos = "IC".to_string();
+        }
+    }
+
+    // 254차: "ㅓ요/EF" → "어요/EF" 표면형 정규화
+    // MeCab decomposition이 "ㅓ요"로 분리하지만 세종 기준은 "어요"
+    // "쉬워요" = "쉽/VA 어요/EF"
+    for token in tokens.iter_mut() {
+        if token.surface == "ㅓ요" && token.pos == "EF" {
+            token.surface = "어요".to_string();
+        }
+    }
+
+    // 256차: "졸리/VV → 졸리/VA" 변환
+    // "졸려요" = "졸리/VA 어요/EF"
+    // MeCab이 VV로 분석하지만 형용사(VA)로 처리
+    let vv_to_va = ["졸리"];
+    for token in tokens.iter_mut() {
+        if token.pos == "VV" && vv_to_va.contains(&token.surface.as_str()) {
+            token.pos = "VA".to_string();
+        }
+    }
+}
+
+/// 209~223차: 빈 POS 및 XR 태그 정규화
+///
+/// - 209차: 빈 POS → SL (영문자) 또는 NNG (한글)
+/// - 223차: XR(어근) → NNG 변환
+fn apply_tag_normalization_corrections(tokens: &mut [SejongToken]) {
+    // 209차: 빈 POS → SL (외래어/영문자)
+    // MeCab이 영문자를 빈 품사로 분석하는 경우 SL 태그 부여
+    // "MBTI/" → "MBTI/SL"
+    for token in tokens.iter_mut() {
+        if token.pos.is_empty() {
+            // 영문자로만 구성된 경우 SL 태그 부여
+            let is_alpha = token.surface.chars().all(|c| c.is_ascii_alphabetic());
+            if is_alpha && !token.surface.is_empty() {
+                token.pos = "SL".to_string();
+            } else {
+                // 223차: 한글 의성어/의태어가 빈 POS인 경우 NNG 부여
+                // "왈왈/" → "왈왈/NNG"
+                let is_korean = token.surface.chars().all(|c| {
+                    let code = c as u32;
+                    (0xAC00..=0xD7A3).contains(&code) || (0x3131..=0x318E).contains(&code)
+                });
+                if is_korean && !token.surface.is_empty() {
+                    token.pos = "NNG".to_string();
+                }
+            }
+        }
+    }
+
+    // 223차: XR(어근) → NNG 변환
+    // 의성어/의태어가 XR로 분석되는 경우 NNG로 처리
+    // "멍멍/XR" → "멍멍/NNG"
+    for token in tokens.iter_mut() {
+        if token.pos == "XR" {
+            token.pos = "NNG".to_string();
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -5915,5 +5938,262 @@ mod tests {
         // 247차 보정: 여/XSN 표면형 → 어, pos → EC
         assert_eq!(tokens[2].surface, "어", "여/XSN surface must change to 어");
         assert_eq!(tokens[2].pos, "EC", "여/XSN pos must change to EC");
+    }
+
+    // ── 보호 테스트: 228차 하/XSV + ㄹ/ETM + 머/NP + 님/XSN → 할머님/NNG 병합 ──
+    #[test]
+    fn test_protection_228_halmeonym_merge() {
+        let mut tokens = vec![
+            tok_at("하", "XSV", 0, 1),
+            tok_at("ㄹ", "ETM", 1, 2),
+            tok_at("머", "NP", 2, 3),
+            tok_at("님", "XSN", 3, 4),
+        ];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens.len(), 1, "하+ㄹ+머+님 must merge into 할머님");
+        assert_eq!(tokens[0].surface, "할머님");
+        assert_eq!(tokens[0].pos, "NNG");
+        assert_eq!(tokens[0].start_pos, 0);
+        assert_eq!(tokens[0].end_pos, 4);
+    }
+
+    // ── 보호 테스트: 230차 시/NNG + 가/VV + ㄴ/ETM → 시간/NNG 병합 ─────────
+    #[test]
+    fn test_protection_230_sigan_merge() {
+        let mut tokens = vec![
+            tok_at("시", "NNG", 0, 1),
+            tok_at("가", "VV", 1, 2),
+            tok_at("ㄴ", "ETM", 2, 3),
+        ];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens.len(), 1, "시+가+ㄴ must merge into 시간");
+        assert_eq!(tokens[0].surface, "시간");
+        assert_eq!(tokens[0].pos, "NNG");
+    }
+
+    // ── 보호 테스트: 231차 주/VX + 말/NNG → 주말/NNG 병합 ──────────────────
+    #[test]
+    fn test_protection_231_jumal_merge() {
+        let mut tokens = vec![
+            tok_at("주", "VX", 0, 1),
+            tok_at("말", "NNG", 1, 2),
+        ];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens.len(), 1, "주+말 must merge into 주말");
+        assert_eq!(tokens[0].surface, "주말");
+        assert_eq!(tokens[0].pos, "NNG");
+    }
+
+    // ── 보호 테스트: 232차 가/VV + ㄹ/ETM + 등/NNG → 갈등/NNG 병합 ──────────
+    #[test]
+    fn test_protection_232_galdeung_merge() {
+        let mut tokens = vec![
+            tok_at("가", "VV", 0, 1),
+            tok_at("ㄹ", "ETM", 1, 2),
+            tok_at("등", "NNG", 2, 3),
+        ];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens.len(), 1, "가+ㄹ+등 must merge into 갈등");
+        assert_eq!(tokens[0].surface, "갈등");
+        assert_eq!(tokens[0].pos, "NNG");
+    }
+
+    // ── 보호 테스트: 234차 SL 뒤 가/VV + 어/EC → 가/JKS 병합 ─────────────
+    #[test]
+    fn test_protection_234_sl_ga_vv_to_jks() {
+        let mut tokens = vec![
+            tok("MBTI", "SL"),
+            tok("가", "VV"),
+            tok("어", "EC"),
+            tok("뭐", "NP"),
+        ];
+        apply_context_corrections(&mut tokens);
+        // 가/VV가 가/JKS로 바뀌고 어/EC는 제거됨
+        assert_eq!(tokens[1].surface, "가");
+        assert_eq!(tokens[1].pos, "JKS", "가/VV after SL must become JKS");
+        assert_eq!(tokens.len(), 3, "어/EC must be removed");
+    }
+
+    // ── 보호 테스트: 236차 지/VX + ㄴ/ETM + 행/NNG → 진행/NNG 병합 ──────────
+    #[test]
+    fn test_protection_236_jinheng_merge() {
+        let mut tokens = vec![
+            tok_at("지", "VX", 0, 1),
+            tok_at("ㄴ", "ETM", 1, 2),
+            tok_at("행", "NNG", 2, 3),
+        ];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens.len(), 1, "지+ㄴ+행 must merge into 진행");
+        assert_eq!(tokens[0].surface, "진행");
+        assert_eq!(tokens[0].pos, "NNG");
+    }
+
+    // ── 보호 테스트: 238차 하/VV + 아/EC → 하/VV + 어/EC 표면형 통일 ────────
+    #[test]
+    fn test_protection_238_ha_a_to_ha_eo() {
+        let mut tokens = vec![
+            tok("사랑하", "VV"),
+            tok("아", "EC"),
+            tok("주", "VX"),
+        ];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens[1].surface, "어", "아 after 하-ending VV must change to 어");
+        assert_eq!(tokens[1].pos, "EC");
+    }
+
+    // ── 보호 테스트: 239차 주/VX + 워/NNG → 줍/VV + 어/EF (ㅂ불규칙) ─────
+    #[test]
+    fn test_protection_239_jup_irregular_weo_nng() {
+        let mut tokens = vec![
+            tok_at("주", "VX", 0, 1),
+            tok_at("워", "NNG", 1, 2),
+        ];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens[0].surface, "줍", "주/VX before 워/NNG must become 줍");
+        assert_eq!(tokens[0].pos, "VV");
+        assert_eq!(tokens[1].surface, "어");
+    }
+
+    // ── 보호 테스트: 241차 무거/NNG + 우면/NNG → 무겁/VA + 으면/EC ─────────
+    #[test]
+    fn test_protection_241_mugeop_irregular() {
+        let mut tokens = vec![
+            tok_at("무거", "NNG", 0, 2),
+            tok_at("우면", "NNG", 2, 4),
+        ];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens[0].surface, "무겁", "무거/NNG must become 무겁/VA");
+        assert_eq!(tokens[0].pos, "VA");
+        assert_eq!(tokens[1].surface, "으면");
+        assert_eq!(tokens[1].pos, "EC");
+    }
+
+    // ── 보호 테스트: 242차 이르면/MAJ → 이르/VV + 면/EC 분리 ───────────────
+    #[test]
+    fn test_protection_242_ireumyeon_maj_to_vv_ec() {
+        let mut tokens = vec![
+            tok("이르", "VV"),
+            tok("어", "EF"),
+            tok("이르면", "MAJ"),
+        ];
+        apply_context_corrections(&mut tokens);
+        // EF 뒤의 이르면/MAJ은 동사 활용으로 분리됨
+        assert_eq!(tokens[2].surface, "이르", "이르면/MAJ must split: stem=이르");
+        assert_eq!(tokens[2].pos, "VV");
+        assert_eq!(tokens[3].surface, "면");
+        assert_eq!(tokens[3].pos, "EC");
+    }
+
+    // ── 보호 테스트: 244차 VX + 안/MAG + 으며/EC → 안 제거 ─────────────────
+    // 54차 보정이 있/VX를 있/VV로 바꾸므로, 있/VX가 보조동사로 유지되려면
+    // 앞에 고/EC가 있어야 함.  따라서 [가/VV, 고/EC, 있/VX, 안/MAG, 으며/EC]
+    // → 안/MAG 제거 후 4 토큰.
+    #[test]
+    fn test_protection_244_an_mag_removal() {
+        let mut tokens = vec![
+            tok("가", "VV"),
+            tok("고", "EC"),
+            tok("있", "VX"),
+            tok("안", "MAG"),
+            tok("으며", "EC"),
+        ];
+        apply_context_corrections(&mut tokens);
+        // 안/MAG이 제거되어 4 토큰만 남아야 함
+        assert_eq!(tokens.len(), 4, "안/MAG between VX and 으며/EC must be removed");
+        assert_eq!(tokens[2].surface, "있");
+        assert_eq!(tokens[3].surface, "으며");
+    }
+
+    // ── 보호 테스트: 167차 NNG + 적/XSN → 성공적/NNG 병합 ──────────────────
+    #[test]
+    fn test_protection_167_jeok_merge() {
+        let mut tokens = vec![
+            tok_at("성공", "NNG", 0, 2),
+            tok_at("적", "XSN", 2, 3),
+        ];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens.len(), 1, "성공 + 적 must merge into 성공적");
+        assert_eq!(tokens[0].surface, "성공적");
+        assert_eq!(tokens[0].pos, "NNG");
+    }
+
+    // ── 보호 테스트: 168차 NNG 뒤의 의/JKB → 의/JKG 변환 ──────────────────
+    #[test]
+    fn test_protection_168_ui_jkb_to_jkg() {
+        let mut tokens = vec![
+            tok("나라", "NNG"),
+            tok("의", "JKB"),
+        ];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens[1].surface, "의");
+        assert_eq!(tokens[1].pos, "JKG", "의/JKB after NNG must become JKG");
+    }
+
+    // ── 보호 테스트: 86차 ㄴ/ETM + 다/EF → ㄴ다/EF 병합 ───────────────────
+    #[test]
+    fn test_protection_86_nda_etm_ef_merge() {
+        let mut tokens = vec![
+            tok_at("가", "VV", 0, 1),
+            tok_at("ㄴ", "ETM", 1, 2),
+            tok_at("다", "EF", 2, 3),
+        ];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens.len(), 2, "ㄴ + 다 must merge into ㄴ다");
+        assert_eq!(tokens[1].surface, "ㄴ다");
+        assert_eq!(tokens[1].pos, "EF");
+    }
+
+    // ── 보호 테스트: 87차 EC 뒤의 보조동사 VV → VX 변환 ────────────────────
+    #[test]
+    fn test_protection_87_aux_vv_to_vx_after_ec() {
+        let mut tokens = vec![
+            tok("먹", "VV"),
+            tok("어", "EC"),
+            tok("버리", "VV"),
+            tok("었", "EP"),
+            tok("다", "EF"),
+        ];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens[2].surface, "버리");
+        assert_eq!(tokens[2].pos, "VX", "버리/VV after EC must become VX");
+    }
+
+    // ── 보호 테스트: 88차 NNG + 되/VV → 되/XSV 변환 ────────────────────────
+    #[test]
+    fn test_protection_88_doe_vv_to_xsv_after_nng() {
+        let mut tokens = vec![
+            tok("공개", "NNG"),
+            tok("되", "VV"),
+            tok("었", "EP"),
+            tok("다", "EF"),
+        ];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens[1].surface, "되");
+        assert_eq!(tokens[1].pos, "XSV", "되/VV after NNG must become XSV");
+    }
+
+    // ── 보호 테스트: 265차 VV 뒤 문장 끝 네/IC → 네/EF 변환 ─────────────────
+    #[test]
+    fn test_protection_265_ne_ic_to_ef_after_vv() {
+        let mut tokens = vec![
+            tok("킹받", "VV"),
+            tok("네", "IC"),
+        ];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens[1].surface, "네");
+        assert_eq!(tokens[1].pos, "EF", "네/IC at sentence end after VV must become EF");
+    }
+
+    // ── 보호 테스트: 259차 채/VV + 아/EF → 채/NNB (의존명사) ──────────────
+    #[test]
+    fn test_protection_259_chae_vv_to_nnb() {
+        let mut tokens = vec![
+            tok_at("채", "VV", 0, 1),
+            tok_at("아", "EF", 1, 2),
+        ];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens.len(), 1, "채/VV + 아/EF must reduce to single 채/NNB");
+        assert_eq!(tokens[0].surface, "채");
+        assert_eq!(tokens[0].pos, "NNB");
     }
 }
