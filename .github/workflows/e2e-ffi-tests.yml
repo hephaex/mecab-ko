@@ -383,6 +383,10 @@ jobs:
           echo "- WebAssembly Bindings: ${{ needs.wasm-bindings.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- Elasticsearch Plugin: ${{ needs.elasticsearch-plugin.result }}" >> $GITHUB_STEP_SUMMARY
 
+          # nodejs-e2e and wasm-e2e use step-level continue-on-error (WIP bindings).
+          # Step-level continue-on-error still reports job as "success",
+          # so including them here is safe. If they ever move to job-level
+          # continue-on-error, exclude them from this gate.
           if [[ "${{ needs.cli-tests.result }}" != "success" ||
                 "${{ needs.python-e2e.result }}" != "success" ||
                 "${{ needs.nodejs-e2e.result }}" != "success" ||

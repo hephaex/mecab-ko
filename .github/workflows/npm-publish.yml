@@ -268,7 +268,7 @@ jobs:
       - name: Set up Rust
         uses: ./.github/actions/rust-setup
         with:
-          toolchain: stable
+          toolchain: ${{ env.RUST_VERSION }}
           targets: wasm32-unknown-unknown
           cache-key: npm-wasm
 

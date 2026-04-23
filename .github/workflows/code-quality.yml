@@ -43,7 +43,6 @@ jobs:
         uses: ./.github/actions/rust-setup
         with:
           toolchain: nightly
-          components: cargo
 
       - name: Install cargo-udeps
         run: cargo install cargo-udeps --locked
