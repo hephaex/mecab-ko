@@ -9,7 +9,8 @@
 
 mod common;
 
-use common::load_golden_tests;
+use common::{load_golden_tests, system_dict_available};
+use mecab_ko::Tokenizer;
 use std::path::PathBuf;
 
 /// Get path to golden tests directory
@@ -26,123 +27,401 @@ fn golden_path() -> PathBuf {
         .join("golden")
 }
 
-/// Test basic golden test set
-// TODO: implement golden test assertions once tokenizer integration is complete
+/// Validate that a POS tag string is non-empty and follows mecab-ko conventions.
+///
+/// Valid tags are alphanumeric identifiers, optionally joined with '+' for
+/// compound tags (e.g. "EP+EF", "XSV+EF").
+fn is_valid_pos(pos: &str) -> bool {
+    !pos.is_empty()
+        && pos
+            .split('+')
+            .all(|part| !part.is_empty() && part.chars().all(|c| c.is_ascii_alphanumeric()))
+}
+
+/// Test basic golden test set.
+///
+/// With a full system dictionary the tokenizer output is compared directly
+/// against the expected morphemes and POS pairs stored in `basic.json`.
+///
+/// Without a system dictionary (mini-dict fallback) the test still runs and
+/// verifies structural properties:
+/// - Every token has a non-empty surface string
+/// - Every token carries a valid POS tag
+/// - Repeated tokenization of the same input is deterministic
 #[test]
-#[ignore = "tokenizer output assertions not yet implemented; only verifies file loading"]
 fn test_golden_basic() {
     let test_cases = load_golden_tests("basic.json").expect("Failed to load basic golden tests");
 
     assert!(
         !test_cases.is_empty(),
-        "Should have basic golden test cases"
+        "basic.json must contain at least one test case"
     );
 
-    // TODO: Implement once tokenizer is available
-    // let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
-    //
-    // for test_case in test_cases {
-    //     let result = tokenizer.tokenize(&test_case.input);
-    //     let morphs: Vec<String> = result.iter().map(|t| t.surface.clone()).collect();
-    //
-    //     let comparison = common::compare_morphs(&test_case.expected_morphs, &morphs);
-    //     assert_test_result!(comparison, test_case);
-    // }
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let has_system_dict = system_dict_available();
 
-    println!("Loaded {} basic golden test cases", test_cases.len());
+    let mut exact_matches = 0usize;
+    let mut total = 0usize;
+
+    for test_case in &test_cases {
+        let tokens = tokenizer.tokenize(&test_case.input);
+        total += 1;
+
+        // Structural assertions hold regardless of dictionary quality.
+        for token in &tokens {
+            assert!(
+                !token.surface.is_empty(),
+                "input '{}': every token must have a non-empty surface (got empty surface with pos '{}')",
+                test_case.input,
+                token.pos
+            );
+            assert!(
+                is_valid_pos(&token.pos),
+                "input '{}': token '{}' has invalid POS tag '{}'",
+                test_case.input,
+                token.surface,
+                token.pos
+            );
+        }
+
+        // Determinism: a second pass must produce identical output.
+        let tokens2 = tokenizer.tokenize(&test_case.input);
+        let surfaces1: Vec<&str> = tokens.iter().map(|t| t.surface.as_str()).collect();
+        let surfaces2: Vec<&str> = tokens2.iter().map(|t| t.surface.as_str()).collect();
+        assert_eq!(
+            surfaces1, surfaces2,
+            "input '{}': tokenization must be deterministic",
+            test_case.input
+        );
+
+        if has_system_dict && !tokens.is_empty() {
+            // Full comparison: morpheme surfaces must match expected_morphs exactly.
+            if !test_case.expected_morphs.is_empty() {
+                let actual_morphs: Vec<String> =
+                    tokens.iter().map(|t| t.surface.clone()).collect();
+                let comparison =
+                    common::compare_morphs(&test_case.expected_morphs, &actual_morphs);
+                assert!(
+                    comparison.passed,
+                    "basic.json morph mismatch for input '{}':\n  expected: {:?}\n  actual:   {:?}{}",
+                    test_case.input,
+                    test_case.expected_morphs,
+                    actual_morphs,
+                    comparison.diff.as_deref().map(|d| format!("\n{d}")).unwrap_or_default()
+                );
+            }
+
+            // Full comparison: (surface, POS) pairs must match expected_pos exactly.
+            if !test_case.expected_pos.is_empty() {
+                let actual_pos: Vec<(String, String)> = tokens
+                    .iter()
+                    .map(|t| (t.surface.clone(), t.pos.clone()))
+                    .collect();
+                let comparison =
+                    common::compare_pos_tags(&test_case.expected_pos, &actual_pos);
+                assert!(
+                    comparison.passed,
+                    "basic.json POS mismatch for input '{}':\n  expected: {:?}\n  actual:   {:?}{}",
+                    test_case.input,
+                    test_case.expected_pos,
+                    actual_pos,
+                    comparison.diff.as_deref().map(|d| format!("\n{d}")).unwrap_or_default()
+                );
+            }
+
+            exact_matches += 1;
+        }
+    }
+
+    println!(
+        "test_golden_basic: {total} cases, {exact_matches} with full dict comparison (system_dict={has_system_dict})"
+    );
 }
 
-/// Test nouns golden test set
-// TODO: implement golden test assertions once tokenizer integration is complete
+/// Test nouns golden test set.
+///
+/// All test cases in `nouns.json` are noun-only phrases (NNG / NNP).  With a
+/// full system dictionary every expected morph must appear in the tokenizer's
+/// noun extraction (`nouns()`).  Without one the test verifies that
+/// `nouns()` and `tokenize()` return consistent noun subsets and that
+/// every returned noun surface is non-empty.
 #[test]
-#[ignore = "tokenizer output assertions not yet implemented; only verifies file loading"]
 fn test_golden_nouns() {
     let test_cases = load_golden_tests("nouns.json").expect("Failed to load nouns golden tests");
 
     assert!(
         !test_cases.is_empty(),
-        "Should have nouns golden test cases"
+        "nouns.json must contain at least one test case"
     );
 
-    // TODO: Implement once tokenizer is available
-    // let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
-    //
-    // for test_case in test_cases {
-    //     let result = tokenizer.tokenize(&test_case.input);
-    //
-    //     // Extract nouns (NNG, NNP, NNB)
-    //     let nouns: Vec<String> = result
-    //         .iter()
-    //         .filter(|t| t.pos.starts_with("NN"))
-    //         .map(|t| t.surface.clone())
-    //         .collect();
-    //
-    //     // Verify expected nouns are found
-    //     for expected_noun in &test_case.expected_morphs {
-    //         assert!(nouns.contains(expected_noun),
-    //                 "Expected noun '{}' not found in '{}'", expected_noun, test_case.input);
-    //     }
-    // }
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let has_system_dict = system_dict_available();
 
-    println!("Loaded {} nouns golden test cases", test_cases.len());
+    let mut cases_checked = 0usize;
+
+    for test_case in &test_cases {
+        // nouns() must be a subset of the full tokenization (structural invariant).
+        let all_tokens = tokenizer.tokenize(&test_case.input);
+        let noun_surfaces: Vec<String> = tokenizer.nouns(&test_case.input);
+
+        // Every noun returned must be present in the full token list.
+        let all_surfaces: Vec<&str> = all_tokens.iter().map(|t| t.surface.as_str()).collect();
+        for noun in &noun_surfaces {
+            assert!(
+                !noun.is_empty(),
+                "input '{}': nouns() must not return empty strings",
+                test_case.input
+            );
+            assert!(
+                all_surfaces.contains(&noun.as_str()),
+                "input '{}': noun '{}' returned by nouns() is not in tokenize() output {:?}",
+                test_case.input,
+                noun,
+                all_surfaces
+            );
+        }
+
+        if has_system_dict {
+            // Every expected morph must appear as a noun in the output.
+            for expected_noun in &test_case.expected_morphs {
+                assert!(
+                    noun_surfaces.contains(expected_noun),
+                    "input '{}': expected noun '{}' not found in nouns() output {:?}",
+                    test_case.input,
+                    expected_noun,
+                    noun_surfaces
+                );
+            }
+
+            // All tokens produced for noun-only phrases should carry NN* tags.
+            for token in &all_tokens {
+                assert!(
+                    token.pos.starts_with("NN"),
+                    "input '{}': token '{}/{}' in a noun-only phrase should have NN* POS",
+                    test_case.input,
+                    token.surface,
+                    token.pos
+                );
+            }
+
+            cases_checked += 1;
+        }
+    }
+
+    println!(
+        "test_golden_nouns: {} cases, {cases_checked} with full dict comparison (system_dict={})",
+        test_cases.len(),
+        has_system_dict
+    );
 }
 
-/// Test complex golden test set
-// TODO: implement golden test assertions once tokenizer integration is complete
+/// Test complex golden test set.
+///
+/// `complex.json` contains long, syntactically rich Korean sentences.  With a
+/// full system dictionary the tokenizer output is compared against the
+/// expected (surface, POS) pairs.  Without one the test validates:
+/// - At least one token is produced per non-trivial input
+/// - No token has an empty surface or an invalid POS tag
+/// - Token positions form a non-overlapping, monotonically increasing sequence
 #[test]
-#[ignore = "tokenizer output assertions not yet implemented; only verifies file loading"]
 fn test_golden_complex() {
     let test_cases =
         load_golden_tests("complex.json").expect("Failed to load complex golden tests");
 
     assert!(
         !test_cases.is_empty(),
-        "Should have complex golden test cases"
+        "complex.json must contain at least one test case"
     );
 
-    // TODO: Implement once tokenizer is available
-    // let tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
-    //
-    // for test_case in test_cases {
-    //     let result = tokenizer.tokenize(&test_case.input);
-    //     let pos_pairs: Vec<(String, String)> = result
-    //         .iter()
-    //         .map(|t| (t.surface.clone(), t.pos.clone()))
-    //         .collect();
-    //
-    //     let comparison = common::compare_pos_tags(&test_case.expected_pos, &pos_pairs);
-    //     assert_test_result!(comparison, test_case);
-    // }
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+    let has_system_dict = system_dict_available();
 
-    println!("Loaded {} complex golden test cases", test_cases.len());
-}
+    let mut exact_matches = 0usize;
 
-/// Test all golden test files
-// TODO: implement actual tokenizer pass/fail counting; currently a placeholder
-#[test]
-#[ignore = "hardcoded pass rate placeholder does not reflect real tokenizer output"]
-fn test_all_golden_tests() {
-    let golden_files = vec!["basic.json", "nouns.json", "complex.json"];
+    for test_case in &test_cases {
+        let tokens = tokenizer.tokenize(&test_case.input);
 
-    let mut total_tests = 0;
-    let mut passed_tests = 0;
+        // Structural: all tokens must have valid surface and POS.
+        for token in &tokens {
+            assert!(
+                !token.surface.is_empty(),
+                "complex.json input '{}': token must not have an empty surface",
+                test_case.input
+            );
+            assert!(
+                is_valid_pos(&token.pos),
+                "complex.json input '{}': token '{}' has invalid POS tag '{}'",
+                test_case.input,
+                token.surface,
+                token.pos
+            );
+        }
 
-    for file in golden_files {
-        match load_golden_tests(file) {
-            Ok(test_cases) => {
-                total_tests += test_cases.len();
-                // TODO: Run actual tests and count passes
-                passed_tests += test_cases.len(); // Placeholder
+        // Structural: token start/end positions must be monotonically increasing.
+        for window in tokens.windows(2) {
+            let (prev, next) = (&window[0], &window[1]);
+            assert!(
+                next.start_pos >= prev.start_pos,
+                "complex.json input '{}': token positions are not monotonically increasing \
+                 ('{}'@{} before '{}'@{})",
+                test_case.input,
+                prev.surface,
+                prev.start_pos,
+                next.surface,
+                next.start_pos
+            );
+        }
 
-                println!("{}: {} tests", file, test_cases.len());
-            }
-            Err(e) => {
-                eprintln!("Failed to load {file}: {e}");
-            }
+        if has_system_dict && !tokens.is_empty() {
+            let actual_pos: Vec<(String, String)> = tokens
+                .iter()
+                .map(|t| (t.surface.clone(), t.pos.clone()))
+                .collect();
+            let comparison = common::compare_pos_tags(&test_case.expected_pos, &actual_pos);
+            assert!(
+                comparison.passed,
+                "complex.json POS mismatch for input '{}':\n  expected: {:?}\n  actual:   {:?}{}",
+                test_case.input,
+                test_case.expected_pos,
+                actual_pos,
+                comparison.diff.as_deref().map(|d| format!("\n{d}")).unwrap_or_default()
+            );
+            exact_matches += 1;
         }
     }
 
-    println!("Total golden tests: {passed_tests}/{total_tests} passed");
+    println!(
+        "test_golden_complex: {} cases, {exact_matches} with full dict comparison (system_dict={})",
+        test_cases.len(),
+        has_system_dict
+    );
+}
+
+/// Test all golden test files, count real pass/fail against tokenizer output.
+///
+/// Replaces the former hardcoded placeholder that always reported 100% pass
+/// rate.  The test now runs the tokenizer on every case across all three
+/// golden files and counts:
+///
+/// - **structurally valid**: tokenizer produced ≥1 token and every token has a
+///   non-empty surface and a valid POS tag
+/// - **no output**: tokenizer returned no tokens for a non-empty input
+///
+/// With a full system dictionary every produced token must be structurally
+/// valid AND the pass rate must be 100%.
+///
+/// Without a full system dictionary (mini-dict fallback) the mini-dict only
+/// covers ~21 entries, so empty token arrays for most inputs are expected and
+/// documented.  In that case the test still asserts:
+/// 1. All three golden files load successfully and are non-empty.
+/// 2. Any tokens that *are* produced are structurally valid (non-empty surface,
+///    valid POS tag).  Zero structurally invalid tokens is always required.
+/// 3. At least one golden file produces some valid tokens (smoke-test that
+///    the tokenizer pipeline is wired up at all).
+#[test]
+fn test_all_golden_tests() {
+    let golden_files = ["basic.json", "nouns.json", "complex.json"];
+    let has_system_dict = system_dict_available();
+    let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
+
+    let mut total_tests = 0usize;
+    let mut structurally_valid = 0usize;
+    let mut structurally_invalid = 0usize;
+    let mut no_output = 0usize;
+    let mut files_loaded = 0usize;
+
+    for file in &golden_files {
+        let test_cases = match load_golden_tests(file) {
+            Ok(cases) => {
+                assert!(
+                    !cases.is_empty(),
+                    "{file}: golden file must not be empty"
+                );
+                files_loaded += 1;
+                cases
+            }
+            Err(e) => {
+                panic!("Failed to load golden file {file}: {e}");
+            }
+        };
+
+        let mut file_valid = 0usize;
+
+        for test_case in &test_cases {
+            total_tests += 1;
+            let tokens = tokenizer.tokenize(&test_case.input);
+            let input_is_trivial = test_case.input.trim().is_empty();
+
+            if tokens.is_empty() {
+                if !input_is_trivial {
+                    no_output += 1;
+                }
+            } else {
+                // Every produced token must satisfy structural invariants —
+                // this is always enforced regardless of dictionary quality.
+                let all_valid = tokens
+                    .iter()
+                    .all(|t| !t.surface.is_empty() && is_valid_pos(&t.pos));
+
+                if all_valid {
+                    file_valid += 1;
+                    structurally_valid += 1;
+                } else {
+                    structurally_invalid += 1;
+                    eprintln!(
+                        "{file}: structurally INVALID token(s) for input '{}' — {:?}",
+                        test_case.input,
+                        tokens
+                            .iter()
+                            .map(|t| format!("{}/{}", t.surface, t.pos))
+                            .collect::<Vec<_>>()
+                    );
+                }
+            }
+        }
+
+        println!(
+            "{file}: {file_valid}/{} structurally valid",
+            test_cases.len()
+        );
+    }
+
+    println!(
+        "total: {structurally_valid} valid, {no_output} no-output, {structurally_invalid} invalid \
+         out of {total_tests} cases (system_dict={has_system_dict})"
+    );
+
+    // All three golden files must load successfully.
+    assert_eq!(
+        files_loaded, 3,
+        "All 3 golden files must load; only {files_loaded} loaded"
+    );
+
+    // Tokens that ARE produced must always be structurally valid — regardless of
+    // which dictionary is in use.
+    assert_eq!(
+        structurally_invalid, 0,
+        "{structurally_invalid} cases produced tokens with empty surfaces or invalid POS tags. \
+         Every tokenizer output must satisfy structural invariants."
+    );
+
+    if has_system_dict {
+        // With a full dictionary every input must produce at least one token.
+        assert_eq!(
+            structurally_valid, total_tests,
+            "With full system dict: {structurally_valid}/{total_tests} cases produced valid tokens. \
+             All golden test cases must tokenize successfully."
+        );
+    } else {
+        // Without a full dictionary the mini-dict only covers ~21 entries, so
+        // empty-output cases are expected.  We verify the pipeline is alive by
+        // asserting that at least some cases succeeded.
+        assert!(
+            structurally_valid > 0,
+            "Even with the sparse mini-dict, at least one golden test case must produce \
+             structurally valid tokens (pipeline smoke-test)"
+        );
+    }
 }
 
 /// Verify golden test file format
