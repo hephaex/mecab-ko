@@ -100,6 +100,28 @@ jobs:
             --release \
             --verbose
 
+  # Async feature tests (tokio-based)
+  async-tests:
+    name: Async Feature Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
+        with:
+          toolchain: stable
+          cache-key: async
+
+      - name: Run async feature tests
+        run: |
+          cargo test \
+            --manifest-path rust/Cargo.toml \
+            -p mecab-ko-core \
+            --features async \
+            -- --nocapture
+
   # Profiler tests with test-allocator (isolated due to global allocator)
   profiler-allocator:
     name: Profiler Allocator Tests
@@ -193,7 +215,7 @@ jobs:
   ci-status:
     name: CI Status
     runs-on: ubuntu-latest
-    needs: [fmt, clippy, test, profiler-allocator, build, coverage]
+    needs: [fmt, clippy, test, async-tests, profiler-allocator, build, coverage]
     if: always()
     steps:
       - name: Check CI Status
@@ -202,6 +224,7 @@ jobs:
           if [[ "${{ needs.fmt.result }}" != "success" ||
                 "${{ needs.clippy.result }}" != "success" ||
                 "${{ needs.test.result }}" != "success" ||
+                "${{ needs.async-tests.result }}" != "success" ||
                 "${{ needs.profiler-allocator.result }}" != "success" ||
                 "${{ needs.build.result }}" != "success" ||
                 "${{ needs.coverage.result }}" != "success" ]]; then
