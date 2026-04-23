@@ -1,6 +1,51 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-23 (Sprint 78 완료 — 테스트 + CI Phase 3)
+## 마지막 업데이트: 2026-04-23 (Sprint 79 완료 — CI 전체 DRY + corrections 보호 테스트)
+
+### ✅ Sprint 79 - CI Phase 4 + corrections 보호 테스트 + 리뷰 수정
+
+**기간**: 2026-04-23
+**목표**: Composite action 전체 적용, e2e/ffi 병합 (17→16), corrections 보호 테스트
+
+#### 4개 에이전트 병렬 실행 + 리뷰 에이전트
+
+| 에이전트 | 작업 | 결과 |
+|----------|------|------|
+| deployment-engineer | composite action 14개 워크플로우 적용 | 45 replacements, dtolnay/rust-cache 잔여 0건 |
+| deployment-engineer | e2e + ffi 병합 | e2e-ffi-tests.yml (10 jobs), 17→16 |
+| general-purpose | stale docs 정리 | RELEASE_CHECKLIST 6건 + ci-consolidation-plan 1건 |
+| rust-developer | corrections 보호 테스트 | 11개 추가 (19 total), 11개 correction rule 고정 |
+| code-reviewer | 리뷰 | HIGH 1 + MEDIUM 2 즉시 수정 |
+
+#### 커밋 내역
+
+| 커밋 | 내용 |
+|------|------|
+| `41c0b13` | ci: composite action 전체 적용 + e2e/ffi 병합 (17→16) |
+| `712118a` | docs: stale 워크플로우 참조 정리 |
+| `953fc4f` | test(corrections): 보호 테스트 11개 추가 |
+| `7303a32` | fix(ci): 리뷰 HIGH + MEDIUM 수정 |
+
+#### 테스트 변화
+
+| 지표 | Sprint 78 | Sprint 79 | 변화 |
+|------|-----------|-----------|------|
+| 총 테스트 | 1,149 | 1,160 | +11 (corrections) |
+| passed | 1,149 | 1,160 | +11 |
+| ignored | 18 | 18 | 유지 |
+| failed | 0 | 0 | 유지 |
+| CI 워크플로우 | 17 | 16 | -1 (e2e+ffi 병합) |
+
+#### 리뷰 결과
+
+| 심각도 | 건수 | 내용 |
+|--------|------|------|
+| CRITICAL | 0 | — |
+| HIGH | 1/1 | continue-on-error vs gate 의미 불일치 → 주석 추가 |
+| MEDIUM | 2/4 | `components: cargo` 제거, RUST_VERSION env var 사용 |
+| LOW | 3 | 미수정 (무해한 스타일 이슈) |
+
+---
 
 ### ✅ Sprint 78 - 테스트 커버리지 + CI Phase 3 + 리뷰 수정
 

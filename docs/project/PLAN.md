@@ -1,41 +1,39 @@
-# ✅ 완료: Phase 44 - Sprint 78 (테스트 커버리지 + CI Phase 3 + 리뷰 수정)
+# ✅ 완료: Phase 45 - Sprint 79 (CI 전체 DRY + corrections 보호 테스트)
 
-## 🎯 Sprint 78 목표
-CRITICAL 테스트 갭 해소, CI Phase 3 (npm 통합 + composite action), 리뷰 HIGH 즉시 수정
+## 🎯 Sprint 79 목표
+Composite action 전체 적용, e2e/ffi 병합 (17→16), stale docs 정리, corrections.rs 보호 테스트
 
-## Sprint 78 작업 목록
+## Sprint 79 작업 목록
 
-### Track A: 테스트 커버리지 강화
-- [x] S78-01: async_tokenizer.rs 30개 테스트 추가 (0→30, CRITICAL gap 해소) ✅
-- [x] S78-02: integration_golden.rs #[ignore] 4개 실제 assertion 구현 ✅
-- [x] S78-03: 리뷰 HIGH — 11개 `let _ =` no-op assertion을 실제 검증으로 교체 ✅
+### Track A: CI Phase 4 — composite action 전체 적용
+- [x] S79-01: 14개 워크플로우에 rust-setup action 적용 (45 replacements) ✅
+- [x] S79-02: e2e-tests.yml + ffi-tests.yml → e2e-ffi-tests.yml 병합 (17→16, 10 jobs) ✅
 
-### Track B: CI Phase 3 (18→17)
-- [x] S78-04: npm-publish-wasm.yml → npm-publish.yml 병합 (tag 기반 라우팅) ✅
-- [x] S78-05: composite action `.github/actions/rust-setup/action.yml` 생성 ✅
-- [x] S78-06: ci.yml에 composite action 적용 (proof of concept, 6 jobs) ✅
+### Track B: 문서 정비
+- [x] S79-03: RELEASE_CHECKLIST, ci-consolidation-plan에서 삭제된 워크플로우 참조 정리 ✅
 
-### Track C: 검증
-- [x] S78-07: 전체 빌드/테스트/클리피 통과 (1,149 pass / 0 fail / 18 ignored) ✅
-- [x] S78-08: 리뷰 에이전트 검증 → HIGH 1건 즉시 수정 ✅
+### Track C: corrections.rs 분할 준비
+- [x] S79-04: corrections.rs 보호 테스트 11개 작성 (7 기존 + 11 신규 = 19 total) ✅
+
+### Track D: 리뷰 수정
+- [x] S79-05: 리뷰 HIGH 1건 + MEDIUM 2건 즉시 수정 ✅
 
 ---
 
-## 📋 Sprint 79+ 로드맵
+## 📋 Sprint 80+ 로드맵
 
-### P1: composite action 전체 적용 (Sprint 79)
-- ci.yml 이외 14개 워크플로우에 rust-setup action 적용
-- e2e-tests.yml + ffi-tests.yml 병합 (17→16)
-- MEDIUM 리뷰: npm-publish tag 라우팅 문서화, 삭제된 파일 참조 정리
+### P1: corrections.rs 분할 (Sprint 80)
+- 보호 테스트 39개 추가 (19→50+, 핵심 correction rule 전수 커버)
+- 5개 서브함수 추출 (5,795줄 → 5개 파일)
 
-### P2: corrections.rs 분할 (Sprint 79-80)
-- 보호 테스트 50개 작성 (8-12시간)
-- 5개 서브함수 추출 (3-4시간)
+### P2: CI async feature test (Sprint 80)
+- CI에 `cargo test --features async` 작업 추가 (30 tests 현재 CI 미포함)
+- test-allocator CI 작업 추가 (12개 ignored 해제)
 
-### P3: v0.8.0 준비 (Sprint 80+)
+### P3: v0.8.0 준비 (Sprint 81+)
 - Streaming API async 버전 (tokio feature flag)
 - crates.io v0.7.1 배포
-- test-allocator CI 작업 (12개 ignored 해제)
+- WASM/Node e2e 테스트 WIP 해제
 
 ---
 
