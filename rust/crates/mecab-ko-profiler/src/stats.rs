@@ -79,7 +79,7 @@ impl DetailedStats {
             .map(|(name, stats)| (name.as_str(), stats))
             .collect();
 
-        components.sort_by(|a, b| b.1.current_usage.cmp(&a.1.current_usage));
+        components.sort_by_key(|entry| std::cmp::Reverse(entry.1.current_usage));
         components.truncate(n);
         components
     }
@@ -271,10 +271,9 @@ impl HistogramBucket {
     /// Gets the average allocation size in this bucket.
     #[must_use]
     pub const fn avg_size(&self) -> u64 {
-        if self.count > 0 {
-            self.total_bytes / self.count
-        } else {
-            0
+        match self.total_bytes.checked_div(self.count) {
+            Some(avg) => avg,
+            None => 0,
         }
     }
 }

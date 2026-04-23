@@ -31,6 +31,7 @@
 //! - `:help` - Show help
 
 use std::collections::HashMap;
+use std::fmt::Write as FmtWrite;
 use std::io::{self, Write};
 use std::path::PathBuf;
 
@@ -158,20 +159,21 @@ fn format_table(tokens: &[Token]) -> String {
         let reading = token.reading.as_deref().unwrap_or("-");
         let lemma = token.lemma.as_deref().unwrap_or("-");
 
-        output.push_str(&format!(
-            "│ {:6} │ {:4} │ {:7} │ {:7} │ {:8} │ {:8} │\n",
+        let _ = writeln!(
+            output,
+            "│ {:6} │ {:4} │ {:7} │ {:7} │ {:8} │ {:8} │",
             truncate(&token.surface, 6),
             truncate(&token.pos, 4),
             truncate(reading, 7),
             truncate(lemma, 7),
             token.start_pos,
             token.end_pos
-        ));
+        );
     }
 
     // Footer
     output.push_str("└────────┴──────┴─────────┴─────────┴──────────┴──────────┘\n");
-    output.push_str(&format!("Total tokens: {}\n", tokens.len()));
+    let _ = writeln!(output, "Total tokens: {}", tokens.len());
 
     output
 }
@@ -191,7 +193,7 @@ fn format_raw(tokens: &[Token]) -> String {
     let mut output = String::new();
 
     for token in tokens {
-        output.push_str(&format!("{}\t{}\n", token.surface, token.features));
+        let _ = writeln!(output, "{}\t{}", token.surface, token.features);
     }
     output.push_str("EOS\n");
 
@@ -319,24 +321,23 @@ fn main() {
     let config = parse_args();
 
     // Initialize tokenizer
-    let tokenizer = if let Some(ref dict_path) = config.dict_path {
-        match Tokenizer::with_dict(dict_path) {
-            Ok(t) => t,
-            Err(e) => {
-                eprintln!("Failed to load dictionary from {dict_path:?}: {e}");
-                std::process::exit(1);
-            }
-        }
-    } else {
-        match Tokenizer::new() {
+    let tokenizer = config.dict_path.as_ref().map_or_else(
+        || match Tokenizer::new() {
             Ok(t) => t,
             Err(e) => {
                 eprintln!("Failed to initialize tokenizer: {e}");
                 eprintln!("Make sure the dictionary is available at the default location.");
                 std::process::exit(1);
             }
-        }
-    };
+        },
+        |dict_path| match Tokenizer::with_dict(dict_path) {
+            Ok(t) => t,
+            Err(e) => {
+                eprintln!("Failed to load dictionary from {}: {e}", dict_path.display());
+                std::process::exit(1);
+            }
+        },
+    );
 
     // Run in appropriate mode
     if let Some(ref text) = config.text {

@@ -17,7 +17,7 @@ fn test_full_accuracy_evaluation() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     // 사전 경로 설정
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
@@ -78,7 +78,7 @@ fn test_ec_error_analysis() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -156,7 +156,7 @@ fn test_etm_error_analysis() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -235,7 +235,7 @@ fn test_ef_error_analysis() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -336,7 +336,7 @@ fn test_etn_error_analysis() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -416,7 +416,7 @@ fn test_xsv_error_analysis() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -486,7 +486,7 @@ fn test_vcp_error_analysis() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -555,7 +555,7 @@ fn test_nng_error_analysis() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -636,7 +636,7 @@ fn test_xpn_error_analysis() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -713,7 +713,7 @@ fn test_nnb_error_analysis() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -794,7 +794,7 @@ fn test_ec_sample_errors() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -871,7 +871,7 @@ fn test_jks_sample_errors() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -948,7 +948,7 @@ fn test_mag_sample_errors() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -1025,7 +1025,7 @@ fn test_ef_sample_errors() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -1102,7 +1102,7 @@ fn test_vx_sample_errors() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -1179,7 +1179,7 @@ fn test_xsv_sample_errors() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -1254,7 +1254,7 @@ fn test_pos_accuracy_breakdown() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -1289,7 +1289,7 @@ fn test_pos_accuracy_breakdown() {
     // 품사별 정확도 출력
     println!("\n=== 품사별 정확도 ===");
     let mut pos_sorted: Vec<_> = result.pos_stats.iter().collect();
-    pos_sorted.sort_by(|a, b| b.1.gold_count.cmp(&a.1.gold_count));
+    pos_sorted.sort_by_key(|entry| std::cmp::Reverse(entry.1.gold_count));
 
     for (pos, stats) in pos_sorted {
         if stats.gold_count >= 10 {
@@ -1315,7 +1315,7 @@ fn test_vx_pattern_debug() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -1382,7 +1382,7 @@ fn test_ep_error_analysis() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -1470,7 +1470,7 @@ fn test_ef_error_cases_detailed() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -1548,7 +1548,7 @@ fn test_vcp_sample_errors() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -1641,7 +1641,7 @@ fn test_vv_sample_errors() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -1717,7 +1717,7 @@ fn test_xsv_debug_sentences() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -1827,7 +1827,7 @@ fn test_h_irregular_adjective_ec() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -1898,7 +1898,7 @@ fn test_specific_sentence_debug() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -2037,7 +2037,7 @@ fn test_ep_sample_errors() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -2122,7 +2122,7 @@ fn test_d_irregular_verb() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -2191,7 +2191,7 @@ fn test_list_all_mismatches() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -2266,13 +2266,16 @@ fn test_list_all_mismatches() {
 /// PR 병합 전 정확도 검증을 위한 테스트
 #[test]
 fn test_accuracy_gate() {
+    // 95% 정확도 게이트
+    const ACCURACY_THRESHOLD: f64 = 0.95;
+
     // 프로젝트 루트 경로 계산
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     // 사전 경로 설정
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
@@ -2318,9 +2321,6 @@ fn test_accuracy_gate() {
         result.sentence_accuracy * 100.0
     );
     println!("F1 Score: {:.3}", result.f1_score);
-
-    // 95% 정확도 게이트
-    const ACCURACY_THRESHOLD: f64 = 0.95;
     assert!(
         result.token_accuracy >= ACCURACY_THRESHOLD,
         "ACCURACY GATE FAILED: Token accuracy {:.1}% is below {:.0}% threshold",
@@ -2340,12 +2340,14 @@ fn test_accuracy_gate() {
 /// 수작업 검증된 `sprint58_verified.tsv` 데이터셋에 대한 정확도 검증
 #[test]
 fn test_accuracy_gate_verified() {
+    const VERIFIED_THRESHOLD: f64 = 0.90;
+
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
     let project_root = std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
@@ -2377,8 +2379,6 @@ fn test_accuracy_gate_verified() {
         result.sentence_accuracy * 100.0
     );
     println!("F1 Score: {:.3}", result.f1_score);
-
-    const VERIFIED_THRESHOLD: f64 = 0.90;
     assert!(
         result.token_accuracy >= VERIFIED_THRESHOLD,
         "VERIFIED ACCURACY GATE FAILED: Token accuracy {:.1}% is below {:.0}% threshold",

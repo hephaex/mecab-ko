@@ -1161,7 +1161,7 @@ mod sentence_reader_tests {
     fn test_question_mark() {
         let input = "이것은 무엇인가요? 네, 맞습니다.\n";
         let reader = SentenceReader::new(Cursor::new(input));
-        let sentences: Vec<_> = reader.map(|r| r.unwrap()).collect();
+        let sentences: Vec<_> = reader.collect::<std::result::Result<_, _>>().unwrap();
         assert_eq!(sentences.len(), 2);
     }
 
@@ -1169,7 +1169,7 @@ mod sentence_reader_tests {
     fn test_empty_input() {
         let input = "";
         let reader = SentenceReader::new(Cursor::new(input));
-        let sentences: Vec<_> = reader.map(|r| r.unwrap()).collect();
+        let sentences: Vec<_> = reader.collect::<std::result::Result<_, _>>().unwrap();
         assert!(sentences.is_empty());
     }
 
@@ -1194,7 +1194,7 @@ mod sentence_reader_tests {
     fn test_exclamation() {
         let input = "대단합니다! 정말요?\n";
         let reader = SentenceReader::new(Cursor::new(input));
-        let sentences: Vec<_> = reader.map(|r| r.unwrap()).collect();
+        let sentences: Vec<_> = reader.collect::<std::result::Result<_, _>>().unwrap();
         assert_eq!(sentences.len(), 2);
     }
 
@@ -1209,7 +1209,7 @@ mod sentence_reader_tests {
         // Punctuation followed by closing bracket then space should still split.
         let input = "문장입니다.) 다음 문장.\n";
         let reader = SentenceReader::new(Cursor::new(input));
-        let sentences: Vec<_> = reader.map(|r| r.unwrap()).collect();
+        let sentences: Vec<_> = reader.collect::<std::result::Result<_, _>>().unwrap();
         assert_eq!(sentences.len(), 2);
     }
 

@@ -29,7 +29,7 @@ fn main() {
     println!("2. 엔트리 수집...");
     let mut entries = Vec::with_capacity(entry_count);
     for i in 0..entry_count {
-        if let Ok(entry) = dict.get_entry(i as u32) {
+        if let Ok(entry) = dict.get_entry(u32::try_from(i).unwrap_or(u32::MAX)) {
             entries.push((*entry).clone());
         }
     }
@@ -43,8 +43,8 @@ fn main() {
 
     // 파일 크기 확인
     let v1_path = dict_path.join("entries.bin");
-    let v1_size = std::fs::metadata(&v1_path).map(|m| m.len()).unwrap_or(0);
-    let v2_size = std::fs::metadata(&v2_path).map(|m| m.len()).unwrap_or(0);
+    let v1_size = std::fs::metadata(&v1_path).map_or(0, |m| m.len());
+    let v2_size = std::fs::metadata(&v2_path).map_or(0, |m| m.len());
 
     println!("\n=== 결과 ===");
     println!(

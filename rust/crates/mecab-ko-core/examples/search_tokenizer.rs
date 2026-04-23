@@ -431,7 +431,7 @@ impl SearchEngine {
             .iter()
             .map(|(token, docs)| (token.clone(), docs.len()))
             .collect();
-        token_counts.sort_by(|a, b| b.1.cmp(&a.1));
+        token_counts.sort_by_key(|entry| std::cmp::Reverse(entry.1));
 
         println!("\n상위 토큰:");
         for (token, count) in token_counts.iter().take(5) {

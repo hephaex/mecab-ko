@@ -341,7 +341,7 @@ impl KeywordExtractor {
             .into_iter()
             .map(|((w1, w2), count)| (w1, w2, count))
             .collect();
-        collocations.sort_by(|a, b| b.2.cmp(&a.2));
+        collocations.sort_by_key(|entry| std::cmp::Reverse(entry.2));
         collocations.truncate(top_n);
 
         Ok(collocations)

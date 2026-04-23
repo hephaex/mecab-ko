@@ -396,10 +396,10 @@ pub fn split_morpheme<S: std::hash::BuildHasher>(
 /// 축약형 동사 분리 시도
 /// 예: 했어요 → 하 + 았 + 어요, 갔어요 → 가 + 았 + 어요
 /// 예: 만났어요 → 만나 + 았 + 어요
-fn try_split_contracted(
+fn try_split_contracted<S: std::hash::BuildHasher>(
     surface: &str,
     pos: &str,
-    tag_map: &HashMap<String, Vec<String>>,
+    tag_map: &HashMap<String, Vec<String>, S>,
 ) -> Option<Vec<(String, String)>> {
     let tags = split_compound_tag(tag_map, pos);
     if tags.len() != 3 {
@@ -507,10 +507,10 @@ fn try_split_contracted(
 /// 2개 태그 축약형 동사 분리 시도
 /// 예: 해요 → 하 + 어요, 돼요 → 되 + 어요
 /// VV+EF, VA+EF 에서 '하다/되다' 축약형 처리
-fn try_split_contracted_two_tags(
+fn try_split_contracted_two_tags<S: std::hash::BuildHasher>(
     surface: &str,
     pos: &str,
-    tag_map: &HashMap<String, Vec<String>>,
+    tag_map: &HashMap<String, Vec<String>, S>,
 ) -> Option<Vec<(String, String)>> {
     let tags = split_compound_tag(tag_map, pos);
     if tags.len() != 2 {

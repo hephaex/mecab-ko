@@ -409,9 +409,9 @@ fn test_e2e_mixed_korean_english() {
 /// This test requires a full system dictionary to handle numeric and symbol tokens.
 #[test]
 fn test_e2e_numbers_and_symbols() {
-    skip_without_system_dict!();
-
     use mecab_ko::Tokenizer;
+
+    skip_without_system_dict!();
 
     let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
 
@@ -505,9 +505,9 @@ fn test_e2e_token_metadata() {
 /// This test requires a full system dictionary to handle special character tokens.
 #[test]
 fn test_e2e_special_characters() {
-    skip_without_system_dict!();
-
     use mecab_ko::Tokenizer;
+
+    skip_without_system_dict!();
 
     let mut tokenizer = Tokenizer::new().expect("Failed to create tokenizer");
 

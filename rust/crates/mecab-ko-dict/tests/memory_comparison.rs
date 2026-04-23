@@ -30,7 +30,7 @@ fn ensure_entries_bin() -> PathBuf {
         // get_entry로 모든 엔트리를 Vec으로 수집
         let mut entries = Vec::new();
         for i in 0..dict.entry_count() {
-            if let Ok(entry) = dict.get_entry(i as u32) {
+            if let Ok(entry) = dict.get_entry(u32::try_from(i).unwrap_or(u32::MAX)) {
                 entries.push((*entry).clone());
             }
         }
@@ -222,8 +222,8 @@ fn test_entry_store_abstraction() {
 
     // 동일한 결과 반환 확인
     for i in 0..eager_dict.entry_count().min(10) {
-        let eager_entry = eager_dict.get_entry(i as u32);
-        let lazy_entry = lazy_dict.get_entry(i as u32);
+        let eager_entry = eager_dict.get_entry(u32::try_from(i).unwrap_or(u32::MAX));
+        let lazy_entry = lazy_dict.get_entry(u32::try_from(i).unwrap_or(u32::MAX));
 
         match (eager_entry, lazy_entry) {
             (Ok(e), Ok(l)) => {

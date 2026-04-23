@@ -1227,7 +1227,7 @@ fn show_dict_info(path: Option<&PathBuf>) {
                 ("unk.dic", &unk_dic),
             ] {
                 if f.exists() {
-                    let size = fs::metadata(f).map(|m| m.len()).unwrap_or(0);
+                    let size = fs::metadata(f).map_or(0, |m| m.len());
                     println!("  {name:<14} {size:>10} bytes");
                 } else {
                     println!("  {name:<14} (not found)");
@@ -2490,7 +2490,7 @@ fn run_collect_unknown(
         })
         .collect();
 
-    entries.sort_by(|a, b| b.count.cmp(&a.count));
+    entries.sort_by_key(|e| std::cmp::Reverse(e.count));
 
     // Apply limit if specified
     if let Some(limit) = limit {

@@ -55,7 +55,7 @@ impl DictAnalyzer {
             .collect();
 
         // Sort by count descending
-        tag_stats.sort_by(|a, b| b.count.cmp(&a.count));
+        tag_stats.sort_by_key(|s| std::cmp::Reverse(s.count));
 
         PosDistribution { tags: tag_stats }
     }
@@ -459,7 +459,7 @@ impl AnalysisReport {
         if !self.cost_distribution.histogram.is_empty() {
             output.push_str("\n비용 히스토그램 (상위 10개 구간):\n");
             let mut hist = self.cost_distribution.histogram.clone();
-            hist.sort_by(|a, b| b.count.cmp(&a.count));
+            hist.sort_by_key(|bin| std::cmp::Reverse(bin.count));
             for bin in hist.iter().take(10) {
                 let bar = "█".repeat((bin.count as f64 / 100.0).min(50.0) as usize);
                 let _ = writeln!(
@@ -654,13 +654,13 @@ mod tests {
     #[test]
     fn test_median_calculation() {
         let odd = vec![1, 2, 3, 4, 5];
-        assert_eq!(DictAnalyzer::calculate_median(&odd), 3.0);
+        assert!((DictAnalyzer::calculate_median(&odd) - 3.0).abs() < f64::EPSILON);
 
         let even = vec![1, 2, 3, 4];
-        assert_eq!(DictAnalyzer::calculate_median(&even), 2.5);
+        assert!((DictAnalyzer::calculate_median(&even) - 2.5).abs() < f64::EPSILON);
 
         let empty: Vec<i32> = vec![];
-        assert_eq!(DictAnalyzer::calculate_median(&empty), 0.0);
+        assert!((DictAnalyzer::calculate_median(&empty)).abs() < f64::EPSILON);
     }
 
     #[test]

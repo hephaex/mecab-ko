@@ -760,17 +760,16 @@ mod tests {
         assert!(chunks.len() > 1, "Should split into multiple chunks");
 
         // 대부분의 청크가 구분자로 끝나야 함 (마지막 청크 제외)
-        let delimiter_ending: Vec<_> = chunks[..chunks.len().saturating_sub(1)]
+        let has_delimiter_ending = chunks[..chunks.len().saturating_sub(1)]
             .iter()
-            .filter(|chunk| {
+            .any(|chunk| {
                 let trimmed = chunk.trim();
                 trimmed.ends_with('.') || trimmed.ends_with(' ')
-            })
-            .collect();
+            });
 
         // 적어도 일부 청크는 구분자에서 분할되어야 함
         assert!(
-            !delimiter_ending.is_empty() || chunks.len() <= 2,
+            has_delimiter_ending || chunks.len() <= 2,
             "At least some chunks should end with delimiters"
         );
     }

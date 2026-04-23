@@ -12,7 +12,7 @@ fn generate_gold_standards() {
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or(std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."));
 
     let dict_path = project_root.join("data/mecab-ko-dic-2.1.1-20180720");
     let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");

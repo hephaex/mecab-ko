@@ -24,7 +24,7 @@ fn main() {
             }
         }
     } else {
-        eprintln!("User dictionary not found: {user_dict_path:?}");
+        eprintln!("User dictionary not found: {}", user_dict_path.display());
     }
 
     // sample.tsv 평가

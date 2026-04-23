@@ -27,6 +27,7 @@
 //! 3. Return top-N by frequency
 
 use std::collections::HashMap;
+use std::fmt::Write as _;
 use std::io::{self, Read};
 use std::path::PathBuf;
 
@@ -237,13 +238,14 @@ fn format_keywords(keywords: &[Keyword]) -> String {
 
     // Rows
     for (i, keyword) in keywords.iter().enumerate() {
-        output.push_str(&format!(
-            "│ {:3} │ {:16} │ {:9} │ {:.5} │\n",
+        let _ = writeln!(
+            output,
+            "│ {:3} │ {:16} │ {:9} │ {:.5} │",
             i + 1,
             truncate(&keyword.term, 16),
             keyword.frequency,
             keyword.score
-        ));
+        );
     }
 
     // Footer
@@ -273,37 +275,35 @@ fn main() {
     let config = parse_args();
 
     // Initialize tokenizer
-    let mut tokenizer = if let Some(ref dict_path) = config.dict_path {
-        match Tokenizer::with_dict(dict_path) {
-            Ok(t) => t,
-            Err(e) => {
-                eprintln!("Failed to load dictionary from {dict_path:?}: {e}");
-                std::process::exit(1);
-            }
-        }
-    } else {
-        match Tokenizer::new() {
+    let mut tokenizer = config.dict_path.as_ref().map_or_else(
+        || match Tokenizer::new() {
             Ok(t) => t,
             Err(e) => {
                 eprintln!("Failed to initialize tokenizer: {e}");
                 eprintln!("Make sure the dictionary is available at the default location.");
                 std::process::exit(1);
             }
-        }
-    };
+        },
+        |dict_path| match Tokenizer::with_dict(dict_path) {
+            Ok(t) => t,
+            Err(e) => {
+                eprintln!("Failed to load dictionary from {}: {e}", dict_path.display());
+                std::process::exit(1);
+            }
+        },
+    );
 
     // Get input text
-    let text = if let Some(ref text) = config.text {
-        text.clone()
-    } else {
-        match read_stdin() {
+    let text = config.text.as_ref().map_or_else(
+        || match read_stdin() {
             Ok(text) => text,
             Err(e) => {
                 eprintln!("Failed to read from stdin: {e}");
                 std::process::exit(1);
             }
-        }
-    };
+        },
+        std::clone::Clone::clone,
+    );
 
     if text.trim().is_empty() {
         eprintln!("No input text provided.");
