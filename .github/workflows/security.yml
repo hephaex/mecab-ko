@@ -15,9 +15,6 @@ on:
       - '.github/workflows/security.yml'
       - 'Cargo.toml'
       - 'Cargo.lock'
-  schedule:
-    # Run daily at 2 AM UTC
-    - cron: '0 2 * * *'
   workflow_dispatch:
 
 env:

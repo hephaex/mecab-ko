@@ -22,6 +22,8 @@ on:
   schedule:
     # Weekly sync: Every Monday at 00:00 UTC (09:00 KST)
     - cron: '0 0 * * 1'
+    # Monthly comprehensive sync: First day of month at 00:00 UTC (09:00 KST)
+    - cron: '0 0 1 * *'
   workflow_dispatch:
     inputs:
       sources:
