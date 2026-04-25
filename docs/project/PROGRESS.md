@@ -15,7 +15,7 @@
 | rust-developer | particle_and_ending 추��� | passes 1-23 (3,337��2,633) |
 | rust-developer | CHANGELOG/README 수정 | v0.7.1 섹션 + 0.1.1→0.7.1 |
 | rust-developer | 보호 테스트 5개 | conjugation/post_conj/particle/compound |
-| code-reviewer | 리뷰 | 진행 중 |
+| code-reviewer | 리뷰 | APPROVE (H2 즉시수정, M4 차기) |
 
 #### 커밋 내역
 
@@ -25,6 +25,18 @@
 | `c7ca2e8` | docs: CHANGELOG v0.7.1 + README 0.1.1→0.7.1 |
 | `c1fd7fb` | test: 보호 테스트 5개 (174/86/88/21/196) |
 | `0ad9b4d` | refactor: particle_and_ending 추출 (3,337→2,633) |
+| `0753830` | fix(docs): CHANGELOG 수치 수정 (1181→1186, 5→8) |
+
+#### 리뷰 결과
+
+| 심각도 | 건수 | 처리 |
+|--------|------|------|
+| CRITICAL | 0 | — |
+| HIGH | 2 | 즉시 수정 (0753830) |
+| MEDIUM | 4 | Sprint 83 이행 |
+| LOW | 2 | 1건 즉시 수정, 1건 유지 |
+
+리뷰 아카이브: `~/.claude/references/2026-04-26_sprint82_corrections_split3_review.md`
 
 #### 테스트 변화
 

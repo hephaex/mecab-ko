@@ -20,20 +20,26 @@ corrections.rs 추가 추출 (3,337→2,633), CHANGELOG/README 버전 수정, �
 
 ## 📋 Sprint 83 로드맵
 
-### P1: corrections.rs 분할 4차 (Sprint 83)
-- main function 2,633줄 → 2,000줄 이하 목표
-- 추출 후보: 24~88차 인라인 보정 중 동사/형용사 분리 그룹 (~600줄)
-- apply_sentence_final_corrections 1,821줄 → 2개로 분할
+### P1: corrections.rs 분할 4차 — inline passes 24-173 추출
+- main function 2,633줄 → 300줄 이하 목표
+- **핵심**: inline passes 24-173 (~2,334줄)을 2-3개 서브함수로 추출
+  - 동사/형용사 분리 그룹 (24-50번대)
+  - NNG/NNP 합성어 보정 그룹 (60-100번대)
+  - 기타 패턴 그룹 (110-173번대)
+- sentence_final 전용 보호 테스트 2-3개 추가 (리뷰 M4)
+- conjugation 전용 보호 테스트 추가 (S81 리뷰 M1)
 
-### P2: v0.7.1 git push + crates.io 배포
-- git push (37+ commits ahead)
+### P2: v0.7.1 릴리스
+- v0.7.1 annotated tag 재설정 (HEAD)
+- git push (38+ commits ahead)
 - cargo publish --dry-run 전 크레이트
 - crates.io 실제 배포
 
 ### P3: v0.8.0 준비 (Sprint 84+)
+- sentence_final 1,821줄 → 2-3개로 분할
+- LazyLock/phf 적용 (particle_map 등 매 호출 HashMap 제거)
 - Streaming API async 버전 (tokio feature flag)
 - WASM/Node e2e 테스트 WIP 해제
-- corrections.rs 분할 완료 (800줄 이하 최종 목표)
 
 ---
 
