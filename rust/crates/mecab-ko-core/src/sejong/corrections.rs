@@ -5325,7 +5325,7 @@ fn apply_particle_and_ending_corrections(tokens: &mut Vec<SejongToken>) {
 
     // 10차 보정: "고/EC + 나/NP" 다음에 서/EC가 아니면 "고나서" 패턴 아님
     // 일단 단순한 보정: "먹고/EC 나서/EC" → "먹/VV 고나서/EC"
-    // 이 패턴은 apply_token_merges에서 처리하는 것이 더 적절
+    // TODO: 토큰 병합 패턴으로 분리 검토
 
     // 11차 보정: NP + 세요/EF → NP + 이/VCP + 세요/EF
     // "누구세요"에서 계사 "이다"가 생략된 경우 복원
