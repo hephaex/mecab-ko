@@ -7,7 +7,7 @@
 
 **고성능 한국어 형태소 분석기 - MeCab-Ko의 순수 Rust 구현**
 
-🎉 **v0.5.0: 100% Token Accuracy 달성!** (500문장 테스트셋 기준)
+🎉 **v0.7.1: 1,181 테스트 100% 통과, Streaming/Domain Overlay/Search Plugin 추가!**
 
 MeCab-Ko는 일본어 형태소 분석기 MeCab을 한국어에 맞게 개선한 형태소 분석 도구입니다. 이 크레이트는 기존 C++ 구현을 Rust로 재작성하여 메모리 안전성과 성능을 동시에 달성합니다.
 
@@ -25,7 +25,7 @@ Cargo.toml에 추가:
 
 ```toml
 [dependencies]
-mecab-ko = "0.5.0"
+mecab-ko = "0.7.1"
 ```
 
 ## 빠른 시작

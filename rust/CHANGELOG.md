@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-04-26
+
+### Added
+- **Streaming API**
+  - `SentenceReader`: sentence-boundary-aware reader for streaming input
+  - `StreamingTokenizer`: synchronous streaming tokenizer over sentence chunks
+  - `AsyncStreamingTokenizer`: async streaming tokenizer with backpressure support
+- **Domain Overlay Dictionary**
+  - `HotReloadDictV2`: lock-free hot-reload dictionary using `ArcSwap`
+  - Runtime domain overlay without process restart
+- **Search Plugins**
+  - Elasticsearch plugin adapter (Nori-compatible analysis chain)
+  - OpenSearch plugin adapter
+- **Node.js Bindings**
+  - napi-rs 3.x based Node.js bindings replacing old N-API layer
+- **Tests**
+  - 1,181 total tests (0 failures, 100% pass rate)
+  - Async tokenizer tests added to CI async-tests job
+  - 3 tag_normalization protection tests (Sprint 81)
+  - 18 corrections protection tests (Sprint 79)
+
+### Changed
+- **CI Consolidation**
+  - Reduced from 22 to 16 workflows (removed redundant/duplicate jobs)
+  - Composite action `rust-setup` shared across all CI workflows
+  - Async-tests job added as dedicated CI step
+- **Code Quality**
+  - `corrections.rs` refactored: extracted 5 sub-functions (5,590 → 3,423 lines in main fn)
+  - `sejong` module visibility tightened (`pub` → `pub(super)` for internal items)
+
+### Fixed
+- GitHub Actions versions upgraded: `docker/build-push-action` v4→v6, `gradle/gradle-build-action` v2→v4
+- Security patch: `rustls-webpki` updated to non-vulnerable version
+- `dict-build.yml` now correctly declares its `mecab-ko-dict-builder` dependency
+- `npm-publish.yml` WASM toolchain variable expanded correctly in shell
+
+### Performance
+- 1,181 tests passing, 0 failures
+- 100% token accuracy maintained across all test sentences
+
 ## [0.6.0] - 2026-03-19
 
 ### 🚀 Production-Ready Release with Performance Boost!
@@ -381,7 +421,8 @@ This release marks a major milestone: **100% token accuracy** on a comprehensive
 - ~238K morphemes/sec (mini-dict)
 - 0.086ms cold start
 
-[Unreleased]: https://github.com/hephaex/mecab-ko/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/hephaex/mecab-ko/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/hephaex/mecab-ko/compare/v0.6.0...v0.7.1
 [0.6.0]: https://github.com/hephaex/mecab-ko/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/hephaex/mecab-ko/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/hephaex/mecab-ko/compare/v0.3.0...v0.4.0

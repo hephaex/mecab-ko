@@ -21,7 +21,7 @@
 
 ```toml
 [dependencies]
-mecab-ko = "0.1.1"
+mecab-ko = "0.7.1"
 ```
 
 ### Python
