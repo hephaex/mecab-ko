@@ -6283,4 +6283,59 @@ mod tests {
             "XR root token '아름답' must be converted to NNG (Pass 223)"
         );
     }
+
+    // ── 보호 테스트 (M1): 174차 형용사 어근 뒤 하/XSV → XSA ────────────────
+    #[test]
+    fn test_protection_conjugation_174_xsv_to_xsa() {
+        // 14차가 하/XSV+다/EF→하/VV 변환하므로 "어요/EF" 사용
+        let mut tokens = vec![tok("행복", "NNG"), tok("하", "XSV"), tok("어요", "EF")];
+        apply_context_corrections(&mut tokens);
+        // 174차: 행복 + 하/XSV → 하/XSA, 215차: 미안/심심만 VA 병합
+        // 행복은 va_merge_roots에 없으므로 XSA 유지
+        let ha_token = tokens.iter().find(|t| t.surface == "하");
+        assert!(ha_token.is_some(), "하 token must exist");
+        assert_eq!(ha_token.unwrap().pos, "XSA", "하/XSV after adj root must become XSA (Pass 174)");
+    }
+
+    // ── 보호 테스트 (M1): post_conjugation 86차 ㄴ다 병합 ───────────────────
+    #[test]
+    fn test_protection_post_conjugation_86_nda_merge() {
+        let mut tokens = vec![
+            tok_at("가", "VV", 0, 1),
+            tok_at("ㄴ", "ETM", 1, 2),
+            tok_at("다", "EF", 2, 3),
+        ];
+        apply_context_corrections(&mut tokens);
+        let nda = tokens.iter().find(|t| t.surface == "ㄴ다");
+        assert!(nda.is_some(), "ㄴ/ETM + 다/EF must merge to ㄴ다/EF (Pass 86)");
+        assert_eq!(nda.unwrap().pos, "EF");
+    }
+
+    // ── 보호 테스트 (M1): post_conjugation 88차 NNG+되→XSV ─────────────────
+    #[test]
+    fn test_protection_post_conjugation_88_nng_doe_xsv() {
+        let mut tokens = vec![tok("공개", "NNG"), tok("되", "VV"), tok("었", "EP")];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens[1].pos, "XSV", "되/VV after NNG must become XSV (Pass 88)");
+    }
+
+    // ── 보호 테스트: particle_and_ending 21차 VCP 삽입 ──────────────────────
+    #[test]
+    fn test_protection_particle_21_vcp_insertion() {
+        let mut tokens = vec![tok("학생", "NNG"), tok("이", "EP"), tok("다", "EF")];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens[1].pos, "VCP", "이/EP after NNG must become VCP (Pass 21)");
+    }
+
+    // ── 보호 테스트: compound_noun 196차 XPN 분리 ───────────────────────────
+    #[test]
+    fn test_protection_compound_196_xpn_maeson() {
+        let mut tokens = vec![tok_at("맨손", "NNG", 0, 2)];
+        apply_context_corrections(&mut tokens);
+        assert_eq!(tokens.len(), 2, "맨손 must split into 맨/XPN + 손/NNG");
+        assert_eq!(tokens[0].surface, "맨");
+        assert_eq!(tokens[0].pos, "XPN");
+        assert_eq!(tokens[1].surface, "손");
+        assert_eq!(tokens[1].pos, "NNG");
+    }
 }
