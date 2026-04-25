@@ -1,3 +1,49 @@
+# ✅ 완료: Phase 47 - Sprint 81 (corrections 분할 2차 + v0.7.1 태그)
+
+## 🎯 Sprint 81 목표
+corrections.rs 추가 서브함수 추출 (5,590→3,423), 리뷰 M2 해결, v0.7.1 태그 재설정
+
+## Sprint 81 작업 목록
+
+### Track A: corrections.rs 분할 2차
+- [x] S81-01: 3개 서브함수 추출 (sentence_final 1,812줄, conjugation 170줄, compound_noun 190줄) ✅
+- [x] S81-02: tag_normalization 보호 테스트 3개 추가 (리뷰 M2) ✅
+
+### Track B: v0.7.1 태그
+- [x] S81-03: v0.7.1 annotated tag HEAD 재설정 (8fbfdbb) ✅
+
+### Track C: 리뷰 + 문서
+- [x] S81-04: Sprint 81 리뷰 + PLAN/PROGRESS 업데이트 ✅
+
+---
+
+## 📋 Sprint 82 로드맵
+
+### P1: corrections.rs 분할 3차 (Sprint 82)
+- main function 3,423줄 → 2,000줄 이하 목표
+- 추출 후보 4개 (분석 완료):
+  1. 어미 병합/복원 보정 (~607줄)
+  2. 동사/형용사 분리 + 명사화 (~700줄)
+  3. 복합 명사 파생 패턴 (~650줄)
+  4. 불규칙 활용 + 특수 패턴 (~712줄)
+- 2개 이상 추출로 2,000줄 이하 달성
+
+### P2: corrections 보호 테스트 확충
+- 새로 추출된 서브함수별 전용 테스트 추가
+- 목표: 각 서브함수 최소 2개 직접 테스트
+
+### P3: v0.7.1 git push + 배포 준비
+- git push (33 commits ahead)
+- RELEASE_CHECKLIST 확인
+- crates.io 배포 준비
+
+### P4: v0.8.0 준비 (Sprint 83+)
+- Streaming API async 버전 (tokio feature flag)
+- WASM/Node e2e 테스트 WIP 해제
+- corrections.rs 분할 완료 (800줄 이하 최종 목표)
+
+---
+
 # ✅ 완료: Phase 46 - Sprint 80 (corrections 분할 1차 + CI async)
 
 ## 🎯 Sprint 80 목표
@@ -15,25 +61,6 @@ corrections.rs 함수 추출 시작, 보호 테스트 확대, CI async feature t
 
 ### Track C: 리뷰
 - [x] S80-05: 리뷰 APPROVE — CRITICAL 0, HIGH 0, MEDIUM 3 (M1 수정, M2/M3 차기) ✅
-
----
-
-## 📋 Sprint 81+ 로드맵
-
-### P1: corrections.rs 분할 2차 (Sprint 81)
-- 보호 테스트: tag_normalization 전용 3개 추가 (리뷰 M2)
-- 추가 3-4개 서브함수 추출 (compound noun merge/split, sentence-final, irregular conjugation)
-- 목표: main function 3,000줄 이하
-
-### P2: v0.7.1 배포 + 태그 정리 (Sprint 81)
-- v0.7.1 annotated tag HEAD 재설정
-- crates.io 배포
-- git push (30+ commits ahead)
-
-### P3: v0.8.0 준비 (Sprint 82+)
-- Streaming API async 버전 (tokio feature flag)
-- WASM/Node e2e 테스트 WIP 해제
-- corrections.rs 분할 완료 (800줄 이하 목표)
 
 ---
 

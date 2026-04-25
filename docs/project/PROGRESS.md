@@ -1,6 +1,64 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-23 (Sprint 80 완료 — corrections 분할 1차 + CI async)
+## 마지막 업데이트: 2026-04-26 (Sprint 81 완료 — corrections 분할 2차 + tag_norm 테스트 + v0.7.1 태그)
+
+### ✅ Sprint 81 - corrections 분할 2차 + v0.7.1 태그 재설정
+
+**기간**: 2026-04-26
+**목표**: corrections.rs 추가 서브함수 추출, 리뷰 M2 해결, v0.7.1 태그 HEAD 재설정
+
+#### 에이전트 실행
+
+| 에이전트 | 작업 | 결과 |
+|----------|------|------|
+| rust-developer | corrections 3개 서브함수 추출 | sentence_final, conjugation, compound_noun |
+| rust-developer | tag_normalization 보호 테스트 3개 | 리뷰 M2 해결 |
+| code-reviewer | Sprint 81 리뷰 | 리뷰 진행 |
+
+#### 커밋 내역
+
+| 커밋 | 내용 |
+|------|------|
+| `eaa9717` | refactor(corrections): 3개 서브함수 추출 (5,590→3,423 main lines) |
+| `8fbfdbb` | test(corrections): tag_normalization 보호 테스트 3개 (리뷰 M2) |
+
+#### 테스트 변화
+
+| 지표 | Sprint 80 | Sprint 81 | 변화 |
+|------|-----------|-----------|------|
+| 총 테스트 | 1,178 | 1,181 | +3 (tag_norm tests) |
+| passed | 1,178 | 1,181 | +3 |
+| ignored | 18 | 18 | 유지 |
+| failed | 0 | 0 | 유지 |
+| corrections tests | 37 | 39+1 | +3 tag_norm |
+| corrections.rs 줄수 | 6,199 | 6,271 | +72 (테스트+함수 시그니처) |
+| main function 줄수 | 5,590 | 3,423 | -2,167 (3 sub-functions) |
+
+#### 추출된 서브함수 (Sprint 81 신규)
+
+| 함수 | 줄수 | 내용 |
+|------|------|------|
+| `apply_sentence_final_corrections` | 1,812 | 89~259차 문장 종결·EC/EF 변환 |
+| `apply_conjugation_corrections` | 170 | 174~219차 동사/형용사 활용 보정 |
+| `apply_compound_noun_corrections` | 190 | 192/196~202차 복합어 분리/병합 |
+
+#### 전체 서브함수 현황 (5개)
+
+| 함수 | 시그니처 | 줄수 | Sprint |
+|------|----------|------|--------|
+| `apply_sentence_final_corrections` | `&mut Vec<SejongToken>` | 1,812 | S81 |
+| `apply_conjugation_corrections` | `&mut Vec<SejongToken>` | 170 | S81 |
+| `apply_compound_noun_corrections` | `&mut Vec<SejongToken>` | 190 | S81 |
+| `apply_pos_reclassification_corrections` | `&mut [SejongToken]` | 90 | S80 |
+| `apply_tag_normalization_corrections` | `&mut [SejongToken]` | 33 | S80 |
+
+#### v0.7.1 태그
+
+- annotated tag `v0.7.1` → HEAD (8fbfdbb)
+- 33 commits ahead of origin/main
+- push 대기 (Sprint 82에서 진행)
+
+---
 
 ### ✅ Sprint 80 - corrections 분할 1차 + CI async + 리뷰
 
