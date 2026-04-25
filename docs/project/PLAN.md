@@ -1,3 +1,42 @@
+# ✅ 완료: Phase 48 - Sprint 82 (corrections 분할 3차 + CHANGELOG + 보호 테스트)
+
+## 🎯 Sprint 82 목표
+corrections.rs 추가 추출 (3,337→2,633), CHANGELOG/README 버전 수정, 보호 테스트 확충
+
+## Sprint 82 작업 목록
+
+### Track A: corrections.rs 분할 3차
+- [x] S82-01: apply_post_conjugation_corrections 추출 (passes 220/86/87/88/205, 3,423→3,337) ✅
+- [x] S82-02: apply_particle_and_ending_corrections 추출 (passes 1-23, 3,337→2,633) ✅
+
+### Track B: 보호 테스트
+- [x] S82-03: 보호 테스트 5개 추가 (conjugation 174, post_conj 86/88, particle 21, compound 196) ✅
+
+### Track C: 문서 + 릴리스 준비
+- [x] S82-04: CHANGELOG.md v0.7.1 + README 0.1.1→0.7.1 ✅
+- [x] S82-05: Sprint 82 리뷰 + PLAN/PROGRESS 업데이트 ✅
+
+---
+
+## 📋 Sprint 83 로드맵
+
+### P1: corrections.rs 분할 4차 (Sprint 83)
+- main function 2,633줄 → 2,000줄 이하 목표
+- 추출 후보: 24~88차 인라인 보정 중 동사/형용사 분리 그룹 (~600줄)
+- apply_sentence_final_corrections 1,821줄 → 2개로 분할
+
+### P2: v0.7.1 git push + crates.io 배포
+- git push (37+ commits ahead)
+- cargo publish --dry-run 전 크레이트
+- crates.io 실제 배포
+
+### P3: v0.8.0 준비 (Sprint 84+)
+- Streaming API async 버전 (tokio feature flag)
+- WASM/Node e2e 테스트 WIP 해제
+- corrections.rs 분할 완료 (800줄 이하 최종 목표)
+
+---
+
 # ✅ 완료: Phase 47 - Sprint 81 (corrections 분할 2차 + v0.7.1 태그)
 
 ## 🎯 Sprint 81 목표
@@ -14,33 +53,6 @@ corrections.rs 추가 서브함수 추출 (5,590→3,423), 리뷰 M2 해결, v0.
 
 ### Track C: 리뷰 + 문서
 - [x] S81-04: Sprint 81 리뷰 + PLAN/PROGRESS 업데이트 ✅
-
----
-
-## 📋 Sprint 82 로드맵
-
-### P1: corrections.rs 분할 3차 (Sprint 82)
-- main function 3,423줄 → 2,000줄 이하 목표
-- 추출 후보 4개 (분석 완료):
-  1. 어미 병합/복원 보정 (~607줄)
-  2. 동사/형용사 분리 + 명사화 (~700줄)
-  3. 복합 명사 파생 패턴 (~650줄)
-  4. 불규칙 활용 + 특수 패턴 (~712줄)
-- 2개 이상 추출로 2,000줄 이하 달성
-
-### P2: corrections 보호 테스트 확충
-- 새로 추출된 서브함수별 전용 테스트 추가
-- 목표: 각 서브함수 최소 2개 직접 테스트
-
-### P3: v0.7.1 git push + 배포 준비
-- git push (33 commits ahead)
-- RELEASE_CHECKLIST 확인
-- crates.io 배포 준비
-
-### P4: v0.8.0 준비 (Sprint 83+)
-- Streaming API async 버전 (tokio feature flag)
-- WASM/Node e2e 테스트 WIP 해제
-- corrections.rs 분할 완료 (800줄 이하 최종 목표)
 
 ---
 

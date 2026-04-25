@@ -1,6 +1,54 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-26 (Sprint 81 완료 — corrections 분할 2차 + tag_norm 테스트 + v0.7.1 태그)
+## 마지막 업데이트: 2026-04-26 (Sprint 82 완료 — corrections 분할 3차 + CHANGELOG + 보호 테스트)
+
+### ✅ Sprint 82 - corrections 분할 3차 + CHANGELOG v0.7.1 + 보호 테스트
+
+**기간**: 2026-04-26
+**목표**: corrections.rs 추가 추출 (3,337→2,633), CHANGELOG/README 버전 수정, 보호 테스트 확충
+
+#### 에이전트 실행
+
+| 에이전트 | 작업 | 결과 |
+|----------|------|------|
+| rust-developer | post_conjugation 추출 | passes 220/86/87/88/205 (3,423→3,337) |
+| rust-developer | particle_and_ending 추��� | passes 1-23 (3,337��2,633) |
+| rust-developer | CHANGELOG/README 수정 | v0.7.1 섹션 + 0.1.1→0.7.1 |
+| rust-developer | 보호 테스트 5개 | conjugation/post_conj/particle/compound |
+| code-reviewer | 리뷰 | 진행 중 |
+
+#### 커밋 내역
+
+| 커밋 | 내용 |
+|------|------|
+| `d005815` | refactor: post_conjugation 추출 (3,423→3,337) |
+| `c7ca2e8` | docs: CHANGELOG v0.7.1 + README 0.1.1→0.7.1 |
+| `c1fd7fb` | test: 보호 테스트 5개 (174/86/88/21/196) |
+| `0ad9b4d` | refactor: particle_and_ending 추출 (3,337→2,633) |
+
+#### 테스트 변화
+
+| 지표 | Sprint 81 | Sprint 82 | 변화 |
+|------|-----------|-----------|------|
+| 총 테스트 | 1,181 | 1,186 | +5 (보호 테스트) |
+| passed | 1,181 | 1,186 | +5 |
+| corrections tests | 39 | 44 | +5 |
+| main function 줄수 | 3,423 | 2,633 | -790 |
+| 서브함수 수 | 7 | 8 | +1 (particle_and_ending) |
+
+#### 전체 서브함수 현황 (8개)
+
+| 함수 | 줄수 | 내용 | Sprint |
+|------|------|------|--------|
+| apply_sentence_final_corrections | 1,821 | 89~259차 문장 종결 | S81 |
+| apply_particle_and_ending_corrections | 706 | 1~23차 조사/어미 | S82 |
+| apply_conjugation_corrections | 181 | 174~219차 활용 보정 | S81 |
+| apply_compound_noun_corrections | 190 | 192~202차 복합어 | S81 |
+| apply_post_conjugation_corrections | 105 | 86/87/88/205/220차 | S82 |
+| apply_pos_reclassification_corrections | 95 | 207~256차 POS 재분류 | S80 |
+| apply_tag_normalization_corrections | 33 | 209/223차 태그 정규화 | S80 |
+
+---
 
 ### ✅ Sprint 81 - corrections 분할 2차 + v0.7.1 태그 재설정
 
