@@ -311,8 +311,8 @@ pub(super) fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
     apply_sentence_final_corrections(tokens);
 }
 
-/// 24~67차: 동사/형용사 분리, 어미 정규화, 접두사·의존명사 보정
-fn apply_verb_and_morpheme_corrections(tokens: &mut Vec<SejongToken>) {
+/// 24~44차: 동사 분리, 피동·사동 보정, EC/EF 정규화, 존칭 보정
+fn apply_verb_splitting_corrections(tokens: &mut Vec<SejongToken>) {
     // 24차 보정: 명사형 어미 분리 - "가기/NNG" → "가/VV + 기/ETN" (동사 어간 + 기)
     // 동사 기본형 사전 (가기, 오기, 하기, 먹기, 보기 등)
     let verb_gi_words: std::collections::HashMap<&str, &str> = [
@@ -1072,6 +1072,12 @@ fn apply_verb_and_morpheme_corrections(tokens: &mut Vec<SejongToken>) {
             tokens[i].pos = "VV".to_string();
         }
     }
+}
+
+/// 24~67차: 동사/형용사 분리, 어미 정규화, 접두사·의존명사 보정
+fn apply_verb_and_morpheme_corrections(tokens: &mut Vec<SejongToken>) {
+    // 24~44차: 동사 분리, 피동·사동 보정, EC/EF 정규화, 존칭 보정
+    apply_verb_splitting_corrections(tokens);
 
     // 45차 보정: 연속된 EC 병합
     // 패턴: "아/EC + 면서/EC" → "아면서/EC" (또는 그냥 "면서/EC")
