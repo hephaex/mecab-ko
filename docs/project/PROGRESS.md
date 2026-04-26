@@ -1,6 +1,42 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-26 (Sprint 86 완료 -- v0.7.1 릴리스 + 보호 테스트)
+## 마지막 업데이트: 2026-04-27 (Sprint 87 완료 -- per-call 할당 제거 성능 최적화)
+
+### ✅ Sprint 87 - per-call 할당 제거 성능 최적화
+
+**기간**: 2026-04-27
+**목표**: corrections/ 내 22개 매 호출 HashMap/HashSet 생성을 정적 할당으로 전환
+
+#### 커밋 내역
+
+| 커밋 | 내용 |
+|------|------|
+| `3984165` | perf(corrections): eliminate 22 per-call HashMap/HashSet allocations |
+
+#### 최적화 대상 (6개 파일, 22개 할당)
+
+| 파일 | 전환 수 | 방식 |
+|------|---------|------|
+| particle_and_ending.rs | 11 | OnceLock (3) + const slice (8) |
+| sentence_final_endings.rs | 5 | const slice (5) |
+| compound_noun.rs | 4 | static tuple slice (4) |
+| pos_reclassification.rs | 2 | const slice (2) |
+| sentence_final.rs | 1 | const slice (1) |
+| conjugation.rs | 1 | static tuple slice (1) |
+
+#### 테스트 결과
+
+| 지표 | Sprint 86 | Sprint 87 | 변화 |
+|------|-----------|-----------|------|
+| 총 테스트 | 1,198 | 1,198 | 0 (순수 리팩토링) |
+| passed | 1,198 | 1,198 | 0 |
+| clippy warnings | 0 | 0 | 0 |
+
+#### 분할 검토 결과
+- verb_splitting.rs (764줄): 24개 pass 순차 단일 함수. 의미적 분할점 없음 → 분할 불필요
+- tests.rs (728줄): 800줄 이하 → 모니터링 유지
+
+---
 
 ### ✅ Sprint 86 - v0.7.1 릴리스 + 보호 테스트 확충
 
