@@ -1,5 +1,38 @@
 use crate::sejong::types::SejongToken;
 
+/// 196차: XPN 복합어 분리 테이블 ("맨손" → ("맨", "손"))
+static XPN_COMPOUNDS: &[(&str, (&str, &str))] = &[
+    ("맨손", ("맨", "손")),
+    ("맨발", ("맨", "발")),
+    ("맨몸", ("맨", "몸")),
+    ("맨땅", ("맨", "땅")),
+];
+
+/// 202차: 복합명사 병합 쌍 (앞 명사, 뒤 명사)
+static COMPOUND_NOUN_PAIRS: &[(&str, &str)] = &[
+    ("무역", "수지"),
+    ("여론", "조사"),
+    ("시민", "단체"),
+    ("국민", "경제"),
+    ("경제", "성장"),
+    ("대통령", "선거"),
+    ("정부", "정책"),
+    ("환경", "보호"),
+    ("인공", "지능"),
+    ("형태소", "분석"),
+];
+
+/// 198차: VA 어간 → (표면형, 어간) 변환 테이블
+static VA_EC_WORDS: &[(&str, &str)] = &[
+    ("높이", "높"),
+    ("낮이", "낮"),
+    ("깊이", "깊"),
+    ("넓이", "넓"),
+];
+
+/// 199차: VA 어간 목록 (낮/NNG + 이/JKS 패턴)
+static VA_STEMS: &[&str] = &["높", "낮", "깊", "넓"];
+
 /// 192~202차: 복합명사/형태소 병합·분리
 ///
 /// - 192차: "가/VV + 지/NNB + 고/EC" → "가지/VV + 고/EC" 병합
@@ -35,14 +68,6 @@ pub(super) fn apply_compound_noun_corrections(tokens: &mut Vec<SejongToken>) {
     // 196차: XPN 복합어 분리
     // "맨손/NNG" → "맨/XPN 손/NNG"
     // "맨발/NNG" → "맨/XPN 발/NNG"
-    let xpn_compounds: std::collections::HashMap<&str, (&str, &str)> = [
-        ("맨손", ("맨", "손")),
-        ("맨발", ("맨", "발")),
-        ("맨몸", ("맨", "몸")),
-        ("맨땅", ("맨", "땅")),
-    ]
-    .into_iter()
-    .collect();
 
     // 200차: "밤낮/NNG" → "밤/NNG 낮/NNG" 분리
     // "밤 낮" = "밤/NNG 낮/NNG"
@@ -68,7 +93,10 @@ pub(super) fn apply_compound_noun_corrections(tokens: &mut Vec<SejongToken>) {
     let mut i = 0;
     while i < tokens.len() {
         if tokens[i].pos == "NNG" {
-            if let Some((prefix, noun)) = xpn_compounds.get(tokens[i].surface.as_str()) {
+            if let Some(&(_, (prefix, noun))) = XPN_COMPOUNDS
+                .iter()
+                .find(|(k, _)| *k == tokens[i].surface.as_str())
+            {
                 let start = tokens[i].start_pos;
                 let end = tokens[i].end_pos;
                 let prefix_len = prefix.chars().count();
@@ -106,26 +134,15 @@ pub(super) fn apply_compound_noun_corrections(tokens: &mut Vec<SejongToken>) {
     // "여론/NNG + 조사/NNG" → "여론조사/NNG"
     // "시민/NNG + 단체/NNG" → "시민단체/NNG"
     // sample.tsv에서 단일 토큰으로 취급하는 복합명사들
-    let compound_nouns: std::collections::HashSet<(&str, &str)> = [
-        ("무역", "수지"),
-        ("여론", "조사"),
-        ("시민", "단체"),
-        ("국민", "경제"),
-        ("경제", "성장"),
-        ("대통령", "선거"),
-        ("정부", "정책"),
-        ("환경", "보호"),
-        ("인공", "지능"),
-        ("형태소", "분석"),
-    ]
-    .into_iter()
-    .collect();
-
     let mut i = 0;
     while i + 1 < tokens.len() {
         if tokens[i].pos == "NNG" && tokens[i + 1].pos == "NNG" {
-            let pair = (tokens[i].surface.as_str(), tokens[i + 1].surface.as_str());
-            if compound_nouns.contains(&pair) {
+            let a = tokens[i].surface.as_str();
+            let b = tokens[i + 1].surface.as_str();
+            if COMPOUND_NOUN_PAIRS
+                .iter()
+                .any(|&(ka, kb)| ka == a && kb == b)
+            {
                 let start = tokens[i].start_pos;
                 let end = tokens[i + 1].end_pos;
                 let merged = format!("{}{}", tokens[i].surface, tokens[i + 1].surface);
@@ -140,23 +157,16 @@ pub(super) fn apply_compound_noun_corrections(tokens: &mut Vec<SejongToken>) {
     // 198차: "높이/NNG" → "높/VA 이/EC" 분리
     // "높이 낮이" = "높/VA 이/EC 낮/VA 이/EC"
     // 형용사 부사형 분리
-    let va_ec_words: std::collections::HashMap<&str, &str> = [
-        ("높이", "높"),
-        ("낮이", "낮"),
-        ("깊이", "깊"),
-        ("넓이", "넓"),
-    ]
-    .into_iter()
-    .collect();
-
-    // 199차: VA 어간 목록 (낮/NNG + 이/JKS 패턴용)
-    let va_stems: std::collections::HashSet<&str> = ["높", "낮", "깊", "넓"].into_iter().collect();
 
     let mut i = 0;
     while i < tokens.len() {
         // 패턴 1: "높이/NNG" 단일 토큰
         if tokens[i].pos == "NNG" {
-            if let Some(&stem) = va_ec_words.get(tokens[i].surface.as_str()) {
+            if let Some(stem) = VA_EC_WORDS
+                .iter()
+                .find(|(k, _)| *k == tokens[i].surface.as_str())
+                .map(|(_, v)| *v)
+            {
                 let start = tokens[i].start_pos;
                 let end = tokens[i].end_pos;
                 let stem_len = stem.chars().count();
@@ -169,7 +179,7 @@ pub(super) fn apply_compound_noun_corrections(tokens: &mut Vec<SejongToken>) {
         // 패턴 2: "낮/NNG + 이/JKS" 두 토큰
         if i + 1 < tokens.len()
             && tokens[i].pos == "NNG"
-            && va_stems.contains(tokens[i].surface.as_str())
+            && VA_STEMS.contains(&tokens[i].surface.as_str())
             && tokens[i + 1].surface == "이"
             && tokens[i + 1].pos == "JKS"
         {

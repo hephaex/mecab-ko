@@ -1,5 +1,22 @@
 use crate::sejong::types::SejongToken;
 
+/// 152차 보정에 사용되는 XPN 접두사 목록
+const XPN_PREFIXES: &[&str] = &["큰", "작은", "새", "헌", "젊은", "늙은"];
+
+/// 152차 보정에 사용되는 VA 어간 → XPN 형태 매핑 (어간, XPN 표면형)
+const XPN_STEM_MAP: &[(&str, &str)] = &[("크", "큰"), ("작", "작은")];
+
+/// 164차 보정에 사용되는 단위 수사 목록 (십/백/천/만)
+const UNIT_NUMERALS: &[&str] = &["십", "백", "천", "만"];
+
+/// 164차 보정에 사용되는 한 자리 수사 목록
+const DIGIT_NUMERALS: &[&str] = &["일", "이", "삼", "사", "오", "육", "칠", "팔", "구"];
+
+/// 189차 보정에 사용되는 단일 한자 숫자 목록 (NR → SN 변환 대상)
+const SINGLE_SINO_NUMERALS: &[&str] = &[
+    "일", "이", "삼", "사", "오", "육", "칠", "팔", "구", "영", "공",
+];
+
 /// 149~259차: 문장 종결·EC/EF 변환 보정 (후반부)
 ///
 /// 의문대명사 NP 변환, EP 표면형 정규화, 합성 형용사,
@@ -50,12 +67,8 @@ pub(super) fn apply_sentence_final_endings_corrections(tokens: &mut Vec<SejongTo
 
     // 152차: "큰/VA+ETM + 집/NNG" → "큰/XPN + 집/NNG"
     // 관형사형 어미가 붙은 형용사가 접두사처럼 사용될 때
-    let xpn_prefixes: std::collections::HashSet<&str> = ["큰", "작은", "새", "헌", "젊은", "늙은"]
-        .into_iter()
-        .collect();
-
     for i in 0..tokens.len().saturating_sub(1) {
-        if xpn_prefixes.contains(tokens[i].surface.as_str())
+        if XPN_PREFIXES.contains(&tokens[i].surface.as_str())
             && (tokens[i].pos == "VA" || tokens[i].pos == "ETM")
             && tokens[i + 1].pos == "NNG"
         {
@@ -66,8 +79,6 @@ pub(super) fn apply_sentence_final_endings_corrections(tokens: &mut Vec<SejongTo
 
     // VA+ETM 분리 후 재병합이 필요한 패턴: "크/VA + ㄴ/ETM + 집/NNG" → "큰/XPN + 집/NNG"
     let mut xpn_merge_indices: Vec<(usize, String)> = Vec::new();
-    let xpn_stem_map: std::collections::HashMap<&str, &str> =
-        [("크", "큰"), ("작", "작은")].into_iter().collect();
 
     for i in 0..tokens.len().saturating_sub(2) {
         if tokens[i].pos == "VA"
@@ -75,8 +86,12 @@ pub(super) fn apply_sentence_final_endings_corrections(tokens: &mut Vec<SejongTo
             && tokens[i + 1].pos == "ETM"
             && tokens[i + 2].pos == "NNG"
         {
-            if let Some(merged) = xpn_stem_map.get(tokens[i].surface.as_str()) {
-                xpn_merge_indices.push((i, (*merged).to_string()));
+            if let Some(merged) = XPN_STEM_MAP
+                .iter()
+                .find(|(stem, _)| *stem == tokens[i].surface.as_str())
+                .map(|(_, xpn)| *xpn)
+            {
+                xpn_merge_indices.push((i, merged.to_string()));
             }
         }
     }
@@ -338,11 +353,10 @@ pub(super) fn apply_sentence_final_endings_corrections(tokens: &mut Vec<SejongTo
         if tokens[idx].pos == "NR" && tokens[idx + 1].pos == "NR" {
             let second = tokens[idx + 1].surface.as_str();
             // 십, 백, 천, 만 뒤에 올 수 있는 1자리 수사
-            if ["십", "백", "천", "만"].contains(&second) {
+            if UNIT_NUMERALS.contains(&second) {
                 let first = tokens[idx].surface.clone();
                 // 일, 이, 삼, 사, 오, 육, 칠, 팔, 구 등 1자리 수사
-                if ["일", "이", "삼", "사", "오", "육", "칠", "팔", "구"].contains(&first.as_str())
-                {
+                if DIGIT_NUMERALS.contains(&first.as_str()) {
                     // 병합
                     tokens[idx].surface = format!("{first}{second}");
                     tokens.remove(idx + 1);
@@ -357,18 +371,12 @@ pub(super) fn apply_sentence_final_endings_corrections(tokens: &mut Vec<SejongTo
     // "일 이 삼" = "일/SN 이/SN 삼/SN"
     // 한자 숫자는 SN(숫자), 아라비아 숫자도 SN
     // 주의: 병합된 "삼십/NR"은 NR 유지 (sample.tsv 기준)
-    let single_sino_numerals: std::collections::HashSet<&str> = [
-        "일", "이", "삼", "사", "오", "육", "칠", "팔", "구", "영", "공",
-    ]
-    .into_iter()
-    .collect();
-
     for token in tokens.iter_mut() {
         // 단일 글자 한자 숫자만 SN으로 변환
         // "삼십", "이백" 등 합성 수사는 NR 유지
         if token.pos == "NR"
             && token.surface.chars().count() == 1
-            && single_sino_numerals.contains(token.surface.as_str())
+            && SINGLE_SINO_NUMERALS.contains(&token.surface.as_str())
         {
             token.pos = "SN".to_string();
         }

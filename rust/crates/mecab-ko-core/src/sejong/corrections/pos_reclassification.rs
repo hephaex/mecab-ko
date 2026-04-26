@@ -1,5 +1,27 @@
 use crate::sejong::types::SejongToken;
 
+/// 207차: MAG/VV → NNG 변환 대상 단어
+const TO_NNG_WORDS: &[&str] = &["요즘", "진짜"];
+
+/// 248차: 외래어 NNP → NNG 변환 목록
+const FOREIGN_NNP_TO_NNG: &[&str] = &[
+    "프레임워크",
+    "리팩토링",
+    "알고리즘",
+    "커버리지",
+    "아키텍처",
+    "머신러닝",
+    "컨테이너",
+    "인터페이스",
+    "데이터베이스",
+    "서버",
+    "클라이언트",
+    "프로토콜",
+    "레이어",
+    "모듈",
+    "컴포넌트",
+];
+
 /// 207~256차: 단일 토큰 POS 재분류
 ///
 /// - 207차: 부사로 잘못 분석된 명사 복원 (요즘, 진짜)
@@ -14,10 +36,9 @@ pub(super) fn apply_pos_reclassification_corrections(tokens: &mut [SejongToken])
     // "요즘/MAG" → "요즘/NNG", "진짜/MAG" → "진짜/NNG"
     // "진짜/VV" → "진짜/NNG" (동사로 분석된 경우도)
     // sample.tsv에서 NNG로 태깅됨
-    let to_nng_words = ["요즘", "진짜"];
     for token in tokens.iter_mut() {
         if (token.pos == "MAG" || token.pos == "VV")
-            && to_nng_words.contains(&token.surface.as_str())
+            && TO_NNG_WORDS.contains(&token.surface.as_str())
         {
             token.pos = "NNG".to_string();
         }
@@ -37,25 +58,8 @@ pub(super) fn apply_pos_reclassification_corrections(tokens: &mut [SejongToken])
     // "프레임워크/NNP" → "프레임워크/NNG"
     // "리팩토링/NNP" → "리팩토링/NNG"
     // sample.tsv에서 NNG로 태깅되는 외래어들
-    let foreign_nnp_to_nng = [
-        "프레임워크",
-        "리팩토링",
-        "알고리즘",
-        "커버리지",
-        "아키텍처",
-        "머신러닝",
-        "컨테이너",
-        "인터페이스",
-        "데이터베이스",
-        "서버",
-        "클라이언트",
-        "프로토콜",
-        "레이어",
-        "모듈",
-        "컴포넌트",
-    ];
     for token in tokens.iter_mut() {
-        if token.pos == "NNP" && foreign_nnp_to_nng.contains(&token.surface.as_str()) {
+        if token.pos == "NNP" && FOREIGN_NNP_TO_NNG.contains(&token.surface.as_str()) {
             token.pos = "NNG".to_string();
         }
     }

@@ -1,7 +1,12 @@
-use crate::sejong::types::SejongToken;
+use super::sentence_final_endings::apply_sentence_final_endings_corrections;
 use super::xsv_and_ec_ef::apply_xsv_and_ec_ef_corrections;
 use super::xsv_morpheme_split::apply_xsv_morpheme_split_corrections;
-use super::sentence_final_endings::apply_sentence_final_endings_corrections;
+use crate::sejong::types::SejongToken;
+
+/// 133차 보정에 사용되는 동사 기본형 목록 (NNG → VV + 다/EF 변환 대상)
+const VERB_BASE_FORMS: &[&str] = &[
+    "하다", "가다", "오다", "보다", "사다", "주다", "타다", "서다", "나다",
+];
 
 /// 89~148차: 문장 종결·EC/EF 변환 보정 (전반부)
 ///
@@ -18,12 +23,6 @@ pub(super) fn apply_sentence_final_corrections(tokens: &mut Vec<SejongToken>) {
     // 133차 보정: 동사 기본형 NNG → VV + 다/EF
     // "하다/NNG" → "하/VV + 다/EF"
     // 단독으로 나오는 동사 기본형 (주의: 명사 "하다"와 구분 필요)
-    let verb_base_forms: std::collections::HashSet<&str> = [
-        "하다", "가다", "오다", "보다", "사다", "주다", "타다", "서다", "나다",
-    ]
-    .into_iter()
-    .collect();
-
     let mut split_verb_base_indices: Vec<usize> = Vec::new();
     for i in 0..tokens.len() {
         let surface = &tokens[i].surface;
@@ -31,7 +30,7 @@ pub(super) fn apply_sentence_final_corrections(tokens: &mut Vec<SejongToken>) {
 
         // NNG로 분석된 동사 기본형이면서 단독으로 쓰인 경우
         // (다음 토큰이 없거나 다른 동사 기본형이 이어지는 경우)
-        if pos == "NNG" && verb_base_forms.contains(surface.as_str()) {
+        if pos == "NNG" && VERB_BASE_FORMS.contains(&surface.as_str()) {
             let is_standalone = if i + 1 < tokens.len() {
                 // 다음 토큰이 동사/형용사 관련 태그가 아닌 경우
                 let next_pos = &tokens[i + 1].pos;

@@ -1293,8 +1293,7 @@ mod sentence_reader_tests {
         // A line with no sentence boundary should eventually be flushed
         // when buffer exceeds max_buffer_size.
         let long_line = "가".repeat(200);
-        let reader = SentenceReader::new(Cursor::new(long_line.as_str()))
-            .with_max_buffer_size(64);
+        let reader = SentenceReader::new(Cursor::new(long_line.as_str())).with_max_buffer_size(64);
         let sentences: Vec<_> = reader.map(|r| r.unwrap()).collect();
         // Should produce at least one sentence without hanging or OOM.
         assert!(!sentences.is_empty());

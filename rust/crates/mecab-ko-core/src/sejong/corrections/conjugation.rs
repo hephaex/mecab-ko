@@ -1,5 +1,14 @@
 use crate::sejong::types::SejongToken;
 
+/// 219차: ㄷ불규칙 동사 활용형 → 원형 변환 테이블 (활용형, 원형)
+static D_IRREGULAR_VERBS: &[(&str, &str)] = &[
+    ("걸", "걷"),     // 걷다 → 걸어
+    ("들", "듣"),     // 듣다 → 들어
+    ("물", "묻"),     // 묻다 → 물어
+    ("실", "싣"),     // 싣다 → 실어
+    ("깨달", "깨닫"), // 깨닫다 → 깨달아
+];
+
 /// 174~219차: 동사/형용사 활용 보정
 ///
 /// - 174차: 형용사적 "하다"의 XSV → XSA 변환
@@ -146,20 +155,14 @@ pub(super) fn apply_conjugation_corrections(tokens: &mut Vec<SejongToken>) {
     // MeCab이 "걸/VV"로 분석하지만 원형은 "걷"
     // 주요 ㄷ불규칙 동사: 걷다(→걸), 듣다(→들), 묻다(→물), 싣다(→실), 깨닫다(→깨달)
     // 229차 수정: "들/VV + 세요/시" 패턴은 "드시다" (먹다의 존칭)이므로 변환 제외
-    let d_irregular_verbs: std::collections::HashMap<&str, &str> = [
-        ("걸", "걷"),     // 걷다 → 걸어
-        ("들", "듣"),     // 듣다 → 들어
-        ("물", "묻"),     // 묻다 → 물어
-        ("실", "싣"),     // 싣다 → 실어
-        ("깨달", "깨닫"), // 깨닫다 → 깨달아
-    ]
-    .iter()
-    .copied()
-    .collect();
 
     for i in 0..tokens.len() {
         if tokens[i].pos == "VV" {
-            if let Some(&original) = d_irregular_verbs.get(tokens[i].surface.as_str()) {
+            if let Some(original) = D_IRREGULAR_VERBS
+                .iter()
+                .find(|(k, _)| *k == tokens[i].surface.as_str())
+                .map(|(_, v)| *v)
+            {
                 // 229차: "들/VV + 세요" 패턴은 "드시다" (먹다의 존칭)이므로 "듣"으로 변환 안함
                 // sample.tsv 기준: "드세요" → "들/VV 세요/EF"
                 let is_honorific_pattern = if i + 1 < tokens.len() {

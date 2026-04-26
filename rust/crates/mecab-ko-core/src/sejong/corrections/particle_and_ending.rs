@@ -1,6 +1,129 @@
-use std::collections::HashMap;
 use crate::sejong::hangul::extract_vowel;
 use crate::sejong::types::SejongToken;
+use std::collections::HashMap;
+use std::sync::OnceLock;
+
+// ---------------------------------------------------------------------------
+// Static lookup tables — initialised once, reused on every call.
+// ---------------------------------------------------------------------------
+
+/// 체언 뒤 잘못 태그된 품사 → 조사 품사 매핑 (1차 보정)
+static PARTICLE_MAP: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();
+
+fn particle_map() -> &'static HashMap<&'static str, &'static str> {
+    PARTICLE_MAP.get_or_init(|| {
+        [
+            ("이", "JKS"),
+            ("가", "JKS"),
+            ("께서", "JKS"),
+            ("을", "JKO"),
+            ("를", "JKO"),
+            ("에", "JKB"),
+            ("에서", "JKB"),
+            ("에게", "JKB"),
+            ("로", "JKB"),
+            ("으로", "JKB"),
+            ("한테", "JKB"),
+            ("보다", "JKB"),
+            ("처럼", "JKB"),
+            ("같이", "JKB"),
+            ("의", "JKG"),
+            ("야", "JKV"),
+            ("여", "JKV"),
+            ("이여", "JKV"),
+            ("은", "JX"),
+            ("는", "JX"),
+            ("도", "JX"),
+            ("만", "JX"),
+            ("까지", "JX"),
+            ("부터", "JX"),
+            ("마저", "JX"),
+            ("조차", "JX"),
+            ("라도", "JX"),
+            ("밖에", "JX"),
+            ("요", "JX"),
+            ("와", "JC"),
+            ("과", "JC"),
+            ("이랑", "JC"),
+            ("랑", "JC"),
+            ("하고", "JC"),
+        ]
+        .into_iter()
+        .collect()
+    })
+}
+
+/// 체언 품사 집합 (1차 보정)
+const NOUN_POSES: &[&str] = &["NNG", "NNP", "NNB", "NP", "NR"];
+
+/// 의문대명사 집합 — 뒤의 VV를 조사로 보정하지 않음 (1차 보정)
+const INTERROGATIVES: &[&str] = &[
+    "어디", "언제", "뭐", "무엇", "누구", "어느", "어떤", "왜", "어찌",
+];
+
+/// 동사/형용사 품사 집합 (2차 보정)
+const VERB_POSES: &[&str] = &["VV", "VA", "VX"];
+
+/// 동사/형용사 뒤 관형형어미(ETM) 표면형 → 품사 매핑 (2차 보정)
+static ETM_MAP: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();
+
+fn etm_map() -> &'static HashMap<&'static str, &'static str> {
+    ETM_MAP.get_or_init(|| {
+        [
+            ("는", "ETM"),
+            ("ㄴ", "ETM"),
+            ("은", "ETM"),
+            ("ㄹ", "ETM"),
+            ("을", "ETM"),
+            ("던", "ETM"),
+        ]
+        .into_iter()
+        .collect()
+    })
+}
+
+/// XSV 보정 대상 품사 집합 (3차 보정 — 대명사 NP 제외)
+const XSV_TRIGGER_POSES: &[&str] = &["NNG", "NNP", "NNB"];
+
+/// XSV 패턴 표면형 목록 (3차 보정)
+const XSV_PATTERNS: &[&str] = &["하", "해", "했", "되", "됐"];
+
+/// 문장 끝에서 종결어미로 사용되는 패턴 (8차 보정)
+const FINAL_ENDINGS: &[&str] = &["니", "다", "요", "죠", "지", "나", "자"];
+
+/// 동사 기본형 목록 (13차 보정)
+const BASE_VERBS: &[&str] = &[
+    "가다", "오다", "보다", "먹다", "되다", "주다", "받다", "쓰다", "읽다", "듣다", "말다", "살다",
+    "죽다", "자다", "일다", "앉다", "서다", "놓다", "두다", "치다", "잡다", "놀다", "울다",
+];
+
+/// 대명사+관형격조사 합성형 목록 (17차 보정)
+const POSSESSIVE_PRONOUNS: &[&str] = &["나의", "너의", "우리의", "저의", "그의", "그녀의"];
+
+/// MAJ → MAG 변환 대상 목록 (20차 보정)
+const MAJ_TO_MAG: &[&str] = &["또한", "따라서", "그러므로"];
+
+/// 시간 표현 분리 매핑 (22차 보정)
+static TIME_WORDS: OnceLock<HashMap<&'static str, (&'static str, &'static str)>> = OnceLock::new();
+
+fn time_words() -> &'static HashMap<&'static str, (&'static str, &'static str)> {
+    TIME_WORDS.get_or_init(|| {
+        [
+            ("열시", ("열", "시")),
+            ("세시", ("세", "시")),
+            ("한시", ("한", "시")),
+            ("두시", ("두", "시")),
+            ("네시", ("네", "시")),
+            ("다섯시", ("다섯", "시")),
+            ("여섯시", ("여섯", "시")),
+            ("일곱시", ("일곱", "시")),
+            ("여덟시", ("여덟", "시")),
+            ("아홉시", ("아홉", "시")),
+        ]
+        .into_iter()
+        .collect()
+    })
+}
 
 /// 1~23차: 조사 및 어미 보정
 ///
@@ -22,67 +145,8 @@ use crate::sejong::types::SejongToken;
 /// - 22차: 시간 표현 분리
 /// - 23차: "그렇다면" 분리
 pub(super) fn apply_particle_and_ending_corrections(tokens: &mut Vec<SejongToken>) {
-    // 조사로 보정해야 할 표면형 -> 품사 매핑
-    let particle_map: HashMap<&str, &str> = [
-        // 주격조사 (JKS)
-        ("이", "JKS"),
-        ("가", "JKS"),
-        ("께서", "JKS"),
-        // 목적격조사 (JKO)
-        ("을", "JKO"),
-        ("를", "JKO"),
-        // 부사격조사 (JKB)
-        ("에", "JKB"),
-        ("에서", "JKB"),
-        ("에게", "JKB"),
-        ("로", "JKB"),
-        ("으로", "JKB"),
-        ("한테", "JKB"),
-        ("보다", "JKB"),
-        ("처럼", "JKB"),
-        ("같이", "JKB"),
-        // 관형격조사 (JKG)
-        ("의", "JKG"),
-        // 호격조사 (JKV) - 191차: "아"는 sample.tsv 기준 JX로 처리
-        // ("아", "JKV"), // 191차 수정: JKV → JX
-        ("야", "JKV"),
-        ("여", "JKV"),
-        ("이여", "JKV"),
-        // 보조사 (JX)
-        ("은", "JX"),
-        ("는", "JX"),
-        ("도", "JX"),
-        ("만", "JX"),
-        ("까지", "JX"),
-        ("부터", "JX"),
-        ("마저", "JX"),
-        ("조차", "JX"),
-        ("라도", "JX"),
-        ("밖에", "JX"),
-        ("요", "JX"),
-        // 접속조사 (JC)
-        ("와", "JC"),
-        ("과", "JC"),
-        ("이랑", "JC"),
-        ("랑", "JC"),
-        ("하고", "JC"),
-    ]
-    .into_iter()
-    .collect();
-
-    // 체언 품사 집합
-    let noun_poses: std::collections::HashSet<&str> =
-        ["NNG", "NNP", "NNB", "NP", "NR"].into_iter().collect();
-
     // 수정이 필요한 인덱스와 새 품사를 저장
     let mut corrections: Vec<(usize, String)> = Vec::new();
-
-    // 의문대명사 집합 (이 뒤의 VV는 조사가 아님)
-    let interrogatives: std::collections::HashSet<&str> = [
-        "어디", "언제", "뭐", "무엇", "누구", "어느", "어떤", "왜", "어찌",
-    ]
-    .into_iter()
-    .collect();
 
     for i in 1..tokens.len() {
         let prev_surface = &tokens[i - 1].surface;
@@ -96,7 +160,7 @@ pub(super) fn apply_particle_and_ending_corrections(tokens: &mut Vec<SejongToken
         // EP: "씨" 등이 선어말어미로 잘못 태그되는 경우
         // JKB: "께서" 등이 부사격조사로 잘못 태그되는 경우 → JKS로 보정
         // NNG: "의" 등이 명사로 잘못 태그되는 경우 → JKG로 보정
-        if noun_poses.contains(prev_pos.as_str())
+        if NOUN_POSES.contains(&prev_pos.as_str())
             && (curr_pos == "EF"
                 || curr_pos == "EC"
                 || curr_pos == "ETN"
@@ -117,13 +181,13 @@ pub(super) fn apply_particle_and_ending_corrections(tokens: &mut Vec<SejongToken
 
             // 의문대명사 뒤의 VV는 동사로 유지 (조사가 아님)
             // 예: 어디 가니, 뭐 하니
-            let prev_is_interrogative = interrogatives.contains(prev_surface.as_str());
+            let prev_is_interrogative = INTERROGATIVES.contains(&prev_surface.as_str());
 
             // "께서"는 항상 주격조사 (동사 어간이 될 수 없음)
             let is_definite_particle = curr_surface == "께서";
 
             if is_definite_particle || (!next_is_ep && !next_is_ending && !prev_is_interrogative) {
-                if let Some(&correct_pos) = particle_map.get(curr_surface.as_str()) {
+                if let Some(&correct_pos) = particle_map().get(curr_surface.as_str()) {
                     corrections.push((i, correct_pos.to_string()));
                 }
             }
@@ -136,18 +200,6 @@ pub(super) fn apply_particle_and_ending_corrections(tokens: &mut Vec<SejongToken
     }
 
     // 2차 보정: 동사/형용사 뒤의 관형형어미(ETM) 보정
-    let verb_poses: std::collections::HashSet<&str> = ["VV", "VA", "VX"].into_iter().collect();
-    let etm_map: HashMap<&str, &str> = [
-        ("는", "ETM"), // 현재 관형형: 가는, 먹는
-        ("ㄴ", "ETM"), // 과거 관형형: 간, 먹은
-        ("은", "ETM"), // 과거 관형형: 먹은
-        ("ㄹ", "ETM"), // 미래 관형형: 갈, 먹을
-        ("을", "ETM"), // 미래 관형형: 먹을
-        ("던", "ETM"), // 회상 관형형: 가던, 먹던
-    ]
-    .into_iter()
-    .collect();
-
     let mut etm_corrections: Vec<(usize, String)> = Vec::new();
 
     for i in 1..tokens.len() {
@@ -156,10 +208,10 @@ pub(super) fn apply_particle_and_ending_corrections(tokens: &mut Vec<SejongToken
         let curr_pos = &tokens[i].pos;
 
         // 동사/형용사 뒤의 JX/EF를 ETM으로 보정
-        if verb_poses.contains(prev_pos.as_str())
+        if VERB_POSES.contains(&prev_pos.as_str())
             && (curr_pos == "JX" || curr_pos == "EF" || curr_pos == "EC")
         {
-            if let Some(&correct_pos) = etm_map.get(curr_surface.as_str()) {
+            if let Some(&correct_pos) = etm_map().get(curr_surface.as_str()) {
                 etm_corrections.push((i, correct_pos.to_string()));
             }
         }
@@ -174,20 +226,6 @@ pub(super) fn apply_particle_and_ending_corrections(tokens: &mut Vec<SejongToken
     // 일반명사 뒤의 "하다/되다" 계열을 XSV로 보정
     // 패턴: NNG + 하/했/해/되/됐 → NNG + XSV
     // 주의: NP(대명사) 뒤에는 적용하지 않음 (예: "뭐 하니"에서 "하"는 VV)
-    let xsv_patterns: HashMap<&str, bool> = [
-        ("하", true), // 하다
-        ("해", true), // 해요 (하+어)
-        ("했", true), // 했다 (하+았)
-        ("되", true), // 되다
-        ("됐", true), // 됐다 (되+었)
-    ]
-    .into_iter()
-    .collect();
-
-    // XSV 보정 대상: 일반명사만 (대명사 NP 제외)
-    let xsv_trigger_poses: std::collections::HashSet<&str> =
-        ["NNG", "NNP", "NNB"].into_iter().collect();
-
     let mut xsv_corrections: Vec<(usize, String)> = Vec::new();
 
     for i in 1..tokens.len() {
@@ -196,9 +234,9 @@ pub(super) fn apply_particle_and_ending_corrections(tokens: &mut Vec<SejongToken
         let curr_pos = &tokens[i].pos;
 
         // 일반명사 뒤의 VV/EF를 XSV로 보정 (대명사 NP 제외)
-        if xsv_trigger_poses.contains(prev_pos.as_str())
+        if XSV_TRIGGER_POSES.contains(&prev_pos.as_str())
             && (curr_pos == "VV" || curr_pos == "EF" || curr_pos == "VA")
-            && xsv_patterns.contains_key(curr_surface.as_str())
+            && XSV_PATTERNS.contains(&curr_surface.as_str())
         {
             xsv_corrections.push((i, "XSV".to_string()));
         }
@@ -342,8 +380,7 @@ pub(super) fn apply_particle_and_ending_corrections(tokens: &mut Vec<SejongToken
     if let Some(last) = tokens.last_mut() {
         if last.pos == "EC" {
             // 문장 끝에서 종결어미로 사용되는 패턴
-            let final_endings = ["니", "다", "요", "죠", "지", "나", "자"];
-            if final_endings.contains(&last.surface.as_str()) {
+            if FINAL_ENDINGS.contains(&last.surface.as_str()) {
                 last.pos = "EF".to_string();
             }
         }
@@ -439,20 +476,13 @@ pub(super) fn apply_particle_and_ending_corrections(tokens: &mut Vec<SejongToken
     // 13차 보정: 동사 기본형 분리 (Xda/VV → X/VV + 다/EF)
     // 가다, 먹다, 오다, 보다, 하다 등 기본형을 분리
     // 주의: 단독 사용 시만 분리 (문장 내에서는 어간+어미로 분석됨)
-    let base_verbs: std::collections::HashSet<&str> = [
-        "가다", "오다", "보다", "먹다", "되다", "주다", "받다", "쓰다", "읽다", "듣다", "말다",
-        "살다", "죽다", "자다", "일다", "앉다", "서다", "놓다", "두다", "치다", "잡다", "놀다",
-        "울다",
-    ]
-    .into_iter()
-    .collect();
 
     // "하다"는 별도 처리 (XSV인 경우만 VV로 변환 후 분리)
 
     let mut verb_split_indices: Vec<usize> = Vec::new();
 
     for (i, token) in tokens.iter().enumerate() {
-        if token.pos == "VV" && base_verbs.contains(token.surface.as_str()) {
+        if token.pos == "VV" && BASE_VERBS.contains(&token.surface.as_str()) {
             verb_split_indices.push(i);
         }
     }
@@ -559,15 +589,10 @@ pub(super) fn apply_particle_and_ending_corrections(tokens: &mut Vec<SejongToken
 
     // 17차 보정: "X의/NNG" → "X/NP + 의/JKG" 분리
     // "나의", "우리의" 등 대명사+관형격조사 패턴 분리
-    let possessive_pronouns: std::collections::HashSet<&str> =
-        ["나의", "너의", "우리의", "저의", "그의", "그녀의"]
-            .into_iter()
-            .collect();
-
     let mut possessive_split_indices: Vec<usize> = Vec::new();
 
     for (i, token) in tokens.iter().enumerate() {
-        if token.pos == "NNG" && possessive_pronouns.contains(token.surface.as_str()) {
+        if token.pos == "NNG" && POSSESSIVE_PRONOUNS.contains(&token.surface.as_str()) {
             possessive_split_indices.push(i);
         }
     }
@@ -653,11 +678,8 @@ pub(super) fn apply_particle_and_ending_corrections(tokens: &mut Vec<SejongToken
     // 20차 보정: MAJ → MAG 보정
     // "또한", "따라서" 등 일반부사(MAG)로 분류되어야 하는 단어들
     // 주의: "하지만", "그러나", "그래서", "그리고"는 접속부사(MAJ) 유지
-    let maj_to_mag: std::collections::HashSet<&str> =
-        ["또한", "따라서", "그러므로"].into_iter().collect();
-
     for token in tokens.iter_mut() {
-        if token.pos == "MAJ" && maj_to_mag.contains(token.surface.as_str()) {
+        if token.pos == "MAJ" && MAJ_TO_MAG.contains(&token.surface.as_str()) {
             token.pos = "MAG".to_string();
         }
     }
@@ -681,25 +703,10 @@ pub(super) fn apply_particle_and_ending_corrections(tokens: &mut Vec<SejongToken
 
     // 22차 보정: 시간 표현 분리 - "열시/NNG" → "열/NR + 시/NNB"
     // "세시", "열시", "한시" 등의 패턴
-    let time_words: std::collections::HashMap<&str, (&str, &str)> = [
-        ("열시", ("열", "시")),
-        ("세시", ("세", "시")),
-        ("한시", ("한", "시")),
-        ("두시", ("두", "시")),
-        ("네시", ("네", "시")),
-        ("다섯시", ("다섯", "시")),
-        ("여섯시", ("여섯", "시")),
-        ("일곱시", ("일곱", "시")),
-        ("여덟시", ("여덟", "시")),
-        ("아홉시", ("아홉", "시")),
-    ]
-    .into_iter()
-    .collect();
-
     let mut time_split_indices: Vec<(usize, String, String)> = Vec::new();
     for (i, token) in tokens.iter().enumerate() {
         if token.pos == "NNG" {
-            if let Some(&(num, unit)) = time_words.get(token.surface.as_str()) {
+            if let Some(&(num, unit)) = time_words().get(token.surface.as_str()) {
                 time_split_indices.push((i, num.to_string(), unit.to_string()));
             }
         }
@@ -727,5 +734,4 @@ pub(super) fn apply_particle_and_ending_corrections(tokens: &mut Vec<SejongToken
         tokens[idx] = SejongToken::new("그렇", "VA", start, start + 2);
         tokens.insert(idx + 1, SejongToken::new("다면", "EC", start + 2, end));
     }
-
 }
