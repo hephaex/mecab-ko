@@ -2661,12 +2661,8 @@ fn apply_suffix_and_dependency_corrections(tokens: &mut Vec<SejongToken>) {
     }
 }
 
-/// 89~259차: 문장 종결·EC/EF 변환 보정
-///
-/// 문장 끝 EC → EF 변환, 종결어미 정규화, NNG/NNP 분리,
-/// ㄴ다/는다 패턴, 보조동사 VV → VX, XSV 패턴 등
-/// 89~259차 보정 패스를 포함합니다.
-fn apply_sentence_final_corrections(tokens: &mut Vec<SejongToken>) {
+/// 89~132차: XSV 변환, EC↔EF 변환, 보조동사 VX 패턴
+fn apply_xsv_and_ec_ef_corrections(tokens: &mut Vec<SejongToken>) {
     // 89차 보정: 문장 끝 "어요/EC" → "어요/EF"
     // "고마워요" = "고맙/VA 어요/EF"
     // "미안해요" = "미안/NNG 하/XSV 어요/EF"
@@ -3651,6 +3647,16 @@ fn apply_sentence_final_corrections(tokens: &mut Vec<SejongToken>) {
         tokens[idx].pos = "VV".to_string();
         tokens.insert(idx + 1, SejongToken::new("자", "EF", start, end));
     }
+}
+
+/// 89~265차: 문장 종결·EC/EF 변환 보정
+///
+/// 문장 끝 EC → EF 변환, 종결어미 정규화, NNG/NNP 분리,
+/// ㄴ다/는다 패턴, 보조동사 VV → VX, XSV 패턴 등
+/// 89~265차 보정 패스를 포함합니다.
+fn apply_sentence_final_corrections(tokens: &mut Vec<SejongToken>) {
+    // 89~132차: XSV 변환, EC↔EF 변환, 보조동사 VX 패턴
+    apply_xsv_and_ec_ef_corrections(tokens);
 
     // 133차 보정: 동사 기본형 NNG → VV + 다/EF
     // "하다/NNG" → "하/VV + 다/EF"
