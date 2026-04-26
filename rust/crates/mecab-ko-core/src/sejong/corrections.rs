@@ -6458,4 +6458,47 @@ mod tests {
             "으면/EF after VA must become EC (Pass 217 direct call)"
         );
     }
+
+    // ── 보호 테스트 (verb_morpheme): 24차 직접 호출 가기/NNG → VV+ETN ────────
+    #[test]
+    fn test_protection_verb_morpheme_24_verb_gi_splitting() {
+        // Pass 24: 명사형 어미 분리 "가기/NNG" → "가/VV + 기/ETN"
+        let mut tokens = vec![tok("가기", "NNG")];
+        apply_verb_and_morpheme_corrections(&mut tokens);
+        assert_eq!(tokens.len(), 2);
+        assert_eq!(tokens[0].surface, "가");
+        assert_eq!(tokens[0].pos, "VV");
+        assert_eq!(tokens[1].surface, "기");
+        assert_eq!(tokens[1].pos, "ETN");
+    }
+
+    // ── 보호 테스트 (compound_irregular): 228차 직접 호출 할머님 병합 ─────────
+    #[test]
+    fn test_protection_compound_irregular_228_halmeonim() {
+        // Pass 228: "하/XSV + ㄹ/ETM + 머/NP + 님/XSN" → "할머님/NNG"
+        let mut tokens = vec![
+            tok("하", "XSV"),
+            tok("ㄹ", "ETM"),
+            tok("머", "NP"),
+            tok("님", "XSN"),
+        ];
+        apply_compound_and_irregular_corrections(&mut tokens);
+        assert_eq!(tokens.len(), 1);
+        assert_eq!(tokens[0].surface, "할머님");
+        assert_eq!(tokens[0].pos, "NNG");
+    }
+
+    // ── 보호 테스트 (suffix_dep): 167차 직접 호출 NNG + 적/XSN 병합 ───────────
+    #[test]
+    fn test_protection_suffix_dep_167_jeok_xsn_merge() {
+        // Pass 167: NNG + "적/XSN" → NNG 병합 (e.g. "역사적" → "역사적/NNG")
+        let mut tokens = vec![
+            tok("역사", "NNG"),
+            tok("적", "XSN"),
+        ];
+        apply_suffix_and_dependency_corrections(&mut tokens);
+        assert_eq!(tokens.len(), 1);
+        assert_eq!(tokens[0].surface, "역사적");
+        assert_eq!(tokens[0].pos, "NNG");
+    }
 }
