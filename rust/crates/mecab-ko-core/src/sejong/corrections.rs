@@ -311,7 +311,7 @@ pub(super) fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
     apply_sentence_final_corrections(tokens);
 }
 
-/// 24~44차: 동사 분리, 피동·사동 보정, EC/EF 정규화, 존칭 보정
+/// 24~44차(+5, 56, 184, 216, 224): 동사 분리, 피동·사동 보정, EC/EF 정규화, 존칭 보정
 fn apply_verb_splitting_corrections(tokens: &mut Vec<SejongToken>) {
     // 24차 보정: 명사형 어미 분리 - "가기/NNG" → "가/VV + 기/ETN" (동사 어간 + 기)
     // 동사 기본형 사전 (가기, 오기, 하기, 먹기, 보기 등)
@@ -2667,7 +2667,7 @@ fn apply_suffix_and_dependency_corrections(tokens: &mut Vec<SejongToken>) {
     }
 }
 
-/// 89~132차: XSV 변환, EC↔EF 변환, 보조동사 VX 패턴
+/// 89~134차(+9, 176, 179, 213, 220, 235): XSV 변환, EC↔EF 변환, 보조동사 VX 패턴
 fn apply_xsv_and_ec_ef_corrections(tokens: &mut Vec<SejongToken>) {
     // 89차 보정: 문장 끝 "어요/EC" → "어요/EF"
     // "고마워요" = "고맙/VA 어요/EF"
