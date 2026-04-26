@@ -1,3 +1,5 @@
+//! 태그 정규화: 빈 POS, XR 태그, 미분류 태그 보정
+
 use crate::sejong::types::SejongToken;
 
 /// 209~223차: 빈 POS 및 XR 태그 정규화

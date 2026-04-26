@@ -2,7 +2,7 @@
 
 [![Crates.io](https://img.shields.io/crates/v/mecab-ko.svg)](https://crates.io/crates/mecab-ko)
 [![Documentation](https://docs.rs/mecab-ko/badge.svg)](https://docs.rs/mecab-ko)
-[![MSRV](https://img.shields.io/badge/MSRV-1.75-blue)](https://www.rust-lang.org/)
+[![MSRV](https://img.shields.io/badge/MSRV-1.80-blue)](https://www.rust-lang.org/)
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue)](LICENSE)
 
 **고성능 한국어 형태소 분석기 - MeCab-Ko의 순수 Rust 구현**
@@ -21,7 +21,7 @@
 
 ```toml
 [dependencies]
-mecab-ko = "0.7.1"
+mecab-ko = "0.7.2"
 ```
 
 ### Python

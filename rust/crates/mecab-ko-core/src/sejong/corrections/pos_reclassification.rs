@@ -1,3 +1,5 @@
+//! 품사 재분류: MAG/VV→NNG 변환, 외래어 NNP→NNG 변환
+
 use crate::sejong::types::SejongToken;
 
 /// 207차: MAG/VV → NNG 변환 대상 단어

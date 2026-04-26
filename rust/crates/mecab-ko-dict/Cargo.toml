@@ -14,7 +14,7 @@ keywords = ["korean", "dictionary", "morpheme", "nlp", "fst"]
 categories = ["text-processing", "data-structures"]
 
 [dependencies]
-mecab-ko-hangul = { version = "0.7.1", path = "../mecab-ko-hangul" }
+mecab-ko-hangul = { version = "0.7.2", path = "../mecab-ko-hangul" }
 thiserror.workspace = true
 serde.workspace = true
 fst.workspace = true

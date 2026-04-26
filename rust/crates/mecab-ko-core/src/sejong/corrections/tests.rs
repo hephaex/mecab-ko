@@ -1,3 +1,5 @@
+//! corrections 모듈 통합 테스트 및 보호 테스트
+
 use super::apply_context_corrections;
 use super::compound_and_irregular::apply_compound_and_irregular_corrections;
 use super::conjugation::apply_conjugation_corrections;

@@ -5,7 +5,7 @@
 ### System Requirements
 
 - Python 3.8 or later
-- Rust toolchain (1.75 or later)
+- Rust toolchain (1.80 or later)
 - Maturin (Python package builder for Rust)
 
 ### Install Maturin

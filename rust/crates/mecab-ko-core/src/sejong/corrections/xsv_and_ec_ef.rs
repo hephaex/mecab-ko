@@ -1,3 +1,5 @@
+//! XSV 변환 및 EC↔EF 교차 보정: 보조동사 VX 패턴
+
 use crate::sejong::types::SejongToken;
 
 /// 89~112차(+9, 176, 179, 213, 220, 235): XSV 변환, EC↔EF 변환, 보조동사 VX 패턴

@@ -161,7 +161,7 @@ The `index.js` loader automatically selects the correct binary.
 
 #### Cargo.toml Features
 - `crate-type = ["cdylib"]` for dynamic library
-- Rust version: 1.77+ (required by napi-build)
+- Rust version: 1.80+ (required by napi-build)
 - Release profile optimizations:
   - LTO enabled
   - Single codegen unit

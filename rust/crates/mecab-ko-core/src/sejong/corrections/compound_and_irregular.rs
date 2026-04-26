@@ -1,3 +1,5 @@
+//! 복합어 병합 및 불규칙 활용 보정
+
 use crate::sejong::types::SejongToken;
 
 /// 228~244차: 복합어 병합 및 불규칙 활용 보정

@@ -230,7 +230,7 @@ Converts the token to a JSON string.
 
 ### Prerequisites
 
-- Rust (1.75+)
+- Rust (1.80+)
 - wasm-pack
 
 ```bash

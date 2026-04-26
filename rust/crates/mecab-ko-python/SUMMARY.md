@@ -133,7 +133,7 @@ mecab.morphs("안녕하세요")
 | Maturin | Latest | Build system |
 | mecab-ko-core | 0.1.0 | Core tokenizer |
 | Python | 3.8+ | Target runtime |
-| Rust | 1.75+ | Implementation |
+| Rust | 1.80+ | Implementation |
 
 ## Installation Methods
 

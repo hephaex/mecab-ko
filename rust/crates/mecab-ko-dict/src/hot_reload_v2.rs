@@ -76,7 +76,7 @@ struct WriteState {
 }
 
 impl WriteState {
-    // VecDeque::new() is not const-stable on MSRV 1.75, so we suppress the lint.
+    // VecDeque::new() is not const-stable on MSRV 1.80, so we suppress the lint.
     #[allow(clippy::missing_const_for_fn)]
     fn new(max_history: usize) -> Self {
         Self {

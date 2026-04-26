@@ -3,7 +3,7 @@
 [![Crates.io](https://img.shields.io/crates/v/mecab-ko.svg)](https://crates.io/crates/mecab-ko)
 [![Documentation](https://docs.rs/mecab-ko/badge.svg)](https://docs.rs/mecab-ko)
 [![License](https://img.shields.io/crates/l/mecab-ko.svg)](https://github.com/hephaex/mecab-ko)
-[![MSRV](https://img.shields.io/badge/MSRV-1.75-blue)](https://www.rust-lang.org/)
+[![MSRV](https://img.shields.io/badge/MSRV-1.80-blue)](https://www.rust-lang.org/)
 
 **고성능 한국어 형태소 분석기 - MeCab-Ko의 순수 Rust 구현**
 
@@ -25,7 +25,7 @@ Cargo.toml에 추가:
 
 ```toml
 [dependencies]
-mecab-ko = "0.7.1"
+mecab-ko = "0.7.2"
 ```
 
 ## 빠른 시작
@@ -146,7 +146,7 @@ Rust 구현은 기존 C++ 구현과 비슷하거나 더 나은 성능을 제공�
 
 ## 최소 Rust 버전 (MSRV)
 
-이 크레이트는 Rust 1.75 이상을 요구합니다.
+이 크레이트는 Rust 1.80 이상을 요구합니다.
 
 ## 라이선스
 

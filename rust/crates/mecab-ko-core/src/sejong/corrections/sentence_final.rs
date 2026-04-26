@@ -1,3 +1,5 @@
+//! 문장 종결 보정: 종결어미 합성, 보조동사 VX 패턴, 부정 부사 처리
+
 use super::sentence_final_endings::apply_sentence_final_endings_corrections;
 use super::xsv_and_ec_ef::apply_xsv_and_ec_ef_corrections;
 use super::xsv_morpheme_split::apply_xsv_morpheme_split_corrections;

@@ -1,3 +1,5 @@
+//! 복합명사 보정: XPN 복합어 분리, 복합명사 쌍, VA/EC 패턴
+
 use crate::sejong::types::SejongToken;
 
 /// 196차: XPN 복합어 분리 테이블 ("맨손" → ("맨", "손"))

@@ -6,7 +6,7 @@ Thank you for your interest in contributing to mecab-ko-python! This document pr
 
 ### Prerequisites
 
-1. **Rust Toolchain** (1.75+)
+1. **Rust Toolchain** (1.80+)
    ```bash
    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
    source $HOME/.cargo/env

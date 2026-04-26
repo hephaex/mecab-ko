@@ -6,7 +6,7 @@ This guide explains how to build and test the Node.js bindings for MeCab-Ko.
 
 ### System Requirements
 
-- **Rust**: 1.77 or higher
+- **Rust**: 1.80 or higher
 - **Node.js**: 16 or higher
 - **npm** or **yarn** or **pnpm**
 
@@ -204,7 +204,7 @@ Make sure you have run `npm install` first.
 
 ```bash
 rustup update
-rustc --version  # Should be 1.77 or higher
+rustc --version  # Should be 1.80 or higher
 ```
 
 ### Node Module Won't Load

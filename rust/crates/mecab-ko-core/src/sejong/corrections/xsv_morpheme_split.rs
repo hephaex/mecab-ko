@@ -1,3 +1,5 @@
+//! XSV 형태소 분리: 하다/되다/시키다 동사 분리
+
 use crate::sejong::hangul::has_jongseong;
 use crate::sejong::types::SejongToken;
 

@@ -175,7 +175,7 @@ Wheels are tested on Python 3.8, 3.9, 3.10, 3.11, 3.12
 1. **Rust compilation errors**
    ```bash
    # Check Rust version
-   rustc --version  # Should be 1.75+
+   rustc --version  # Should be 1.80+
 
    # Update Rust
    rustup update stable

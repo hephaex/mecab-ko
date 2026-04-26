@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-04-27
+
+### Changed
+- **MSRV 1.80**: Minimum Supported Rust Version upgraded from 1.75 to 1.80
+  - Enables `LazyLock` for simpler lazy-static initialization
+  - All FFI crates (python/wasm/node) updated to MSRV 1.80
+
+### Performance
+- **28 per-call HashMap/HashSet allocations eliminated** (Sprint 87)
+  - `const` slices for small lookup sets (≤12 entries)
+  - `OnceLock<HashMap>` for larger maps (>10 entries)
+  - Zero per-call allocations remaining in corrections/ module
+- **OnceLock → LazyLock simplification** (Sprint 88)
+  - 4 OnceLock + accessor function patterns replaced with direct LazyLock access
+  - `tag_map.rs`: per-call HashMap construction → LazyLock static (46 entries)
+  - `converter.rs`: owned HashMap field → `&'static` reference (zero-copy)
+
+### Improved
+- **corrections/ module documentation**: all 15 sub-modules now have `//!` doc comments
+- **CI**: benchmark workflow no longer auto-commits to main (artifact-only)
+
+### Fixed
+- **CI rebase conflicts**: removed benchmark auto-commit to main branch
+- **mecab-ko-node MSRV**: explicit `rust-version = "1.77"` updated to `1.80`
+
+### Stats
+- 1,198 tests pass / 0 fail / 18 ignored
+- corrections/ per-call allocations: 28 → 0
+- clippy: 0 warnings (workspace code)
+
 ## [0.7.1] - 2026-04-26
 
 ### Added

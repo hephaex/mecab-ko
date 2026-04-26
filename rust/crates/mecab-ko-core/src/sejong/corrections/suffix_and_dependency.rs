@@ -1,3 +1,5 @@
+//! 접미사 및 의존형태소 보정: XSN/XSA/XSV 접미사 처리
+
 use crate::sejong::hangul::has_jongseong;
 use crate::sejong::types::SejongToken;
 

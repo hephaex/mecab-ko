@@ -6,7 +6,7 @@ This guide explains how to build the WebAssembly bindings for MeCab-Ko.
 
 ### Required
 
-- Rust 1.75+ with `wasm32-unknown-unknown` target
+- Rust 1.80+ with `wasm32-unknown-unknown` target
 - wasm-bindgen-cli (optional but recommended)
 
 ```bash

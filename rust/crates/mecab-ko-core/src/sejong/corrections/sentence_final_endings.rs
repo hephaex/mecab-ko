@@ -1,3 +1,5 @@
+//! 종결어미 세부 보정: XPN 접두사, 수사·고유명사 복합어, NR 변환
+
 use crate::sejong::types::SejongToken;
 
 /// 152차 보정에 사용되는 XPN 접두사 목록

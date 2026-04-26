@@ -1,3 +1,5 @@
+//! 조사/어미 보정: 주격·목적격·관형격 조사, 어미 변환, 시간 표현 보정
+
 use crate::sejong::hangul::extract_vowel;
 use crate::sejong::types::SejongToken;
 use std::collections::HashMap;

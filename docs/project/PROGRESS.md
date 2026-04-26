@@ -1,6 +1,44 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-27 (Sprint 88 완료 -- MSRV 1.80 + LazyLock + CI 수정)
+## 마지막 업데이트: 2026-04-27 (Sprint 89 완료 -- v0.7.2 릴리스 준비)
+
+### ✅ Sprint 89 - v0.7.2 릴리스 준비 + 코드 품질 + 벤치마크
+
+**기간**: 2026-04-27
+**목표**: v0.7.2 버전 범프, CHANGELOG, MSRV 문서 갱신, corrections/ 모듈 문서화, 벤치마크 비교
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| workspace version | 0.7.1 | 0.7.2 |
+| Cargo.toml 내부 deps | 0.7.1 (22개) | 0.7.2 |
+| README MSRV 배지 | 1.75 | 1.80 |
+| MSRV 문서 참조 | 1.75 (16개 파일) | 1.80 |
+| mecab-ko-node rust-version | 1.77 | 1.80 |
+| corrections/ doc comments | 1개 (mod.rs) | 16개 (전체) |
+| CHANGELOG v0.7.2 | 없음 | 작성 완료 |
+
+#### 벤치마크 결과 (v0.7.2, mini-dict)
+
+| 벤치마크 | 시간 | 변화 |
+|----------|------|------|
+| normalization_toggle/disabled | 8.71 µs | **-11.7%** |
+| tokenizer_wakati/medium | 7.95 µs | **-1.8%** |
+| tokenizer_scalability/1000chars | 1.08 ms | **-3.3%** |
+| normalization_by_text_type/pure_korean | 7.96 µs | -1.2% |
+| normalization_chain/complex_text | 35.3 µs | +2.4% |
+
+#### #[allow(clippy::too_many_lines)] 리뷰 (8개)
+
+모두 KEEP 판정: 데이터 테이블(lexicon 493줄, tag_map 222줄, inflect_gen 193줄), 순차 처리(mod.rs 300줄), CLI 루프(repl 169줄, collect_async ~800줄), HTML 생성(lattice_viz), 예제(config_examples 140줄)
+
+#### 상태
+- 테스트: 1,198 pass / 0 fail / 18 ignored
+- clippy: 0 warnings (workspace code)
+- crates.io 배포: 대기 (Sprint 90에서 실행)
+
+---
 
 ### ✅ Sprint 88 - MSRV 1.80 + LazyLock + tag_map 최적화 + CI 수정
 

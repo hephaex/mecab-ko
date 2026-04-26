@@ -345,7 +345,7 @@ npm test
 
 ### Prerequisites for Building
 
-- Rust toolchain (>= 1.75)
+- Rust toolchain (>= 1.80)
 - Node.js (>= 18)
 - Cargo
 

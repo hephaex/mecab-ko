@@ -222,7 +222,7 @@ Successfully implemented a comprehensive integration test suite for MeCab-Ko Rus
      - Codecov upload
   3. **Documentation** (Linux only)
      - Doc build with warnings as errors
-  4. **MSRV Check** (Rust 1.75)
+  4. **MSRV Check** (Rust 1.80)
      - Verify minimum supported version
 
 ### 6. Documentation

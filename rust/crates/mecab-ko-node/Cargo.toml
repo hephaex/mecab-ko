@@ -2,8 +2,8 @@
 name = "mecab-ko-node"
 version.workspace = true
 edition.workspace = true
-# napi-build requires cargo:: syntax which needs Rust 1.77+
-rust-version = "1.77"
+# napi-build requires cargo:: syntax which needs Rust 1.80+
+rust-version = "1.80"
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
@@ -20,7 +20,7 @@ crate-type = ["cdylib"]
 doc = false  # Skip docs for Node.js bindings (FFI crate, not meant for Rust docs)
 
 [dependencies]
-mecab-ko-core = { version = "0.7.1", path = "../mecab-ko-core" }
+mecab-ko-core = { version = "0.7.2", path = "../mecab-ko-core" }
 # napi-rs for Node.js bindings
 napi = "3"
 napi-derive = "3"

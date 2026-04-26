@@ -1,3 +1,5 @@
+//! 동사·형태소 보정: 종성 기반 어미 조정, 보조동사 패턴
+
 use crate::sejong::hangul::has_jongseong;
 use crate::sejong::types::SejongToken;
 
