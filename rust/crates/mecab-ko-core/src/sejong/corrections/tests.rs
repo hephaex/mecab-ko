@@ -2,8 +2,12 @@ use super::apply_context_corrections;
 use super::compound_and_irregular::apply_compound_and_irregular_corrections;
 use super::conjugation::apply_conjugation_corrections;
 use super::sentence_final::apply_sentence_final_corrections;
+use super::sentence_final_endings::apply_sentence_final_endings_corrections;
 use super::suffix_and_dependency::apply_suffix_and_dependency_corrections;
 use super::verb_and_morpheme::apply_verb_and_morpheme_corrections;
+use super::verb_splitting::apply_verb_splitting_corrections;
+use super::xsv_and_ec_ef::apply_xsv_and_ec_ef_corrections;
+use super::xsv_morpheme_split::apply_xsv_morpheme_split_corrections;
 use crate::sejong::types::SejongToken;
 
 fn tok(surface: &str, pos: &str) -> SejongToken {
@@ -667,4 +671,58 @@ fn test_protection_suffix_dep_167_jeok_xsn_merge() {
     assert_eq!(tokens.len(), 1);
     assert_eq!(tokens[0].surface, "역사적");
     assert_eq!(tokens[0].pos, "NNG");
+}
+
+// ── 보호 테스트 (xsv_morpheme_split): 113차 직접 호출 고나서 병합 ─────────
+#[test]
+fn test_protection_xsv_morpheme_split_113_gonaseo_merge() {
+    // Pass 113: "고/EC + 나/NP + 서/JKB" → "고나서/EC"
+    let mut tokens = vec![
+        tok_at("고", "EC", 0, 1),
+        tok_at("나", "NP", 1, 2),
+        tok_at("서", "JKB", 2, 3),
+    ];
+    apply_xsv_morpheme_split_corrections(&mut tokens);
+    assert_eq!(tokens.len(), 1, "고+나+서 must merge into 고나서");
+    assert_eq!(tokens[0].surface, "고나서");
+    assert_eq!(tokens[0].pos, "EC");
+    assert_eq!(tokens[0].start_pos, 0);
+    assert_eq!(tokens[0].end_pos, 3);
+}
+
+// ── 보호 테스트 (verb_splitting): 24차 직접 호출 가기/NNG → VV+ETN 분리 ──
+#[test]
+fn test_protection_verb_splitting_24_gagi_nng_to_vv_etn() {
+    // Pass 24: 명사형 어미 분리 "가기/NNG" → "가/VV + 기/ETN"
+    let mut tokens = vec![tok("가기", "NNG")];
+    apply_verb_splitting_corrections(&mut tokens);
+    assert_eq!(tokens.len(), 2, "가기/NNG must split into 가/VV + 기/ETN");
+    assert_eq!(tokens[0].surface, "가");
+    assert_eq!(tokens[0].pos, "VV");
+    assert_eq!(tokens[1].surface, "기");
+    assert_eq!(tokens[1].pos, "ETN");
+}
+
+// ── 보호 테스트 (sentence_final_endings): 164차 직접 호출 NR 수사 병합 ────
+#[test]
+fn test_protection_sentence_final_endings_164_nr_numeral_merge() {
+    // Pass 164: "삼/NR + 십/NR" → "삼십/NR"
+    let mut tokens = vec![tok_at("삼", "NR", 0, 1), tok_at("십", "NR", 1, 2)];
+    apply_sentence_final_endings_corrections(&mut tokens);
+    assert_eq!(tokens.len(), 1, "삼 + 십 must merge into 삼십");
+    assert_eq!(tokens[0].surface, "삼십");
+    assert_eq!(tokens[0].pos, "NR");
+}
+
+// ── 보호 테스트 (xsv_and_ec_ef): 91차 직접 호출 는다/EC → EF 변환 ─────────
+#[test]
+fn test_protection_xsv_and_ec_ef_91_neunda_ec_to_ef() {
+    // Pass 91: "는다/EC" → "는다/EF" (평서형 종결어미)
+    let mut tokens = vec![tok("먹", "VV"), tok("는다", "EC")];
+    apply_xsv_and_ec_ef_corrections(&mut tokens);
+    assert_eq!(tokens[1].surface, "는다");
+    assert_eq!(
+        tokens[1].pos, "EF",
+        "는다/EC must become EF (Pass 91 direct call)"
+    );
 }

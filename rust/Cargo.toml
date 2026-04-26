@@ -39,7 +39,7 @@ repository = "https://github.com/hephaex/mecab-ko"
 homepage = "https://github.com/hephaex/mecab-ko"
 documentation = "https://docs.rs/mecab-ko"
 readme = "README.md"
-keywords = ["korean", "morphological-analysis", "nlp", "tokenizer", "mecab"]
+keywords = ["korean", "morphology", "nlp", "tokenizer", "mecab"]
 categories = ["text-processing", "science"]
 
 [workspace.dependencies]
