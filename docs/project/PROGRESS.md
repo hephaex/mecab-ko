@@ -1,6 +1,38 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-27 (Sprint 87 완료 -- per-call 할당 제거 성능 최적화)
+## 마지막 업데이트: 2026-04-27 (Sprint 88 완료 -- MSRV 1.80 + LazyLock + CI 수정)
+
+### ✅ Sprint 88 - MSRV 1.80 + LazyLock + tag_map 최적화 + CI 수정
+
+**기간**: 2026-04-27
+**목표**: MSRV 업그레이드, OnceLock→LazyLock 전환, tag_map 정적화, CI 자동커밋 제거
+
+#### 커밋 내역
+
+| 커밋 | 내용 |
+|------|------|
+| `28ac73d` | fix(ci): remove auto-commit to main in benchmark workflow |
+| `fb4364c` | perf: MSRV 1.80 + OnceLock→LazyLock + tag_map static init |
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| MSRV | 1.75 | 1.80 |
+| particle_and_ending.rs | OnceLock×3 + accessor fn×3 | LazyLock×3 (직접 접근) |
+| tag_map.rs | init_tag_map() per-call | LazyLock static init |
+| converter.rs | HashMap<> 소유 | &'static HashMap<> 참조 |
+| benchmark.yml | main에 자동커밋 | artifact 업로드만 |
+
+#### 테스트 결과
+
+| 지표 | Sprint 87 | Sprint 88 | 변화 |
+|------|-----------|-----------|------|
+| 총 테스트 | 1,198 | 1,198 | 0 (순수 리팩토링) |
+| passed | 1,198 | 1,198 | 0 |
+| clippy warnings | 0 | 0 | 0 |
+
+---
 
 ### ✅ Sprint 87 - per-call 할당 제거 성능 최적화
 
