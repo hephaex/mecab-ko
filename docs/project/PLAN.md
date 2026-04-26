@@ -1,3 +1,42 @@
+# ✅ 완료: Phase 49 - Sprint 83 (corrections 분할 4차 — inline 완전 추출)
+
+## 🎯 Sprint 83 목표
+corrections.rs main inline 코드 완전 추출 (2,633→300줄), 보호 테스트 확충
+
+## Sprint 83 작업 목록
+
+### Track A: corrections.rs 분할 4차
+- [x] S83-01: apply_verb_and_morpheme_corrections 추출 (passes 24-67, 2,633→1,238) ✅
+- [x] S83-02: apply_compound_and_irregular_corrections 추출 (passes 228-244, 1,238→867) ✅
+- [x] S83-03: apply_suffix_and_dependency_corrections 추출 (passes 167-172/68-85, 867→300) ✅
+
+### Track B: 보호 테스트
+- [x] S83-04: sentence_final 보호 테스트 3개 + conjugation 직접호출 테스트 2개 추가 ✅
+
+### Track C: 리뷰 + 문서
+- [x] S83-05: Sprint 83 리뷰 + PLAN/PROGRESS/memory 업데이트 ✅
+
+---
+
+## 📋 Sprint 84 로드맵
+
+### P1: v0.7.1 릴리스
+- v0.7.1 annotated tag 재설정 (HEAD)
+- git push (42+ commits ahead)
+- cargo publish --dry-run 전 크레이트
+- crates.io 실제 배포
+
+### P2: corrections.rs 대형 서브함수 분할
+- sentence_final 1,821줄 → 2-3개로 분할
+- verb_and_morpheme 1,392줄 → 2개로 분할 검토
+
+### P3: 성능 최적화 + v0.8.0 준비
+- LazyLock/phf 적용 (particle_map, verb_gi_words 등 매 호출 HashMap 제거)
+- Streaming API async 버전 (tokio feature flag)
+- WASM/Node e2e 테스트 WIP 해제
+
+---
+
 # ✅ 완료: Phase 48 - Sprint 82 (corrections 분할 3차 + CHANGELOG + 보호 테스트)
 
 ## 🎯 Sprint 82 목표
@@ -15,29 +54,6 @@ corrections.rs 추가 추출 (3,337→2,633), CHANGELOG/README 버전 수정, �
 ### Track C: 문서 + 릴리스 준비
 - [x] S82-04: CHANGELOG.md v0.7.1 + README 0.1.1→0.7.1 ✅
 - [x] S82-05: Sprint 82 리뷰 + PLAN/PROGRESS 업데이트 ✅
-
----
-
-## 📋 Sprint 83 로드맵
-
-### P1: corrections.rs 분할 4차 — inline passes 24-173 추출
-- main function 2,633줄 → 300줄 이하 목표
-- **핵심**: inline passes 24-173 (~2,334줄)을 2-3개 서브함수로 추출
-  - 동사/형용사 분리 그룹 (24-50번대)
-  - NNG/NNP 합성어 보정 그룹 (60-100번대)
-  - 기타 패턴 그룹 (110-173번대)
-- sentence_final 전용 보호 테스트 2-3개 추가 (리뷰 M4)
-- conjugation 전용 보호 테스트 추가 (S81 리뷰 M1)
-
-### P2: v0.7.1 릴리스
-- v0.7.1 annotated tag 재설정 (HEAD)
-- git push (38+ commits ahead)
-- cargo publish --dry-run 전 크레이트
-- crates.io 실제 배포
-
-### P3: v0.8.0 준비 (Sprint 84+)
-- sentence_final 1,821줄 → 2-3개로 분할
-- LazyLock/phf 적용 (particle_map 등 매 호출 HashMap 제거)
 - Streaming API async 버전 (tokio feature flag)
 - WASM/Node e2e 테스트 WIP 해제
 

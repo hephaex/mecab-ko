@@ -23,8 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Node.js Bindings**
   - napi-rs 3.x based Node.js bindings replacing old N-API layer
 - **Tests**
-  - 1,186 total tests (0 failures, 100% pass rate)
+  - 1,191 total tests (0 failures, 100% pass rate)
   - Async tokenizer tests added to CI async-tests job
+  - 5 protection tests: sentence_final, conjugation direct-call (Sprint 83)
   - 5 protection tests: conjugation, post_conjugation, particle, compound_noun (Sprint 82)
   - 3 tag_normalization protection tests (Sprint 81)
   - 18 corrections protection tests (Sprint 79)
@@ -35,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Composite action `rust-setup` shared across all CI workflows
   - Async-tests job added as dedicated CI step
 - **Code Quality**
-  - `corrections.rs` refactored: extracted 8 sub-functions (5,590 → 2,633 lines in main fn)
+  - `corrections.rs` refactored: extracted 11 sub-functions (5,590 → 300 lines in main fn)
   - `sejong` module visibility tightened (`pub` → `pub(super)` for internal items)
 
 ### Fixed
@@ -45,7 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `npm-publish.yml` WASM toolchain variable expanded correctly in shell
 
 ### Performance
-- 1,186 tests passing, 0 failures
+- 1,191 tests passing, 0 failures
 - 100% token accuracy maintained across all test sentences
 
 ## [0.6.0] - 2026-03-19

@@ -1,6 +1,58 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-26 (Sprint 82 완료 — corrections 분할 3차 + CHANGELOG + 보호 테스트)
+## 마지막 업데이트: 2026-04-26 (Sprint 83 완료 — corrections inline 완전 추출)
+
+### ✅ Sprint 83 - corrections 분할 4차 — inline 완전 추출 + 보호 테스트
+
+**기간**: 2026-04-26
+**목표**: main function inline 코드 완전 추출 (2,633→300줄), sentence_final/conjugation 보호 테스트
+
+#### 에이전트 실행
+
+| 에이전트 | 작업 | 결과 |
+|----------|------|------|
+| rust-developer | verb_and_morpheme 추출 | passes 24-67 (2,633→1,238) |
+| rust-developer | compound_and_irregular 추출 | passes 228-244 (1,238→867) |
+| rust-developer | suffix_and_dependency 추출 | passes 167-172/68-85 (867→300) |
+| rust-developer | 보호 테스트 5개 | sentence_final 3 + conjugation 2 |
+| code-reviewer | 리뷰 | APPROVE (C0/H0/M2/L2) |
+
+#### 커밋 내역
+
+| 커밋 | 내용 |
+|------|------|
+| `da53706` | refactor: verb_and_morpheme 추출 (2,633→1,238) |
+| `4d99b7f` | refactor: compound_and_irregular 추출 (1,238→867) |
+| `57e64b1` | refactor: suffix_and_dependency 추출 (867→300) |
+| `c14a896` | test: sentence_final/conjugation 보호 테스트 5개 |
+
+#### 테스트 변화
+
+| 지표 | Sprint 82 | Sprint 83 | 변화 |
+|------|-----------|-----------|------|
+| 총 테스트 | 1,186 | 1,191 | +5 (보호 테스트) |
+| passed | 1,186 | 1,191 | +5 |
+| corrections tests | 44 | 49 | +5 |
+| main function 줄수 | 2,633 | 300 | -2,333 |
+| 서브함수 수 | 8 | 11 | +3 |
+
+#### 전체 서브함수 현황 (11개)
+
+| 함수 | 줄수 | 내용 | Sprint |
+|------|------|------|--------|
+| apply_sentence_final_corrections | 1,821 | 89~259차 문장 종결 | S81 |
+| apply_verb_and_morpheme_corrections | 1,392 | 24~67차 동사/어미 | S83 |
+| apply_particle_and_ending_corrections | 706 | 1~23차 조사/어미 | S82 |
+| apply_suffix_and_dependency_corrections | 571 | 167~172/68~85차 접미사/의존명사 | S83 |
+| apply_compound_and_irregular_corrections | 371 | 228~244차 복합어/불규칙 | S83 |
+| apply_conjugation_corrections | 181 | 174~219차 활용 보정 | S81 |
+| apply_compound_noun_corrections | 190 | 192~202차 복합어 | S81 |
+| apply_post_conjugation_corrections | 105 | 86/87/88/205/220차 | S82 |
+| apply_pos_reclassification_corrections | 95 | 207~256차 POS 재분류 | S80 |
+| apply_tag_normalization_corrections | 33 | 209/223차 태그 정규화 | S80 |
+| **apply_context_corrections (main)** | **300** | **오케스트레이터** | **S83** |
+
+---
 
 ### ✅ Sprint 82 - corrections 분할 3차 + CHANGELOG v0.7.1 + 보호 테스트
 
