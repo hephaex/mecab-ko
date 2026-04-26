@@ -1,6 +1,47 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-26 (Sprint 85 완료 -- corrections/ 디렉토리 전환)
+## 마지막 업데이트: 2026-04-26 (Sprint 86 완료 -- v0.7.1 릴리스 + 보호 테스트)
+
+### ✅ Sprint 86 - v0.7.1 릴리스 + 보호 테스트 확충
+
+**기간**: 2026-04-26
+**목표**: v0.7.1 crates.io 배포, 보호 테스트 52→56, remote 충돌 해결
+
+#### 커밋 내역
+
+| 커밋 | 내용 |
+|------|------|
+| `f172c84` | fix(corrections): remove dead imports and format tests (review H1/M1) |
+| `79ce4d4` | fix(workspace): shorten keyword + add 4 protection tests |
+
+#### crates.io v0.7.1 배포 (7/7 완료)
+
+| 크레이트 | 버전 | 상태 |
+|---------|------|------|
+| mecab-ko-hangul | v0.7.1 | ✅ Published |
+| mecab-ko-dict | v0.7.1 | ✅ Published |
+| mecab-ko-core | v0.7.1 | ✅ Published |
+| mecab-ko-dict-builder | v0.7.1 | ✅ Published |
+| mecab-ko-dict-sync | v0.7.1 | ✅ Published |
+| mecab-ko-dict-validator | v0.7.1 | ✅ Published |
+| mecab-ko | v0.7.1 | ✅ Published |
+
+#### 보호 테스트 변화
+
+| 지표 | Sprint 85 | Sprint 86 | 변화 |
+|------|-----------|-----------|------|
+| 총 테스트 | 1,194 | 1,198 | +4 |
+| passed | 1,194 | 1,198 | +4 |
+| corrections 보호 테스트 | 52 | 56 | +4 |
+| 추가된 테스트 대상 | - | xsv_morpheme_split, verb_splitting, sentence_final_endings, xsv_and_ec_ef | |
+
+#### 주요 이슈 해결
+
+- Remote 충돌: benchmark dashboard CI 커밋과 rebase 통합
+- crates.io 키워드: "morphological-analysis" (23자) → "morphology" (10자, <20자 제한)
+- 코드 리뷰 H1: mod.rs 죽은 import 제거 (hangul::extract_vowel, has_jongseong)
+
+---
 
 ### ✅ Sprint 85 - corrections/ 디렉토리 전환 + 추가 분할
 
