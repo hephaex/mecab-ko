@@ -1,6 +1,51 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-26 (Sprint 84 완료 — 대형 서브함수 분할)
+## 마지막 업데이트: 2026-04-26 (Sprint 85 완료 -- corrections/ 디렉토리 전환)
+
+### ✅ Sprint 85 - corrections/ 디렉토리 전환 + 추가 분할
+
+**기간**: 2026-04-26
+**목표**: corrections.rs -> corrections/ 디렉토리, 800줄 초과 파일 추가 분할
+
+#### 커밋 내역
+
+| 커밋 | 내용 |
+|------|------|
+| `e67d8b7` | refactor: corrections.rs -> corrections/ (6,516 -> 14 files) |
+| `6613339` | refactor: sentence_final (838->440+413) + xsv_ec_ef (990->499+495) |
+
+#### corrections/ 디렉토리 파일 현황 (16개)
+
+| 파일 | 줄수 | 내용 |
+|------|------|------|
+| verb_splitting.rs | 764 | 동사 분리 (passes 5,24-44,56,184,216,224) |
+| particle_and_ending.rs | 731 | 조사/어미 (passes 1-23) |
+| tests.rs | 674 | 52개 보호 테스트 |
+| verb_and_morpheme.rs | 642 | 동사/어미 (passes 24-67) |
+| suffix_and_dependency.rs | 577 | 접미사/의존명사 (passes 167-172,68-85) |
+| xsv_and_ec_ef.rs | 499 | XSV/EC/EF (passes 89-112) |
+| xsv_morpheme_split.rs | 495 | 형태소 분리 (passes 113-134) |
+| sentence_final.rs | 440 | 문장 종결 1부 (passes 89-148) |
+| sentence_final_endings.rs | 413 | 문장 종결 2부 (passes 149-259) |
+| compound_and_irregular.rs | 380 | 복합어/불규칙 (passes 228-244) |
+| mod.rs | 344 | 오케스트레이터 (300줄 main) |
+| compound_noun.rs | 202 | 복합명사 (passes 190-197) |
+| conjugation.rs | 181 | 활용 보정 (passes 174-219) |
+| post_conjugation.rs | 108 | 후처리 (passes 220,86-88,205) |
+| pos_reclassification.rs | 101 | 품사 재분류 |
+| tag_normalization.rs | 39 | 태그 정규화 |
+| **총계** | **6,590** | **모든 파일 800줄 이하** |
+
+#### 테스트 변화
+
+| 지표 | Sprint 84 | Sprint 85 | 변화 |
+|------|-----------|-----------|------|
+| 총 테스트 | 1,194 | 1,194 | 0 (구조 변경만) |
+| passed | 1,194 | 1,194 | 0 |
+| 최대 파일 줄수 | 6,516 (단일) | 764 | -88% |
+| 파일 수 | 1 | 16 | +15 |
+
+---
 
 ### ✅ Sprint 84 - 대형 서브함수 분할 + 보호 테스트
 
