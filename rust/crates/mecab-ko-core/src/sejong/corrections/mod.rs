@@ -1,6 +1,5 @@
 //! 컨텍스트 기반 품사 보정 (265개 보정 패스)
 
-use super::hangul::{extract_vowel, has_jongseong};
 use super::types::SejongToken;
 
 mod compound_and_irregular;
@@ -31,7 +30,6 @@ use sentence_final::apply_sentence_final_corrections;
 use suffix_and_dependency::apply_suffix_and_dependency_corrections;
 use tag_normalization::apply_tag_normalization_corrections;
 use verb_and_morpheme::apply_verb_and_morpheme_corrections;
-
 
 /// 컨텍스트 기반 품사 보정
 ///
@@ -337,8 +335,4 @@ pub(super) fn apply_context_corrections(tokens: &mut Vec<SejongToken>) {
 
     // 89~259차: 문장 종결·EC/EF 변환 보정
     apply_sentence_final_corrections(tokens);
-
-    // suppress unused import warnings
-    let _ = extract_vowel;
-    let _ = has_jongseong;
 }
