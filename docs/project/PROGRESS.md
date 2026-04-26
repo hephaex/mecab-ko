@@ -1,6 +1,58 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-26 (Sprint 83 완료 — corrections inline 완전 추출)
+## 마지막 업데이트: 2026-04-26 (Sprint 84 완료 — 대형 서브함수 분할)
+
+### ✅ Sprint 84 - 대형 서브함수 분할 + 보호 테스트
+
+**기간**: 2026-04-26
+**목표**: sentence_final/verb_and_morpheme 분할, Sprint 83 보호 테스트 추가
+
+#### 에이전트 실행
+
+| 에이전트 | 작업 | 결과 |
+|----------|------|------|
+| rust-developer | 보호 테스트 3개 | verb_morpheme/compound_irregular/suffix_dep |
+| rust-developer | sentence_final 분할 | 1,821→986+1,020 |
+| rust-developer | verb_and_morpheme 분할 | 1,401→762+638 |
+| code-reviewer | 리뷰 | 진행 중 |
+
+#### 커밋 내역
+
+| 커밋 | 내용 |
+|------|------|
+| `b528d4f` | test: S83 함수 보호 테스트 3개 (24/228/167) |
+| `a75a0b4` | refactor: sentence_final 분할 (1,821→986+1,020) |
+| `dcdfeb3` | refactor: verb_and_morpheme 분할 (1,401→762+638) |
+
+#### 테스트 변화
+
+| 지표 | Sprint 83 | Sprint 84 | 변화 |
+|------|-----------|-----------|------|
+| 총 테스트 | 1,191 | 1,194 | +3 (보호 테스트) |
+| passed | 1,191 | 1,194 | +3 |
+| corrections tests | 49 | 52 | +3 |
+| 서브함수 수 | 11 | 13 | +2 (xsv_ec_ef, verb_splitting) |
+| 최대 함수 줄수 | 1,821 | 1,020 | -44% |
+
+#### 전체 서브함수 현황 (13개)
+
+| 함수 | 줄수 | Sprint |
+|------|------|--------|
+| apply_sentence_final_corrections | 1,020 | S84 분할 |
+| apply_xsv_and_ec_ef_corrections | 986 | S84 추출 |
+| apply_verb_splitting_corrections | 762 | S84 추출 |
+| apply_particle_and_ending_corrections | 717 | S82 |
+| apply_verb_and_morpheme_corrections | 638 | S84 분할 |
+| apply_suffix_and_dependency_corrections | 573 | S83 |
+| apply_compound_and_irregular_corrections | 372 | S83 |
+| apply_context_corrections (main) | 300 | S83 |
+| apply_compound_noun_corrections | 201 | S81 |
+| apply_conjugation_corrections | 181 | S81 |
+| apply_post_conjugation_corrections | 116 | S82 |
+| apply_pos_reclassification_corrections | 95 | S80 |
+| apply_tag_normalization_corrections | 34 | S80 |
+
+---
 
 ### ✅ Sprint 83 - corrections 분할 4차 — inline 완전 추출 + 보호 테스트
 

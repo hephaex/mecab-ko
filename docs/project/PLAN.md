@@ -1,3 +1,42 @@
+# ✅ 완료: Phase 50 - Sprint 84 (대형 서브함수 분할 + 보호 테스트)
+
+## 🎯 Sprint 84 ��표
+sentence_final과 verb_and_morpheme 2분할, Sprint 83 보호 테스트 추가
+
+## Sprint 84 작업 목록
+
+### Track A: 대형 서브함수 분할
+- [x] S84-02: sentence_final 분할 (1,821→986+1,020) — xsv_and_ec_ef 추출 ✅
+- [x] S84-03: verb_and_morpheme 분할 (1,401→762+638) — verb_splitting 추출 ✅
+
+### Track B: 보호 테스트
+- [x] S84-01: Sprint 83 함수 보호 테스트 3개 (verb_morpheme, compound_irregular, suffix_dep) ✅
+
+### Track C: 리뷰 + 문서
+- [x] S84-04: Sprint 84 리뷰 + PLAN/PROGRESS/memory 업데이트 ✅
+
+---
+
+## 📋 Sprint 85 로드맵
+
+### P1: v0.7.1 릴리스
+- v0.7.1 annotated tag 재설정 (HEAD)
+- git push (45+ commits ahead)
+- cargo publish --dry-run 전 크레이트
+- crates.io 실제 배포
+
+### P2: corrections.rs 파일 분할 (corrections/ 디렉토리)
+- 단일 파일 6,500줄 → corrections/ 디렉토리로 전환
+- 각 서브함수를 별도 파일로 분리
+- mod.rs에 pub(super) fn apply_context_corrections 유지
+
+### P3: 성능 최적화 + v0.8.0 준비
+- LazyLock/phf 적용 (particle_map, verb_gi_words 등)
+- sentence_final 1,020줄 추가 분할 (800줄 이하 목표)
+- xsv_and_ec_ef 986줄 추가 분할 (800줄 이하 목표)
+
+---
+
 # ✅ 완료: Phase 49 - Sprint 83 (corrections 분할 4차 — inline 완전 추출)
 
 ## 🎯 Sprint 83 목표
@@ -15,19 +54,6 @@ corrections.rs main inline 코드 완전 추출 (2,633→300줄), 보호 테스�
 
 ### Track C: 리뷰 + 문서
 - [x] S83-05: Sprint 83 리뷰 + PLAN/PROGRESS/memory 업데이트 ✅
-
----
-
-## 📋 Sprint 84 로드맵
-
-### P1: v0.7.1 릴리스
-- v0.7.1 annotated tag 재설정 (HEAD)
-- git push (42+ commits ahead)
-- cargo publish --dry-run 전 크레이트
-- crates.io 실제 배포
-
-### P2: corrections.rs 대형 서브함수 분할
-- sentence_final 1,821줄 → 2-3개로 분할
 - verb_and_morpheme 1,392줄 → 2개로 분할 검토
 
 ### P3: 성능 최적화 + v0.8.0 준비
