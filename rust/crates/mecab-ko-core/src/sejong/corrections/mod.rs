@@ -10,11 +10,13 @@ mod particle_and_ending;
 mod post_conjugation;
 mod pos_reclassification;
 mod sentence_final;
+mod sentence_final_endings;
 mod suffix_and_dependency;
 mod tag_normalization;
 mod verb_and_morpheme;
 mod verb_splitting;
 mod xsv_and_ec_ef;
+mod xsv_morpheme_split;
 
 #[cfg(test)]
 mod tests;
