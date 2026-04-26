@@ -1,11 +1,19 @@
 //! 품사 태그 매핑 테이블
 
 use std::collections::HashMap;
+use std::sync::LazyLock;
 
-/// 품사 태그 매핑 테이블 초기화
-#[allow(clippy::too_many_lines)]
+static TAG_MAP: LazyLock<HashMap<String, Vec<String>>> = LazyLock::new(build_tag_map);
+
+/// 전역 품사 태그 매핑 테이블을 반환한다. 최초 접근 시 한 번만 초기화된다.
 #[must_use]
-pub(super) fn init_tag_map() -> HashMap<String, Vec<String>> {
+pub(super) fn tag_map() -> &'static HashMap<String, Vec<String>> {
+    &TAG_MAP
+}
+
+/// 품사 태그 매핑 테이블 초기화 (내부 빌더)
+#[allow(clippy::too_many_lines)]
+fn build_tag_map() -> HashMap<String, Vec<String>> {
     let mut map: HashMap<String, Vec<String>> = HashMap::new();
 
     // 동사 + 어미
@@ -234,8 +242,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_init_tag_map_verb_endings() {
-        let map = init_tag_map();
+    fn test_tag_map_verb_endings() {
+        let map = tag_map();
         assert_eq!(
             map.get("VV+EF"),
             Some(&vec!["VV".to_string(), "EF".to_string()])
@@ -251,8 +259,8 @@ mod tests {
     }
 
     #[test]
-    fn test_init_tag_map_three_way_splits() {
-        let map = init_tag_map();
+    fn test_tag_map_three_way_splits() {
+        let map = tag_map();
         assert_eq!(
             map.get("VV+EP+EF"),
             Some(&vec!["VV".to_string(), "EP".to_string(), "EF".to_string()])
@@ -264,8 +272,8 @@ mod tests {
     }
 
     #[test]
-    fn test_init_tag_map_noun_particle_entries() {
-        let map = init_tag_map();
+    fn test_tag_map_noun_particle_entries() {
+        let map = tag_map();
         assert_eq!(
             map.get("NNG+JKS"),
             Some(&vec!["NNG".to_string(), "JKS".to_string()])

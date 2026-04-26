@@ -397,10 +397,10 @@ pub(super) fn split_morpheme<S: std::hash::BuildHasher>(
 mod tests {
     use super::*;
     use crate::sejong::ending_rules::init_ending_rules;
-    use crate::sejong::tag_map::init_tag_map;
+    use crate::sejong::tag_map::tag_map;
 
-    fn make_tag_map() -> HashMap<String, Vec<String>> {
-        init_tag_map()
+    fn make_tag_map() -> &'static HashMap<String, Vec<String>> {
+        tag_map()
     }
 
     fn make_rules() -> Vec<crate::sejong::types::EndingRule> {
@@ -425,11 +425,11 @@ mod tests {
     fn test_split_compound_tag_known_pattern() {
         let map = make_tag_map();
         assert_eq!(
-            split_compound_tag(&map, "VV+EF"),
+            split_compound_tag(map, "VV+EF"),
             vec!["VV".to_string(), "EF".to_string()]
         );
         assert_eq!(
-            split_compound_tag(&map, "VA+EP+EF"),
+            split_compound_tag(map, "VA+EP+EF"),
             vec!["VA".to_string(), "EP".to_string(), "EF".to_string()]
         );
     }
@@ -438,7 +438,7 @@ mod tests {
     fn test_split_compound_tag_unknown_falls_back_to_simple_split() {
         let map = make_tag_map();
         // 매핑 테이블에 없는 복합 태그는 단순 분리
-        let result = split_compound_tag(&map, "XSV+EF");
+        let result = split_compound_tag(map, "XSV+EF");
         assert_eq!(result, vec!["XSV".to_string(), "EF".to_string()]);
     }
 
@@ -447,7 +447,7 @@ mod tests {
         let map = make_tag_map();
         let rules = make_rules();
         // 복합 태그가 아니면 그대로 반환
-        let result = split_morpheme("먹", "VV", &map, &rules);
+        let result = split_morpheme("먹", "VV", map, &rules);
         assert_eq!(result, vec![("먹".to_string(), "VV".to_string())]);
     }
 
@@ -456,7 +456,7 @@ mod tests {
         let map = make_tag_map();
         let rules = make_rules();
         // "해요/VV+EF" → "하/VV + 어요/EF"
-        let result = split_morpheme("해요", "VV+EF", &map, &rules);
+        let result = split_morpheme("해요", "VV+EF", map, &rules);
         assert_eq!(result.len(), 2);
         assert_eq!(result[0], ("하".to_string(), "VV".to_string()));
         assert_eq!(result[1], ("어요".to_string(), "EF".to_string()));
@@ -467,7 +467,7 @@ mod tests {
         let map = make_tag_map();
         let rules = make_rules();
         // "입니다/VCP+EF" → "이/VCP + 습니다/EF"
-        let result = split_morpheme("입니다", "VCP+EF", &map, &rules);
+        let result = split_morpheme("입니다", "VCP+EF", map, &rules);
         assert_eq!(result.len(), 2);
         assert_eq!(result[0], ("이".to_string(), "VCP".to_string()));
         assert_eq!(result[1], ("습니다".to_string(), "EF".to_string()));
@@ -478,7 +478,7 @@ mod tests {
         let map = make_tag_map();
         let rules = make_rules();
         // "셨/EP+EP" → "시/EP + 었/EP"
-        let result = split_morpheme("셨", "EP+EP", &map, &rules);
+        let result = split_morpheme("셨", "EP+EP", map, &rules);
         assert_eq!(result.len(), 2);
         assert_eq!(result[0], ("시".to_string(), "EP".to_string()));
         assert_eq!(result[1], ("었".to_string(), "EP".to_string()));

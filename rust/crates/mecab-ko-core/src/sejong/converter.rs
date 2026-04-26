@@ -12,13 +12,13 @@ use super::postprocess::{
     apply_decomposition_corrections, apply_token_merges, apply_vv_seyo_splits,
 };
 use super::splitter::{is_compound_tag, split_compound_tag, split_morpheme};
-use super::tag_map::init_tag_map;
+use super::tag_map::tag_map;
 use super::types::{DecomposedMorpheme, EndingRule, SejongToken};
 
 /// 세종 코퍼스 형식 변환기
 pub struct SejongConverter {
-    /// 품사 태그 매핑 테이블 (복합 → 분리)
-    tag_map: HashMap<String, Vec<String>>,
+    /// 품사 태그 매핑 테이블 (복합 → 분리) — 전역 정적 참조
+    tag_map: &'static HashMap<String, Vec<String>>,
     /// 어미 분리 규칙
     ending_rules: Vec<EndingRule>,
     /// 분석결과 컬럼 사용 여부 (불규칙 활용 지원)
@@ -36,7 +36,7 @@ impl SejongConverter {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            tag_map: init_tag_map(),
+            tag_map: tag_map(),
             ending_rules: init_ending_rules(),
             use_decomposition: true, // 기본값: 분석결과 컬럼 활용
         }
@@ -119,7 +119,7 @@ impl SejongConverter {
     /// 복합 품사 태그를 분리된 태그 목록으로 변환
     #[must_use]
     pub fn split_compound_tag(&self, pos: &str) -> Vec<String> {
-        split_compound_tag(&self.tag_map, pos)
+        split_compound_tag(self.tag_map, pos)
     }
 
     /// 표면형에서 어미를 분리
@@ -132,7 +132,7 @@ impl SejongConverter {
     /// 분리된 (표면형, 품사) 쌍의 벡터
     #[must_use]
     pub fn split_morpheme(&self, surface: &str, pos: &str) -> Vec<(String, String)> {
-        split_morpheme(surface, pos, &self.tag_map, &self.ending_rules)
+        split_morpheme(surface, pos, self.tag_map, &self.ending_rules)
     }
 
     /// 토큰을 세종 형식으로 변환

@@ -1,57 +1,53 @@
 use crate::sejong::hangul::extract_vowel;
 use crate::sejong::types::SejongToken;
 use std::collections::HashMap;
-use std::sync::OnceLock;
+use std::sync::LazyLock;
 
 // ---------------------------------------------------------------------------
 // Static lookup tables — initialised once, reused on every call.
 // ---------------------------------------------------------------------------
 
 /// 체언 뒤 잘못 태그된 품사 → 조사 품사 매핑 (1차 보정)
-static PARTICLE_MAP: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();
-
-fn particle_map() -> &'static HashMap<&'static str, &'static str> {
-    PARTICLE_MAP.get_or_init(|| {
-        [
-            ("이", "JKS"),
-            ("가", "JKS"),
-            ("께서", "JKS"),
-            ("을", "JKO"),
-            ("를", "JKO"),
-            ("에", "JKB"),
-            ("에서", "JKB"),
-            ("에게", "JKB"),
-            ("로", "JKB"),
-            ("으로", "JKB"),
-            ("한테", "JKB"),
-            ("보다", "JKB"),
-            ("처럼", "JKB"),
-            ("같이", "JKB"),
-            ("의", "JKG"),
-            ("야", "JKV"),
-            ("여", "JKV"),
-            ("이여", "JKV"),
-            ("은", "JX"),
-            ("는", "JX"),
-            ("도", "JX"),
-            ("만", "JX"),
-            ("까지", "JX"),
-            ("부터", "JX"),
-            ("마저", "JX"),
-            ("조차", "JX"),
-            ("라도", "JX"),
-            ("밖에", "JX"),
-            ("요", "JX"),
-            ("와", "JC"),
-            ("과", "JC"),
-            ("이랑", "JC"),
-            ("랑", "JC"),
-            ("하고", "JC"),
-        ]
-        .into_iter()
-        .collect()
-    })
-}
+static PARTICLE_MAP: LazyLock<HashMap<&'static str, &'static str>> = LazyLock::new(|| {
+    [
+        ("이", "JKS"),
+        ("가", "JKS"),
+        ("께서", "JKS"),
+        ("을", "JKO"),
+        ("를", "JKO"),
+        ("에", "JKB"),
+        ("에서", "JKB"),
+        ("에게", "JKB"),
+        ("로", "JKB"),
+        ("으로", "JKB"),
+        ("한테", "JKB"),
+        ("보다", "JKB"),
+        ("처럼", "JKB"),
+        ("같이", "JKB"),
+        ("의", "JKG"),
+        ("야", "JKV"),
+        ("여", "JKV"),
+        ("이여", "JKV"),
+        ("은", "JX"),
+        ("는", "JX"),
+        ("도", "JX"),
+        ("만", "JX"),
+        ("까지", "JX"),
+        ("부터", "JX"),
+        ("마저", "JX"),
+        ("조차", "JX"),
+        ("라도", "JX"),
+        ("밖에", "JX"),
+        ("요", "JX"),
+        ("와", "JC"),
+        ("과", "JC"),
+        ("이랑", "JC"),
+        ("랑", "JC"),
+        ("하고", "JC"),
+    ]
+    .into_iter()
+    .collect()
+});
 
 /// 체언 품사 집합 (1차 보정)
 const NOUN_POSES: &[&str] = &["NNG", "NNP", "NNB", "NP", "NR"];
@@ -65,22 +61,18 @@ const INTERROGATIVES: &[&str] = &[
 const VERB_POSES: &[&str] = &["VV", "VA", "VX"];
 
 /// 동사/형용사 뒤 관형형어미(ETM) 표면형 → 품사 매핑 (2차 보정)
-static ETM_MAP: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();
-
-fn etm_map() -> &'static HashMap<&'static str, &'static str> {
-    ETM_MAP.get_or_init(|| {
-        [
-            ("는", "ETM"),
-            ("ㄴ", "ETM"),
-            ("은", "ETM"),
-            ("ㄹ", "ETM"),
-            ("을", "ETM"),
-            ("던", "ETM"),
-        ]
-        .into_iter()
-        .collect()
-    })
-}
+static ETM_MAP: LazyLock<HashMap<&'static str, &'static str>> = LazyLock::new(|| {
+    [
+        ("는", "ETM"),
+        ("ㄴ", "ETM"),
+        ("은", "ETM"),
+        ("ㄹ", "ETM"),
+        ("을", "ETM"),
+        ("던", "ETM"),
+    ]
+    .into_iter()
+    .collect()
+});
 
 /// XSV 보정 대상 품사 집합 (3차 보정 — 대명사 NP 제외)
 const XSV_TRIGGER_POSES: &[&str] = &["NNG", "NNP", "NNB"];
@@ -104,10 +96,8 @@ const POSSESSIVE_PRONOUNS: &[&str] = &["나의", "너의", "우리의", "저의"
 const MAJ_TO_MAG: &[&str] = &["또한", "따라서", "그러므로"];
 
 /// 시간 표현 분리 매핑 (22차 보정)
-static TIME_WORDS: OnceLock<HashMap<&'static str, (&'static str, &'static str)>> = OnceLock::new();
-
-fn time_words() -> &'static HashMap<&'static str, (&'static str, &'static str)> {
-    TIME_WORDS.get_or_init(|| {
+static TIME_WORDS: LazyLock<HashMap<&'static str, (&'static str, &'static str)>> =
+    LazyLock::new(|| {
         [
             ("열시", ("열", "시")),
             ("세시", ("세", "시")),
@@ -122,8 +112,7 @@ fn time_words() -> &'static HashMap<&'static str, (&'static str, &'static str)> 
         ]
         .into_iter()
         .collect()
-    })
-}
+    });
 
 /// 1~23차: 조사 및 어미 보정
 ///
@@ -187,7 +176,7 @@ pub(super) fn apply_particle_and_ending_corrections(tokens: &mut Vec<SejongToken
             let is_definite_particle = curr_surface == "께서";
 
             if is_definite_particle || (!next_is_ep && !next_is_ending && !prev_is_interrogative) {
-                if let Some(&correct_pos) = particle_map().get(curr_surface.as_str()) {
+                if let Some(&correct_pos) = PARTICLE_MAP.get(curr_surface.as_str()) {
                     corrections.push((i, correct_pos.to_string()));
                 }
             }
@@ -211,7 +200,7 @@ pub(super) fn apply_particle_and_ending_corrections(tokens: &mut Vec<SejongToken
         if VERB_POSES.contains(&prev_pos.as_str())
             && (curr_pos == "JX" || curr_pos == "EF" || curr_pos == "EC")
         {
-            if let Some(&correct_pos) = etm_map().get(curr_surface.as_str()) {
+            if let Some(&correct_pos) = ETM_MAP.get(curr_surface.as_str()) {
                 etm_corrections.push((i, correct_pos.to_string()));
             }
         }
@@ -706,7 +695,7 @@ pub(super) fn apply_particle_and_ending_corrections(tokens: &mut Vec<SejongToken
     let mut time_split_indices: Vec<(usize, String, String)> = Vec::new();
     for (i, token) in tokens.iter().enumerate() {
         if token.pos == "NNG" {
-            if let Some(&(num, unit)) = time_words().get(token.surface.as_str()) {
+            if let Some(&(num, unit)) = TIME_WORDS.get(token.surface.as_str()) {
                 time_split_indices.push((i, num.to_string(), unit.to_string()));
             }
         }
