@@ -6385,4 +6385,77 @@ mod tests {
         assert_eq!(tokens[1].surface, "손");
         assert_eq!(tokens[1].pos, "NNG");
     }
+
+    // ── 보호 테스트 (sentence_final): 89차 문장 끝 어요/EC → EF ─────────────
+    #[test]
+    fn test_protection_sentence_final_89_eoyo_ec_to_ef() {
+        // Pass 89: 문장 끝 "어요/EC" → "어요/EF"
+        // apply_sentence_final_corrections 직접 호출
+        let mut tokens = vec![tok("먹", "VV"), tok("어요", "EC")];
+        apply_sentence_final_corrections(&mut tokens);
+        assert_eq!(
+            tokens.last().unwrap().pos,
+            "EF",
+            "어요/EC at sentence end must become EF (Pass 89)"
+        );
+    }
+
+    // ── 보호 테스트 (sentence_final): 91차 ㄴ다/EC → EF ─────────────────────
+    #[test]
+    fn test_protection_sentence_final_91_nda_ec_to_ef() {
+        // Pass 91: "ㄴ다/EC" → "ㄴ다/EF" (문장 내 모든 위치)
+        // apply_sentence_final_corrections 직접 호출
+        let mut tokens = vec![tok("가", "VV"), tok("ㄴ다", "EC")];
+        apply_sentence_final_corrections(&mut tokens);
+        assert_eq!(
+            tokens.last().unwrap().pos,
+            "EF",
+            "ㄴ다/EC must become EF (Pass 91)"
+        );
+    }
+
+    // ── 보호 테스트 (sentence_final): 154차 문장 끝 다/NNG → EF ─────────────
+    #[test]
+    fn test_protection_sentence_final_154_da_nng_to_ef() {
+        // Pass 154: 문장 끝 "다/NNG" → "다/EF"
+        // VV 뒤의 "다/NNG"도 EF로 변환
+        // apply_sentence_final_corrections 직접 호출
+        let mut tokens = vec![tok("하", "VV"), tok("다", "NNG")];
+        apply_sentence_final_corrections(&mut tokens);
+        assert_eq!(
+            tokens.last().unwrap().pos,
+            "EF",
+            "다/NNG at sentence end after VV must become EF (Pass 154)"
+        );
+    }
+
+    // ── 보호 테스트 (conjugation): 174차 직접 호출 XSV → XSA ────────────────
+    #[test]
+    fn test_protection_conjugation_174_direct_call() {
+        // Pass 174: 형용사 어근 뒤 하/XSV → XSA
+        // "행복/NNG + 하/XSV + 어요/EF" → 하/XSA
+        // apply_conjugation_corrections 직접 호출 (apply_context_corrections 경유 아님)
+        let mut tokens = vec![tok("행복", "NNG"), tok("하", "XSV"), tok("어요", "EF")];
+        apply_conjugation_corrections(&mut tokens);
+        assert_eq!(
+            tokens[1].pos,
+            "XSA",
+            "하/XSV after adj root 행복 must become XSA (Pass 174 direct call)"
+        );
+    }
+
+    // ── 보호 테스트 (conjugation): 217차 VA + 으면/EF → EC 직접 호출 ─────────
+    #[test]
+    fn test_protection_conjugation_217_va_eumyeon_ef_to_ec() {
+        // Pass 217: VA 뒤 으면/EF → 으면/EC (연결어미)
+        // apply_conjugation_corrections 직접 호출 (apply_context_corrections 경유 아님)
+        let mut tokens = vec![tok("예쁘", "VA"), tok("으면", "EF")];
+        apply_conjugation_corrections(&mut tokens);
+        assert_eq!(tokens[0].pos, "VA", "예쁘/VA must remain VA");
+        assert_eq!(
+            tokens[1].pos,
+            "EC",
+            "으면/EF after VA must become EC (Pass 217 direct call)"
+        );
+    }
 }
