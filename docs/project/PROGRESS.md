@@ -1,6 +1,35 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-27 (Sprint 89 완료 -- v0.7.2 릴리스 준비)
+## 마지막 업데이트: 2026-04-27 (Sprint 90 완료 -- 벤치마크 문서화 + 코드 품질)
+
+### ✅ Sprint 90 - 벤치마크 문서화 + 코드 품질 + 배포 준비
+
+**기간**: 2026-04-27
+**목표**: 벤치마크 문서화, example clippy 수정, VecDeque 검증, FFI 확인, crates.io dry-run
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| docs/benchmarks/ | 없음 | v0.7.2-benchmark-report.md |
+| example clippy | expect/unwrap 사용 | Result + ? 패턴 |
+| test_analyze.rs | unwrap() on f64 | unwrap_or(Equal) NaN-safe |
+| VecDeque const | 1.82 필요 확인 | allow 유지 (정당) |
+| ffi-tests.yml | "존재" 가정 | 미존재 확인 → Sprint 91 |
+| crates.io dry-run | 미실행 | 2/7 통과 (독립 크레이트) |
+
+#### 발견사항
+- `.github/workflows/ffi-tests.yml`이 실제로 존재하지 않음 (root Cargo.toml 주석만 참조)
+- VecDeque::new() const: Rust 1.82부터 — MSRV 1.80에서는 아직 불가
+- mecab-ko-core crate-level doc: 이미 상세 작성됨 (30줄+)
+- test/example 파일에 clippy 경고 127개 잔존 (lib은 0)
+
+#### 상태
+- 테스트: 1,198 pass / 0 fail / 18 ignored
+- clippy: lib 0 warnings, test/example 127 warnings
+- crates.io: dry-run 완료, 배포 대기
+
+---
 
 ### ✅ Sprint 89 - v0.7.2 릴리스 준비 + 코드 품질 + 벤치마크
 

@@ -1,55 +1,53 @@
-# 완료: Phase 55 - Sprint 89 (v0.7.2 릴리스 준비 + 코드 품질 + 벤치마크)
+# 완료: Phase 56 - Sprint 90 (벤치마크 문서화 + 코드 품질 + 배포 준비)
 
-## Sprint 89 목표
-v0.7.2 릴리스 준비 (버전 범프 + CHANGELOG + MSRV 문서 갱신), corrections/ 모듈 문서화, #[allow] 리뷰, FFI 호환성 확인, 벤치마크 비교
+## Sprint 90 목표
+벤치마크 결과 문서화, example clippy 경고 수정, VecDeque const 검증, FFI 호환성 확인, crates.io dry-run
 
-## Sprint 89 작업 목록
+## Sprint 90 작업 목록
 
-### Track A: 릴리스 준비
-- [x] S89-01: Version bump 0.7.1 → 0.7.2 (13개 Cargo.toml) ✅
-- [x] S89-02: CHANGELOG.md v0.7.2 작성 ✅
-- [x] S89-03: README/문서 MSRV 1.75→1.80 갱신 (16개 파일) ✅
+### Track A: 문서
+- [x] S90-01: docs/benchmarks/v0.7.2-benchmark-report.md 작성 ✅
+- [x] S90-03: mecab-ko-core crate-level doc 확인 (이미 존재) ✅
 
-### Track B: 벤치마크
-- [x] S89-04: normalization_bench + tokenizer_bench 실행 (criterion 기준) ✅
+### Track B: 코드 품질
+- [x] S90-02: example clippy 경고 수정 (expect→?, unwrap→unwrap_or, 3파일) ✅
+- [x] S90-04: hot_reload_v2.rs VecDeque::new() const 검증 → 1.82 필요, KEEP ✅
 
-### Track C: 코드 품질
-- [x] S89-05: #[allow(clippy::too_many_lines)] 8개 리뷰 → 전부 KEEP (정당한 사유) ✅
-- [x] S89-06: corrections/ 15개 서브모듈 `//!` doc comment 추가 ✅
+### Track C: FFI + 배포
+- [x] S90-05: FFI crate 빌드 검증 → ffi-tests.yml 미존재 발견 ✅
+- [x] S90-06: crates.io dry-run → hangul, dict-sync 성공, 나머지 의존성 순서 확인 ✅
 
-### Track D: FFI
-- [x] S89-07: FFI crate MSRV 1.80 호환 확인 + mecab-ko-node 1.77→1.80 갱신 ✅
-
-### Track E: 검증 + 리뷰
-- [x] S89-08: 빌드/테스트/클리피 전체 검증 (1,198 pass / 0 fail) ✅
-- [x] S89-09: Sprint 89 리뷰 + 문서 + Sprint 90 로드맵 ✅
+### Track D: 검증 + 리뷰
+- [x] S90-07: 빌드/테스트/클리피 전체 검증 (1,198 pass / 0 fail / lib 0 warnings) ✅
+- [x] S90-08: Sprint 90 리뷰 + 문서 + Sprint 91 로드맵 ✅
 
 ---
 
-## Sprint 90 로드맵
+## Sprint 91 로드맵
 
-### P1: crates.io v0.7.2 배포
-- 의존성 순서대로 7개 크레이트 publish
+### P1: crates.io v0.7.2 배포 (사용자 승인 필요)
+- 배포 순서: hangul → dict → core → dict-validator → dict-builder → dict-sync → mecab-ko
+- 각 단계 publish 후 다음 단계 의존성 해결 확인
 - 배포 후 `cargo install mecab-ko-cli` 검증
-- crates.io 페이지 MSRV 1.80 확인
 
-### P2: 벤치마크 결과 문서화
-- Sprint 89에서 수집한 criterion 결과를 docs/benchmarks/에 정리
-- v0.7.1 vs v0.7.2 비교표 작성
-- normalization: -11.7% (disabled toggle), -1.8% (wakati)
-- tokenizer: scalability/1000chars -3.3%, baseline 안정
+### P2: ffi-tests.yml CI 워크플로우 생성
+- 참조된 .github/workflows/ffi-tests.yml이 실제로 존재하지 않음
+- Python (maturin + pytest), WASM (wasm-pack test), Node.js (npm test) 별도 job
+- 주 1회 또는 release 태그 시 트리거
 
-### P3: 잔여 코드 품질
-- example 파일 clippy 경고 정리 (expect/unwrap → proper error handling)
-- mecab-ko-core crate-level doc comment 추가
-- `hot_reload_v2.rs` MSRV 코멘트 검증 (VecDeque::new const 여부)
+### P3: test/example clippy 경고 정리
+- 테스트 파일 127개 경고 (expect_used, unwrap_used, panic 등)
+- 우선순위: 핵심 테스트 > 통합 테스트 > example
+- `clippy::pedantic` 그룹 정리
 
-### P4: 통합 테스트 강화
-- FFI crate 빌드 테스트 (CI ffi-tests.yml 실행)
-- 시스템 사전 기반 벤치마크 (mini-dict fallback 아닌 전체 사전)
+### P4: 시스템 사전 기반 벤치마크
+- 시스템 사전 설치 후 전체 사전 벤치마크 실행
+- mini-dict vs full-dict 비교
+- corrections/ 최적화 효과 정량 측정
 
 ---
 
+# 완료: Phase 55 - Sprint 89 (v0.7.2 릴리스 준비 + 코드 품질 + 벤치마크)
 # 완료: Phase 54 - Sprint 88 (MSRV 1.80 + LazyLock + CI 수정)
 # 완료: Phase 53 - Sprint 87 (per-call 할당 제거 성능 최적화)
 # 완료: Phase 52 - Sprint 86 (v0.7.1 릴리스 + 보호 테스트 확충)
@@ -62,10 +60,10 @@ v0.7.2 릴리스 준비 (버전 범프 + CHANGELOG + MSRV 문서 갱신), correc
 
 | 크레이트 | crates.io | 로컬 | 상태 |
 |---------|-----------|------|------|
-| mecab-ko-hangul | v0.7.1 | v0.7.2 | ⏳ 배포 대기 |
-| mecab-ko-dict | v0.7.1 | v0.7.2 | ⏳ 배포 대기 |
-| mecab-ko-core | v0.7.1 | v0.7.2 | ⏳ 배포 대기 |
-| mecab-ko-dict-validator | v0.7.1 | v0.7.2 | ⏳ 배포 대기 |
-| mecab-ko-dict-builder | v0.7.1 | v0.7.2 | ⏳ 배포 대기 |
-| mecab-ko-dict-sync | v0.7.1 | v0.7.2 | ⏳ 배포 대기 |
-| mecab-ko | v0.7.1 | v0.7.2 | ⏳ 배포 대기 |
+| mecab-ko-hangul | v0.7.1 | v0.7.2 | ⏳ dry-run 통과 |
+| mecab-ko-dict | v0.7.1 | v0.7.2 | ⏳ 의존성 순서 대기 |
+| mecab-ko-core | v0.7.1 | v0.7.2 | ⏳ 의존성 순서 대기 |
+| mecab-ko-dict-validator | v0.7.1 | v0.7.2 | ⏳ 의존성 순서 대기 |
+| mecab-ko-dict-builder | v0.7.1 | v0.7.2 | ⏳ 의존성 순서 대기 |
+| mecab-ko-dict-sync | v0.7.1 | v0.7.2 | ⏳ dry-run 통과 |
+| mecab-ko | v0.7.1 | v0.7.2 | ⏳ 의존성 순서 대기 |
