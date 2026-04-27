@@ -2,6 +2,13 @@
 //!
 //! Usage: `DICT_PATH=/path/to/dict` cargo run --example `memory_measure` --release
 
+#![allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::cast_precision_loss,
+    clippy::too_many_lines
+)]
+
 use mecab_ko_dict::dictionary::{LoadOptions, SystemDictionary};
 use std::env;
 use std::time::Instant;

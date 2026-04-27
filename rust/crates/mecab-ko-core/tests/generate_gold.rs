@@ -1,5 +1,11 @@
 //! Gold standard generation for test sentences
 
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::too_many_lines
+)]
+
 use mecab_ko_core::sejong::SejongConverter;
 use mecab_ko_core::tokenizer::Tokenizer;
 use mecab_ko_dict::UserDictionary;

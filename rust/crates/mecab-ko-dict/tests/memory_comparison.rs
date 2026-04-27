@@ -2,7 +2,7 @@
 //!
 //! Eager vs Lazy 로딩 모드의 메모리 특성 검증
 
-#![allow(clippy::expect_used, clippy::unwrap_used)]
+#![allow(clippy::expect_used, clippy::unwrap_used, clippy::panic)]
 
 use mecab_ko_dict::dictionary::{LoadOptions, SystemDictionary};
 use mecab_ko_dict::LazyEntries;

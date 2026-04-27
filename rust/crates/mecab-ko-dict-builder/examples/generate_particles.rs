@@ -7,6 +7,8 @@
 //! cargo run --example generate_particles > generated_particles.csv
 //! ```
 
+#![allow(clippy::unwrap_used, clippy::expect_used)]
+
 use mecab_ko_hangul::has_jongseong;
 
 /// 고빈도 명사 목록 (세종 코퍼스 기반 상위 100)

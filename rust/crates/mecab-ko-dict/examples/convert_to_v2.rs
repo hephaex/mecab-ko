@@ -2,6 +2,12 @@
 //!
 //! Usage: `DICT_PATH=/path/to/dict` cargo run --example `convert_to_v2` --release
 
+#![allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::cast_precision_loss
+)]
+
 use mecab_ko_dict::dictionary::{LoadOptions, SystemDictionary};
 use mecab_ko_dict::LazyEntries;
 use std::env;

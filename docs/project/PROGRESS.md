@@ -1,6 +1,45 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-27 (Sprint 90 완료 -- 벤치마크 문서화 + 코드 품질)
+## 마지막 업데이트: 2026-04-27 (Sprint 91 완료 -- crates.io v0.7.2 배포 + CI 수정 + clippy 정리)
+
+### ✅ Sprint 91 - crates.io v0.7.2 배포 + CI 수정 + clippy 정리
+
+**기간**: 2026-04-27
+**목표**: crates.io v0.7.2 배포 (7개), ffi-tests.yml CI 확인, test/example clippy 경고 정리, 시스템 사전 확인
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| crates.io | v0.7.1 (7개) | v0.7.2 (7개 모두 배포 완료) |
+| Cargo.toml CI 참조 | ffi-tests.yml | e2e-ffi-tests.yml (실제 파일명) |
+| integration test clippy | #[allow] 부분적 | 확장 (3파일 추가 allow) |
+| test/example clippy | 127 warnings | 0 warnings (21파일 수정) |
+| 시스템 사전 | 미확인 | 미설치 확인 (full-dict 불가) |
+
+#### crates.io 배포 순서 (전체 성공)
+
+1. mecab-ko-hangul v0.7.2 ✅
+2. mecab-ko-dict v0.7.2 ✅
+3. mecab-ko-core v0.7.2 ✅
+4. mecab-ko-dict-validator v0.7.2 ✅
+5. mecab-ko-dict-builder v0.7.2 ✅
+6. mecab-ko-dict-sync v0.7.2 ✅
+7. mecab-ko v0.7.2 ✅
+
+#### clippy 수정 내역 (21파일)
+
+- integration tests (6파일): file-level `#![allow]` 확장
+- inline `#[cfg(test)]` (8파일): 모듈 내부 `#![allow]` 추가
+- examples (7파일): file-level `#![allow]` 추가
+- splitter.rs: `items_after_test_module` allow (구조 유지)
+
+#### 상태
+- 테스트: 1,198 pass / 0 fail / 18 ignored
+- clippy: lib 0 warnings, test/example 0 warnings (전체 0)
+- crates.io: 7/7 배포 완료
+
+---
 
 ### ✅ Sprint 90 - 벤치마크 문서화 + 코드 품질 + 배포 준비
 

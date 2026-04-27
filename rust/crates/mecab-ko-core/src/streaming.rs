@@ -1182,8 +1182,9 @@ impl<R: BufRead> Iterator for SentenceReader<R> {
 }
 
 #[cfg(test)]
-#[allow(clippy::expect_used)]
 mod sentence_reader_tests {
+    #![allow(clippy::expect_used, clippy::unwrap_used, clippy::needless_collect)]
+
     use super::*;
     use std::io::Cursor;
 

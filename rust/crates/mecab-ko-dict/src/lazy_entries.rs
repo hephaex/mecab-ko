@@ -531,6 +531,8 @@ pub fn migrate_entries_v1_to_v2<P: AsRef<Path>>(v1_path: P, v2_path: P) -> Resul
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::expect_used, clippy::unwrap_used)]
+
     use super::*;
     use tempfile::tempdir;
 

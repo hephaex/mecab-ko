@@ -1,5 +1,8 @@
 //! 형태소 분리 함수
 
+// Private helper functions are defined after the test module for readability.
+#![allow(clippy::items_after_test_module)]
+
 use std::collections::HashMap;
 
 use super::hangul::{remove_jongseong_bieup, remove_jongseong_nieun, remove_jongseong_rieul};

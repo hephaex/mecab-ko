@@ -30,6 +30,8 @@
 //! - `:quit` or `:q` - Exit REPL
 //! - `:help` - Show help
 
+#![allow(clippy::unwrap_used, clippy::expect_used)]
+
 use std::collections::HashMap;
 use std::fmt::Write as FmtWrite;
 use std::io::{self, Write};

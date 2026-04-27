@@ -3,6 +3,8 @@
 //! This example demonstrates how to use the dictionary converter to transform
 //! entries from various Korean dictionary formats into MeCab-Ko compatible CSV.
 
+#![allow(clippy::unwrap_used, clippy::expect_used, clippy::too_many_lines)]
+
 use mecab_ko_dict_sync::{ConverterEntry, DictConverter};
 
 fn main() {

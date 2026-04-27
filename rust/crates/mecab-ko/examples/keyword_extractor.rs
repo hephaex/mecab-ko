@@ -26,6 +26,8 @@
 //! 2. Count frequency of each term
 //! 3. Return top-N by frequency
 
+#![allow(clippy::cast_precision_loss, clippy::unwrap_used)]
+
 use std::collections::HashMap;
 use std::fmt::Write as _;
 use std::io::{self, Read};

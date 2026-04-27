@@ -2,7 +2,12 @@
 //!
 //! sample.tsv 데이터셋을 사용한 정확도 측정
 
-#![allow(clippy::expect_used, clippy::unwrap_used)]
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::cast_precision_loss,
+    clippy::too_many_lines
+)]
 
 use mecab_ko_core::evaluate::{evaluate_dataset_sejong, TestDataset};
 use mecab_ko_core::tokenizer::Tokenizer;

@@ -585,6 +585,8 @@ pub enum RecommendationSeverity {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::expect_used, clippy::unwrap_used)]
+
     use super::*;
 
     fn create_test_entries() -> Vec<DictEntry> {
