@@ -1,12 +1,14 @@
+//! Analyze NR (numeral) tagging errors against a sample TSV dataset.
+
 use mecab_ko_core::evaluate::TestDataset;
 use mecab_ko_core::sejong::SejongConverter;
 use mecab_ko_core::tokenizer::Tokenizer;
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let dict_path = "../../../data/mecab-ko-dic-2.1.1-20180720";
-    let mut tokenizer = Tokenizer::with_dict(dict_path).expect("tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(dict_path)?;
     let converter = SejongConverter::new();
-    let dataset = TestDataset::from_tsv("../../../data/eval/sample.tsv").expect("dataset");
+    let dataset = TestDataset::from_tsv("../../../data/eval/sample.tsv")?;
 
     // NR 오류 분석
     let mut errors = Vec::new();
@@ -33,4 +35,6 @@ fn main() {
     for (text, gold, pred) in &errors {
         println!("{text}: {gold} → {pred}");
     }
+
+    Ok(())
 }

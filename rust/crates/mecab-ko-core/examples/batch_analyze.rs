@@ -1,14 +1,16 @@
+//! Batch-tokenize lines from a text file and print Sejong-formatted results.
+
 use mecab_ko_core::sejong::SejongConverter;
 use mecab_ko_core::tokenizer::Tokenizer;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let project_root = PathBuf::from("/Users/mare/Simon/mecab-ko");
     let dict_path = project_root.join("data/dict-output");
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path)?;
     let converter = SejongConverter::new();
 
     // 사용자 사전 로드
@@ -22,13 +24,13 @@ fn main() {
 
     // 입력 파일 처리
     let input_path = "/tmp/curated_sentences.txt";
-    let file = File::open(input_path).expect("Failed to open input file");
+    let file = File::open(input_path)?;
     let reader = BufReader::new(file);
 
     let mut current_section = String::new();
 
     for line in reader.lines() {
-        let line = line.expect("Failed to read line");
+        let line = line?;
         let line = line.trim();
 
         // 빈 줄 건너뛰기
@@ -54,4 +56,6 @@ fn main() {
         // TSV 형식 출력
         println!("{line}\t{result}");
     }
+
+    Ok(())
 }

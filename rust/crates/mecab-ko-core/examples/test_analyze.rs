@@ -1,13 +1,16 @@
+//! Evaluate tokenizer accuracy against sample.tsv and debug specific cases.
+
 use mecab_ko_core::evaluate::{evaluate_dataset_sejong, TestDataset};
 use mecab_ko_core::sejong::SejongConverter;
 use mecab_ko_core::tokenizer::Tokenizer;
 use std::path::PathBuf;
 
-fn main() {
+#[allow(clippy::too_many_lines)]
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let project_root = PathBuf::from("/Users/mare/Simon/mecab-ko");
     let dict_path = project_root.join("data/dict-output");
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
+    let mut tokenizer = Tokenizer::with_dict(&dict_path)?;
     let converter = SejongConverter::new();
 
     // 사용자 사전 로드 테스트
@@ -30,7 +33,7 @@ fn main() {
     // sample.tsv 평가
     let sample_path = project_root.join("data/eval/sample.tsv");
     if sample_path.exists() {
-        let dataset = TestDataset::from_tsv(&sample_path).expect("Failed to load sample.tsv");
+        let dataset = TestDataset::from_tsv(&sample_path)?;
         let result = evaluate_dataset_sejong(&mut tokenizer, &dataset);
 
         println!("=== Sample.tsv 평가 결과 ===");
@@ -45,7 +48,11 @@ fn main() {
 
         // 품사별 정확도 (낮은 순서)
         let mut pos_vec: Vec<_> = result.pos_stats.iter().collect();
-        pos_vec.sort_by(|a, b| a.1.accuracy.partial_cmp(&b.1.accuracy).unwrap());
+        pos_vec.sort_by(|a, b| {
+            a.1.accuracy
+                .partial_cmp(&b.1.accuracy)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
         println!("=== 품사별 정확도 (낮은 순) ===");
         for (pos, stats) in pos_vec.iter().take(15) {
@@ -155,4 +162,6 @@ fn main() {
         }
         println!();
     }
+
+    Ok(())
 }
