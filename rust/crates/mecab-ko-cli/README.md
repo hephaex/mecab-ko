@@ -250,7 +250,7 @@ mecab --repl
 ### REPL Example
 
 ```
-MeCab-Ko REPL v0.1.0
+MeCab-Ko REPL v0.7.2
 한국어 형태소 분석기 대화형 모드
 
 mecab> 안녕하세요

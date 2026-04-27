@@ -32,11 +32,11 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-mecab-ko-profiler = "0.1"
+mecab-ko-profiler = "0.7"
 
 # For development/testing
 [dev-dependencies]
-mecab-ko-profiler = { version = "0.1", features = ["full"] }
+mecab-ko-profiler = { version = "0.7", features = ["full"] }
 ```
 
 ## Usage
@@ -307,7 +307,7 @@ Analysis & Recommendations:
 {
   "metadata": {
     "timestamp": "2026-01-06T12:34:56Z",
-    "version": "0.1.0",
+    "version": "0.7.2",
     "platform": "linux"
   },
   "stats": {

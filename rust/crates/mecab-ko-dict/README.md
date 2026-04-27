@@ -16,7 +16,7 @@
 
 ```toml
 [dependencies]
-mecab-ko-dict = "0.1.0"
+mecab-ko-dict = "0.7.2"
 ```
 
 ## 사용 예제

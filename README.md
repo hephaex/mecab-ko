@@ -15,7 +15,7 @@ MeCab-Ko는 [은전한닢 프로젝트](https://bitbucket.org/eunjeon/mecab-ko)�
 
 ## 주요 성과
 
-| 지표 | v0.5.0 | v0.6.0 | v0.7.1 |
+| 지표 | v0.5.0 | v0.6.0 | v0.7.2 |
 |------|--------|--------|--------|
 | Token Accuracy | 100.0% | 100.0% | **100.0%** |
 | 테스트 | 500문장 | 1,100문장 | **1,149 pass / 18 ignored** |
@@ -281,7 +281,7 @@ mecab evaluate --input test.tsv --dicdir ./dict-output --sejong
 
 ## 성능
 
-### KPI (v0.7.1 기준)
+### KPI (v0.7.2 기준)
 
 | 지표 | 목표 | 현재 |
 |------|------|------|
@@ -367,7 +367,7 @@ cargo run -p mecab-ko-dict-builder -- build \
 - ✅ 멀티플랫폼 배포 (crates.io, PyPI, npm, Docker)
 - ✅ 세종 코퍼스 호환 모드, N-best 경로 탐색
 
-### v0.7.1 (현재 릴리스)
+### v0.7.2 (현재 릴리스)
 - ✅ LazyEntries 메모리 최적화 (150MB → 34MB, -77%)
 - ✅ Streaming API (SentenceReader, StreamingTokenizer) — 버퍼 상한 16MB, 다중바이트 안전
 - ✅ sejong.rs 9,700줄 → 11개 서브모듈 분할, 36개 smoke test 추가

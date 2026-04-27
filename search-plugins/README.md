@@ -51,13 +51,13 @@ cargo build --release -p mecab-ko-elasticsearch --features jni-bindings
 ### Elasticsearch
 
 ```bash
-bin/elasticsearch-plugin install file:///path/to/mecab-ko-analyzer-0.7.1.zip
+bin/elasticsearch-plugin install file:///path/to/mecab-ko-analyzer-0.7.2.zip
 ```
 
 ### OpenSearch
 
 ```bash
-bin/opensearch-plugin install file:///path/to/opensearch-analysis-mecab-ko-0.7.1.zip
+bin/opensearch-plugin install file:///path/to/opensearch-analysis-mecab-ko-0.7.2.zip
 ```
 
 ## 사용법

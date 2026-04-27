@@ -29,14 +29,14 @@ Elasticsearch/Lucene Nori 호환 한국어 형태소 분석기
 
 ```toml
 [dependencies]
-mecab-ko-elasticsearch = "0.1"
+mecab-ko-elasticsearch = "0.7"
 ```
 
 ### JNI 바인딩 활성화
 
 ```toml
 [dependencies]
-mecab-ko-elasticsearch = { version = "0.1", features = ["jni-bindings"] }
+mecab-ko-elasticsearch = { version = "0.7", features = ["jni-bindings"] }
 ```
 
 ## 사용법

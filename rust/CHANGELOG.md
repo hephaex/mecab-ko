@@ -27,15 +27,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Improved
 - **corrections/ module documentation**: all 15 sub-modules now have `//!` doc comments
 - **CI**: benchmark workflow no longer auto-commits to main (artifact-only)
+- **clippy zero warnings**: all test/example clippy warnings resolved (127→0, 21 files)
+  - Integration tests: file-level `#![allow]` for test-appropriate lints
+  - Examples: `Result + ?` pattern and file-level `#![allow]`
 
 ### Fixed
 - **CI rebase conflicts**: removed benchmark auto-commit to main branch
+- **CI workflow reference**: `ffi-tests.yml` → `e2e-ffi-tests.yml` in Cargo.toml comment
 - **mecab-ko-node MSRV**: explicit `rust-version = "1.77"` updated to `1.80`
+
+### Published
+- **crates.io**: all 7 crates published to crates.io v0.7.2
+  - Publishing order: hangul → dict → core → validator → builder → dict-sync → mecab-ko
 
 ### Stats
 - 1,198 tests pass / 0 fail / 18 ignored
 - corrections/ per-call allocations: 28 → 0
-- clippy: 0 warnings (workspace code)
+- clippy: 0 warnings (all targets — lib, tests, examples)
 
 ## [0.7.1] - 2026-04-26
 

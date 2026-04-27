@@ -1,6 +1,6 @@
-# Release Checklist -- mecab-ko v0.1.0
+# Release Checklist -- mecab-ko v0.7.2
 
-This document is the authoritative checklist for cutting the first public release of the mecab-ko Rust workspace. Every item must be completed (or explicitly marked N/A with justification) before the `v0.1.0` tag is pushed.
+This document is the authoritative checklist for cutting the v0.7.2 release of the mecab-ko Rust workspace. Every item must be completed (or explicitly marked N/A with justification) before the `v0.7.2` tag is pushed.
 
 ---
 
@@ -44,7 +44,7 @@ All checks must pass on the `main` branch **before** any version bumps.
 - [ ] **Rustdoc builds without warnings** -- `RUSTDOCFLAGS="-D warnings" cargo doc --manifest-path rust/Cargo.toml --no-deps --release` succeeds.
 - [ ] **All public APIs have rustdoc comments** -- Workspace lint `missing_docs = "warn"` should report zero warnings.
 - [ ] **README files present** -- Each publishable crate directory contains a `README.md`.
-- [ ] **CHANGELOG.md updated** -- Move all items from `[Unreleased]` to `[0.1.0] - YYYY-MM-DD` with the actual release date.
+- [ ] **CHANGELOG.md updated** -- Move all items from `[Unreleased]` to `[0.7.2] - YYYY-MM-DD` with the actual release date.
 - [ ] **mdBook documentation** -- `docs/book/` content is current and builds successfully.
 - [ ] **Type stubs (Python)** -- `py.typed` and `__init__.pyi` are present in `rust/crates/mecab-ko-python/python/mecab_ko/`.
 - [ ] **TypeScript declarations (Node.js)** -- `index.d.ts` is present and current in `rust/crates/mecab-ko-node/`.
@@ -53,7 +53,7 @@ All checks must pass on the `main` branch **before** any version bumps.
 ### 1.4 Security Audit
 
 - [ ] **cargo audit** -- `cargo audit --manifest-path rust/Cargo.toml` reports no actionable vulnerabilities. Known advisory exceptions:
-  - `RUSTSEC-2025-0141` (bincode 1.3 unmaintained) -- Accepted; migration to alternative planned for Phase 2.
+  - None. bincode was removed from the dependency graph in v0.7.x; `RUSTSEC-2025-0141` no longer applies.
 - [ ] **cargo deny** -- `cargo deny --manifest-path rust/Cargo.toml check all` passes (advisories, licenses, bans, sources).
 - [ ] **cargo geiger** -- `cargo geiger --manifest-path rust/Cargo.toml` output reviewed; no unexpected `unsafe` in first-party code.
 - [ ] **SBOM generated** -- `cargo sbom --manifest-path rust/Cargo.toml > sbom.json` produced and archived.
@@ -76,12 +76,12 @@ All crates in the workspace use `version.workspace = true`, inheriting from the 
 
 ```toml
 [workspace.package]
-version = "0.1.0"
+version = "0.7.2"
 ```
 
 ### 2.1 Cargo Workspace Version
 
-- [ ] Confirm `rust/Cargo.toml` has `version = "0.1.0"` under `[workspace.package]`.
+- [ ] Confirm `rust/Cargo.toml` has `version = "0.7.2"` under `[workspace.package]`.
 - [ ] Confirm all 11 publishable crates inherit the workspace version (`version.workspace = true`):
 
 | Crate | Cargo.toml Path |
@@ -102,24 +102,28 @@ version = "0.1.0"
 
 ### 2.2 Inter-Crate Dependency Versions
 
-Path dependencies also specify a version for crates.io resolution. Verify these match `0.1.0`:
+Path dependencies also specify a version for crates.io resolution. Verify these match `0.7.2`:
 
-- [ ] `mecab-ko-dict` depends on `mecab-ko-hangul = { version = "0.1.0", path = "..." }`
-- [ ] `mecab-ko-core` depends on `mecab-ko-hangul = { version = "0.1.0", path = "..." }`
-- [ ] `mecab-ko-core` depends on `mecab-ko-dict = { version = "0.1.0", path = "..." }`
-- [ ] `mecab-ko` depends on `mecab-ko-core = { version = "0.1.0", path = "..." }`
-- [ ] `mecab-ko` depends on `mecab-ko-dict = { version = "0.1.0", path = "..." }`
-- [ ] `mecab-ko` depends on `mecab-ko-hangul = { version = "0.1.0", path = "..." }`
+- [ ] `mecab-ko-dict` depends on `mecab-ko-hangul = { version = "0.7.2", path = "..." }`
+- [ ] `mecab-ko-core` depends on `mecab-ko-hangul = { version = "0.7.2", path = "..." }`
+- [ ] `mecab-ko-core` depends on `mecab-ko-dict = { version = "0.7.2", path = "..." }`
+- [ ] `mecab-ko-dict-validator` depends on `mecab-ko-dict = { version = "0.7.2", path = "..." }`
+- [ ] `mecab-ko-dict-builder` depends on `mecab-ko-hangul = { version = "0.7.2", path = "..." }`
+- [ ] `mecab-ko-dict-builder` depends on `mecab-ko-dict = { version = "0.7.2", path = "..." }`
+- [ ] `mecab-ko-dict-sync` depends on `mecab-ko-dict = { version = "0.7.2", path = "..." }`
+- [ ] `mecab-ko` depends on `mecab-ko-core = { version = "0.7.2", path = "..." }`
+- [ ] `mecab-ko` depends on `mecab-ko-dict = { version = "0.7.2", path = "..." }`
+- [ ] `mecab-ko` depends on `mecab-ko-hangul = { version = "0.7.2", path = "..." }`
 
 ### 2.3 Non-Rust Package Versions
 
-- [ ] **Python** -- `rust/crates/mecab-ko-python/pyproject.toml` has `version = "0.1.0"`.
-- [ ] **Node.js** -- `rust/crates/mecab-ko-node/package.json` has `"version": "0.1.0"`.
-- [ ] **WASM** -- `rust/crates/mecab-ko-wasm/package.json` has `"version": "0.1.0"`.
+- [ ] **Python** -- `rust/crates/mecab-ko-python/pyproject.toml` has `version = "0.7.2"`.
+- [ ] **Node.js** -- `rust/crates/mecab-ko-node/package.json` has `"version": "0.7.2"`.
+- [ ] **WASM** -- `rust/crates/mecab-ko-wasm/package.json` has `"version": "0.7.2"`.
 
 ### 2.4 Final Version Commit
 
-- [ ] Create a single commit with message: `chore: release v0.1.0`
+- [ ] Create a single commit with message: `chore: release v0.7.2`
 - [ ] Ensure the commit includes the updated `CHANGELOG.md` with the release date.
 
 ---
@@ -140,6 +144,15 @@ mecab-ko-dict            (depends on: mecab-ko-hangul)
 mecab-ko-core            (depends on: mecab-ko-hangul, mecab-ko-dict)
        |
        v
+mecab-ko-dict-validator  (depends on: mecab-ko-dict)
+       |
+       v
+mecab-ko-dict-builder    (depends on: mecab-ko-hangul, mecab-ko-dict)
+       |
+       v
+mecab-ko-dict-sync       (depends on: mecab-ko-dict)
+       |
+       v
 mecab-ko                 (depends on: mecab-ko-core, mecab-ko-dict, mecab-ko-hangul)
 ```
 
@@ -156,20 +169,27 @@ cargo publish --manifest-path rust/crates/mecab-ko-hangul/Cargo.toml
 cargo publish --manifest-path rust/crates/mecab-ko-dict/Cargo.toml
 # Wait ~60s
 
-# Step 3: Dictionary tools (parallel -- no cross-dependency)
-cargo publish --manifest-path rust/crates/mecab-ko-dict-builder/Cargo.toml
-cargo publish --manifest-path rust/crates/mecab-ko-dict-validator/Cargo.toml
-# Wait ~60s
-
-# Step 4: Core engine
+# Step 3: Core engine
 cargo publish --manifest-path rust/crates/mecab-ko-core/Cargo.toml
 # Wait ~60s
 
-# Step 5: Main library crate
+# Step 4: Dictionary validator (depends on mecab-ko-dict)
+cargo publish --manifest-path rust/crates/mecab-ko-dict-validator/Cargo.toml
+# Wait ~60s
+
+# Step 5: Dictionary builder (depends on mecab-ko-hangul, mecab-ko-dict)
+cargo publish --manifest-path rust/crates/mecab-ko-dict-builder/Cargo.toml
+# Wait ~60s
+
+# Step 6: Dictionary sync (depends on mecab-ko-dict)
+cargo publish --manifest-path rust/crates/mecab-ko-dict-sync/Cargo.toml
+# Wait ~60s
+
+# Step 7: Main library crate
 cargo publish --manifest-path rust/crates/mecab-ko/Cargo.toml
 # Wait ~60s
 
-# Step 6: Consumer crates (parallel -- all depend on mecab-ko-core)
+# Step 8: Consumer crates (parallel -- all depend on mecab-ko-core)
 cargo publish --manifest-path rust/crates/mecab-ko-cli/Cargo.toml
 cargo publish --manifest-path rust/crates/mecab-ko-elasticsearch/Cargo.toml
 cargo publish --manifest-path rust/crates/mecab-ko-profiler/Cargo.toml
@@ -189,9 +209,10 @@ cargo publish --manifest-path rust/crates/mecab-ko-profiler/Cargo.toml
 - [ ] After all publishes, verify each crate at `https://crates.io/crates/<name>`:
   - [ ] `mecab-ko-hangul` -- https://crates.io/crates/mecab-ko-hangul
   - [ ] `mecab-ko-dict` -- https://crates.io/crates/mecab-ko-dict
-  - [ ] `mecab-ko-dict-builder` -- https://crates.io/crates/mecab-ko-dict-builder
-  - [ ] `mecab-ko-dict-validator` -- https://crates.io/crates/mecab-ko-dict-validator
   - [ ] `mecab-ko-core` -- https://crates.io/crates/mecab-ko-core
+  - [ ] `mecab-ko-dict-validator` -- https://crates.io/crates/mecab-ko-dict-validator
+  - [ ] `mecab-ko-dict-builder` -- https://crates.io/crates/mecab-ko-dict-builder
+  - [ ] `mecab-ko-dict-sync` -- https://crates.io/crates/mecab-ko-dict-sync
   - [ ] `mecab-ko` -- https://crates.io/crates/mecab-ko
   - [ ] `mecab-ko-cli` -- https://crates.io/crates/mecab-ko-cli
   - [ ] `mecab-ko-elasticsearch` -- https://crates.io/crates/mecab-ko-elasticsearch
@@ -234,7 +255,7 @@ cd pkg
 npm publish
 ```
 
-- [ ] Verify `mecab-ko-wasm@0.1.0` is available at https://www.npmjs.com/package/mecab-ko-wasm
+- [ ] Verify `mecab-ko-wasm@0.7.2` is available at https://www.npmjs.com/package/mecab-ko-wasm
 - [ ] Test installation: `npm install mecab-ko-wasm` in a fresh project.
 - [ ] Verify WASM module loads in browser and Node.js environments.
 
@@ -268,7 +289,7 @@ For multi-platform pre-built binaries, the CI release workflow builds for these 
 - `aarch64-apple-darwin`
 - `x86_64-pc-windows-msvc`
 
-- [ ] Verify `@mecab-ko/node@0.1.0` is available at https://www.npmjs.com/package/@mecab-ko/node
+- [ ] Verify `@mecab-ko/node@0.7.2` is available at https://www.npmjs.com/package/@mecab-ko/node
 - [ ] Test installation on Linux x86_64: `npm install @mecab-ko/node`
 - [ ] Test installation on macOS ARM64: `npm install @mecab-ko/node`
 - [ ] Verify TypeScript types resolve correctly.
@@ -315,7 +336,7 @@ maturin publish
 
 ### 5.4 Verification
 
-- [ ] Verify `mecab-ko-python==0.1.0` is available at https://pypi.org/project/mecab-ko-python/
+- [ ] Verify `mecab-ko-python==0.7.2` is available at https://pypi.org/project/mecab-ko-python/
 - [ ] Test installation in a clean virtual environment:
   ```bash
   python -m venv /tmp/mecab-test && source /tmp/mecab-test/bin/activate
@@ -338,10 +359,10 @@ git checkout main
 git pull origin main
 
 # Create annotated tag
-git tag -a v0.1.0 -m "Release v0.1.0 - Initial public release of MeCab-Ko Rust implementation"
+git tag -a v0.7.2 -m "Release v0.7.2"
 
 # Push tag (triggers release.yml and python-wheels.yml workflows)
-git push origin v0.1.0
+git push origin v0.7.2
 ```
 
 ### 6.2 Automated Release (via `release.yml`)
@@ -362,17 +383,17 @@ The `release.yml` workflow performs the following on tag push:
 
 The release notes should include:
 
-- [ ] **Summary** -- Brief description of what mecab-ko v0.1.0 provides.
+- [ ] **Summary** -- Brief description of what mecab-ko v0.7.2 provides.
 - [ ] **Highlights** -- Key features (Viterbi engine, Hangul utilities, dictionary management, multi-platform bindings).
 - [ ] **Installation instructions** -- For each ecosystem (Rust, Python, Node.js, WASM).
-- [ ] **Breaking changes** -- N/A for v0.1.0 (first release), but note that APIs are `0.x` and may change.
-- [ ] **Known issues** -- Document any known limitations (e.g., bincode advisory, stub components).
+- [ ] **Breaking changes** -- Document any API changes since v0.7.1.
+- [ ] **Known issues** -- Document any known limitations or open issues.
 - [ ] **Full changelog link** -- Link to `CHANGELOG.md` or the diff since repository creation.
 
 ### 6.4 Release Asset Verification
 
 - [ ] All five binary archives are attached to the release.
-- [ ] Linux x86_64 binary runs: `./mecab-ko --version` outputs `0.1.0`.
+- [ ] Linux x86_64 binary runs: `./mecab-ko --version` outputs `0.7.2`.
 - [ ] macOS ARM64 binary runs correctly.
 - [ ] Windows binary runs correctly.
 - [ ] Release is **not** marked as pre-release (unless intentionally doing an alpha/beta/RC).
@@ -401,23 +422,19 @@ The release notes should include:
 
 ### 7.3 Prepare for Next Development Cycle
 
-- [ ] **Bump workspace version** -- Update `rust/Cargo.toml` to `version = "0.2.0-dev"` (or `0.1.1-dev`).
+- [ ] **Bump workspace version** -- Update `rust/Cargo.toml` to `version = "0.7.3-dev"` (or `0.8.0-dev` if the next release is a minor bump).
 - [ ] **Update non-Rust versions** -- Bump `pyproject.toml`, `package.json` files to match.
-- [ ] **Reset CHANGELOG.md** -- Add a new `[Unreleased]` section above the `[0.1.0]` entry.
-- [ ] **Update comparison links** -- Add `[0.1.0]: https://github.com/hephaex/mecab-ko/releases/tag/v0.1.0` to CHANGELOG footer.
-- [ ] **Create v0.2.0 milestone** -- Set up a GitHub milestone for the next release with the planned roadmap items:
-  - Binary dictionary loader completion
-  - Viterbi algorithm optimization
-  - N-best path search
-  - Whitespace penalty implementation
+- [ ] **Reset CHANGELOG.md** -- Add a new `[Unreleased]` section above the `[0.7.2]` entry.
+- [ ] **Update comparison links** -- Add `[0.7.2]: https://github.com/hephaex/mecab-ko/releases/tag/v0.7.2` to CHANGELOG footer.
+- [ ] **Create v0.7.3 milestone** (or v0.8.0) -- Set up a GitHub milestone for the next release with the planned roadmap items.
 - [ ] **Review Dependabot PRs** -- Merge any pending dependency updates that were deferred for the release.
 - [ ] **Archive release branch** -- If a release branch was used, merge it back to main and delete it.
 
 ### 7.4 Monitoring (first week)
 
 - [ ] **Track download counts** -- Monitor crates.io, PyPI, and npm download metrics.
-- [ ] **Watch for issue reports** -- Triage any bug reports related to the v0.1.0 release.
-- [ ] **Check daily security audit** -- The `scheduled.yml` workflow runs daily; ensure no new advisories affect v0.1.0.
+- [ ] **Watch for issue reports** -- Triage any bug reports related to the v0.7.2 release.
+- [ ] **Check daily security audit** -- The `scheduled.yml` workflow runs daily; ensure no new advisories affect v0.7.2.
 - [ ] **Verify Dependabot** -- Confirm automated dependency update PRs are being created.
 
 ---
