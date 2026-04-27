@@ -1,6 +1,35 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-27 (Sprint 91 완료 -- crates.io v0.7.2 배포 + CI 수정 + clippy 정리)
+## 마지막 업데이트: 2026-04-27 (Sprint 92 완료 -- 문서 v0.7.2 갱신 + RELEASE_CHECKLIST + git tag 준비)
+
+### ✅ Sprint 92 - 문서 v0.7.2 갱신 + RELEASE_CHECKLIST + git tag 준비
+
+**기간**: 2026-04-27
+**목표**: 문서 전체 v0.7.2 갱신, RELEASE_CHECKLIST 오버홀, CHANGELOG 갱신, git tag 준비
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| RELEASE_CHECKLIST.md | v0.1.0 기준 | v0.7.2 기준 + dict-validator/dict-sync 추가 |
+| README 8파일 | v0.7.1/v0.1.0 참조 | v0.7.2 통일 |
+| CHANGELOG v0.7.2 | clippy/배포 미반영 | clippy 0 + crates.io 7/7 추가 |
+| docs.rs | v0.7.1 표시 | v0.7.2 빌드 대기 (자동 해결) |
+| elasticsearch/profiler README | v0.1 | v0.7 |
+
+#### docs.rs 상태
+- 7개 크레이트 모두 v0.7.1 표시 (v0.7.2 빌드 큐 대기)
+- crates.io publish 후 수시간 소요 — 자동 해결 예정
+
+#### 보류 사항
+- git tag v0.7.2 + GitHub Release: 사용자 승인 대기 → Sprint 93 이관
+
+#### 상태
+- 테스트: 1,198 pass / 0 fail / 18 ignored
+- clippy: 0 warnings (all targets)
+- 빌드: clean
+
+---
 
 ### ✅ Sprint 91 - crates.io v0.7.2 배포 + CI 수정 + clippy 정리
 

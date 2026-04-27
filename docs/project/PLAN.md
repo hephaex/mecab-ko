@@ -1,48 +1,46 @@
-# 완료: Phase 57 - Sprint 91 (crates.io v0.7.2 배포 + CI 수정 + clippy 정리)
+# 완료: Phase 58 - Sprint 92 (문서 v0.7.2 갱신 + RELEASE_CHECKLIST + git tag 준비)
 
-## Sprint 91 목표
-crates.io v0.7.2 배포 (7개), ffi-tests.yml CI 확인, test/example clippy 경고 정리, 시스템 사전 확인
+## Sprint 92 목표
+문서 전체 v0.7.2 갱신, RELEASE_CHECKLIST 오버홀, CHANGELOG 갱신, git tag + GitHub Release 준비
 
-## Sprint 91 작업 목록
+## Sprint 92 작업 목록
 
-### Track A: 배포
-- [x] S91-01: crates.io v0.7.2 배포 — 7/7 크레이트 성공 ✅
+### Track A: 문서
+- [x] S92-01: RELEASE_CHECKLIST.md 오버홀 (v0.1.0 → v0.7.2, dict-validator/dict-sync 추가) ✅
+- [x] S92-02: README 버전 참조 수정 (8파일, 0.1.0/0.7.1 → 0.7.2) ✅
+- [x] S92-04: CHANGELOG v0.7.2 갱신 (clippy 완료 + crates.io 배포 기록) ✅
 
-### Track B: CI
-- [x] S91-02: ffi-tests.yml → e2e-ffi-tests.yml로 이미 존재 확인, Cargo.toml 참조 수정 ✅
+### Track B: 검증
+- [x] S92-03: docs.rs 빌드 확인 — v0.7.2 아직 빌드 중 (v0.7.1 표시, 자동 해결 예정) ✅
 
-### Track C: 코드 품질
-- [x] S91-03: integration test clippy #[allow] 확장 (3파일), 경고 127→36 감소 ✅
+### Track C: 릴리스
+- [ ] S92-05: git tag v0.7.2 + GitHub Release — **사용자 승인 대기**
 
-### Track D: 환경
-- [x] S91-04: 시스템 사전 미설치 확인 → full-dict 벤치마크 불가 ✅
-
-### Track E: 검증 + 리뷰
-- [x] S91-05: 빌드/테스트/클리피 검증 + 리뷰 + Sprint 92 로드맵 ✅
+### Track D: 리뷰
+- [x] S92-06: 빌드/테스트/클리피 검증 + 리뷰 + Sprint 93 로드맵 ✅
 
 ---
 
-## Sprint 92 로드맵
+## Sprint 93 로드맵
 
-### P1: v0.7.2 git tag + GitHub Release
-- `git tag v0.7.2` + `git push --tags`
-- GitHub Release 생성 (CHANGELOG v0.7.2 내용 포함)
-- e2e-ffi-tests.yml release 트리거 검증
+### P1: git tag v0.7.2 + GitHub Release (S92에서 이관)
+- `git tag -a v0.7.2` + `git push origin v0.7.2`
+- release.yml 트리거 → GitHub Release + CLI 바이너리 5플랫폼
+- python-wheels.yml 트리거 → PyPI 배포
+- 사용자 승인 필요
 
-### P2: 잔여 test/example clippy 정리 (36개)
-- accuracy_eval (13), convert_to_v2 (7), memory_measure (3+2), 기타
-- example 파일: Result+? 패턴 적용
-- accuracy_eval: 대량 테스트 파일, #[allow] 그룹으로 처리
-
-### P3: 시스템 사전 설치 + full-dict 벤치마크
+### P2: 시스템 사전 설치 + full-dict 벤치마크
 - mecab-ko-dic 설치 절차 문서화
 - MECAB_DICDIR 설정 후 벤치마크 재실행
 - mini-dict vs full-dict 비교
 
-### P4: 문서 개선
-- docs/RELEASE_CHECKLIST.md 갱신 (v0.7.2 절차 반영)
-- README 설치 예제 검증
-- API 문서 빌드 확인 (docs.rs)
+### P3: docs.rs 검증
+- v0.7.2 빌드 완료 확인
+- 문서 누락/경고 확인
+
+### P4: v0.8.0 기능 계획
+- 잠재 기능 목록 정리 (N-best, whitespace penalty 등)
+- 로드맵 작성
 
 ---
 
