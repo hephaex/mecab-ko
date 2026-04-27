@@ -8,7 +8,12 @@
 //! are accessible, so users of the top-level crate can import nori types
 //! without reaching into `mecab_ko_core` directly.
 
-#![allow(clippy::expect_used)]
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::doc_markdown,
+    clippy::no_effect_underscore_binding
+)]
 
 #[test]
 fn test_nori_types_reexported_via_core() {

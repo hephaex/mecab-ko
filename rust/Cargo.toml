@@ -22,7 +22,7 @@ members = [
 #   maturin develop          (in crates/mecab-ko-python/)
 #   wasm-pack build          (in crates/mecab-ko-wasm/)
 #   npm run build            (in crates/mecab-ko-node/)
-# CI coverage: .github/workflows/ffi-tests.yml
+# CI coverage: .github/workflows/e2e-ffi-tests.yml
 exclude = [
     "crates/mecab-ko-python",
     "crates/mecab-ko-wasm",

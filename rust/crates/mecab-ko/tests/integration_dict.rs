@@ -11,7 +11,9 @@
     clippy::expect_used,
     clippy::unwrap_used,
     clippy::uninlined_format_args,
-    clippy::useless_vec
+    clippy::useless_vec,
+    clippy::doc_markdown,
+    clippy::needless_collect
 )]
 
 mod common;

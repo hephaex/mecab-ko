@@ -7,7 +7,14 @@
 //! - User dictionary persistence
 //! - CSV format parsing
 
-#![allow(clippy::expect_used, clippy::unwrap_used, clippy::useless_vec)]
+#![allow(
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::useless_vec,
+    clippy::doc_markdown,
+    clippy::match_same_arms,
+    clippy::single_match_else
+)]
 
 mod common;
 
