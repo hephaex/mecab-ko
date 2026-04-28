@@ -80,7 +80,7 @@ MeCab-Ko welcomes contributions of new words, especially:
 
 ### Prerequisites
 
-- Rust toolchain (1.75.0 or later recommended)
+- Rust toolchain (1.80.0 or later recommended)
 - Git
 - Python 3.8+ with development headers (for `mecab-ko-python` crate only)
 

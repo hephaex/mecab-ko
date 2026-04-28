@@ -160,7 +160,7 @@ docker compose down
 
 ```
 Stage 1: Builder (Rust)
-  ├─ rust:1.75-bookworm base
+  ├─ rust:1.80-bookworm base
   ├─ Install Rust dependencies
   ├─ Build mecab-ko CLI binary
   └─ Strip binary for size
@@ -181,7 +181,7 @@ Stage 1: Python Builder
   └─ Output: /wheels
 
 Stage 2: Rust/Maturin Builder
-  ├─ rust:1.75-bookworm base
+  ├─ rust:1.80-bookworm base
   ├─ Build Python extension (mecab-ko-python)
   └─ Output: /wheels
 

@@ -258,7 +258,7 @@ let suggestions = search_engine.autocomplete("접두어")?;
 - **작성일**: 2026-02-05
 - **위치**: `/home/mare/mecab-ko/examples/`
 - **언어**: Rust 2021 Edition
-- **최소 Rust 버전**: 1.75
+- **최소 Rust 버전**: 1.80
 
 ## 검증 완료
 

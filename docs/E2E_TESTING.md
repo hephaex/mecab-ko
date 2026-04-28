@@ -361,7 +361,7 @@ Tests run automatically in GitHub Actions:
 - **OS**: Ubuntu, macOS, Windows
 - **Python**: 3.9, 3.10, 3.11, 3.12
 - **Node.js**: 18, 20, 21
-- **Rust**: stable, 1.75.0
+- **Rust**: stable, 1.80.0
 
 ## Writing New Tests
 

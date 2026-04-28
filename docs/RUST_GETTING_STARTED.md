@@ -27,14 +27,14 @@ A comprehensive guide to getting started with the MeCab-Ko Rust implementation -
 
 ### Rust Toolchain
 
-MeCab-Ko requires Rust 1.75 or later. Install using rustup:
+MeCab-Ko requires Rust 1.80 or later. Install using rustup:
 
 ```bash
 # Install Rust (Linux/macOS)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 # Verify installation
-rustc --version  # Should be 1.75+
+rustc --version  # Should be 1.80+
 cargo --version
 ```
 
@@ -1005,7 +1005,7 @@ error: could not compile `mecab-ko`
 
 2. Check MSRV (Minimum Supported Rust Version):
    ```bash
-   rustc --version  # Should be 1.75+
+   rustc --version  # Should be 1.80+
    ```
 
 3. Clean and rebuild:
