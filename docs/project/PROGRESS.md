@@ -1,6 +1,38 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-27 (Sprint 92 완료 -- 문서 v0.7.2 갱신 + RELEASE_CHECKLIST + git tag 준비)
+## 마지막 업데이트: 2026-04-28 (Sprint 93 완료 -- git tag v0.7.2 + GitHub Release + docs.rs 검증)
+
+### ✅ Sprint 93 - git tag v0.7.2 + GitHub Release + docs.rs 검증 + MSRV 문서
+
+**기간**: 2026-04-28
+**목표**: git tag v0.7.2, GitHub Release, docs.rs 검증, MSRV 문서 갱신, v0.8.0 조사
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| git tag | v0.7.1 | v0.7.2 (push 완료, release.yml 트리거) |
+| GitHub Release | 없음 | v0.7.2 생성 (바이너리 빌드 중) |
+| docs.rs | v0.7.1 표시 | v0.7.2 전체 7/7 빌드 성공 |
+| MSRV 문서 | 1.75 잔여 5파일 | 1.80으로 전체 갱신 |
+
+#### GitHub Release 상태
+- release.yml: GitHub Release 생성 완료, CLI 바이너리 5플랫폼 빌드 중
+- python-wheels.yml: 실패 (maturin build — 기존 이슈)
+- npm-publish.yml: 실패 (wasm-pack build — 기존 이슈)
+- docker.yml: 실패 (OIDC 토큰 — 기존 이슈)
+
+#### v0.8.0 기능 후보 (조사 완료)
+- Binary Dict v3 (DIC-010), 사전 검증 (DIC-009), 사용자 사전 (RST-011)
+- Whitespace penalty (RST-009), 도메인 오버레이
+- 40+ integration test TODOs
+
+#### 상태
+- 테스트: 1,198 pass / 0 fail / 18 ignored
+- clippy: 0 warnings (all targets)
+- docs.rs: 7/7 v0.7.2 빌드 성공
+
+---
 
 ### ✅ Sprint 92 - 문서 v0.7.2 갱신 + RELEASE_CHECKLIST + git tag 준비
 

@@ -1,46 +1,49 @@
-# 완료: Phase 58 - Sprint 92 (문서 v0.7.2 갱신 + RELEASE_CHECKLIST + git tag 준비)
+# 완료: Phase 59 - Sprint 93 (git tag v0.7.2 + GitHub Release + docs.rs 검증 + MSRV 문서)
 
-## Sprint 92 목표
-문서 전체 v0.7.2 갱신, RELEASE_CHECKLIST 오버홀, CHANGELOG 갱신, git tag + GitHub Release 준비
+## Sprint 93 목표
+git tag v0.7.2 + GitHub Release, docs.rs 빌드 검증, MSRV 문서 갱신, v0.8.0 로드맵 조사
 
-## Sprint 92 작업 목록
+## Sprint 93 작업 목록
 
-### Track A: 문서
-- [x] S92-01: RELEASE_CHECKLIST.md 오버홀 (v0.1.0 → v0.7.2, dict-validator/dict-sync 추가) ✅
-- [x] S92-02: README 버전 참조 수정 (8파일, 0.1.0/0.7.1 → 0.7.2) ✅
-- [x] S92-04: CHANGELOG v0.7.2 갱신 (clippy 완료 + crates.io 배포 기록) ✅
+### Track A: 릴리스
+- [x] S93-01: git tag v0.7.2 + GitHub Release — 태그 push 완료, release.yml 트리거 ✅
 
 ### Track B: 검증
-- [x] S92-03: docs.rs 빌드 확인 — v0.7.2 아직 빌드 중 (v0.7.1 표시, 자동 해결 예정) ✅
+- [x] S93-02: docs.rs v0.7.2 빌드 확인 — 7/7 크레이트 100% documented ✅
+- [x] S93-03: 시스템 사전 설치 문서 검증 + MSRV 1.75→1.80 갱신 (5파일) ✅
 
-### Track C: 릴리스
-- [ ] S92-05: git tag v0.7.2 + GitHub Release — **사용자 승인 대기**
+### Track C: 조사
+- [x] S93-04: v0.8.0 기능 후보 조사 — ISSUE_BACKLOG 분석, TODO/FIXME 스캔 완료 ✅
 
 ### Track D: 리뷰
-- [x] S92-06: 빌드/테스트/클리피 검증 + 리뷰 + Sprint 93 로드맵 ✅
+- [x] S93-05: 빌드/테스트/클리피 검증 + 리뷰 + Sprint 94 로드맵 ✅
+
+### CI 워크플로우 상태 (v0.7.2 태그)
+- release.yml: ✅ GitHub Release 생성, 바이너리 빌드 진행 중
+- python-wheels.yml: ❌ maturin build 실패 (기존 이슈)
+- npm-publish.yml: ❌ wasm-pack build 실패 (기존 이슈)
+- docker.yml: ❌ OIDC 토큰 설정 누락 (기존 이슈)
 
 ---
 
-## Sprint 93 로드맵
+## Sprint 94 로드맵
 
-### P1: git tag v0.7.2 + GitHub Release (S92에서 이관)
-- `git tag -a v0.7.2` + `git push origin v0.7.2`
-- release.yml 트리거 → GitHub Release + CLI 바이너리 5플랫폼
-- python-wheels.yml 트리거 → PyPI 배포
-- 사용자 승인 필요
+### P1: CI 워크플로우 수정 (3개)
+- python-wheels.yml: maturin build 에러 진단 + 수정
+- npm-publish.yml: wasm-pack build 에러 진단 + 수정
+- docker.yml: OIDC 토큰 / permissions 설정
 
-### P2: 시스템 사전 설치 + full-dict 벤치마크
-- mecab-ko-dic 설치 절차 문서화
-- MECAB_DICDIR 설정 후 벤치마크 재실행
-- mini-dict vs full-dict 비교
+### P2: 시스템 사전 벤치마크
+- `brew install mecab-ko-dic` 후 MECAB_DICDIR 설정
+- full-dict 벤치마크 실행 + mini-dict 비교 리포트
 
-### P3: docs.rs 검증
-- v0.7.2 빌드 완료 확인
-- 문서 누락/경고 확인
+### P3: GitHub Actions Node.js 20 deprecation
+- actions/checkout@v4 → v5 (Node.js 24 지원) 검토
+- 전체 워크플로우 업데이트
 
-### P4: v0.8.0 기능 계획
-- 잠재 기능 목록 정리 (N-best, whitespace penalty 등)
-- 로드맵 작성
+### P4: v0.8.0 기능 계획 구체화
+- ISSUE_BACKLOG에서 P0 항목 선정
+- Binary Dict v3 (DIC-010), 사전 검증 (DIC-009), 사용자 사전 개선 (RST-011)
 
 ---
 
