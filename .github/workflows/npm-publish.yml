@@ -59,10 +59,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -102,7 +102,7 @@ jobs:
         shell: bash
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: bindings-${{ matrix.target }}
           path: ${{ env.NODE_CRATE_DIR }}/*.node
@@ -122,15 +122,15 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node }}
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: ${{ env.NODE_CRATE_DIR }}
           pattern: bindings-*
@@ -161,10 +161,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
@@ -174,7 +174,7 @@ jobs:
         run: npm ci
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: ${{ env.NODE_CRATE_DIR }}/artifacts
           pattern: bindings-*
@@ -257,10 +257,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
@@ -276,22 +276,19 @@ jobs:
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - name: Build WASM (bundler target)
-        working-directory: ${{ env.WASM_CRATE_DIR }}
         run: |
-          wasm-pack build --target bundler --out-dir pkg --release
-          ls -la pkg/
+          wasm-pack build ${{ env.WASM_CRATE_DIR }} --target bundler --out-dir pkg --release
+          ls -la ${{ env.WASM_CRATE_DIR }}/pkg/
 
       - name: Build WASM (nodejs target)
-        working-directory: ${{ env.WASM_CRATE_DIR }}
         run: |
-          wasm-pack build --target nodejs --out-dir pkg-node --release
-          ls -la pkg-node/
+          wasm-pack build ${{ env.WASM_CRATE_DIR }} --target nodejs --out-dir pkg-node --release
+          ls -la ${{ env.WASM_CRATE_DIR }}/pkg-node/
 
       - name: Build WASM (web target)
-        working-directory: ${{ env.WASM_CRATE_DIR }}
         run: |
-          wasm-pack build --target web --out-dir pkg-web --release
-          ls -la pkg-web/
+          wasm-pack build ${{ env.WASM_CRATE_DIR }} --target web --out-dir pkg-web --release
+          ls -la ${{ env.WASM_CRATE_DIR }}/pkg-web/
 
       - name: Prepare package for publishing
         working-directory: ${{ env.WASM_CRATE_DIR }}
@@ -336,7 +333,7 @@ jobs:
           ls -la
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: wasm-package
           path: |
@@ -355,15 +352,15 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: wasm-package
           path: ${{ env.WASM_CRATE_DIR }}
@@ -402,16 +399,16 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: wasm-package
           path: ${{ env.WASM_CRATE_DIR }}

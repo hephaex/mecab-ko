@@ -79,7 +79,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -131,7 +131,7 @@ jobs:
           echo "Collected $COUNT entries from OpenDict"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: opendict-candidates
           path: ${{ env.CANDIDATES_DIR }}/opendict_*.csv
@@ -149,7 +149,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Collect from Baram API
         id: collect
@@ -207,7 +207,7 @@ jobs:
           echo "Extracted text content for unknown word analysis"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: baram-candidates
           path: ${{ env.CANDIDATES_DIR }}/baram_*.json
@@ -225,7 +225,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Rust
         uses: ./.github/actions/rust-setup
@@ -283,7 +283,7 @@ jobs:
           echo "Found $COUNT unknown words in corpus"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: corpus-candidates
           path: ${{ env.CANDIDATES_DIR }}/corpus_unknown_*.csv
@@ -301,7 +301,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Rust
         uses: ./.github/actions/rust-setup
@@ -401,7 +401,7 @@ PYEOF
           echo "Found $COUNT unknown words in wiki dump"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: wiki-candidates
           path: ${{ env.CANDIDATES_DIR }}/wiki_unknown_*.csv
@@ -419,10 +419,10 @@ PYEOF
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: artifacts
 
@@ -564,7 +564,7 @@ ${table}
             console.log('Created bulk candidate issue');
 
       - name: Upload merged artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: merged-candidates
           path: ${{ env.CANDIDATES_DIR }}/merged_*.csv

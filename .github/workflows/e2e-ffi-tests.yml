@@ -53,7 +53,7 @@ jobs:
         rust: [stable, 1.75.0]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Rust Setup
         uses: ./.github/actions/rust-setup
@@ -98,7 +98,7 @@ jobs:
         python-version: ['3.9', '3.10', '3.11', '3.12']
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Rust Setup
         uses: ./.github/actions/rust-setup
@@ -125,7 +125,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: python-e2e-test-results-${{ matrix.os }}-${{ matrix.python-version }}
           path: tests/e2e/python/junit.xml
@@ -140,13 +140,13 @@ jobs:
         node-version: ['18', '20', '21']
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Rust Setup
         uses: ./.github/actions/rust-setup
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -171,7 +171,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Rust Setup
         uses: ./.github/actions/rust-setup
@@ -186,7 +186,7 @@ jobs:
         run: wasm-pack build --target web
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '20'
 
@@ -204,7 +204,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Rust Setup
         uses: ./.github/actions/rust-setup
@@ -244,7 +244,7 @@ jobs:
         python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Rust Setup
         uses: ./.github/actions/rust-setup
@@ -279,7 +279,7 @@ jobs:
         node-version: ['18.x', '20.x', '22.x']
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Rust Setup
         uses: ./.github/actions/rust-setup
@@ -287,7 +287,7 @@ jobs:
           cache-key: node-${{ matrix.node-version }}
 
       - name: Set up Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -308,7 +308,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Rust Setup
         uses: ./.github/actions/rust-setup
@@ -327,7 +327,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Rust Setup
         uses: ./.github/actions/rust-setup

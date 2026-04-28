@@ -41,7 +41,7 @@ jobs:
       error_count: ${{ steps.validate.outputs.error_count }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Rust
         uses: ./.github/actions/rust-setup
@@ -191,7 +191,7 @@ jobs:
       total_errors: ${{ steps.validate.outputs.total_errors }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Detect changed CSV files
         id: changed
@@ -373,7 +373,7 @@ jobs:
       entry_count: ${{ steps.build.outputs.entry_count }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -501,7 +501,7 @@ jobs:
           done
 
       - name: Upload dictionary artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: dict-binary-${{ github.run_number }}
           path: dict-output/
@@ -545,7 +545,7 @@ jobs:
     if: always()
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Rust
         uses: ./.github/actions/rust-setup
@@ -554,7 +554,7 @@ jobs:
           cache-key: dict-test
 
       - name: Download dictionary artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: dict-binary-${{ github.run_number }}
           path: dict-output
@@ -619,7 +619,7 @@ jobs:
       f1_score: ${{ steps.evaluate.outputs.f1_score }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Rust
         uses: ./.github/actions/rust-setup
@@ -628,7 +628,7 @@ jobs:
           cache-key: dict-cli
 
       - name: Download dictionary artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: dict-binary-${{ github.run_number }}
           path: dict-output
@@ -700,7 +700,7 @@ jobs:
           EOF
 
       - name: Upload accuracy history
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: accuracy-history-${{ github.run_number }}
           path: accuracy-history/
@@ -713,10 +713,10 @@ jobs:
     if: always()
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: dict-binary-${{ github.run_number }}
           path: dict-output
@@ -762,7 +762,7 @@ jobs:
           cat dict-build-report.md
 
       - name: Upload report as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: dict-build-report-${{ github.run_number }}
           path: dict-build-report.md
@@ -770,7 +770,7 @@ jobs:
 
       - name: Archive test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: dict-build-logs-${{ github.run_number }}
           path: |

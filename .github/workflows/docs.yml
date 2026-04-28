@@ -37,7 +37,7 @@ jobs:
       doc_path: rust/target/doc
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Rust
         uses: ./.github/actions/rust-setup
@@ -72,7 +72,7 @@ jobs:
           EOF
 
       - name: Upload rustdoc artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: rustdoc
           path: rust/target/doc
@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install mdBook
         run: |
@@ -145,7 +145,7 @@ jobs:
           EOF
 
       - name: Upload mdbook artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: mdbook
           path: site/book
@@ -158,16 +158,16 @@ jobs:
     if: always()
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download rustdoc artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: rustdoc
           path: docs-combined/api
 
       - name: Download mdbook artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: mdbook
           path: docs-combined/book
@@ -291,7 +291,7 @@ jobs:
           EOF
 
       - name: Upload combined documentation
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: documentation
           path: docs-combined
@@ -307,7 +307,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Download documentation artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: documentation
           path: ./docs-deploy

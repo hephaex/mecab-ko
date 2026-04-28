@@ -21,7 +21,7 @@ jobs:
         rust: [stable, beta, nightly]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Rust
         uses: ./.github/actions/rust-setup
@@ -59,7 +59,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Get repository info
         id: repo_info
@@ -90,7 +90,7 @@ jobs:
           EOF
 
       - name: Upload status report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: status-report
           path: status.md

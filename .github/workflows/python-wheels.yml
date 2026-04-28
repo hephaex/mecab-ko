@@ -82,7 +82,7 @@ jobs:
             target: x86_64-pc-windows-msvc
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Rust
         uses: ./.github/actions/rust-setup
@@ -106,7 +106,7 @@ jobs:
         uses: docker/setup-qemu-action@v4
 
       - name: Build wheels with maturin
-        uses: PyO3/maturin-action@v2
+        uses: PyO3/maturin-action@v1
         with:
           working-directory: rust/crates/mecab-ko-python
           target: ${{ matrix.target }}
@@ -115,7 +115,7 @@ jobs:
           manylinux: ${{ matrix.manylinux || 'off' }}
 
       - name: Upload wheels artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: wheels-${{ matrix.platform }}-${{ matrix.arch }}
           path: rust/crates/mecab-ko-python/dist/*.whl
@@ -131,7 +131,7 @@ jobs:
     name: Build source distribution
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -148,7 +148,7 @@ jobs:
         run: maturin sdist --out dist
 
       - name: Upload sdist artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: sdist
           path: rust/crates/mecab-ko-python/dist/*.tar.gz
@@ -175,7 +175,7 @@ jobs:
             py_version: '3.11'
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -183,7 +183,7 @@ jobs:
           python-version: ${{ matrix.py_version }}
 
       - name: Download wheels
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: wheels
 
@@ -223,10 +223,10 @@ jobs:
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: dist
 
@@ -318,7 +318,7 @@ jobs:
           echo "- Python 3.13" >> /tmp/wheel-report.md
 
       - name: Upload wheel report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: wheel-report
           path: /tmp/wheel-report.md
@@ -374,10 +374,10 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: dist
           merge-multiple: true
@@ -491,10 +491,10 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Download wheel report
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: wheel-report
 
