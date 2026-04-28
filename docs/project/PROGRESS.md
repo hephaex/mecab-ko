@@ -1,6 +1,36 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-28 (Sprint 93 완료 -- git tag v0.7.2 + GitHub Release + docs.rs 검증)
+## 마지막 업데이트: 2026-04-28 (Sprint 94 완료 -- CI 워크플로우 수정 + Actions Node.js 24 대응)
+
+### ✅ Sprint 94 - CI 워크플로우 수정 + GitHub Actions Node.js 24 대응
+
+**기간**: 2026-04-28
+**목표**: CI 워크플로우 3개 실패 수정, 전체 16개 워크플로우 actions v4→v5 업데이트
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| python-wheels.yml | PyO3/maturin-action@v2 (미존재) | @v1 (v1.50.0) |
+| npm-publish.yml | wasm-pack working-directory (workspace root 실패) | repo root에서 crate path 인자 |
+| docker.yml | permissions: contents+packages만 | +id-token: write +attestations: write |
+| 16 워크플로우 | actions/checkout@v4 등 | @v5 (Node.js 24 대응) |
+
+#### 수정된 워크플로우 (16개)
+accuracy-gate, benchmark, ci, code-quality, dependabot, dict-build, docker,
+docs, e2e-ffi-tests, neologism-multi-source, npm-publish, python-wheels,
+release, scheduled, search-plugins, security
+
+#### 잔여 CI 이슈
+- ci.yml: 테스트 30개 실패 (사전 데이터 미포함 — 구조적 문제)
+- dict-build.yml: 사전 빌드 런타임 에러
+
+#### 상태
+- 테스트: 1,198 pass / 0 fail / 18 ignored
+- clippy: 0 warnings (all targets)
+- 빌드: clean
+
+---
 
 ### ✅ Sprint 93 - git tag v0.7.2 + GitHub Release + docs.rs 검증 + MSRV 문서
 
