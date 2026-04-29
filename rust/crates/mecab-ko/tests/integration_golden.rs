@@ -97,10 +97,8 @@ fn test_golden_basic() {
         if has_system_dict && !tokens.is_empty() {
             // Full comparison: morpheme surfaces must match expected_morphs exactly.
             if !test_case.expected_morphs.is_empty() {
-                let actual_morphs: Vec<String> =
-                    tokens.iter().map(|t| t.surface.clone()).collect();
-                let comparison =
-                    common::compare_morphs(&test_case.expected_morphs, &actual_morphs);
+                let actual_morphs: Vec<String> = tokens.iter().map(|t| t.surface.clone()).collect();
+                let comparison = common::compare_morphs(&test_case.expected_morphs, &actual_morphs);
                 assert!(
                     comparison.passed,
                     "basic.json morph mismatch for input '{}':\n  expected: {:?}\n  actual:   {:?}{}",
@@ -117,15 +115,18 @@ fn test_golden_basic() {
                     .iter()
                     .map(|t| (t.surface.clone(), t.pos.clone()))
                     .collect();
-                let comparison =
-                    common::compare_pos_tags(&test_case.expected_pos, &actual_pos);
+                let comparison = common::compare_pos_tags(&test_case.expected_pos, &actual_pos);
                 assert!(
                     comparison.passed,
                     "basic.json POS mismatch for input '{}':\n  expected: {:?}\n  actual:   {:?}{}",
                     test_case.input,
                     test_case.expected_pos,
                     actual_pos,
-                    comparison.diff.as_deref().map(|d| format!("\n{d}")).unwrap_or_default()
+                    comparison
+                        .diff
+                        .as_deref()
+                        .map(|d| format!("\n{d}"))
+                        .unwrap_or_default()
                 );
             }
 
@@ -284,7 +285,11 @@ fn test_golden_complex() {
                 test_case.input,
                 test_case.expected_pos,
                 actual_pos,
-                comparison.diff.as_deref().map(|d| format!("\n{d}")).unwrap_or_default()
+                comparison
+                    .diff
+                    .as_deref()
+                    .map(|d| format!("\n{d}"))
+                    .unwrap_or_default()
             );
             exact_matches += 1;
         }
@@ -333,10 +338,7 @@ fn test_all_golden_tests() {
     for file in &golden_files {
         let test_cases = match load_golden_tests(file) {
             Ok(cases) => {
-                assert!(
-                    !cases.is_empty(),
-                    "{file}: golden file must not be empty"
-                );
+                assert!(!cases.is_empty(), "{file}: golden file must not be empty");
                 files_loaded += 1;
                 cases
             }
@@ -466,7 +468,10 @@ fn test_golden_statistics() {
             .unwrap_or_else(|e| panic!("Failed to load golden test file {file}: {e}"));
 
         let total = test_cases.len();
-        assert!(total > 0, "{file}: golden file must contain at least one test case");
+        assert!(
+            total > 0,
+            "{file}: golden file must contain at least one test case"
+        );
 
         let with_morphs = test_cases
             .iter()

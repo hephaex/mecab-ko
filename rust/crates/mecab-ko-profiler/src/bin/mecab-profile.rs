@@ -1,4 +1,12 @@
 //! Command-line interface for MeCab-Ko memory profiling.
+#![allow(
+    clippy::needless_pass_by_value,
+    clippy::unnecessary_wraps,
+    clippy::redundant_closure_for_method_calls,
+    clippy::cast_possible_truncation,
+    clippy::cast_precision_loss,
+    clippy::too_many_lines
+)]
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};

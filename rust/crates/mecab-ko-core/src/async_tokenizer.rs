@@ -415,7 +415,10 @@ mod tests {
     #[tokio::test]
     async fn test_default_max_concurrent_value() {
         let tokenizer = AsyncTokenizer::new().await.expect("should create");
-        assert_eq!(tokenizer.max_concurrent(), AsyncTokenizer::DEFAULT_MAX_CONCURRENT);
+        assert_eq!(
+            tokenizer.max_concurrent(),
+            AsyncTokenizer::DEFAULT_MAX_CONCURRENT
+        );
     }
 
     /// `with_max_concurrent` returns a new value reflected by `max_concurrent()`.
@@ -450,7 +453,11 @@ mod tests {
         let tokenizer = AsyncTokenizer::new().await.expect("should create");
         let tokens = tokenizer.tokenize_async("").await;
         // Empty input always produces zero tokens regardless of the dictionary.
-        assert!(tokens.is_empty(), "expected no tokens for empty input, got {}", tokens.len());
+        assert!(
+            tokens.is_empty(),
+            "expected no tokens for empty input, got {}",
+            tokens.len()
+        );
     }
 
     /// Single ASCII character — must not panic; token count >= 0.
@@ -487,7 +494,11 @@ mod tests {
         let t1 = tokenizer.tokenize_async("안녕").await;
         let t2 = tokenizer.tokenize_async("안녕").await;
         // Both calls must produce the same number of tokens (determinism).
-        assert_eq!(t1.len(), t2.len(), "repeated calls should return same token count");
+        assert_eq!(
+            t1.len(),
+            t2.len(),
+            "repeated calls should return same token count"
+        );
     }
 
     // ---------------------------------------------------------------------------
@@ -500,7 +511,11 @@ mod tests {
         let tokenizer = AsyncTokenizer::new().await.expect("should create");
         let texts = vec!["안녕하세요".to_string(), "감사합니다".to_string()];
         let results = tokenizer.tokenize_batch(texts).await;
-        assert_eq!(results.len(), 2, "batch result count must match input count");
+        assert_eq!(
+            results.len(),
+            2,
+            "batch result count must match input count"
+        );
     }
 
     /// Batch with an empty list — must return an empty Vec.
@@ -550,7 +565,9 @@ mod tests {
     #[tokio::test]
     async fn test_tokenize_stream_empty() {
         let tokenizer = AsyncTokenizer::new().await.expect("should create");
-        let results = tokenizer.tokenize_stream(std::iter::empty::<String>()).await;
+        let results = tokenizer
+            .tokenize_stream(std::iter::empty::<String>())
+            .await;
         assert!(results.is_empty());
     }
 
@@ -564,7 +581,10 @@ mod tests {
         let tokenizer = AsyncTokenizer::new().await.expect("should create");
         let cursor = std::io::Cursor::new(b"" as &[u8]);
         let result = tokenizer.tokenize_reader(cursor).await;
-        assert!(result.is_ok(), "tokenize_reader should succeed on empty input");
+        assert!(
+            result.is_ok(),
+            "tokenize_reader should succeed on empty input"
+        );
         assert!(result.unwrap().is_empty());
     }
 
@@ -585,7 +605,10 @@ mod tests {
         let data = "첫 번째 줄.\n두 번째 줄.\n";
         let cursor = std::io::Cursor::new(data.as_bytes());
         let result = tokenizer.tokenize_reader(cursor).await;
-        assert!(result.is_ok(), "tokenize_reader should succeed on multiple lines");
+        assert!(
+            result.is_ok(),
+            "tokenize_reader should succeed on multiple lines"
+        );
     }
 
     // ---------------------------------------------------------------------------
@@ -596,8 +619,13 @@ mod tests {
     #[tokio::test]
     async fn test_tokenize_file_nonexistent() {
         let tokenizer = AsyncTokenizer::new().await.expect("should create");
-        let result = tokenizer.tokenize_file("/nonexistent/path/that/does/not/exist.txt").await;
-        assert!(result.is_err(), "tokenize_file on missing path must return Err");
+        let result = tokenizer
+            .tokenize_file("/nonexistent/path/that/does/not/exist.txt")
+            .await;
+        assert!(
+            result.is_err(),
+            "tokenize_file on missing path must return Err"
+        );
     }
 
     // ---------------------------------------------------------------------------
@@ -634,7 +662,10 @@ mod tests {
     async fn test_async_streaming_tokenizer_initial_buffer_empty() {
         let tokenizer = AsyncTokenizer::new().await.expect("should create");
         let stream = AsyncStreamingTokenizer::new(tokenizer);
-        assert!(stream.buffer.is_empty(), "buffer must be empty on construction");
+        assert!(
+            stream.buffer.is_empty(),
+            "buffer must be empty on construction"
+        );
     }
 
     // ---------------------------------------------------------------------------
@@ -647,8 +678,14 @@ mod tests {
         let tokenizer = AsyncTokenizer::new().await.expect("should create");
         let mut stream = AsyncStreamingTokenizer::new(tokenizer);
         let tokens = stream.flush().await;
-        assert!(tokens.is_empty(), "flush on empty buffer must produce no tokens");
-        assert!(stream.buffer.is_empty(), "buffer must remain empty after flushing empty buffer");
+        assert!(
+            tokens.is_empty(),
+            "flush on empty buffer must produce no tokens"
+        );
+        assert!(
+            stream.buffer.is_empty(),
+            "buffer must remain empty after flushing empty buffer"
+        );
     }
 
     /// After `flush`, the buffer must be empty regardless of prior state.
@@ -660,7 +697,10 @@ mod tests {
         // Push text without a sentence delimiter so it stays in the buffer.
         let tokens = stream.process_chunk("버퍼에 남을 텍스트").await;
         assert!(tokens.iter().all(|t| !t.surface.is_empty()));
-        assert!(!stream.buffer.is_empty(), "buffer should hold unprocessed text");
+        assert!(
+            !stream.buffer.is_empty(),
+            "buffer should hold unprocessed text"
+        );
 
         let flushed = stream.flush().await;
         assert!(flushed.iter().all(|t| !t.surface.is_empty()));
@@ -681,7 +721,13 @@ mod tests {
         let remaining = stream.flush().await;
         // Total token count may be zero with mini-dict, but the pipeline must complete.
         let total = tokens.len() + remaining.len();
-        assert!(tokens.iter().chain(remaining.iter()).all(|t| !t.surface.is_empty()), "all tokens must have non-empty surface (total: {total})");
+        assert!(
+            tokens
+                .iter()
+                .chain(remaining.iter())
+                .all(|t| !t.surface.is_empty()),
+            "all tokens must have non-empty surface (total: {total})"
+        );
     }
 
     /// Text with no delimiter must be buffered, not tokenised immediately.
@@ -692,9 +738,15 @@ mod tests {
 
         let tokens = stream.process_chunk("구분자없음").await;
         // No delimiter ⇒ no output from process_chunk.
-        assert!(tokens.is_empty(), "text without delimiter must not produce tokens immediately");
+        assert!(
+            tokens.is_empty(),
+            "text without delimiter must not produce tokens immediately"
+        );
         // The text must have been buffered.
-        assert!(!stream.buffer.is_empty(), "text without delimiter must be held in the buffer");
+        assert!(
+            !stream.buffer.is_empty(),
+            "text without delimiter must be held in the buffer"
+        );
     }
 
     /// process_reader on empty bytes — must return Ok(empty).
@@ -718,9 +770,15 @@ mod tests {
         let data = "첫째 줄.\n둘째 줄.\n";
         let cursor = std::io::Cursor::new(data.as_bytes());
         let result = stream.process_reader(cursor).await;
-        assert!(result.is_ok(), "process_reader must succeed on multi-line input");
+        assert!(
+            result.is_ok(),
+            "process_reader must succeed on multi-line input"
+        );
         // After process_reader the buffer should be empty (flush was called internally).
-        assert!(stream.buffer.is_empty(), "process_reader must flush the buffer at the end");
+        assert!(
+            stream.buffer.is_empty(),
+            "process_reader must flush the buffer at the end"
+        );
     }
 
     // ---------------------------------------------------------------------------

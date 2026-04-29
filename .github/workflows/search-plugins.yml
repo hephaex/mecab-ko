@@ -74,6 +74,7 @@ jobs:
 
       - name: Build native library
         working-directory: rust
+        shell: bash
         env:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
         run: |

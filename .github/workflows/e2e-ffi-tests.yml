@@ -116,8 +116,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Build Python binding
-        working-directory: rust/crates/mecab-ko-python
-        run: maturin develop --release
+        run: maturin develop --release --manifest-path rust/crates/mecab-ko-python/Cargo.toml
 
       - name: Run Python E2E tests
         working-directory: tests/e2e/python
@@ -182,8 +181,7 @@ jobs:
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - name: Build WASM binding
-        working-directory: rust/crates/mecab-ko-wasm
-        run: wasm-pack build --target web
+        run: wasm-pack build rust/crates/mecab-ko-wasm --target web
 
       - name: Set up Node.js
         uses: actions/setup-node@v5
@@ -260,8 +258,7 @@ jobs:
           pip install maturin pytest virtualenv
 
       - name: Build Python bindings
-        working-directory: rust/crates/mecab-ko-python
-        run: maturin develop --manifest-path Cargo.toml
+        run: maturin develop --manifest-path rust/crates/mecab-ko-python/Cargo.toml
 
       - name: Run Python tests
         working-directory: rust/crates/mecab-ko-python
@@ -319,8 +316,7 @@ jobs:
         run: curl https://rustwasm.org/wasm-pack/installer/init.sh -sSf | sh
 
       - name: Build WASM bindings
-        working-directory: rust/crates/mecab-ko-wasm
-        run: wasm-pack build --target bundler --release
+        run: wasm-pack build rust/crates/mecab-ko-wasm --target bundler --release
 
   elasticsearch-plugin:
     name: Elasticsearch Plugin

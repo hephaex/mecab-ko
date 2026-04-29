@@ -15,6 +15,7 @@ use mecab_ko_dict::UserDictionary;
 
 /// 전체 데이터셋 정확도 측정
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_full_accuracy_evaluation() {
     // 프로젝트 루트 경로 계산
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
@@ -74,6 +75,7 @@ fn test_full_accuracy_evaluation() {
 
 /// EC 에러 패턴 디버깅
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_ec_error_analysis() {
     use mecab_ko_core::sejong::SejongConverter;
 
@@ -152,6 +154,7 @@ fn test_ec_error_analysis() {
 
 /// ETM 에러 패턴 디버깅
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_etm_error_analysis() {
     use mecab_ko_core::sejong::SejongConverter;
 
@@ -231,6 +234,7 @@ fn test_etm_error_analysis() {
 
 /// EF 에러 패턴 디버깅
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_ef_error_analysis() {
     use mecab_ko_core::sejong::SejongConverter;
 
@@ -332,6 +336,7 @@ fn test_ef_error_analysis() {
 
 /// ETN 에러 패턴 디버깅
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_etn_error_analysis() {
     use mecab_ko_core::sejong::SejongConverter;
 
@@ -412,6 +417,7 @@ fn test_etn_error_analysis() {
 
 /// XSV 에러 패턴 디버깅
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_xsv_error_analysis() {
     use mecab_ko_core::sejong::SejongConverter;
 
@@ -482,6 +488,7 @@ fn test_xsv_error_analysis() {
 
 /// VCP 에러 패턴 디버깅
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_vcp_error_analysis() {
     use mecab_ko_core::sejong::SejongConverter;
 
@@ -550,6 +557,7 @@ fn test_vcp_error_analysis() {
 
 /// NNG 에러 패턴 디버깅 - 틀린 사례 분석
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_nng_error_analysis() {
     use mecab_ko_core::evaluate::TestDataset;
     use mecab_ko_core::sejong::SejongConverter;
@@ -632,6 +640,7 @@ fn test_nng_error_analysis() {
 
 /// XPN 에러 패턴 디버깅
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_xpn_error_analysis() {
     use mecab_ko_core::sejong::SejongConverter;
 
@@ -709,6 +718,7 @@ fn test_xpn_error_analysis() {
 
 /// NNB 에러 패턴 디버깅
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_nnb_error_analysis() {
     use mecab_ko_core::sejong::SejongConverter;
 
@@ -790,6 +800,7 @@ fn test_nnb_error_analysis() {
 
 /// EC 에러 패턴 sample.tsv에서 분석
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_ec_sample_errors() {
     use mecab_ko_core::evaluate::TestDataset;
     use mecab_ko_core::sejong::SejongConverter;
@@ -867,6 +878,7 @@ fn test_ec_sample_errors() {
 
 /// JKS 에러 패턴 sample.tsv에서 분석
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_jks_sample_errors() {
     use mecab_ko_core::evaluate::TestDataset;
     use mecab_ko_core::sejong::SejongConverter;
@@ -944,6 +956,7 @@ fn test_jks_sample_errors() {
 
 /// MAG 에러 패턴 sample.tsv에서 분석
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_mag_sample_errors() {
     use mecab_ko_core::evaluate::TestDataset;
     use mecab_ko_core::sejong::SejongConverter;
@@ -1021,6 +1034,7 @@ fn test_mag_sample_errors() {
 
 /// EF 에러 패턴 sample.tsv에서 분석
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_ef_sample_errors() {
     use mecab_ko_core::evaluate::TestDataset;
     use mecab_ko_core::sejong::SejongConverter;
@@ -1098,6 +1112,7 @@ fn test_ef_sample_errors() {
 
 /// VX 에러 패턴 sample.tsv에서 분석
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_vx_sample_errors() {
     use mecab_ko_core::evaluate::TestDataset;
     use mecab_ko_core::sejong::SejongConverter;
@@ -1175,6 +1190,7 @@ fn test_vx_sample_errors() {
 
 /// XSV 에러 패턴 sample.tsv에서 분석
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_xsv_sample_errors() {
     use mecab_ko_core::evaluate::TestDataset;
     use mecab_ko_core::sejong::SejongConverter;
@@ -1252,6 +1268,7 @@ fn test_xsv_sample_errors() {
 
 /// 특정 품사별 정확도 검증
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_pos_accuracy_breakdown() {
     // 프로젝트 루트 경로 계산
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
@@ -1312,6 +1329,7 @@ fn test_pos_accuracy_breakdown() {
 
 /// VX 패턴 디버깅 - 세부 분석
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_vx_pattern_debug() {
     use mecab_ko_core::sejong::SejongConverter;
 
@@ -1378,6 +1396,7 @@ fn test_vx_pattern_debug() {
 
 /// EP 에러 패턴 디버깅
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_ep_error_analysis() {
     use mecab_ko_core::sejong::SejongConverter;
 
@@ -1467,6 +1486,7 @@ fn test_ep_error_analysis() {
 
 /// EF 오류 케이스 상세 분석
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_ef_error_cases_detailed() {
     use mecab_ko_core::sejong::SejongConverter;
 
@@ -1544,6 +1564,7 @@ fn test_ef_error_cases_detailed() {
 
 /// VCP 에러 패턴 sample.tsv에서 분석
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_vcp_sample_errors() {
     use mecab_ko_core::evaluate::TestDataset;
     use mecab_ko_core::sejong::SejongConverter;
@@ -1637,6 +1658,7 @@ fn test_vcp_sample_errors() {
 
 /// VV 에러 패턴 sample.tsv에서 분석
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_vv_sample_errors() {
     use mecab_ko_core::evaluate::TestDataset;
     use mecab_ko_core::sejong::SejongConverter;
@@ -1714,6 +1736,7 @@ fn test_vv_sample_errors() {
 
 /// Sprint 41: XSV 오류 문장 상세 분석
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_xsv_debug_sentences() {
     use mecab_ko_core::sejong::SejongConverter;
 
@@ -1824,6 +1847,7 @@ fn test_xsv_debug_sentences() {
 
 /// ㅎ불규칙 형용사 "으면/EC" 테스트
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_h_irregular_adjective_ec() {
     use mecab_ko_core::sejong::SejongConverter;
 
@@ -1895,6 +1919,7 @@ fn test_h_irregular_adjective_ec() {
 
 /// 특정 문장 디버그 테스트
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_specific_sentence_debug() {
     use mecab_ko_core::sejong::SejongConverter;
 
@@ -2033,6 +2058,7 @@ fn test_specific_sentence_debug() {
 
 /// EP 샘플 오류 분석
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_ep_sample_errors() {
     use mecab_ko_core::evaluate::TestDataset;
     use mecab_ko_core::sejong::SejongConverter;
@@ -2119,6 +2145,7 @@ fn test_ep_sample_errors() {
 
 /// ㄷ불규칙 동사 테스트
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_d_irregular_verb() {
     use mecab_ko_core::sejong::SejongConverter;
 
@@ -2187,6 +2214,7 @@ fn test_d_irregular_verb() {
 
 /// 전체 데이터셋에서 틀린 문장 목록 출력
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_list_all_mismatches() {
     use mecab_ko_core::sejong::SejongConverter;
 
@@ -2270,6 +2298,7 @@ fn test_list_all_mismatches() {
 ///
 /// PR 병합 전 정확도 검증을 위한 테스트
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_accuracy_gate() {
     // 95% 정확도 게이트
     const ACCURACY_THRESHOLD: f64 = 0.95;
@@ -2344,6 +2373,7 @@ fn test_accuracy_gate() {
 ///
 /// 수작업 검증된 `sprint58_verified.tsv` 데이터셋에 대한 정확도 검증
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn test_accuracy_gate_verified() {
     const VERIFIED_THRESHOLD: f64 = 0.90;
 

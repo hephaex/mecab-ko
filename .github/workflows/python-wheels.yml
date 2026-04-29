@@ -108,9 +108,8 @@ jobs:
       - name: Build wheels with maturin
         uses: PyO3/maturin-action@v1
         with:
-          working-directory: rust/crates/mecab-ko-python
           target: ${{ matrix.target }}
-          args: --release --out dist --interpreter 3.9 3.10 3.11 3.12 3.13
+          args: --release --out rust/crates/mecab-ko-python/dist --interpreter 3.9 3.10 3.11 3.12 3.13 --manifest-path rust/crates/mecab-ko-python/Cargo.toml
           sccache: 'true'
           manylinux: ${{ matrix.manylinux || 'off' }}
 
@@ -144,8 +143,7 @@ jobs:
           python -m pip install maturin[pyo3]
 
       - name: Build source distribution
-        working-directory: rust/crates/mecab-ko-python
-        run: maturin sdist --out dist
+        run: maturin sdist --out rust/crates/mecab-ko-python/dist --manifest-path rust/crates/mecab-ko-python/Cargo.toml
 
       - name: Upload sdist artifact
         uses: actions/upload-artifact@v5

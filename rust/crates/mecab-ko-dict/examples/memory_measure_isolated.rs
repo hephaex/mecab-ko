@@ -5,11 +5,7 @@
 //!   MODE=lazy cargo run --example `memory_measure_isolated` --release
 //!   MODE=memory cargo run --example `memory_measure_isolated` --release
 
-#![allow(
-    clippy::unwrap_used,
-    clippy::expect_used,
-    clippy::cast_precision_loss
-)]
+#![allow(clippy::unwrap_used, clippy::expect_used, clippy::cast_precision_loss)]
 
 use mecab_ko_dict::dictionary::{LoadOptions, SystemDictionary};
 use std::env;

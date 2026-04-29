@@ -39,7 +39,8 @@ jobs:
           components: rustfmt
 
       - name: Check formatting
-        run: cargo fmt --manifest-path rust/Cargo.toml -- --check
+        working-directory: rust
+        run: cargo fmt -- --check
 
   clippy:
     name: Clippy Lint (Library Crates)
@@ -169,6 +170,7 @@ jobs:
           cache-key: ${{ matrix.os }}
 
       - name: Build (release)
+        shell: bash
         run: |
           cargo build \
             --manifest-path rust/Cargo.toml \
