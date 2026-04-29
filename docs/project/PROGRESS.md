@@ -1,6 +1,36 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-28 (Sprint 94 완료 -- CI 워크플로우 수정 + Actions Node.js 24 대응)
+## 마지막 업데이트: 2026-04-29 (Sprint 95 완료 -- CI 워크플로우 6건 수정 + accuracy tests ignore)
+
+### ✅ Sprint 95 - CI 워크플로우 6건 수정 + accuracy tests ignore
+
+**기간**: 2026-04-29
+**목표**: Sprint 94 CI 검증, 잔여 워크플로우 실패 수정, accuracy 테스트 CI 분리
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| python-wheels.yml | working-directory로 workspace root 실패 | --manifest-path 사용 |
+| search-plugins.yml | PowerShell `--features` 파싱 오류 | shell: bash 추가 |
+| ci.yml (fmt) | `cargo fmt --manifest-path` 실패 | working-directory: rust |
+| ci.yml (build) | Windows PowerShell backslash 오류 | shell: bash 추가 |
+| e2e-ffi-tests.yml | maturin/wasm-pack 4곳 workspace root 실패 | --manifest-path / crate path 인자 |
+| accuracy_eval.rs | 30개 테스트 CI에서 패닉 (sys.dic 없음) | #[ignore] 추가 |
+| mecab-profile.rs | clippy pedantic 6개 경고 | #![allow(...)] 추가 |
+| 5 Rust 파일 | 포맷팅 미적용 | cargo fmt 적용 |
+
+#### 수정된 파일 (11개)
+ci.yml, e2e-ffi-tests.yml, python-wheels.yml, search-plugins.yml,
+accuracy_eval.rs, mecab-profile.rs, async_tokenizer.rs, generate_gold.rs,
+convert_to_v2.rs, memory_measure_isolated.rs, integration_golden.rs
+
+#### 상태
+- 테스트: 1,168 pass / 0 fail / 48 ignored
+- clippy: 0 warnings (all targets)
+- 빌드: clean
+
+---
 
 ### ✅ Sprint 94 - CI 워크플로우 수정 + GitHub Actions Node.js 24 대응
 
