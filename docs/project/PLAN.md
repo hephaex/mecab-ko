@@ -1,47 +1,49 @@
-# 완료: Phase 61 - Sprint 95 (CI 워크플로우 6건 수정 + accuracy tests ignore)
+# 완료: Phase 62 - Sprint 96 (excluded FFI crate workspace root 해결 + CI 추가 수정)
 
-## Sprint 95 목표
-Sprint 94 이후 CI 검증, 잔여 워크플로우 실패 수정, accuracy 테스트 CI 분리
+## Sprint 96 목표
+Sprint 95 push 후 CI 검증, excluded FFI 크레이트 workspace 상속 근본 해결
 
-## Sprint 95 작업 목록
+## Sprint 96 작업 목록
 
-### Track A: CI 워크플로우 수정
-- [x] S95-01: python-wheels.yml — working-directory 제거, --manifest-path로 workspace root 해결 ✅
-- [x] S95-02: search-plugins.yml — Windows PowerShell 호환성 (shell: bash) ✅
-- [x] S95-03: ci.yml — cargo fmt 호출 수정 + Windows build shell: bash ✅
-- [x] S95-04: e2e-ffi-tests.yml — maturin/wasm-pack 4곳 workspace root 수정 ✅
+### Track A: Excluded FFI Crate Workspace Root 해결
+- [x] S96-01: mecab-ko-python Cargo.toml — workspace 상속 제거, 직접 값 지정 ✅
+- [x] S96-02: mecab-ko-wasm Cargo.toml — workspace 상속 제거, 직접 값 지정 ✅
+- [x] S96-03: mecab-ko-node Cargo.toml — workspace 상속 제거, 직접 값 지정 ✅
 
-### Track B: 테스트 분리
-- [x] S95-05: accuracy_eval.rs 30개 테스트 #[ignore] 추가 (sys.dic 의존) ✅
-- [x] S95-06: mecab-profile.rs clippy pedantic lint 허용 ✅
+### Track B: CI 워크플로우 추가 수정
+- [x] S96-04: search-plugins.yml — Prepare artifacts step에 shell: bash 추가 ✅
+- [x] S96-05: e2e-ffi-tests.yml — MSRV 1.75→1.80, wasm-pack installer URL 통일 ✅
 
-### Track C: 코드 품질
-- [x] S95-07: cargo fmt 자동 포맷팅 (5 파일) ✅
-- [x] S95-08: 전체 빌드/테스트/클리피 검증 (1168 pass / 0 fail / 48 ignored) ✅
+### Track C: 테스트 분리
+- [x] S96-06: generate_gold.rs #[ignore] 추가 (sys.dic 의존, CI 패닉 방지) ✅
 
-### CI 워크플로우 수정 상세
-| 워크플로우 | 문제 | 수정 |
-|-----------|------|------|
-| python-wheels.yml | maturin workspace root 미발견 | --manifest-path + --out 절대경로 |
-| search-plugins.yml | PowerShell `--features` 파싱 오류 | shell: bash |
-| ci.yml (fmt) | `cargo fmt --manifest-path` 인자 오류 | working-directory: rust |
-| ci.yml (build) | PowerShell backslash 연속 오류 | shell: bash |
-| e2e-ffi-tests.yml (4곳) | maturin/wasm-pack workspace root | --manifest-path / crate path 인자 |
-| security.yml (clippy strict) | mecab-profile.rs pedantic 경고 | #![allow(...)] |
+### 근본 원인 분석
+| 문제 | 근본 원인 | 해결 |
+|------|----------|------|
+| python-wheels, wasm-bindings, node-bindings workspace root 실패 | `exclude`된 크레이트에서 `*.workspace = true` 사용 — Cargo가 workspace root를 찾을 수 없음 | workspace 상속 제거, 직접 값 지정 |
+| search-plugins Windows copy 실패 | `cp ... \` backslash 연속이 PowerShell에서 해석 실패 | shell: bash 추가 |
+| ci.yml test 실패 | generate_gold_standards가 sys.dic 필요 | #[ignore] 추가 |
+| e2e-ffi-tests MSRV | 1.75.0 → LazyLock 빌드 실패 | 1.80.0으로 변경 |
 
-### Sprint 94 검증 결과
-| 워크플로우 | Sprint 94 수정 후 | 비고 |
-|-----------|-----------------|------|
-| docker.yml | ✅ SUCCESS | OIDC 수정 효과 확인 |
-| python-wheels.yml | ❌ FAILURE | workspace root 문제 (Sprint 95에서 수정) |
-| npm-publish.yml | ⏳ 미검증 | 태그 전용 트리거 — 다음 태그에서 확인 |
+### Sprint 95 검증 결과
+| 워크플로우 | Sprint 95 수정 후 | Sprint 96 수정 |
+|-----------|-----------------|----------------|
+| python-wheels.yml | ❌ workspace root | ✅ workspace 상속 제거 |
+| search-plugins.yml | ❌ copy step PowerShell | ✅ shell: bash 추가 |
+| ci.yml | ❌ generate_gold_standards 패닉 | ✅ #[ignore] 추가 |
+| e2e-ffi-tests.yml | ❌ wasm workspace root + MSRV | ✅ workspace 상속 제거 + 1.80 |
+| docker.yml | ✅ SUCCESS | — |
+| code-quality.yml | ✅ SUCCESS | — |
+| security.yml | ✅ SUCCESS | — |
+| docs.yml | ✅ SUCCESS | — |
+| benchmark.yml | ✅ SUCCESS | — |
 
 ---
 
-## Sprint 96 로드맵
+## Sprint 97 로드맵
 
 ### P1: CI 재검증
-- push 후 python-wheels, search-plugins, ci, e2e-ffi-tests 통과 확인
+- push 후 전체 워크플로우 통과 확인
 - npm-publish는 다음 태그 시 확인
 
 ### P2: 시스템 사전 벤치마크
@@ -53,6 +55,10 @@ Sprint 94 이후 CI 검증, 잔여 워크플로우 실패 수정, accuracy 테�
 
 ### P4: dict-build.yml 안정화
 - bitbucket 다운로드/파싱 오류 해결
+
+---
+
+# 완료: Phase 61 - Sprint 95 (CI 워크플로우 6건 수정 + accuracy tests ignore)
 
 ---
 

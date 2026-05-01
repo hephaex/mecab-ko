@@ -1,6 +1,33 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-04-29 (Sprint 95 완료 -- CI 워크플로우 6건 수정 + accuracy tests ignore)
+## 마지막 업데이트: 2026-05-01 (Sprint 96 완료 -- excluded FFI crate workspace root 해결)
+
+### ✅ Sprint 96 - Excluded FFI Crate Workspace Root 해결 + CI 추가 수정
+
+**기간**: 2026-05-01
+**목표**: Sprint 95 push 후 CI 검증, excluded FFI 크레이트 workspace 상속 근본 해결
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| mecab-ko-python Cargo.toml | `*.workspace = true` (workspace 상속) | 직접 값 지정 (v0.7.2, edition 2021 등) |
+| mecab-ko-wasm Cargo.toml | `*.workspace = true` (workspace 상속) | 직접 값 지정 + 의존성 버전 명시 |
+| mecab-ko-node Cargo.toml | `*.workspace = true` (workspace 상속) | 직접 값 지정 |
+| search-plugins.yml | Prepare artifacts step PowerShell 실패 | shell: bash 추가 |
+| e2e-ffi-tests.yml | MSRV 1.75.0, wasm-pack URL 불일치 | 1.80.0 + URL 통일 |
+| generate_gold.rs | CI에서 패닉 (sys.dic 없음) | #[ignore] 추가 |
+
+#### 수정된 파일 (6개)
+mecab-ko-python/Cargo.toml, mecab-ko-wasm/Cargo.toml, mecab-ko-node/Cargo.toml,
+search-plugins.yml, e2e-ffi-tests.yml, generate_gold.rs
+
+#### 상태
+- 테스트: 1,167 pass / 0 fail / 49 ignored
+- clippy: 0 warnings (all targets)
+- 빌드: clean
+
+---
 
 ### ✅ Sprint 95 - CI 워크플로우 6건 수정 + accuracy tests ignore
 
