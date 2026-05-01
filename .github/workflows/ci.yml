@@ -70,6 +70,8 @@ jobs:
   test:
     name: Test Suite
     runs-on: ubuntu-latest
+    # nightly is informational — allow it to fail without blocking CI gate
+    continue-on-error: ${{ matrix.rust == 'nightly' }}
     strategy:
       fail-fast: false
       matrix:
