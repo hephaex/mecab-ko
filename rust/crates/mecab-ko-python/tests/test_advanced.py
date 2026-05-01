@@ -8,6 +8,8 @@ Tests edge cases, performance, and advanced usage patterns.
 import sys
 import pytest
 
+from conftest import requires_dict
+
 try:
     from mecab_ko import Mecab
 except ImportError as e:
@@ -34,6 +36,7 @@ class TestEdgeCases:
         assert isinstance(result1, list)
         assert isinstance(result2, list)
 
+    @requires_dict
     def test_long_text(self, mecab):
         """Test with long text"""
         long_text = "안녕하세요. " * 1000
@@ -56,6 +59,7 @@ class TestEdgeCases:
         result = mecab.morphs(".,!?;:")
         assert isinstance(result, list)
 
+    @requires_dict
     def test_mixed_scripts(self, mecab):
         """Test with mixed scripts (Korean, English, numbers, etc.)"""
         text = "Python 3.12는 2023년에 출시되었습니다!"
@@ -238,6 +242,7 @@ class TestRealWorldExamples:
     def mecab(self):
         return Mecab()
 
+    @requires_dict
     def test_news_headline(self, mecab):
         """Test with news headline style text"""
         text = "한국 경제 성장률 3% 달성 전망"
@@ -252,6 +257,7 @@ class TestRealWorldExamples:
         # Should contain economic terms
         assert any("경제" in noun or "성장" in noun for noun in nouns)
 
+    @requires_dict
     def test_social_media_text(self, mecab):
         """Test with social media style text"""
         text = "오늘 날씨 너무 좋다 ㅎㅎ"
@@ -261,6 +267,7 @@ class TestRealWorldExamples:
         assert len(morphs) > 0
         assert len(pos_tags) > 0
 
+    @requires_dict
     def test_formal_text(self, mecab):
         """Test with formal text"""
         text = "귀하의 의견에 깊이 감사드립니다."
@@ -270,6 +277,7 @@ class TestRealWorldExamples:
         assert len(morphs) > 0
         assert len(nouns) > 0
 
+    @requires_dict
     def test_question(self, mecab):
         """Test with question"""
         text = "내일 날씨가 어떨까요?"

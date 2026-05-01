@@ -8,6 +8,8 @@ These tests verify the KoNLPy-compatible API.
 import sys
 import pytest
 
+from conftest import requires_dict
+
 
 # Try to import the module
 try:
@@ -47,6 +49,7 @@ class TestMecab:
         # Should contain nouns like '아버지', '가방'
         assert all(isinstance(n, str) for n in result)
 
+    @requires_dict
     def test_pos(self, mecab):
         """Test pos() method"""
         result = mecab.pos("나는 학생입니다")
@@ -56,6 +59,7 @@ class TestMecab:
         assert all(isinstance(item, tuple) and len(item) == 2 for item in result)
         assert all(isinstance(item[0], str) and isinstance(item[1], str) for item in result)
 
+    @requires_dict
     def test_parse(self, mecab):
         """Test parse() method"""
         result = mecab.parse("형태소 분석")
@@ -80,6 +84,7 @@ class TestMecab:
         result = mecab.morphs("Hello World")
         assert isinstance(result, list)
 
+    @requires_dict
     def test_mixed_text(self, mecab):
         """Test with mixed Korean and English text"""
         result = mecab.morphs("Hello 안녕하세요 World")
