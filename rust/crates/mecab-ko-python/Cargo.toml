@@ -1,12 +1,12 @@
 [package]
 name = "mecab-ko-python"
-version.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
-homepage.workspace = true
+version = "0.7.2"
+edition = "2021"
+rust-version = "1.80"
+authors = ["hephaex <hephaex@gmail.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/hephaex/mecab-ko"
+homepage = "https://github.com/hephaex/mecab-ko"
 documentation = "https://docs.rs/mecab-ko-python"
 readme = "README.md"
 description = "Python bindings for MeCab-Ko (Korean morphological analyzer)"
@@ -22,10 +22,9 @@ doc = false   # Skip docs to avoid filename collision with root mecab-ko crate
 
 [dependencies]
 mecab-ko-core = { version = "0.7.2", path = "../mecab-ko-core" }
-pyo3 = { workspace = true }
+pyo3 = { version = "0.24.1", features = ["extension-module", "generate-import-lib"] }
 parking_lot = "0.12"
 
-# Python 바인딩에서는 일부 lint 완화
 [lints.rust]
 unsafe_code = "deny"
 missing_docs = "warn"

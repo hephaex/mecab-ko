@@ -83,6 +83,7 @@ jobs:
             --features jni-bindings
 
       - name: Prepare artifacts
+        shell: bash
         run: |
           mkdir -p native/${{ matrix.artifact }}
           cp rust/target/${{ matrix.target }}/release/${{ matrix.lib_name }} \

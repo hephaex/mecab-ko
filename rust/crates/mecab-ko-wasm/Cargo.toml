@@ -1,12 +1,12 @@
 [package]
 name = "mecab-ko-wasm"
-version.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
-homepage.workspace = true
+version = "0.7.2"
+edition = "2021"
+rust-version = "1.80"
+authors = ["hephaex <hephaex@gmail.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/hephaex/mecab-ko"
+homepage = "https://github.com/hephaex/mecab-ko"
 documentation = "https://docs.rs/mecab-ko-wasm"
 readme = "README.md"
 description = "WebAssembly bindings for MeCab-Ko (Korean morphological analyzer)"
@@ -23,15 +23,12 @@ doc = false  # Skip docs for WASM bindings (FFI crate, not meant for Rust docs)
 
 [dependencies]
 mecab-ko-core = { version = "0.7.2", path = "../mecab-ko-core", default-features = false }
-wasm-bindgen = { workspace = true }
-js-sys = { workspace = true }
-serde = { workspace = true, features = ["derive"] }
-serde_json = { workspace = true }
+wasm-bindgen = "0.2.114"
+js-sys = "0.3.91"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 
-# Optional: For better error handling in WASM
 console_error_panic_hook = { version = "0.1", optional = true }
-# Note: wee_alloc removed due to unmaintained status and memory leaks (RUSTSEC-2022-0054)
-# Modern WASM targets work well with the default Rust allocator
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
@@ -39,7 +36,6 @@ wasm-bindgen-test = "0.3"
 [features]
 default = ["console_error_panic_hook"]
 
-# WASM bindings에서는 일부 lint 완화
 [lints.rust]
 unsafe_code = "deny"
 missing_docs = "warn"

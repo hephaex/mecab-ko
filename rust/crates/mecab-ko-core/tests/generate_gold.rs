@@ -7,6 +7,7 @@ use mecab_ko_core::tokenizer::Tokenizer;
 use mecab_ko_dict::UserDictionary;
 
 #[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
 fn generate_gold_standards() {
     // 프로젝트 루트 경로 계산
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());

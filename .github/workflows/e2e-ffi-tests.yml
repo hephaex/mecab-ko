@@ -50,7 +50,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        rust: [stable, 1.75.0]
+        rust: [stable, 1.80.0]
 
     steps:
       - uses: actions/checkout@v5
@@ -313,7 +313,7 @@ jobs:
           targets: wasm32-unknown-unknown
 
       - name: Install wasm-pack
-        run: curl https://rustwasm.org/wasm-pack/installer/init.sh -sSf | sh
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - name: Build WASM bindings
         run: wasm-pack build rust/crates/mecab-ko-wasm --target bundler --release

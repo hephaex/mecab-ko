@@ -1,13 +1,12 @@
 [package]
 name = "mecab-ko-node"
-version.workspace = true
-edition.workspace = true
-# napi-build requires cargo:: syntax which needs Rust 1.80+
+version = "0.7.2"
+edition = "2021"
 rust-version = "1.80"
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
-homepage.workspace = true
+authors = ["hephaex <hephaex@gmail.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/hephaex/mecab-ko"
+homepage = "https://github.com/hephaex/mecab-ko"
 documentation = "https://docs.rs/mecab-ko-node"
 readme = "README.md"
 description = "Node.js bindings for MeCab-Ko Korean morphological analyzer"
@@ -21,16 +20,13 @@ doc = false  # Skip docs for Node.js bindings (FFI crate, not meant for Rust doc
 
 [dependencies]
 mecab-ko-core = { version = "0.7.2", path = "../mecab-ko-core" }
-# napi-rs for Node.js bindings
 napi = "3"
 napi-derive = "3"
-# Thread-safe locking
 parking_lot = "0.12"
 
 [build-dependencies]
 napi-build = "2.3"
 
-# Override workspace lints for FFI code
 [lints.rust]
 unsafe_code = "allow"
 missing_docs = "warn"
@@ -38,7 +34,6 @@ missing_docs = "warn"
 [lints.clippy]
 all = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
-# Allow some patterns common in FFI code
 unwrap_used = "allow"
 expect_used = "allow"
 panic = "allow"
