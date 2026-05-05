@@ -46,6 +46,7 @@ use crate::hot_reload_v2::HotReloadDictV2;
 
 /// 기본 사전 디렉토리 경로 (환경변수가 없을 때)
 const DEFAULT_DICDIR_PATHS: &[&str] = &[
+    "/opt/homebrew/lib/mecab/dic/mecab-ko-dic",
     "/usr/local/lib/mecab/dic/mecab-ko-dic",
     "/usr/lib/mecab/dic/mecab-ko-dic",
     "/opt/mecab/dic/mecab-ko-dic",

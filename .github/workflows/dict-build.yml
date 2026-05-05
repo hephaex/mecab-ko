@@ -410,15 +410,22 @@ jobs:
         run: |
           mkdir -p dict-output
           if [ ! -d "data/mecab-ko-dic-2.1.1-20180720" ]; then
-            echo "Dictionary source not found. Extracting from archive..."
-            if [ -f "data/mecab-ko-dic-2.1.1-20180720.tar.gz" ]; then
-              tar xzf data/mecab-ko-dic-2.1.1-20180720.tar.gz -C data/
-            else
-              echo "::warning::Dictionary source archive not available. Skipping build."
-              echo "dict_size=0" >> $GITHUB_OUTPUT
-              echo "entry_count=0" >> $GITHUB_OUTPUT
-              exit 0
+            echo "Dictionary source directory not found. Looking for archive..."
+            if [ ! -f "data/mecab-ko-dic-2.1.1-20180720.tar.gz" ]; then
+              echo "Archive not found locally. Downloading from bitbucket..."
+              mkdir -p data
+              if ! curl --retry 3 --retry-delay 5 --connect-timeout 30 --max-time 300 \
+                  -L -o data/mecab-ko-dic-2.1.1-20180720.tar.gz \
+                  "https://bitbucket.org/eunjeon/mecab-ko-dic/downloads/mecab-ko-dic-2.1.1-20180720.tar.gz"; then
+                echo "::warning::Failed to download dictionary source. Skipping build."
+                echo "dict_size=0" >> $GITHUB_OUTPUT
+                echo "entry_count=0" >> $GITHUB_OUTPUT
+                exit 0
+              fi
+              echo "Download complete."
             fi
+            echo "Extracting archive..."
+            tar xzf data/mecab-ko-dic-2.1.1-20180720.tar.gz -C data/
           fi
           ls -la data/mecab-ko-dic-2.1.1-20180720/ | head -20
 
