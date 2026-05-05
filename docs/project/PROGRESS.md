@@ -1,6 +1,44 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-02 (Sprint 99 완료 -- CI nightly Rust continue-on-error)
+## 마지막 업데이트: 2026-05-06 (Sprint 100 완료 -- 벤치마크 + dict-build CI + e2e scaffolding)
+
+### ✅ Sprint 100 - 벤치마크 + dict-build CI + e2e scaffolding
+
+**기간**: 2026-05-06
+**목표**: 시스템 사전 벤치마크, dict-build CI 안정화, E2E 테스트 기초 구조
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| dict-build.yml | dict source 없으면 skip | bitbucket에서 자동 다운로드 (curl --retry 3) |
+| DEFAULT_DICDIR_PATHS | 4개 경로 | `/opt/homebrew/...` 추가 (Apple Silicon) |
+| tests/e2e/ | 미존재 | CLI, Python, Node.js stub 테스트 생성 |
+
+#### 벤치마크: Full-dict (816K entries) vs Mini-dict
+
+| Benchmark | Full-Dict | Mini-Dict | Ratio |
+|-----------|----------|-----------|-------|
+| tokenize/short | 7.82 µs | 1.54 µs | 5.1x |
+| tokenize/medium | 86.70 µs | 11.33 µs | 7.7x |
+| tokenize/long | 270.21 µs | 87.65 µs | 3.1x |
+| tokenizer_creation | 127.37 ms | 75.17 µs | 1,694x |
+| consecutive/5_texts | 590.26 µs | 187.08 µs | 3.2x |
+
+#### 수정된 파일 (6개)
+- .github/workflows/dict-build.yml
+- rust/crates/mecab-ko-dict/src/dictionary.rs
+- tests/e2e/README.md (new)
+- tests/e2e/cli/test_basic.sh (new)
+- tests/e2e/python/test_basic.py (new)
+- tests/e2e/node/test_basic.mjs (new)
+
+#### 상태
+- 테스트: 1,167 pass / 0 fail / 49 ignored
+- clippy: 0 warnings (all targets)
+- 빌드: clean
+
+---
 
 ### ✅ Sprint 99 - CI nightly Rust continue-on-error
 

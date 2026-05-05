@@ -1,53 +1,70 @@
-# 완료: Phase 65 - Sprint 99 (CI nightly Rust continue-on-error)
+# 완료: Phase 66 - Sprint 100 (벤치마크 + dict-build CI + e2e scaffolding)
 
-## Sprint 99 목표
-잔여 CI 이슈 수정 — Test Suite (nightly) flake 격리
+## Sprint 100 목표
+시스템 사전 벤치마크, dict-build CI 안정화, E2E 테스트 기초 구조
 
-## Sprint 99 작업 목록
+## Sprint 100 작업 목록
 
-### Track A: ci.yml nightly 격리
-- [x] S99-01: test 잡에 `continue-on-error: ${{ matrix.rust == 'nightly' }}` 추가 ✅
+### Track A: 벤치마크 (병렬)
+- [x] S100-01: Full-dict 벤치마크 (MECAB_DICDIR=data/dict-output, 816K entries) ✅
+- [x] S100-02: Mini-dict vs Full-dict 비교 리포트 ✅
 
-### Track B: 검증 + 문서
-- [x] S99-02: Build/test/clippy 검증 + push ✅
-- [x] S99-03: PLAN/PROGRESS/review/memory update ✅
+### Track B: CI/인프라 (병렬)
+- [x] S100-03: dict-build.yml — bitbucket curl 다운로드 추가 ✅
+- [x] S100-05: DEFAULT_DICDIR_PATHS에 Homebrew ARM 경로 추가 ✅
 
-### 수정 상세
-| 문제 | 근본 원인 | 해결 |
-|------|----------|------|
-| Test Suite (nightly) FAILED | test_load_options_variants가 nightly에서만 NotFound 패닉 (stable+beta는 통과) | 잡 레벨 `continue-on-error: matrix.rust == 'nightly'` |
+### Track C: E2E scaffolding (병렬)
+- [x] S100-04: tests/e2e/ 디렉토리 생성 (CLI, Python, Node.js stubs) ✅
 
-### Sprint 98 push 검증 결과
-| 워크플로우 | Sprint 98 결과 |
-|-----------|--------------|
-| E2E and FFI Tests | ✅ SUCCESS (Python Bindings dict-skip 적용 효과) |
-| Python Wheels | ✅ SUCCESS |
-| Performance Benchmarks | ✅ SUCCESS |
-| Code Quality | ✅ SUCCESS |
-| Security | ✅ SUCCESS |
-| Documentation | ✅ SUCCESS |
-| CI (Test Suite nightly) | ❌ FAILED → S99-01에서 격리 |
+### Track D: 계획
+- [x] S100-06: v0.8.0 기능 계획 — ISSUE_BACKLOG 분석 완료 ✅
+
+### 벤치마크 결과: Mini-dict vs Full-dict (816K entries)
+
+| Benchmark | Full-Dict | Mini-Dict | Ratio |
+|-----------|----------|-----------|-------|
+| tokenize/short (5자) | 7.82 µs | 1.54 µs | 5.1x |
+| tokenize/medium (70자) | 86.70 µs | 11.33 µs | 7.7x |
+| tokenize/long (200자) | 270.21 µs | 87.65 µs | 3.1x |
+| by_text_type/news | 142.05 µs | — | — |
+| by_text_type/technical | 245.57 µs | — | — |
+| tokenizer_creation | 127.37 ms | 75.17 µs | 1,694x |
+| consecutive/5_texts | 590.26 µs | 187.08 µs | 3.2x |
+| throughput/1KB | 2.10 ms | — | — |
+| throughput/10KB | 110.84 ms | — | — |
+
+**핵심 발견:**
+- 토크나이저 생성 시간: full-dict 127ms vs mini-dict 75µs (1,694x 차이 — 사전 로딩 비용)
+- 분석 속도: full-dict이 3~8x 느림 (trie 탐색 범위 증가)
+- Full-dict throughput: ~1 MiB/s (1KB), ~213 KiB/s (10KB)
 
 ---
 
-## Sprint 100 로드맵
+## Sprint 101 로드맵
 
-### P1: 시스템 사전 벤치마크
-- `brew install mecab-ko-dic` 후 full-dict 벤치마크
-- mini-dict vs full-dict 성능 비교 리포트
+### P1: v0.8.0 기능 계획 구체화
+- DIC-010: Binary Dict v3.0 설계 (압축 효율 + mmap 지원)
+- DIC-009: 사전 검증 테스트셋 구축 (golden test 1,000+ 문장)
+- RST-011: 사용자 정의 사전 개선
 
-### P2: v0.8.0 기능 계획 구체화
-- Binary Dict v3, 사전 검증, 사용자 사전 개선 우선순위 결정
+### P2: dict-build.yml CI 검증
+- Push 후 bitbucket 다운로드 동작 확인
+- dict-build 워크플로우 전체 성공 검증
 
-### P3: dict-build.yml 안정화
-- bitbucket 다운로드/파싱 오류 해결
+### P3: E2E 테스트 실질 구현
+- tests/e2e/ stub을 실제 테스트로 확장
+- e2e-ffi-tests 워크플로우와 연동
 
-### P4: tests/e2e/ 디렉토리 구조 생성
-- CLI, Python, Node.js, WASM E2E 테스트 기본 scaffolding
+### P4: Full-dict 벤치마크 기준선 자동화
+- CI Performance Benchmarks에 MECAB_DICDIR 옵션 추가
+- full-dict 벤치마크 regression 자동 감지
 
-### P5: test_load_options_variants nightly 근본 원인 조사 (선택)
-- speed_optimized 모드에서만 발생하는 NotFound 에러 (lazy_entries=false)
-- mini-dict 누락 파일 vs nightly Rust filesystem 동작 차이 확인
+### P5: checksum 검증 추가
+- dict-build.yml curl 다운로드에 SHA256 검증 추가 (코드 리뷰 권고)
+
+---
+
+# 완료: Phase 65 - Sprint 99 (CI nightly Rust continue-on-error)
 
 ---
 
