@@ -1,6 +1,35 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-06 (Sprint 100 완료 -- 벤치마크 + dict-build CI + e2e scaffolding)
+## 마지막 업데이트: 2026-05-06 (Sprint 101 완료 -- dict-build CI .zst 검증 + SHA256)
+
+### ✅ Sprint 101 - dict-build CI .zst 검증 수정 + SHA256 checksum
+
+**기간**: 2026-05-06
+**목표**: dict-build.yml CI 실패 수정 (압축 파일 검증, checksum 추가)
+
+#### 근본 원인
+dict-builder가 `sys.dic.zst`, `matrix.bin.zst` (zstd 압축)를 출력하지만, CI 검증 스텝은 `sys.dic`, `matrix.bin` (비압축)만 체크하여 cascading failure 발생
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| 파일 크기 계산 | `sys.dic` 만 확인 | `get_file_size()` — .zst 우선 fallback |
+| 필수 파일 검증 | uncompressed만 | `check_file()` — .zst 변형 허용 |
+| bitbucket 다운로드 | checksum 없음 | SHA256 검증 추가 |
+| tokenize-test 조건 | `if: always()` | `if: needs.build-dictionary.result == 'success'` |
+| generate-report 조건 | `if: always()` | build 성공 시만 실행 |
+
+#### 수정된 파일 (1개)
+- .github/workflows/dict-build.yml
+
+#### 상태
+- 테스트: 1,167 pass / 0 fail / 49 ignored
+- clippy: 0 warnings (all targets)
+- 빌드: clean
+- CI: dict-build 재실행 대기 중
+
+---
 
 ### ✅ Sprint 100 - 벤치마크 + dict-build CI + e2e scaffolding
 

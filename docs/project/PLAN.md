@@ -1,55 +1,33 @@
-# 완료: Phase 66 - Sprint 100 (벤치마크 + dict-build CI + e2e scaffolding)
+# 완료: Phase 67 - Sprint 101 (dict-build CI .zst 검증 수정 + SHA256 checksum)
 
-## Sprint 100 목표
-시스템 사전 벤치마크, dict-build CI 안정화, E2E 테스트 기초 구조
+## Sprint 101 목표
+dict-build.yml CI 실패 수정 — 압축 출력 파일(.zst) 검증, SHA256 checksum 추가
 
-## Sprint 100 작업 목록
+## Sprint 101 작업 목록
 
-### Track A: 벤치마크 (병렬)
-- [x] S100-01: Full-dict 벤치마크 (MECAB_DICDIR=data/dict-output, 816K entries) ✅
-- [x] S100-02: Mini-dict vs Full-dict 비교 리포트 ✅
+- [x] S101-01: dict-build.yml 파일 검증 — .zst 압축 파일 지원 ✅
+- [x] S101-02: bitbucket 다운로드에 SHA256 checksum 추가 ✅
+- [x] S101-03: tokenize-test/generate-report 조건부 실행 (빌드 성공 시만) ✅
 
-### Track B: CI/인프라 (병렬)
-- [x] S100-03: dict-build.yml — bitbucket curl 다운로드 추가 ✅
-- [x] S100-05: DEFAULT_DICDIR_PATHS에 Homebrew ARM 경로 추가 ✅
-
-### Track C: E2E scaffolding (병렬)
-- [x] S100-04: tests/e2e/ 디렉토리 생성 (CLI, Python, Node.js stubs) ✅
-
-### Track D: 계획
-- [x] S100-06: v0.8.0 기능 계획 — ISSUE_BACKLOG 분석 완료 ✅
-
-### 벤치마크 결과: Mini-dict vs Full-dict (816K entries)
-
-| Benchmark | Full-Dict | Mini-Dict | Ratio |
-|-----------|----------|-----------|-------|
-| tokenize/short (5자) | 7.82 µs | 1.54 µs | 5.1x |
-| tokenize/medium (70자) | 86.70 µs | 11.33 µs | 7.7x |
-| tokenize/long (200자) | 270.21 µs | 87.65 µs | 3.1x |
-| by_text_type/news | 142.05 µs | — | — |
-| by_text_type/technical | 245.57 µs | — | — |
-| tokenizer_creation | 127.37 ms | 75.17 µs | 1,694x |
-| consecutive/5_texts | 590.26 µs | 187.08 µs | 3.2x |
-| throughput/1KB | 2.10 ms | — | — |
-| throughput/10KB | 110.84 ms | — | — |
-
-**핵심 발견:**
-- 토크나이저 생성 시간: full-dict 127ms vs mini-dict 75µs (1,694x 차이 — 사전 로딩 비용)
-- 분석 속도: full-dict이 3~8x 느림 (trie 탐색 범위 증가)
-- Full-dict throughput: ~1 MiB/s (1KB), ~213 KiB/s (10KB)
+### 수정 내용
+- `get_file_size()`: sys.dic / sys.dic.zst 양쪽 모두 크기 반환
+- `check_file()`: 필수/선택 파일 검증에서 .zst 변형도 인정
+- `tokenize-test`: `if: always()` → `if: needs.build-dictionary.result == 'success'`
+- `generate-report`: `if: always()` → `if: always() && needs.build-dictionary.result == 'success'`
+- SHA256: `fd62d3d6...5b330` 검증 추가 (download 직후)
 
 ---
 
-## Sprint 101 로드맵
+## Sprint 102 로드맵
 
-### P1: v0.8.0 기능 계획 구체화
+### P1: dict-build CI 결과 검증
+- Push 후 dict-build 워크플로우 전체 성공 확인
+- User dict validation 경고 개선 여부 확인
+
+### P2: v0.8.0 기능 계획 구체화
 - DIC-010: Binary Dict v3.0 설계 (압축 효율 + mmap 지원)
 - DIC-009: 사전 검증 테스트셋 구축 (golden test 1,000+ 문장)
 - RST-011: 사용자 정의 사전 개선
-
-### P2: dict-build.yml CI 검증
-- Push 후 bitbucket 다운로드 동작 확인
-- dict-build 워크플로우 전체 성공 검증
 
 ### P3: E2E 테스트 실질 구현
 - tests/e2e/ stub을 실제 테스트로 확장
@@ -59,8 +37,9 @@
 - CI Performance Benchmarks에 MECAB_DICDIR 옵션 추가
 - full-dict 벤치마크 regression 자동 감지
 
-### P5: checksum 검증 추가
-- dict-build.yml curl 다운로드에 SHA256 검증 추가 (코드 리뷰 권고)
+---
+
+# 완료: Phase 66 - Sprint 100 (벤치마크 + dict-build CI + e2e scaffolding)
 
 ---
 
