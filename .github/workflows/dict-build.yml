@@ -414,6 +414,7 @@ jobs:
             if [ ! -f "data/mecab-ko-dic-2.1.1-20180720.tar.gz" ]; then
               echo "Archive not found locally. Downloading from bitbucket..."
               mkdir -p data
+              EXPECTED_SHA256="fd62d3d6d8fa85145528065fabad4d7cb20f6b2201e71be4081a4e9701a5b330"
               if ! curl --retry 3 --retry-delay 5 --connect-timeout 30 --max-time 300 \
                   -L -o data/mecab-ko-dic-2.1.1-20180720.tar.gz \
                   "https://bitbucket.org/eunjeon/mecab-ko-dic/downloads/mecab-ko-dic-2.1.1-20180720.tar.gz"; then
@@ -422,7 +423,13 @@ jobs:
                 echo "entry_count=0" >> $GITHUB_OUTPUT
                 exit 0
               fi
-              echo "Download complete."
+              ACTUAL_SHA256=$(sha256sum data/mecab-ko-dic-2.1.1-20180720.tar.gz | awk '{print $1}')
+              if [ "$ACTUAL_SHA256" != "$EXPECTED_SHA256" ]; then
+                echo "::error::SHA256 checksum mismatch! Expected: $EXPECTED_SHA256, Got: $ACTUAL_SHA256"
+                rm -f data/mecab-ko-dic-2.1.1-20180720.tar.gz
+                exit 1
+              fi
+              echo "Download complete. SHA256 verified."
             fi
             echo "Extracting archive..."
             tar xzf data/mecab-ko-dic-2.1.1-20180720.tar.gz -C data/
@@ -447,29 +454,39 @@ jobs:
             --encoding ${ENCODING} \
             --verbose
 
-          # Calculate dictionary statistics
-          if [ -f dict-output/sys.dic ]; then
-            SYS_SIZE=$(stat -f%z dict-output/sys.dic 2>/dev/null || stat -c%s dict-output/sys.dic)
+          # Calculate dictionary statistics (handle both compressed .zst and uncompressed)
+          get_file_size() {
+            local base="$1"
+            if [ -f "dict-output/${base}" ]; then
+              stat -f%z "dict-output/${base}" 2>/dev/null || stat -c%s "dict-output/${base}"
+            elif [ -f "dict-output/${base}.zst" ]; then
+              stat -f%z "dict-output/${base}.zst" 2>/dev/null || stat -c%s "dict-output/${base}.zst"
+            else
+              echo "0"
+            fi
+          }
+
+          SYS_SIZE=$(get_file_size sys.dic)
+          if [ "$SYS_SIZE" -gt 0 ]; then
             echo "sys.dic size: ${SYS_SIZE} bytes"
             echo "dict_size=${SYS_SIZE}" >> $GITHUB_OUTPUT
           fi
 
-          if [ -f dict-output/matrix.bin ]; then
-            MATRIX_SIZE=$(stat -f%z dict-output/matrix.bin 2>/dev/null || stat -c%s dict-output/matrix.bin)
+          MATRIX_SIZE=$(get_file_size matrix.bin)
+          if [ "$MATRIX_SIZE" -gt 0 ]; then
             echo "matrix.bin size: ${MATRIX_SIZE} bytes"
           fi
 
-          if [ -f dict-output/char.bin ]; then
-            CHAR_SIZE=$(stat -f%z dict-output/char.bin 2>/dev/null || stat -c%s dict-output/char.bin)
+          CHAR_SIZE=$(get_file_size char.bin)
+          if [ "$CHAR_SIZE" -gt 0 ]; then
             echo "char.bin size: ${CHAR_SIZE} bytes"
           fi
 
-          if [ -f dict-output/unk.bin ]; then
-            UNK_SIZE=$(stat -f%z dict-output/unk.bin 2>/dev/null || stat -c%s dict-output/unk.bin)
+          UNK_SIZE=$(get_file_size unk.bin)
+          if [ "$UNK_SIZE" -gt 0 ]; then
             echo "unk.bin size: ${UNK_SIZE} bytes"
           fi
 
-          # Estimate entry count from sys.dic size
           ENTRY_COUNT=$((${SYS_SIZE:-0} / 100))
           echo "entry_count=${ENTRY_COUNT}" >> $GITHUB_OUTPUT
 
@@ -484,25 +501,33 @@ jobs:
         run: |
           echo "=== Dictionary Validation ==="
 
-          # Check required files
+          # Check required files (accept both compressed .zst and uncompressed)
+          check_file() {
+            local base="$1"
+            if [ -f "dict-output/${base}" ]; then
+              SIZE=$(stat -f%z "dict-output/${base}" 2>/dev/null || stat -c%s "dict-output/${base}")
+              echo "✓ $base exists (${SIZE} bytes)"
+              return 0
+            elif [ -f "dict-output/${base}.zst" ]; then
+              SIZE=$(stat -f%z "dict-output/${base}.zst" 2>/dev/null || stat -c%s "dict-output/${base}.zst")
+              echo "✓ ${base}.zst exists (${SIZE} bytes, compressed)"
+              return 0
+            fi
+            return 1
+          }
+
           REQUIRED_FILES=("sys.dic" "matrix.bin")
-          OPTIONAL_FILES=("char.bin" "unk.bin")
+          OPTIONAL_FILES=("char.bin" "unk.bin" "entries.bin" "entries.csv")
 
           for FILE in "${REQUIRED_FILES[@]}"; do
-            if [ -f "dict-output/$FILE" ]; then
-              SIZE=$(stat -f%z "dict-output/$FILE" 2>/dev/null || stat -c%s "dict-output/$FILE")
-              echo "✓ $FILE exists (${SIZE} bytes)"
-            else
-              echo "✗ MISSING: $FILE" >&2
+            if ! check_file "$FILE"; then
+              echo "✗ MISSING: $FILE (or ${FILE}.zst)" >&2
               exit 1
             fi
           done
 
           for FILE in "${OPTIONAL_FILES[@]}"; do
-            if [ -f "dict-output/$FILE" ]; then
-              SIZE=$(stat -f%z "dict-output/$FILE" 2>/dev/null || stat -c%s "dict-output/$FILE")
-              echo "✓ $FILE exists (${SIZE} bytes)"
-            else
+            if ! check_file "$FILE"; then
               echo "⚠ Optional file not present: $FILE"
             fi
           done
@@ -549,7 +574,7 @@ jobs:
     name: Tokenization Test
     runs-on: ubuntu-latest
     needs: build-dictionary
-    if: always()
+    if: needs.build-dictionary.result == 'success'
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -601,15 +626,22 @@ jobs:
         run: |
           echo "=== Dictionary Integrity Check ==="
 
-          for FILE in sys.dic matrix.bin char.bin unk.bin; do
-            if [ -f "dict-output/$FILE" ]; then
-              SIZE=$(stat -f%z "dict-output/$FILE" 2>/dev/null || stat -c%s "dict-output/$FILE")
-
-              if [ -s "dict-output/$FILE" ]; then
-                echo "✓ $FILE: ${SIZE} bytes (valid)"
-              else
-                echo "✗ $FILE: Empty file" >&2
+          for FILE in sys.dic matrix.bin char.bin unk.bin entries.bin entries.csv; do
+            FOUND=""
+            for CANDIDATE in "dict-output/$FILE" "dict-output/${FILE}.zst"; do
+              if [ -f "$CANDIDATE" ]; then
+                SIZE=$(stat -f%z "$CANDIDATE" 2>/dev/null || stat -c%s "$CANDIDATE")
+                if [ -s "$CANDIDATE" ]; then
+                  echo "✓ $(basename $CANDIDATE): ${SIZE} bytes (valid)"
+                else
+                  echo "✗ $(basename $CANDIDATE): Empty file" >&2
+                fi
+                FOUND=1
+                break
               fi
+            done
+            if [ -z "$FOUND" ]; then
+              echo "- $FILE: not present"
             fi
           done
 
@@ -717,7 +749,7 @@ jobs:
     name: Generate Build Report
     runs-on: ubuntu-latest
     needs: [build-dictionary, tokenize-test, accuracy-test]
-    if: always()
+    if: always() && needs.build-dictionary.result == 'success'
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
