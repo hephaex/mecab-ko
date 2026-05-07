@@ -1,6 +1,38 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-07 (Sprint 105 완료 -- Golden Test 확장 + v2 Dict 분석)
+## 마지막 업데이트: 2026-05-08 (Sprint 106 완료 — v3 Dict 설계 + Golden Test 확장)
+
+### ✅ Sprint 106 - v3 Dict 설계 + Golden Test 144→155 확장
+
+**기간**: 2026-05-08
+**목표**: v3 바이너리 사전 포맷 설계, golden test 확장, 사용자 사전 개선 설계
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| basic.json | 75건 | 80건 (+5, VCN/JC/MAJ/JKV/XSA 추가) |
+| complex.json | 29건 | 35건 (+6, 구어체/이중부정/피동사동/높임/조건/나열) |
+| POS 커버리지 | 33/45 | 38/45 (VCN, JC, MAJ, JKV, XSA 추가) |
+| Difficulty | 없음 | 전 155건에 Level 1-5 분류 |
+| v3 dict 설계 | 없음 | docs/design/v3-dict-schema.md (374줄) |
+| User dict 설계 | 없음 | docs/design/user-dict-improvement.md (449줄) |
+| Difficulty 테스트 | 없음 | test_golden_difficulty_statistics |
+
+#### 수정/추가된 파일 (7개)
+- rust/crates/mecab-ko/tests/golden/basic.json (+5건, difficulty 추가)
+- rust/crates/mecab-ko/tests/golden/nouns.json (difficulty 추가)
+- rust/crates/mecab-ko/tests/golden/complex.json (+6건, difficulty 추가)
+- rust/crates/mecab-ko/tests/common/mod.rs (difficulty 필드)
+- rust/crates/mecab-ko/tests/integration_golden.rs (+1 테스트)
+- docs/design/v3-dict-schema.md (신규, MKE3/MKM3/mmap 설계)
+- docs/design/user-dict-improvement.md (신규, hot-reload/overlay/포맷 표준화)
+
+#### 테스트 결과
+- 1,170 pass / 0 fail / 49 ignored
+- clippy: 0 warnings (all targets)
+
+---
 
 ### ✅ Sprint 105 - Golden Test 100→144 확장 + v2 Dict 코드 분석
 

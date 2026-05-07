@@ -1,30 +1,43 @@
-# Phase 72 - Sprint 106 (v0.8.0 Binary Dict v3 설계 + Golden Test 확장)
+# Phase 73 - Sprint 107 (v3 Dict 구현 시작 + Golden Test 200건)
 
-## Sprint 106 목표
-v2 dict 코드 분석 결과를 바탕으로 v3 바이너리 사전 포맷 설계를 시작하고, golden test를 200건 이상으로 확장한다.
+## Sprint 107 목표
+v3 dict 설계 문서를 바탕으로 entries.bin LRU 교체를 구현하고, golden test를 200건 이상으로 확장한다.
 
-## Sprint 106 로드맵
+## Sprint 107 로드맵
 
-### P1: v0.8.0 Binary Dict v3.0 설계 (DIC-010)
-- v2-dict-code-analysis.md 기반 v3 스키마 초안 작성
-- entries.bin: LRU 캐시 O(1) 개선 (lru 크레이트), read-lock 기반 조회
-- matrix.bin: magic number + version header 추가
-- mmap 경로 통합 PoC (sys.dic에 mmap 옵션 추가)
+### P1: entries.bin LRU 교체 구현 (DIC-010 Phase 1)
+- lru 크레이트 의존성 추가
+- lazy_entries.rs의 Vec LRU → lru::LruCache 교체
+- RwLock read path 분리 (peek 사용)
+- 기존 테스트 + 벤치마크 검증
 
 ### P2: Golden Test 200건 확장 (DIC-009 계속)
-- complex.json 6건 추가 (구어체/이중부정/피동사동 등) → 35건
-- 구문 난이도 Level 1-5 분류 체계 도입
 - 오분석 사례 수집 (mecab-ko-dic 알려진 오류 기반 테스트)
-- mini-dict 확장 검토 (21 → 50 엔트리)
+- mini-dict 확장 (21 → 40+ 엔트리)
+- 미커버 POS 추가: XR, SE 검토
 
-### P3: 사용자 사전 개선 설계 (RST-011)
-- hot-reload v2 안정화
-- domain overlay API 설계 초안
-- 사용자 사전 포맷 표준화
+### P3: matrix.bin 헤더 추가 (DIC-010 Phase 2)
+- MKM3 magic + version + flags 헤더 설계
+- v2 하위 호환 로딩 유지
 
 ### P4: Benchmark CI 개선
 - full-dict 벤치마크 결과 자동 비교
 - 성능 회귀 threshold 설정
+
+---
+
+# 완료: Phase 72 - Sprint 106 (v0.8.0 Binary Dict v3 설계 + Golden Test 확장)
+
+## Sprint 106 목표
+v2 dict 코드 분석 결과를 바탕으로 v3 바이너리 사전 포맷 설계를 시작하고, golden test를 155건 이상으로 확장한다.
+
+## Sprint 106 결과
+- v3 dict schema 설계 문서 작성 (docs/design/v3-dict-schema.md, 374줄)
+- User dict 개선 설계 문서 작성 (docs/design/user-dict-improvement.md, 449줄)
+- Golden Test: 144건 → 155건 (basic 80, nouns 40, complex 35)
+- POS 커버리지: 33 → 38/45 (VCN, JC, MAJ, JKV, XSA 추가)
+- Difficulty level 1-5 전 테스트 케이스에 도입
+- 테스트: 1,170 pass / 0 fail / 49 ignored, clippy 0 warnings
 
 ---
 
