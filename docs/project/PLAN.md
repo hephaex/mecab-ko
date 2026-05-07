@@ -1,30 +1,40 @@
-# Phase 74 - Sprint 108 (matrix.bin 헤더 + mini-dict 재빌드 + Benchmark)
+# Phase 75 - Sprint 109 (sys.dic mmap PoC + Benchmark CI)
 
-## Sprint 108 목표
-matrix.bin에 MKM3 헤더를 추가하고, 확장된 mini-dict CSV로 바이너리를 재빌드하고, 벤치마크 CI를 개선한다.
+## Sprint 109 목표
+sys.dic mmap PoC로 Trie 백엔드 분리를 시작하고, 벤치마크 CI를 개선한다.
 
-## Sprint 108 로드맵
+## Sprint 109 로드맵
 
-### P1: matrix.bin MKM3 헤더 추가 (DIC-010 Phase 2)
-- matrix/mod.rs에 MKM3 magic(4B) + version(1B) + flags(1B) 헤더 추가
-- lsize/rsize u16→u32 승격
-- v2 하위 호환 로딩 유지 (magic 없으면 v2로 fallback)
-- 검증 테스트 추가
-
-### P2: mini-dict 바이너리 재빌드
-- entries.csv 43엔트리에 맞춰 create_mini_dict.rs 업데이트
-- matrix.bin 재생성 (43x43 크기)
-- sys.dic Trie 재빌드
-- entries.bin v2 재생성
-
-### P3: sys.dic mmap PoC (DIC-010 Phase 3)
+### P1: sys.dic mmap PoC (DIC-010 Phase 3)
 - memmap2::Mmap → yada::DoubleArray 경로 프로토타입
 - TrieBackend enum (Owned vs Mmap) 설계
 - 기존 테스트 통과 확인
 
-### P4: Benchmark CI 개선
+### P2: Benchmark CI 개선
 - full-dict 벤치마크 결과 자동 비교
 - 성능 회귀 threshold 설정
+
+### P3: matrix.bin v3 검증 강화
+- v3 roundtrip 벤치마크 (v2 vs v3 load 성능 비교)
+- parse_matrix_header 헬퍼 추출 (DenseMatrix/MmapMatrix 중복 제거)
+
+### P4: Golden Test 250건 목표
+- 미커버 POS 태그 XR(어근) 추가 시도
+- 도메인별 균형 강화
+
+---
+
+# 완료: Phase 74 - Sprint 108 (matrix.bin MKM3 헤더 + mini-dict 재빌드)
+
+## Sprint 108 목표
+matrix.bin에 MKM3 헤더를 추가하고, 확장된 mini-dict CSV로 바이너리를 재빌드한다.
+
+## Sprint 108 결과
+- matrix.bin v3: MKM3 magic(4B) + version(1B) + flags(1B) + reserved(2B) + lsize(u32) + rsize(u32) = 16B 헤더
+- v2/v3 자동 감지: from_bin_bytes(), MmapMatrix::from_file() 모두 지원
+- to_bin_bytes_v3() 추가 (기존 to_bin_bytes() v2 유지)
+- mini-dict: create_mini_dict.rs 43엔트리 + 44x44 matrix + 41키 trie 재빌드
+- 테스트: 1,173 pass / 0 fail / 49 ignored, clippy 0 warnings
 
 ---
 

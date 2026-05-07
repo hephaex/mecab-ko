@@ -1,6 +1,36 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-08 (Sprint 107 완료 — LRU O(1) 교체 + Golden Test 200건)
+## 마지막 업데이트: 2026-05-08 (Sprint 108 완료 — matrix.bin MKM3 헤더 + mini-dict 재빌드)
+
+### ✅ Sprint 108 - matrix.bin MKM3 v3 헤더 + mini-dict 바이너리 재빌드
+
+**기간**: 2026-05-08
+**목표**: matrix.bin v3 헤더 추가, mini-dict 바이너리 재빌드
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| matrix.bin 헤더 | v2 (4B: lsize u16 + rsize u16) | v3 MKM3 (16B: magic+ver+flags+u32 sizes) |
+| v2 하위 호환 | N/A | from_bin_bytes() 자동 감지 |
+| MmapMatrix | header_size 고정 (4) | header_size 동적 (4 or 16) |
+| create_mini_dict.rs | 21 엔트리, 25x25 matrix | 43 엔트리, 44x44 matrix, 41키 trie |
+| entries.bin | 911 bytes (21 entries) | 1815 bytes (43 entries) |
+| matrix.bin | 1254 bytes (25x25) | 3876 bytes (44x44) |
+
+#### 수정/추가된 파일 (5개)
+- crates/mecab-ko-dict/src/matrix/mod.rs (+139/-8 lines, MKM3 v3 지원)
+- test-fixtures/create_mini_dict.rs (+58/-13 lines, 43 엔트리 확장)
+- test-fixtures/mini-dict/entries.bin (바이너리 재빌드)
+- test-fixtures/mini-dict/matrix.bin (44x44 재빌드)
+- test-fixtures/mini-dict/sys.dic (41키 trie 재빌드)
+
+#### 테스트 결과
+- 1,173 pass / 0 fail / 49 ignored
+- clippy: 0 warnings (all targets)
+- 신규 테스트: test_v3_header_roundtrip, test_v2_backward_compat, test_v3_large_dimensions
+
+---
 
 ### ✅ Sprint 107 - LRU O(1) 교체 + Golden Test 200건 확장
 
