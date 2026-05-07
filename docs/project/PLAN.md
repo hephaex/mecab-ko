@@ -1,26 +1,39 @@
-# Phase 76 - Sprint 110 (TrieBackend 통합 + Benchmark CI + 파일 분할)
+# Phase 77 - Sprint 111 (Benchmark CI + trie 분할 + Golden Test 확장)
 
-## Sprint 110 목표
-TrieBackend를 실제 사전 로더에 통합하고, 벤치마크 CI를 개선하고, 대형 파일을 분할한다.
+## Sprint 111 목표
+벤치마크 CI를 개선하고, trie.rs를 분할하고, golden test를 250건으로 확장한다.
 
-## Sprint 110 로드맵
+## Sprint 111 로드맵
 
-### P1: TrieBackend 사전 로더 통합
-- loader.rs에서 TrieBackend 사용 (Owned → Mmap 전환 가능)
-- mmap vs owned 로딩 벤치마크 비교
-- Box<dyn Iterator> 대안 검토 (SmallVec collect 또는 enum iterator)
-
-### P2: Benchmark CI 개선
+### P1: Benchmark CI 개선
 - full-dict 벤치마크 결과 자동 비교
 - 성능 회귀 threshold 설정
+- mmap vs owned trie 로딩 벤치마크
 
-### P3: 대형 파일 분할
-- matrix/mod.rs (1037줄) → matrix/dense.rs, matrix/sparse.rs 등 분리
-- trie.rs (809줄) → trie/mmap.rs 분리 검토
+### P2: trie.rs 분할
+- trie.rs (809줄) → trie/mod.rs + trie/mmap.rs + trie/backend.rs
+- matrix 분할과 동일 패턴 적용
 
-### P4: Golden Test 250건 목표
+### P3: Golden Test 250건 목표
 - 미커버 POS 태그 XR(어근) 추가 시도
-- 도메인별 균형 강화
+- 도메인별 균형 강화 (과학/기술 추가)
+
+### P4: Box<dyn Iterator> 대안
+- TrieBackend::common_prefix_search 힙 할당 제거
+- SmallVec collect 또는 enum iterator 검토
+
+---
+
+# 완료: Phase 76 - Sprint 110 (TrieBackend 통합 + matrix 분할)
+
+## Sprint 110 목표
+TrieBackend를 사전 로더에 통합하고, matrix 모듈을 분할한다.
+
+## Sprint 110 결과
+- loader.rs: trie 필드를 Trie<'static> → TrieBackend로 전환
+- use_mmap=true 시 MmapTrie 자동 사용, 압축 파일은 Owned fallback
+- matrix/mod.rs (1036줄) → mod.rs(485) + dense.rs(362) + sparse.rs(115) + mmap.rs(105)
+- 테스트: 1,176 pass / 0 fail / 49 ignored, clippy 0 warnings
 
 ---
 

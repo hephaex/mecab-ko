@@ -1,6 +1,35 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-08 (Sprint 109 완료 — sys.dic mmap PoC + parse_matrix_header)
+## 마지막 업데이트: 2026-05-08 (Sprint 110 완료 — TrieBackend 통합 + matrix 분할)
+
+### ✅ Sprint 110 - TrieBackend 로더 통합 + matrix 모듈 분할
+
+**기간**: 2026-05-08
+**목표**: TrieBackend를 사전 로더에 통합, matrix 대형 파일 분할
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| loader.rs trie 필드 | Trie<'static> | TrieBackend (Owned/Mmap 자동 선택) |
+| load_trie() | Trie 반환 | load_trie_backend() → TrieBackend 반환 |
+| use_mmap 설정 | 선언만 존재 | 실제 MmapTrie 로딩에 연결 |
+| matrix/mod.rs | 1036줄 단일 파일 | mod.rs(485) + dense.rs(362) + sparse.rs(115) + mmap.rs(105) |
+
+#### 수정/추가된 파일 (6개)
+- crates/mecab-ko-dict/src/loader.rs (TrieBackend 통합, load_trie_backend)
+- crates/mecab-ko-dict/src/lib.rs (TrieBackend re-export)
+- crates/mecab-ko-dict/src/matrix/mod.rs (1036→485줄, 공용 타입/테스트 유지)
+- crates/mecab-ko-dict/src/matrix/dense.rs (362줄, DenseMatrix 분리)
+- crates/mecab-ko-dict/src/matrix/sparse.rs (115줄, SparseMatrix 분리)
+- crates/mecab-ko-dict/src/matrix/mmap.rs (105줄, MmapMatrix 분리)
+
+#### 테스트 결과
+- 1,176 pass / 0 fail / 49 ignored
+- clippy: 0 warnings (all targets)
+- matrix 하위 모듈 분할 후 전체 기존 테스트 통과 확인
+
+---
 
 ### ✅ Sprint 109 - sys.dic mmap PoC + parse_matrix_header 리팩토링
 
