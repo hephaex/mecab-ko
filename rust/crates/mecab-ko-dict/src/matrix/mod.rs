@@ -43,8 +43,10 @@ pub mod simd;
 #[cfg(feature = "simd")]
 pub use simd::SimdMatrix;
 
-/// 연접 비용 행렬 헤더 크기 (바이트)
 const MATRIX_HEADER_SIZE: usize = 4;
+
+const MKM3_MAGIC: &[u8; 4] = b"MKM3";
+const MKM3_HEADER_SIZE: usize = 16;
 
 /// 기본 비용 (연결 불가능한 경우)
 pub const INVALID_CONNECTION_COST: i32 = i32::MAX;
@@ -259,7 +261,14 @@ impl DenseMatrix {
     ///
     /// 데이터가 유효한 바이너리 형식이 아닌 경우 에러를 반환합니다.
     pub fn from_bin_bytes(data: &[u8]) -> Result<Self> {
-        if data.len() < MATRIX_HEADER_SIZE {
+        let is_v3 = data.len() >= 4 && &data[..4] == MKM3_MAGIC;
+        let header_size = if is_v3 {
+            MKM3_HEADER_SIZE
+        } else {
+            MATRIX_HEADER_SIZE
+        };
+
+        if data.len() < header_size {
             return Err(DictError::Format(
                 "Matrix binary too short for header".to_string(),
             ));
@@ -267,11 +276,22 @@ impl DenseMatrix {
 
         let mut cursor = io::Cursor::new(data);
 
-        let lsize = cursor.read_u16::<LittleEndian>().map_err(DictError::Io)? as usize;
-        let rsize = cursor.read_u16::<LittleEndian>().map_err(DictError::Io)? as usize;
+        let (lsize, rsize) = if is_v3 {
+            cursor.set_position(4);
+            let _version = cursor.read_u8().map_err(DictError::Io)?;
+            let _flags = cursor.read_u8().map_err(DictError::Io)?;
+            let _reserved = cursor.read_u16::<LittleEndian>().map_err(DictError::Io)?;
+            let l = cursor.read_u32::<LittleEndian>().map_err(DictError::Io)? as usize;
+            let r = cursor.read_u32::<LittleEndian>().map_err(DictError::Io)? as usize;
+            (l, r)
+        } else {
+            let l = cursor.read_u16::<LittleEndian>().map_err(DictError::Io)? as usize;
+            let r = cursor.read_u16::<LittleEndian>().map_err(DictError::Io)? as usize;
+            (l, r)
+        };
 
         let expected_size = lsize * rsize * 2;
-        let data_size = data.len() - MATRIX_HEADER_SIZE;
+        let data_size = data.len() - header_size;
 
         if data_size != expected_size {
             return Err(DictError::Format(format!(
@@ -289,6 +309,27 @@ impl DenseMatrix {
             rsize,
             costs,
         })
+    }
+
+    /// v3 포맷(MKM3)으로 직렬화
+    #[must_use]
+    pub fn to_bin_bytes_v3(&self) -> Vec<u8> {
+        let mut buf = Vec::with_capacity(MKM3_HEADER_SIZE + self.costs.len() * 2);
+
+        buf.extend_from_slice(MKM3_MAGIC);
+        buf.push(1);
+        buf.push(0);
+        buf.write_u16::<LittleEndian>(0).ok();
+        #[allow(clippy::cast_possible_truncation)]
+        buf.write_u32::<LittleEndian>(self.lsize as u32).ok();
+        #[allow(clippy::cast_possible_truncation)]
+        buf.write_u32::<LittleEndian>(self.rsize as u32).ok();
+
+        for &cost in &self.costs {
+            buf.write_i16::<LittleEndian>(cost).ok();
+        }
+
+        buf
     }
 
     /// 압축된 바이너리 파일(matrix.bin.zst)에서 로드
@@ -424,6 +465,8 @@ pub struct MmapMatrix {
     lsize: usize,
     /// 우문맥 크기
     rsize: usize,
+    /// 헤더 크기 (v2: 4, v3: 16)
+    header_size: usize,
     /// 메모리 맵
     mmap: memmap2::Mmap,
 }
@@ -447,18 +490,35 @@ impl MmapMatrix {
         // memmap2::Mmap::map은 파일 내용이 변경되지 않을 때 안전합니다.
         let mmap = unsafe { memmap2::Mmap::map(&file).map_err(DictError::Io)? };
 
-        if mmap.len() < MATRIX_HEADER_SIZE {
+        let is_v3 = mmap.len() >= 4 && &mmap[..4] == MKM3_MAGIC;
+        let header_size = if is_v3 {
+            MKM3_HEADER_SIZE
+        } else {
+            MATRIX_HEADER_SIZE
+        };
+
+        if mmap.len() < header_size {
             return Err(DictError::Format(
                 "Matrix file too short for header".to_string(),
             ));
         }
 
-        // 헤더 읽기
-        let mut cursor = io::Cursor::new(&mmap[..MATRIX_HEADER_SIZE]);
-        let lsize = cursor.read_u16::<LittleEndian>().map_err(DictError::Io)? as usize;
-        let rsize = cursor.read_u16::<LittleEndian>().map_err(DictError::Io)? as usize;
+        let (lsize, rsize) = if is_v3 {
+            let mut cursor = io::Cursor::new(&mmap[4..header_size]);
+            let _version = cursor.read_u8().map_err(DictError::Io)?;
+            let _flags = cursor.read_u8().map_err(DictError::Io)?;
+            let _reserved = cursor.read_u16::<LittleEndian>().map_err(DictError::Io)?;
+            let l = cursor.read_u32::<LittleEndian>().map_err(DictError::Io)? as usize;
+            let r = cursor.read_u32::<LittleEndian>().map_err(DictError::Io)? as usize;
+            (l, r)
+        } else {
+            let mut cursor = io::Cursor::new(&mmap[..header_size]);
+            let l = cursor.read_u16::<LittleEndian>().map_err(DictError::Io)? as usize;
+            let r = cursor.read_u16::<LittleEndian>().map_err(DictError::Io)? as usize;
+            (l, r)
+        };
 
-        let expected_size = MATRIX_HEADER_SIZE + lsize * rsize * 2;
+        let expected_size = header_size + lsize * rsize * 2;
         if mmap.len() != expected_size {
             return Err(DictError::Format(format!(
                 "Matrix file size mismatch: expected {} bytes, got {}",
@@ -467,7 +527,12 @@ impl MmapMatrix {
             )));
         }
 
-        Ok(Self { lsize, rsize, mmap })
+        Ok(Self {
+            lsize,
+            rsize,
+            header_size,
+            mmap,
+        })
     }
 
     /// 압축된 파일에서 로드 (메모리에 전체 압축 해제)
@@ -482,10 +547,9 @@ impl MmapMatrix {
         DenseMatrix::from_compressed_file(path)
     }
 
-    /// 비용 배열의 오프셋 계산
     #[inline]
     const fn offset(&self, right_id: u16, left_id: u16) -> usize {
-        MATRIX_HEADER_SIZE + (right_id as usize + self.lsize * left_id as usize) * 2
+        self.header_size + (right_id as usize + self.lsize * left_id as usize) * 2
     }
 }
 
@@ -912,5 +976,52 @@ mod tests {
         assert_eq!(matrix.get(0, 1), 20);
         assert_eq!(matrix.get(1, 0), 30);
         assert_eq!(matrix.get(1, 1), 40);
+    }
+
+    #[test]
+    fn test_v3_header_roundtrip() {
+        let mut matrix = DenseMatrix::new(5, 5, 0);
+        matrix.set(0, 0, 42);
+        matrix.set(2, 3, -999);
+        matrix.set(4, 4, 32767);
+
+        let bytes = matrix.to_bin_bytes_v3();
+        assert_eq!(&bytes[..4], b"MKM3");
+        assert_eq!(bytes[4], 1);
+        assert_eq!(bytes[5], 0);
+
+        let loaded = DenseMatrix::from_bin_bytes(&bytes).unwrap();
+        assert_eq!(loaded.left_size(), 5);
+        assert_eq!(loaded.right_size(), 5);
+        assert_eq!(loaded.get(0, 0), 42);
+        assert_eq!(loaded.get(2, 3), -999);
+        assert_eq!(loaded.get(4, 4), 32767);
+    }
+
+    #[test]
+    fn test_v2_backward_compat() {
+        let mut matrix = DenseMatrix::new(4, 4, 0);
+        matrix.set(1, 2, 777);
+
+        let bytes = matrix.to_bin_bytes();
+        assert_ne!(&bytes[..4], b"MKM3");
+
+        let loaded = DenseMatrix::from_bin_bytes(&bytes).unwrap();
+        assert_eq!(loaded.left_size(), 4);
+        assert_eq!(loaded.right_size(), 4);
+        assert_eq!(loaded.get(1, 2), 777);
+    }
+
+    #[test]
+    fn test_v3_large_dimensions() {
+        let lsize = (u16::MAX as usize) + 1;
+        let rsize = 1;
+        let costs = vec![0i16; lsize * rsize];
+        let matrix = DenseMatrix::from_vec(lsize, rsize, costs).unwrap();
+
+        let bytes = matrix.to_bin_bytes_v3();
+        let loaded = DenseMatrix::from_bin_bytes(&bytes).unwrap();
+        assert_eq!(loaded.left_size(), lsize);
+        assert_eq!(loaded.right_size(), rsize);
     }
 }
