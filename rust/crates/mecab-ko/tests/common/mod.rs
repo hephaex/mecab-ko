@@ -82,6 +82,9 @@ pub struct MorphTestCase {
     /// Test category
     #[serde(default)]
     pub category: Option<String>,
+    /// Difficulty level (1=basic, 2=simple particles, 3=compound, 4=complex grammar, 5=ambiguous/irregular)
+    #[serde(default)]
+    pub difficulty: Option<u8>,
 }
 
 /// Test result comparison

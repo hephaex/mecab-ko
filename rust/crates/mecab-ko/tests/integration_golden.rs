@@ -637,6 +637,67 @@ fn test_golden_category_statistics() {
     );
 }
 
+/// Difficulty level distribution across golden test files.
+///
+/// Reports how many test cases fall into each difficulty level (1-5) and
+/// asserts that every test case has a difficulty assigned.
+#[test]
+fn test_golden_difficulty_statistics() {
+    let golden_files = ["basic.json", "nouns.json", "complex.json"];
+    let mut level_counts: [usize; 6] = [0; 6]; // index 0 unused, 1-5 are levels
+    let mut total_with_difficulty = 0usize;
+    let mut total_without_difficulty = 0usize;
+    let mut total_cases = 0usize;
+
+    for file in &golden_files {
+        let test_cases =
+            load_golden_tests(file).unwrap_or_else(|e| panic!("Failed to load {file}: {e}"));
+
+        let mut file_levels: [usize; 6] = [0; 6];
+
+        for tc in &test_cases {
+            total_cases += 1;
+            if let Some(level) = tc.difficulty {
+                assert!(
+                    (1..=5).contains(&level),
+                    "{file}: difficulty must be 1-5, got {level}"
+                );
+                level_counts[level as usize] += 1;
+                file_levels[level as usize] += 1;
+                total_with_difficulty += 1;
+            } else {
+                total_without_difficulty += 1;
+            }
+        }
+
+        println!(
+            "{file}: L1={} L2={} L3={} L4={} L5={}",
+            file_levels[1], file_levels[2], file_levels[3], file_levels[4], file_levels[5]
+        );
+    }
+
+    println!("\nDifficulty Distribution:");
+    let labels = [
+        "",
+        "basic morphemes",
+        "simple particles",
+        "compound sentences",
+        "complex grammar",
+        "ambiguous/irregular",
+    ];
+    for (level, label) in labels.iter().enumerate().skip(1) {
+        println!("  Level {level} ({label}): {}", level_counts[level]);
+    }
+    println!(
+        "  Total: {total_cases} ({total_with_difficulty} with difficulty, {total_without_difficulty} without)"
+    );
+
+    assert!(
+        total_with_difficulty > 0,
+        "At least some test cases should have difficulty levels"
+    );
+}
+
 #[cfg(test)]
 mod golden_utils {
     use super::*;
