@@ -27,6 +27,10 @@ on:
         description: 'Create GitHub issue on critical regression'
         required: false
         default: 'true'
+      full_dict:
+        description: 'Run full-dict benchmarks (816K entries, ~50MB download)'
+        required: false
+        default: 'false'
 
 # Skip benchmark if commit message contains [skip bench]
 concurrency:
@@ -517,4 +521,81 @@ jobs:
         with:
           name: extended-benchmarks-${{ github.run_id }}
           path: /tmp/extended-benchmark.txt
+          retention-days: 90
+
+  # Full-dictionary benchmarks (optional, workflow_dispatch only — avoids 50MB download on every commit)
+  full-dict-benchmark:
+    name: Full-Dict Benchmarks
+    runs-on: ubuntu-latest
+    if: github.event.inputs.full_dict == 'true'
+    needs: [benchmark-check]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
+        with:
+          toolchain: stable
+          cache-key: bench-full-dict
+
+      - name: Download full Korean dictionary
+        id: download-dict
+        continue-on-error: true
+        run: |
+          mkdir -p data
+          EXPECTED_SHA256="fd62d3d6d8fa85145528065fabad4d7cb20f6b2201e71be4081a4e9701a5b330"
+          echo "Downloading mecab-ko-dic-2.1.1-20180720.tar.gz (~50MB)..."
+          if ! curl --retry 3 --retry-delay 5 --connect-timeout 30 --max-time 300 \
+              -L -o data/mecab-ko-dic-2.1.1-20180720.tar.gz \
+              "https://bitbucket.org/eunjeon/mecab-ko-dic/downloads/mecab-ko-dic-2.1.1-20180720.tar.gz"; then
+            echo "::error::Failed to download full dictionary archive."
+            exit 1
+          fi
+          ACTUAL_SHA256=$(sha256sum data/mecab-ko-dic-2.1.1-20180720.tar.gz | awk '{print $1}')
+          if [ "$ACTUAL_SHA256" != "$EXPECTED_SHA256" ]; then
+            echo "::error::SHA256 checksum mismatch! Expected: $EXPECTED_SHA256, Got: $ACTUAL_SHA256"
+            rm -f data/mecab-ko-dic-2.1.1-20180720.tar.gz
+            exit 1
+          fi
+          echo "SHA256 verified. Extracting..."
+          tar xzf data/mecab-ko-dic-2.1.1-20180720.tar.gz -C data/
+          echo "Extracted to data/mecab-ko-dic-2.1.1-20180720/"
+          ls -lh data/mecab-ko-dic-2.1.1-20180720/ | head -20
+
+      - name: Build dict-builder
+        if: steps.download-dict.outcome == 'success'
+        run: |
+          cargo build --manifest-path rust/Cargo.toml \
+            --release \
+            --bin mecab-ko-dict-builder \
+            --verbose
+
+      - name: Build full dictionary
+        if: steps.download-dict.outcome == 'success'
+        run: |
+          mkdir -p data/dict-output
+          cargo run --manifest-path rust/Cargo.toml \
+            --release \
+            --bin mecab-ko-dict-builder \
+            -- \
+            --input ./data/mecab-ko-dic-2.1.1-20180720 \
+            --output ./data/dict-output \
+            --verbose
+          echo "=== Generated dictionary files ==="
+          ls -lh data/dict-output/
+
+      - name: Run benchmarks with full dictionary
+        if: steps.download-dict.outcome == 'success'
+        run: |
+          MECAB_DICDIR=data/dict-output \
+            cargo bench --manifest-path rust/Cargo.toml -- --output-format bencher \
+            | tee /tmp/full-dict-benchmark.txt
+
+      - name: Upload full-dict benchmark results
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: full-dict-benchmarks-${{ github.run_id }}
+          path: /tmp/full-dict-benchmark.txt
           retention-days: 90
