@@ -1,28 +1,45 @@
-# Phase 73 - Sprint 107 (v3 Dict 구현 시작 + Golden Test 200건)
+# Phase 74 - Sprint 108 (matrix.bin 헤더 + mini-dict 재빌드 + Benchmark)
 
-## Sprint 107 목표
-v3 dict 설계 문서를 바탕으로 entries.bin LRU 교체를 구현하고, golden test를 200건 이상으로 확장한다.
+## Sprint 108 목표
+matrix.bin에 MKM3 헤더를 추가하고, 확장된 mini-dict CSV로 바이너리를 재빌드하고, 벤치마크 CI를 개선한다.
 
-## Sprint 107 로드맵
+## Sprint 108 로드맵
 
-### P1: entries.bin LRU 교체 구현 (DIC-010 Phase 1)
-- lru 크레이트 의존성 추가
-- lazy_entries.rs의 Vec LRU → lru::LruCache 교체
-- RwLock read path 분리 (peek 사용)
-- 기존 테스트 + 벤치마크 검증
+### P1: matrix.bin MKM3 헤더 추가 (DIC-010 Phase 2)
+- matrix/mod.rs에 MKM3 magic(4B) + version(1B) + flags(1B) 헤더 추가
+- lsize/rsize u16→u32 승격
+- v2 하위 호환 로딩 유지 (magic 없으면 v2로 fallback)
+- 검증 테스트 추가
 
-### P2: Golden Test 200건 확장 (DIC-009 계속)
-- 오분석 사례 수집 (mecab-ko-dic 알려진 오류 기반 테스트)
-- mini-dict 확장 (21 → 40+ 엔트리)
-- 미커버 POS 추가: XR, SE 검토
+### P2: mini-dict 바이너리 재빌드
+- entries.csv 43엔트리에 맞춰 create_mini_dict.rs 업데이트
+- matrix.bin 재생성 (43x43 크기)
+- sys.dic Trie 재빌드
+- entries.bin v2 재생성
 
-### P3: matrix.bin 헤더 추가 (DIC-010 Phase 2)
-- MKM3 magic + version + flags 헤더 설계
-- v2 하위 호환 로딩 유지
+### P3: sys.dic mmap PoC (DIC-010 Phase 3)
+- memmap2::Mmap → yada::DoubleArray 경로 프로토타입
+- TrieBackend enum (Owned vs Mmap) 설계
+- 기존 테스트 통과 확인
 
 ### P4: Benchmark CI 개선
 - full-dict 벤치마크 결과 자동 비교
 - 성능 회귀 threshold 설정
+
+---
+
+# 완료: Phase 73 - Sprint 107 (LRU O(1) 교체 + Golden Test 200건)
+
+## Sprint 107 목표
+entries.bin의 hand-rolled LRU를 lru 크레이트로 교체하고, golden test를 200건으로 확장한다.
+
+## Sprint 107 결과
+- LRU 캐시: hand-rolled O(n) → lru crate O(1) eviction
+- Read path: RwLock::write() → RwLock::read() + peek() (write lock 불필요)
+- Golden Test: 155→200건 (basic 95, nouns 55, complex 50)
+- POS 커버리지: 38→39/45 (SE 추가)
+- mini-dict: entries.csv 21→43 엔트리 (CSV만, binary rebuild 별도)
+- 테스트: 1,170 pass / 0 fail / 49 ignored, clippy 0 warnings
 
 ---
 

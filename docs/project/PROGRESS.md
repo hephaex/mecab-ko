@@ -1,6 +1,38 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-08 (Sprint 106 완료 — v3 Dict 설계 + Golden Test 확장)
+## 마지막 업데이트: 2026-05-08 (Sprint 107 완료 — LRU O(1) 교체 + Golden Test 200건)
+
+### ✅ Sprint 107 - LRU O(1) 교체 + Golden Test 200건 확장
+
+**기간**: 2026-05-08
+**목표**: entries.bin LRU 교체, golden test 200건 확장
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| LRU 캐시 | hand-rolled (HashMap+Vec, O(n)) | lru crate (O(1) eviction) |
+| Cache read path | RwLock::write() 필수 | RwLock::read() + peek() |
+| basic.json | 80건 | 95건 (+15, SE/IC/MM/VX/XPN) |
+| nouns.json | 40건 | 55건 (+15, 의학/법률/IT 도메인) |
+| complex.json | 35건 | 50건 (+15, 구어체/뉴스/학술/법률/일상) |
+| POS 커버리지 | 38/45 | 39/45 (SE 추가) |
+| mini-dict CSV | 21 엔트리 | 43 엔트리 (+22, particles/verbs/adverbs) |
+
+#### 수정/추가된 파일 (7개)
+- Cargo.lock (lru 0.16 직접 의존성 추가)
+- crates/mecab-ko-dict/Cargo.toml (lru = "0.16")
+- crates/mecab-ko-dict/src/lazy_entries.rs (LRU 교체, -77/+50 lines)
+- crates/mecab-ko/tests/golden/basic.json (+15건)
+- crates/mecab-ko/tests/golden/nouns.json (+15건)
+- crates/mecab-ko/tests/golden/complex.json (+15건)
+- test-fixtures/mini-dict/entries.csv (+22 엔트리, binary rebuild 별도)
+
+#### 테스트 결과
+- 1,170 pass / 0 fail / 49 ignored
+- clippy: 0 warnings (all targets)
+
+---
 
 ### ✅ Sprint 106 - v3 Dict 설계 + Golden Test 144→155 확장
 
