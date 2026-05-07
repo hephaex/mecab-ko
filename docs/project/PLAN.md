@@ -1,39 +1,44 @@
-# 완료: Phase 68 - Sprint 102 (E2E CLI 테스트 확장 + full-dict 벤치마크 CI)
+# 완료: Phase 69 - Sprint 103 (E2E FFI 테스트 확장 — Python 13, Node.js 12, WASM 5)
 
-## Sprint 102 목표
-E2E CLI 테스트를 stub에서 실제 테스트로 확장, full-dict 벤치마크 CI job 추가
+## Sprint 103 목표
+E2E FFI 테스트를 stub에서 실제 테스트로 확장, CI 워크플로우 경로 버그 수정
 
-## Sprint 102 작업 목록
+## Sprint 103 작업 목록
 
-- [x] S102-01: E2E CLI 테스트 확장 (2 stub → 7 real tests) ✅
-- [x] S102-02: benchmark.yml에 full-dict-benchmark job 추가 ✅
-- [x] S102-03: 빌드/테스트/clippy 검증 + 커밋 ✅
+- [x] S103-01: e2e-ffi-tests.yml 경로 수정 (nodejs → node) + WASM 디렉토리 생성 ✅
+- [x] S103-02: Python requirements.txt + conftest.py 추가 ✅
+- [x] S103-03: Python E2E 테스트 확장 (2 stubs → 13 real tests) ✅
+- [x] S103-04: Node.js E2E 테스트 확장 (1 stub → 12 real tests) + package.json ✅
+- [x] S103-05: 빌드/테스트/clippy 검증 + 커밋 ✅
 
 ### 수정 내용
-- `tests/e2e/cli/test_basic.sh`: PASS/FAIL/SKIP 추적, 사전 게이팅, portable grep
-- `benchmark.yml`: workflow_dispatch `full_dict` 입력, bitbucket 다운로드 + SHA256 검증
-- macOS grep -P 비호환 수정 (grep -E + literal tab 사용)
+- `e2e-ffi-tests.yml`: `tests/e2e/nodejs` → `tests/e2e/node` (CI 경로 버그 수정)
+- Python: morphs, nouns, pos, parse, wakati, empty input, error handling 테스트
+- Node.js: tokenize, morphs, nouns, pos, parse, getVersion, withDict 테스트
+- WASM: 5개 scaffold 테스트 (빌드 artifact 없으면 graceful skip)
+- E2E README 업데이트 (테스트 수, 로컬 실행 방법)
 
 ---
 
-## Sprint 103 로드맵
+## Sprint 104 로드맵
 
-### P1: dict-build CI 전체 결과 검증
-- Push 후 dict-build + benchmark 워크플로우 성공 확인
-- full-dict-benchmark manual trigger 테스트
+### P1: E2E FFI CI 결과 검증
+- Push 후 e2e-ffi-tests 워크플로우 전체 green 확인
+- continue-on-error 해제 가능 여부 평가
 
-### P2: v0.8.0 기능 계획 구체화
-- DIC-010: Binary Dict v3.0 설계 (압축 효율 + mmap 지원)
-- DIC-009: 사전 검증 테스트셋 구축 (golden test 1,000+ 문장)
-- RST-011: 사용자 정의 사전 개선
+### P2: v0.8.0 Binary Dict v3.0 설계
+- DIC-010: mmap 지원, 압축 효율 개선 설계 문서
+- 현 v2 포맷 분석 + v3 스키마 초안
 
-### P3: E2E 테스트 추가 확장
-- Python/Node.js FFI E2E 테스트 실질 구현
-- e2e-ffi-tests 워크플로우와 연동
+### P3: Golden Test 테스트셋 구축 시작
+- DIC-009: 정확도 검증용 golden test 100문장 수작업 라벨링 (최종 1,000+)
 
-### P4: 코드 품질 + 문서
-- README에 E2E 테스트 실행 방법 추가
-- CI 워크플로우 문서 정리
+### P4: 사용자 정의 사전 개선 설계
+- RST-011: hot-reload, 도메인 오버레이 방향 구체화
+
+---
+
+# 완료: Phase 68 - Sprint 102 (E2E CLI 테스트 확장 + full-dict 벤치마크 CI)
 
 ---
 

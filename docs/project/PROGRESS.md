@@ -1,6 +1,48 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-07 (Sprint 102 완료 -- E2E CLI 테스트 확장 + full-dict 벤치마크 CI)
+## 마지막 업데이트: 2026-05-07 (Sprint 103 완료 -- E2E FFI 테스트 확장)
+
+### ✅ Sprint 103 - E2E FFI 테스트 확장 (Python 13, Node.js 12, WASM 5)
+
+**기간**: 2026-05-07
+**목표**: E2E FFI 테스트를 stub에서 실제 테스트로 확장, CI 경로 버그 수정
+
+#### 발견된 버그
+- `e2e-ffi-tests.yml`이 `tests/e2e/nodejs/`를 참조하나 실제 디렉토리는 `tests/e2e/node/`
+- `tests/e2e/wasm/` 디렉토리 미존재
+- `tests/e2e/python/requirements.txt` 미존재 (CI에서 pip install 실패)
+- 모든 버그가 `continue-on-error: true`로 마스킹되어 CI는 false green
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| CI 경로 | `tests/e2e/nodejs` | `tests/e2e/node` (실제 디렉토리) |
+| Python 테스트 | 2개 stub (import, version) | 13개 real tests (전체 API 커버) |
+| Node.js 테스트 | 1개 stub (import) | 12개 real tests (전체 API 커버) |
+| WASM 테스트 | 미존재 | 5개 scaffold (빌드 없으면 skip) |
+| Python 인프라 | — | requirements.txt + conftest.py |
+| Node.js 인프라 | — | package.json |
+| E2E README | 기본 설명 | 테스트 수 + 로컬 실행 가이드 |
+
+#### 수정된 파일 (9개)
+- .github/workflows/e2e-ffi-tests.yml
+- tests/e2e/README.md
+- tests/e2e/python/test_basic.py
+- tests/e2e/python/conftest.py (new)
+- tests/e2e/python/requirements.txt (new)
+- tests/e2e/node/test_basic.mjs
+- tests/e2e/node/package.json (new)
+- tests/e2e/wasm/test_basic.mjs (new)
+- tests/e2e/wasm/package.json (new)
+
+#### 상태
+- 단위 테스트: 1,167 pass / 0 fail / 49 ignored
+- E2E CLI: 7 pass / 0 fail
+- clippy: 0 warnings
+- 커밋: 6b29c72
+
+---
 
 ### ✅ Sprint 102 - E2E CLI 테스트 확장 + full-dict 벤치마크 CI
 
