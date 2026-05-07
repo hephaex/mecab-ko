@@ -4,7 +4,7 @@
 
 use crate::error::{DictError, Result};
 use crate::matrix::{DenseMatrix, Matrix};
-use crate::trie::Trie;
+use crate::trie::TrieBackend;
 use crate::{Dictionary, Entry};
 use std::fs::File;
 use std::path::{Path, PathBuf};
@@ -34,8 +34,8 @@ impl Default for LoaderConfig {
 ///
 /// mmap을 이용하여 사전 파일을 메모리에 매핑합니다.
 pub struct MmapDictionary {
-    /// Trie 인스턴스
-    trie: Trie<'static>,
+    /// Trie 백엔드
+    trie: TrieBackend,
     /// 연접 비용 매트릭스
     matrix: DenseMatrix,
     /// 사전 디렉토리
@@ -73,8 +73,7 @@ impl MmapDictionary {
         let dict_dir = path.as_ref().to_path_buf();
 
         // Trie 로드
-        let trie_data = Self::load_trie(&dict_dir, config)?;
-        let trie = Trie::from_vec(trie_data);
+        let trie = Self::load_trie_backend(&dict_dir, config)?;
 
         // Matrix 로드
         let matrix = Self::load_matrix(&dict_dir, config)?;
@@ -90,23 +89,20 @@ impl MmapDictionary {
         })
     }
 
-    /// Trie 데이터 로드
+    /// Trie 백엔드 로드
     #[cfg(feature = "zstd")]
-    fn load_trie(dict_dir: &Path, config: LoaderConfig) -> Result<Vec<u8>> {
-        // 압축 파일 우선 시도
+    fn load_trie_backend(dict_dir: &Path, config: LoaderConfig) -> Result<TrieBackend> {
         let compressed_path = dict_dir.join("sys.dic.zst");
         let uncompressed_path = dict_dir.join("sys.dic");
 
         if config.auto_decompress && compressed_path.exists() {
-            // zstd 압축 해제
-            let file = File::open(&compressed_path)?;
-            let mut decoder = zstd::Decoder::new(file)?;
-            let mut buffer = Vec::new();
-            std::io::Read::read_to_end(&mut decoder, &mut buffer)?;
-            Ok(buffer)
+            TrieBackend::from_compressed_file(&compressed_path)
         } else if uncompressed_path.exists() {
-            // 압축되지 않은 파일 - mmap 대신 일반 읽기 사용 (unsafe 제거)
-            Ok(std::fs::read(&uncompressed_path)?)
+            if config.use_mmap {
+                TrieBackend::from_mmap_file(&uncompressed_path)
+            } else {
+                TrieBackend::from_file(&uncompressed_path)
+            }
         } else {
             Err(DictError::Format(
                 "sys.dic or sys.dic.zst not found".to_string(),
@@ -114,13 +110,17 @@ impl MmapDictionary {
         }
     }
 
-    /// Trie 데이터 로드 (zstd feature 비활성화 시)
+    /// Trie 백엔드 로드 (zstd feature 비활성화 시)
     #[cfg(not(feature = "zstd"))]
-    fn load_trie(dict_dir: &Path, _config: LoaderConfig) -> Result<Vec<u8>> {
+    fn load_trie_backend(dict_dir: &Path, config: LoaderConfig) -> Result<TrieBackend> {
         let uncompressed_path = dict_dir.join("sys.dic");
 
         if uncompressed_path.exists() {
-            Ok(std::fs::read(&uncompressed_path)?)
+            if config.use_mmap {
+                TrieBackend::from_mmap_file(&uncompressed_path)
+            } else {
+                TrieBackend::from_file(&uncompressed_path)
+            }
         } else {
             Err(DictError::Format(
                 "sys.dic not found (zstd feature disabled, compressed files not supported)"
@@ -434,9 +434,9 @@ impl MmapDictionary {
         })
     }
 
-    /// Trie 참조
+    /// Trie 백엔드 참조
     #[must_use]
-    pub const fn trie(&self) -> &Trie<'static> {
+    pub const fn trie(&self) -> &TrieBackend {
         &self.trie
     }
 
