@@ -1,26 +1,40 @@
-# Phase 75 - Sprint 109 (sys.dic mmap PoC + Benchmark CI)
+# Phase 76 - Sprint 110 (TrieBackend 통합 + Benchmark CI + 파일 분할)
 
-## Sprint 109 목표
-sys.dic mmap PoC로 Trie 백엔드 분리를 시작하고, 벤치마크 CI를 개선한다.
+## Sprint 110 목표
+TrieBackend를 실제 사전 로더에 통합하고, 벤치마크 CI를 개선하고, 대형 파일을 분할한다.
 
-## Sprint 109 로드맵
+## Sprint 110 로드맵
 
-### P1: sys.dic mmap PoC (DIC-010 Phase 3)
-- memmap2::Mmap → yada::DoubleArray 경로 프로토타입
-- TrieBackend enum (Owned vs Mmap) 설계
-- 기존 테스트 통과 확인
+### P1: TrieBackend 사전 로더 통합
+- loader.rs에서 TrieBackend 사용 (Owned → Mmap 전환 가능)
+- mmap vs owned 로딩 벤치마크 비교
+- Box<dyn Iterator> 대안 검토 (SmallVec collect 또는 enum iterator)
 
 ### P2: Benchmark CI 개선
 - full-dict 벤치마크 결과 자동 비교
 - 성능 회귀 threshold 설정
 
-### P3: matrix.bin v3 검증 강화
-- v3 roundtrip 벤치마크 (v2 vs v3 load 성능 비교)
-- parse_matrix_header 헬퍼 추출 (DenseMatrix/MmapMatrix 중복 제거)
+### P3: 대형 파일 분할
+- matrix/mod.rs (1037줄) → matrix/dense.rs, matrix/sparse.rs 등 분리
+- trie.rs (809줄) → trie/mmap.rs 분리 검토
 
 ### P4: Golden Test 250건 목표
 - 미커버 POS 태그 XR(어근) 추가 시도
 - 도메인별 균형 강화
+
+---
+
+# 완료: Phase 75 - Sprint 109 (sys.dic mmap PoC + parse_matrix_header)
+
+## Sprint 109 목표
+sys.dic mmap PoC로 Trie 백엔드 분리를 시작하고, matrix 헤더 파서를 리팩토링한다.
+
+## Sprint 109 결과
+- MmapTrie: DoubleArray<memmap2::Mmap> 기반 zero-copy trie (unsafe는 Mmap::map만)
+- TrieBackend enum: Owned(Trie<'static>) vs Mmap(MmapTrie), 검색 메서드 위임
+- parse_matrix_header(): v2/v3 자동 감지 로직 DenseMatrix/MmapMatrix에서 추출
+- MatrixHeader 구조체로 헤더 정보 캡슐화
+- 테스트: 1,176 pass / 0 fail / 49 ignored, clippy 0 warnings
 
 ---
 

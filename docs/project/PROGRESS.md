@@ -1,6 +1,32 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-08 (Sprint 108 완료 — matrix.bin MKM3 헤더 + mini-dict 재빌드)
+## 마지막 업데이트: 2026-05-08 (Sprint 109 완료 — sys.dic mmap PoC + parse_matrix_header)
+
+### ✅ Sprint 109 - sys.dic mmap PoC + parse_matrix_header 리팩토링
+
+**기간**: 2026-05-08
+**목표**: sys.dic mmap 프로토타입, matrix 헤더 파서 추출
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| Trie 백엔드 | Trie<'a> (Cow 기반) | + MmapTrie (DoubleArray<Mmap>) |
+| TrieBackend | 없음 | enum Owned/Mmap + 검색 메서드 위임 |
+| matrix 헤더 파싱 | DenseMatrix/MmapMatrix 각각 인라인 | parse_matrix_header() 공용 헬퍼 |
+| MatrixHeader | 없음 | 구조체로 lsize/rsize/header_size 캡슐화 |
+
+#### 수정/추가된 파일 (3개)
+- crates/mecab-ko-dict/src/trie.rs (+184 lines, MmapTrie + TrieBackend)
+- crates/mecab-ko-dict/src/matrix/mod.rs (refactor, +259/-66)
+- crates/mecab-ko-dict/src/lib.rs (MmapTrie/TrieBackend 내보내기)
+
+#### 테스트 결과
+- 1,176 pass / 0 fail / 49 ignored (+3 new trie mmap tests)
+- clippy: 0 warnings (all targets)
+- 신규 테스트: test_mmap_trie_exact_match, test_mmap_trie_common_prefix_search, test_trie_backend_owned_vs_mmap
+
+---
 
 ### ✅ Sprint 108 - matrix.bin MKM3 v3 헤더 + mini-dict 바이너리 재빌드
 
