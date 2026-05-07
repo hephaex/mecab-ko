@@ -18,6 +18,7 @@ serde_json = { workspace = true }
 [dev-dependencies]
 criterion = { workspace = true }
 rand = "0.8"
+tempfile = { workspace = true }
 
 [[bench]]
 name = "trie_bench"

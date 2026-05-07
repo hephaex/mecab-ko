@@ -36,6 +36,12 @@ use yada::{builder::DoubleArrayBuilder, DoubleArray};
 
 use crate::error::{DictError, Result};
 
+mod backend;
+mod mmap;
+
+pub use backend::{PrefixSearchResult, TrieBackend};
+pub use mmap::MmapTrie;
+
 /// Double-Array Trie
 ///
 /// 문자열 키를 효율적으로 검색하는 자료구조입니다.
@@ -327,139 +333,6 @@ impl TrieBuilder {
             "zstd feature is not enabled. Use uncompressed files or enable the 'zstd' feature."
                 .to_string(),
         ))
-    }
-}
-
-/// mmap 백엔드 Trie
-///
-/// 파일을 메모리 맵으로 직접 접근하여 불필요한 복사 없이 Trie를 사용합니다.
-pub struct MmapTrie {
-    da: DoubleArray<memmap2::Mmap>,
-}
-
-impl MmapTrie {
-    /// 파일을 메모리 맵으로 열어 Trie 로드
-    ///
-    /// # Errors
-    ///
-    /// 파일을 열거나 매핑할 수 없는 경우 에러를 반환합니다.
-    #[allow(unsafe_code)]
-    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = std::fs::File::open(path.as_ref()).map_err(DictError::Io)?;
-        // SAFETY: file is not modified while mapped
-        let mmap = unsafe { memmap2::Mmap::map(&file).map_err(DictError::Io)? };
-        Ok(Self {
-            da: DoubleArray::new(mmap),
-        })
-    }
-
-    /// 정확히 일치하는 키 검색
-    #[must_use]
-    pub fn exact_match(&self, key: &str) -> Option<u32> {
-        self.da.exact_match_search(key.as_bytes())
-    }
-
-    /// 바이트 키로 정확히 일치하는 키 검색
-    #[must_use]
-    pub fn exact_match_bytes(&self, key: &[u8]) -> Option<u32> {
-        self.da.exact_match_search(key)
-    }
-
-    /// 공통 접두사 검색
-    pub fn common_prefix_search<'a>(
-        &'a self,
-        text: &'a str,
-    ) -> impl Iterator<Item = (u32, usize)> + 'a {
-        self.da.common_prefix_search(text.as_bytes())
-    }
-
-    /// 바이트 키로 공통 접두사 검색
-    pub fn common_prefix_search_bytes<'a>(
-        &'a self,
-        key: &'a [u8],
-    ) -> impl Iterator<Item = (u32, usize)> + 'a {
-        self.da.common_prefix_search(key)
-    }
-}
-
-/// Trie 백엔드 통합 타입
-///
-/// 소유 벡터 또는 mmap 중 하나를 런타임에 선택합니다.
-pub enum TrieBackend {
-    /// 소유 바이트 벡터 백엔드 (압축 해제 포함)
-    Owned(Trie<'static>),
-    /// 메모리 맵 백엔드
-    Mmap(MmapTrie),
-}
-
-impl TrieBackend {
-    /// 파일을 읽어 소유 벡터로 로드
-    ///
-    /// # Errors
-    ///
-    /// 파일을 읽을 수 없는 경우 에러를 반환합니다.
-    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
-        Ok(Self::Owned(Trie::from_file(path)?))
-    }
-
-    /// 파일을 메모리 맵으로 로드
-    ///
-    /// # Errors
-    ///
-    /// 파일을 열거나 매핑할 수 없는 경우 에러를 반환합니다.
-    pub fn from_mmap_file<P: AsRef<Path>>(path: P) -> Result<Self> {
-        Ok(Self::Mmap(MmapTrie::from_file(path)?))
-    }
-
-    /// 압축 파일에서 소유 벡터로 로드 (zstd)
-    ///
-    /// # Errors
-    ///
-    /// 파일을 읽거나 압축 해제할 수 없는 경우 에러를 반환합니다.
-    pub fn from_compressed_file<P: AsRef<Path>>(path: P) -> Result<Self> {
-        Ok(Self::Owned(Trie::from_compressed_file(path)?))
-    }
-
-    /// 정확히 일치하는 키 검색
-    #[must_use]
-    pub fn exact_match(&self, key: &str) -> Option<u32> {
-        match self {
-            Self::Owned(t) => t.exact_match(key),
-            Self::Mmap(t) => t.exact_match(key),
-        }
-    }
-
-    /// 바이트 키로 정확히 일치하는 키 검색
-    #[must_use]
-    pub fn exact_match_bytes(&self, key: &[u8]) -> Option<u32> {
-        match self {
-            Self::Owned(t) => t.exact_match_bytes(key),
-            Self::Mmap(t) => t.exact_match_bytes(key),
-        }
-    }
-
-    /// 공통 접두사 검색
-    #[must_use]
-    pub fn common_prefix_search<'a>(
-        &'a self,
-        text: &'a str,
-    ) -> Box<dyn Iterator<Item = (u32, usize)> + 'a> {
-        match self {
-            Self::Owned(t) => Box::new(t.common_prefix_search(text)),
-            Self::Mmap(t) => Box::new(t.common_prefix_search(text)),
-        }
-    }
-
-    /// 바이트 키로 공통 접두사 검색
-    #[must_use]
-    pub fn common_prefix_search_bytes<'a>(
-        &'a self,
-        key: &'a [u8],
-    ) -> Box<dyn Iterator<Item = (u32, usize)> + 'a> {
-        match self {
-            Self::Owned(t) => Box::new(t.common_prefix_search_bytes(key)),
-            Self::Mmap(t) => Box::new(t.common_prefix_search_bytes(key)),
-        }
     }
 }
 
@@ -782,9 +655,9 @@ mod tests {
             );
         }
 
-        let owned_results: Vec<_> = owned.common_prefix_search("가방에서").collect();
-        let mmap_results: Vec<_> = mmap.common_prefix_search("가방에서").collect();
-        assert_eq!(owned_results, mmap_results);
+        let owned_results = owned.common_prefix_search("가방에서");
+        let mmap_results = mmap.common_prefix_search("가방에서");
+        assert_eq!(owned_results.as_slice(), mmap_results.as_slice());
     }
 
     #[test]

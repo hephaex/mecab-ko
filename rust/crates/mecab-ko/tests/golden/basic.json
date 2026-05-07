@@ -3013,5 +3013,890 @@
       ]
     ],
     "difficulty": 2
+  },
+  {
+    "input": "AI 모델을 학습시켰다",
+    "description": "과학기술 SL + NNG + 사동 JKO + 과거",
+    "category": "science",
+    "expected_morphs": [
+      "AI",
+      "모델",
+      "을",
+      "학습",
+      "시키",
+      "었",
+      "다"
+    ],
+    "expected_pos": [
+      [
+        "AI",
+        "SL"
+      ],
+      [
+        "모델",
+        "NNG"
+      ],
+      [
+        "을",
+        "JKO"
+      ],
+      [
+        "학습",
+        "NNG"
+      ],
+      [
+        "시키",
+        "VV"
+      ],
+      [
+        "었",
+        "EP"
+      ],
+      [
+        "다",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "데이터가 처리되었다",
+    "description": "과학기술 NNG + XSV 피동 + 과거",
+    "category": "science",
+    "expected_morphs": [
+      "데이터",
+      "가",
+      "처리",
+      "되",
+      "었",
+      "다"
+    ],
+    "expected_pos": [
+      [
+        "데이터",
+        "NNG"
+      ],
+      [
+        "가",
+        "JKS"
+      ],
+      [
+        "처리",
+        "NNG"
+      ],
+      [
+        "되",
+        "XSV"
+      ],
+      [
+        "었",
+        "EP"
+      ],
+      [
+        "다",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "실험 결과가 좋았다",
+    "description": "과학기술 도메인 NNG + VA 과거",
+    "category": "science",
+    "expected_morphs": [
+      "실험",
+      "결과",
+      "가",
+      "좋",
+      "았",
+      "다"
+    ],
+    "expected_pos": [
+      [
+        "실험",
+        "NNG"
+      ],
+      [
+        "결과",
+        "NNG"
+      ],
+      [
+        "가",
+        "JKS"
+      ],
+      [
+        "좋",
+        "VA"
+      ],
+      [
+        "았",
+        "EP"
+      ],
+      [
+        "다",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "코드를 컴파일했다",
+    "description": "IT 도메인 NNG + 외래어 하다 패턴",
+    "category": "science",
+    "expected_morphs": [
+      "코드",
+      "를",
+      "컴파일",
+      "하",
+      "었",
+      "다"
+    ],
+    "expected_pos": [
+      [
+        "코드",
+        "NNG"
+      ],
+      [
+        "를",
+        "JKO"
+      ],
+      [
+        "컴파일",
+        "NNG"
+      ],
+      [
+        "하",
+        "XSV"
+      ],
+      [
+        "었",
+        "EP"
+      ],
+      [
+        "다",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "버그를 수정했어요",
+    "description": "IT 도메인 + 해요체",
+    "category": "science",
+    "expected_morphs": [
+      "버그",
+      "를",
+      "수정",
+      "하",
+      "었",
+      "어요"
+    ],
+    "expected_pos": [
+      [
+        "버그",
+        "NNG"
+      ],
+      [
+        "를",
+        "JKO"
+      ],
+      [
+        "수정",
+        "NNG"
+      ],
+      [
+        "하",
+        "XSV"
+      ],
+      [
+        "었",
+        "EP"
+      ],
+      [
+        "어요",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "서버가 다운됐다",
+    "description": "IT 도메인 피동 됐다 (되었다 축약)",
+    "category": "science",
+    "expected_morphs": [
+      "서버",
+      "가",
+      "다운",
+      "되",
+      "었",
+      "다"
+    ],
+    "expected_pos": [
+      [
+        "서버",
+        "NNG"
+      ],
+      [
+        "가",
+        "JKS"
+      ],
+      [
+        "다운",
+        "NNG"
+      ],
+      [
+        "되",
+        "XSV"
+      ],
+      [
+        "었",
+        "EP"
+      ],
+      [
+        "다",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "C++로 개발했다",
+    "description": "기호 포함 외래어 SL + 도구 부사격",
+    "category": "science",
+    "expected_morphs": [
+      "C",
+      "+",
+      "+",
+      "로",
+      "개발",
+      "하",
+      "었",
+      "다"
+    ],
+    "expected_pos": [
+      [
+        "C",
+        "SL"
+      ],
+      [
+        "+",
+        "SW"
+      ],
+      [
+        "+",
+        "SW"
+      ],
+      [
+        "로",
+        "JKB"
+      ],
+      [
+        "개발",
+        "NNG"
+      ],
+      [
+        "하",
+        "XSV"
+      ],
+      [
+        "었",
+        "EP"
+      ],
+      [
+        "다",
+        "EF"
+      ]
+    ],
+    "difficulty": 3
+  },
+  {
+    "input": "알고리즘이 복잡하다",
+    "description": "IT 도메인 외래어 + NNG+XSV 하다",
+    "category": "science",
+    "expected_morphs": [
+      "알고리즘",
+      "이",
+      "복잡",
+      "하",
+      "다"
+    ],
+    "expected_pos": [
+      [
+        "알고리즘",
+        "NNG"
+      ],
+      [
+        "이",
+        "JKS"
+      ],
+      [
+        "복잡",
+        "NNG"
+      ],
+      [
+        "하",
+        "XSV"
+      ],
+      [
+        "다",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "네트워크에 연결됩니다",
+    "description": "IT 도메인 + 격식 피동 됩니다",
+    "category": "science",
+    "expected_morphs": [
+      "네트워크",
+      "에",
+      "연결",
+      "되",
+      "ㅂ니다"
+    ],
+    "expected_pos": [
+      [
+        "네트워크",
+        "NNG"
+      ],
+      [
+        "에",
+        "JKB"
+      ],
+      [
+        "연결",
+        "NNG"
+      ],
+      [
+        "되",
+        "XSV"
+      ],
+      [
+        "ㅂ니다",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "열심히 공부했더니 성적이 올랐어요",
+    "description": "부사 MAG + VV 과거 더니 + 결과 구문",
+    "category": "verb",
+    "expected_morphs": [
+      "열심히",
+      "공부",
+      "하",
+      "었",
+      "더니",
+      "성적",
+      "이",
+      "오르",
+      "았",
+      "어요"
+    ],
+    "expected_pos": [
+      [
+        "열심히",
+        "MAG"
+      ],
+      [
+        "공부",
+        "NNG"
+      ],
+      [
+        "하",
+        "XSV"
+      ],
+      [
+        "었",
+        "EP"
+      ],
+      [
+        "더니",
+        "EC"
+      ],
+      [
+        "성적",
+        "NNG"
+      ],
+      [
+        "이",
+        "JKS"
+      ],
+      [
+        "오르",
+        "VV"
+      ],
+      [
+        "았",
+        "EP"
+      ],
+      [
+        "어요",
+        "EF"
+      ]
+    ],
+    "difficulty": 3
+  },
+  {
+    "input": "문을 열면 종이 울립니다",
+    "description": "조건 연결어미 면 + 자동사",
+    "category": "verb",
+    "expected_morphs": [
+      "문",
+      "을",
+      "열",
+      "면",
+      "종",
+      "이",
+      "울리",
+      "ㅂ니다"
+    ],
+    "expected_pos": [
+      [
+        "문",
+        "NNG"
+      ],
+      [
+        "을",
+        "JKO"
+      ],
+      [
+        "열",
+        "VV"
+      ],
+      [
+        "면",
+        "EC"
+      ],
+      [
+        "종",
+        "NNG"
+      ],
+      [
+        "이",
+        "JKS"
+      ],
+      [
+        "울리",
+        "VV"
+      ],
+      [
+        "ㅂ니다",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "책을 읽다 보면 졸려요",
+    "description": "VV + EC 다 + VX 보다 + 면 + VA",
+    "category": "verb",
+    "expected_morphs": [
+      "책",
+      "을",
+      "읽",
+      "다",
+      "보",
+      "면",
+      "졸리",
+      "어요"
+    ],
+    "expected_pos": [
+      [
+        "책",
+        "NNG"
+      ],
+      [
+        "을",
+        "JKO"
+      ],
+      [
+        "읽",
+        "VV"
+      ],
+      [
+        "다",
+        "EC"
+      ],
+      [
+        "보",
+        "VX"
+      ],
+      [
+        "면",
+        "EC"
+      ],
+      [
+        "졸리",
+        "VA"
+      ],
+      [
+        "어요",
+        "EF"
+      ]
+    ],
+    "difficulty": 3
+  },
+  {
+    "input": "잠을 자고 싶은데 못 자겠어요",
+    "description": "VX 싶다 + 양보 는데 + 부정 못 + 겠",
+    "category": "verb",
+    "expected_morphs": [
+      "잠",
+      "을",
+      "자",
+      "고",
+      "싶",
+      "은데",
+      "못",
+      "자",
+      "겠",
+      "어요"
+    ],
+    "expected_pos": [
+      [
+        "잠",
+        "NNG"
+      ],
+      [
+        "을",
+        "JKO"
+      ],
+      [
+        "자",
+        "VV"
+      ],
+      [
+        "고",
+        "EC"
+      ],
+      [
+        "싶",
+        "VX"
+      ],
+      [
+        "은데",
+        "EC"
+      ],
+      [
+        "못",
+        "MAG"
+      ],
+      [
+        "자",
+        "VV"
+      ],
+      [
+        "겠",
+        "EP"
+      ],
+      [
+        "어요",
+        "EF"
+      ]
+    ],
+    "difficulty": 3
+  },
+  {
+    "input": "한국어와 영어를 같이 공부해요",
+    "description": "접속 조사 와 + 외래어 SL + 부사 MAG",
+    "category": "mixed",
+    "expected_morphs": [
+      "한국어",
+      "와",
+      "영어",
+      "를",
+      "같이",
+      "공부",
+      "하",
+      "아요"
+    ],
+    "expected_pos": [
+      [
+        "한국어",
+        "NNG"
+      ],
+      [
+        "와",
+        "JC"
+      ],
+      [
+        "영어",
+        "NNG"
+      ],
+      [
+        "를",
+        "JKO"
+      ],
+      [
+        "같이",
+        "MAG"
+      ],
+      [
+        "공부",
+        "NNG"
+      ],
+      [
+        "하",
+        "XSV"
+      ],
+      [
+        "아요",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "SNS에 올렸어요",
+    "description": "외래어 약어 SL + 부사격 에 + 과거",
+    "category": "mixed",
+    "expected_morphs": [
+      "SNS",
+      "에",
+      "올리",
+      "었",
+      "어요"
+    ],
+    "expected_pos": [
+      [
+        "SNS",
+        "SL"
+      ],
+      [
+        "에",
+        "JKB"
+      ],
+      [
+        "올리",
+        "VV"
+      ],
+      [
+        "었",
+        "EP"
+      ],
+      [
+        "어요",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "카페에서 Wi-Fi를 사용했다",
+    "description": "외래어 + 기호 SW 포함 표현",
+    "category": "mixed",
+    "expected_morphs": [
+      "카페",
+      "에서",
+      "Wi",
+      "-",
+      "Fi",
+      "를",
+      "사용",
+      "하",
+      "었",
+      "다"
+    ],
+    "expected_pos": [
+      [
+        "카페",
+        "NNG"
+      ],
+      [
+        "에서",
+        "JKB"
+      ],
+      [
+        "Wi",
+        "SL"
+      ],
+      [
+        "-",
+        "SW"
+      ],
+      [
+        "Fi",
+        "SL"
+      ],
+      [
+        "를",
+        "JKO"
+      ],
+      [
+        "사용",
+        "NNG"
+      ],
+      [
+        "하",
+        "XSV"
+      ],
+      [
+        "었",
+        "EP"
+      ],
+      [
+        "다",
+        "EF"
+      ]
+    ],
+    "difficulty": 3
+  },
+  {
+    "input": "앱을 다운로드했어요",
+    "description": "외래어 앱 + 하다 동사 패턴",
+    "category": "mixed",
+    "expected_morphs": [
+      "앱",
+      "을",
+      "다운로드",
+      "하",
+      "었",
+      "어요"
+    ],
+    "expected_pos": [
+      [
+        "앱",
+        "NNG"
+      ],
+      [
+        "을",
+        "JKO"
+      ],
+      [
+        "다운로드",
+        "NNG"
+      ],
+      [
+        "하",
+        "XSV"
+      ],
+      [
+        "었",
+        "EP"
+      ],
+      [
+        "어요",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "온라인으로 주문했습니다",
+    "description": "외래어 + 도구 부사격 으로 + 격식체",
+    "category": "mixed",
+    "expected_morphs": [
+      "온라인",
+      "으로",
+      "주문",
+      "하",
+      "었",
+      "습니다"
+    ],
+    "expected_pos": [
+      [
+        "온라인",
+        "NNG"
+      ],
+      [
+        "으로",
+        "JKB"
+      ],
+      [
+        "주문",
+        "NNG"
+      ],
+      [
+        "하",
+        "XSV"
+      ],
+      [
+        "었",
+        "EP"
+      ],
+      [
+        "습니다",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "이메일로 보내주세요",
+    "description": "외래어 + 도구 부사격 로 + 보조동사 주다",
+    "category": "mixed",
+    "expected_morphs": [
+      "이메일",
+      "로",
+      "보내",
+      "주",
+      "세요"
+    ],
+    "expected_pos": [
+      [
+        "이메일",
+        "NNG"
+      ],
+      [
+        "로",
+        "JKB"
+      ],
+      [
+        "보내",
+        "VV"
+      ],
+      [
+        "주",
+        "VX"
+      ],
+      [
+        "세요",
+        "EP+EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "아름답게 꾸몄다",
+    "description": "어근 XR 아름 + XSA 답 + 연결어미 게 + 과거",
+    "category": "suffix",
+    "expected_morphs": [
+      "아름",
+      "답",
+      "게",
+      "꾸미",
+      "었",
+      "다"
+    ],
+    "expected_pos": [
+      [
+        "아름",
+        "XR"
+      ],
+      [
+        "답",
+        "XSA"
+      ],
+      [
+        "게",
+        "EC"
+      ],
+      [
+        "꾸미",
+        "VV"
+      ],
+      [
+        "었",
+        "EP"
+      ],
+      [
+        "다",
+        "EF"
+      ]
+    ],
+    "difficulty": 3
   }
 ]

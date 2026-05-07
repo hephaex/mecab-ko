@@ -1063,5 +1063,340 @@
       ]
     ],
     "difficulty": 2
+  },
+  {
+    "input": "마이크로서비스 아키텍처",
+    "description": "IT 도메인 외래어 4음절+3음절 복합",
+    "category": "tech",
+    "expected_morphs": [
+      "마이크로서비스",
+      "아키텍처"
+    ],
+    "expected_pos": [
+      [
+        "마이크로서비스",
+        "NNG"
+      ],
+      [
+        "아키텍처",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "컨테이너 오케스트레이션",
+    "description": "IT 도메인 외래어 복합 명사구",
+    "category": "tech",
+    "expected_morphs": [
+      "컨테이너",
+      "오케스트레이션"
+    ],
+    "expected_pos": [
+      [
+        "컨테이너",
+        "NNG"
+      ],
+      [
+        "오케스트레이션",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "디지털 트랜스포메이션",
+    "description": "IT 도메인 외래어 DT 용어",
+    "category": "tech",
+    "expected_morphs": [
+      "디지털",
+      "트랜스포메이션"
+    ],
+    "expected_pos": [
+      [
+        "디지털",
+        "NNG"
+      ],
+      [
+        "트랜스포메이션",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "인슐린 분비",
+    "description": "의학 도메인 외래어+한자어 복합",
+    "category": "medical",
+    "expected_morphs": [
+      "인슐린",
+      "분비"
+    ],
+    "expected_pos": [
+      [
+        "인슐린",
+        "NNG"
+      ],
+      [
+        "분비",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "심근 경색",
+    "description": "의학 도메인 한자어 복합 2+2음절",
+    "category": "medical",
+    "expected_morphs": [
+      "심근",
+      "경색"
+    ],
+    "expected_pos": [
+      [
+        "심근",
+        "NNG"
+      ],
+      [
+        "경색",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "혈압 측정",
+    "description": "의학 도메인 한자어 복합",
+    "category": "medical",
+    "expected_morphs": [
+      "혈압",
+      "측정"
+    ],
+    "expected_pos": [
+      [
+        "혈압",
+        "NNG"
+      ],
+      [
+        "측정",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "손해 배상 청구",
+    "description": "법률 도메인 3어절 한자어 복합",
+    "category": "legal",
+    "expected_morphs": [
+      "손해",
+      "배상",
+      "청구"
+    ],
+    "expected_pos": [
+      [
+        "손해",
+        "NNG"
+      ],
+      [
+        "배상",
+        "NNG"
+      ],
+      [
+        "청구",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "형사 소송법",
+    "description": "법률 도메인 한자어 복합 3어절",
+    "category": "legal",
+    "expected_morphs": [
+      "형사",
+      "소송법"
+    ],
+    "expected_pos": [
+      [
+        "형사",
+        "NNG"
+      ],
+      [
+        "소송법",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "지식 재산권",
+    "description": "법률 도메인 한자어 4음절 복합",
+    "category": "legal",
+    "expected_morphs": [
+      "지식",
+      "재산권"
+    ],
+    "expected_pos": [
+      [
+        "지식",
+        "NNG"
+      ],
+      [
+        "재산권",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "환경 영향 평가",
+    "description": "행정 도메인 3어절 한자어 복합",
+    "category": "legal",
+    "expected_morphs": [
+      "환경",
+      "영향",
+      "평가"
+    ],
+    "expected_pos": [
+      [
+        "환경",
+        "NNG"
+      ],
+      [
+        "영향",
+        "NNG"
+      ],
+      [
+        "평가",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "공급망 관리 시스템",
+    "description": "비즈니스 도메인 4음절+한자어+외래어",
+    "category": "compound-noun",
+    "expected_morphs": [
+      "공급망",
+      "관리",
+      "시스템"
+    ],
+    "expected_pos": [
+      [
+        "공급망",
+        "NNG"
+      ],
+      [
+        "관리",
+        "NNG"
+      ],
+      [
+        "시스템",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "전자 상거래 플랫폼",
+    "description": "IT+비즈니스 도메인 3어절 복합",
+    "category": "compound-noun",
+    "expected_morphs": [
+      "전자",
+      "상거래",
+      "플랫폼"
+    ],
+    "expected_pos": [
+      [
+        "전자",
+        "NNG"
+      ],
+      [
+        "상거래",
+        "NNG"
+      ],
+      [
+        "플랫폼",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "개인 정보 보호",
+    "description": "법률+IT 도메인 3어절 복합",
+    "category": "compound-noun",
+    "expected_morphs": [
+      "개인",
+      "정보",
+      "보호"
+    ],
+    "expected_pos": [
+      [
+        "개인",
+        "NNG"
+      ],
+      [
+        "정보",
+        "NNG"
+      ],
+      [
+        "보호",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "인공 신경망 학습",
+    "description": "AI 도메인 4음절+한자어 복합",
+    "category": "tech",
+    "expected_morphs": [
+      "인공",
+      "신경망",
+      "학습"
+    ],
+    "expected_pos": [
+      [
+        "인공",
+        "NNG"
+      ],
+      [
+        "신경망",
+        "NNG"
+      ],
+      [
+        "학습",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "암호화 키 관리",
+    "description": "보안 도메인 한자어+외래어+한자어 3어절",
+    "category": "tech",
+    "expected_morphs": [
+      "암호화",
+      "키",
+      "관리"
+    ],
+    "expected_pos": [
+      [
+        "암호화",
+        "NNG"
+      ],
+      [
+        "키",
+        "NNG"
+      ],
+      [
+        "관리",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
   }
 ]

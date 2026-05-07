@@ -17,7 +17,7 @@
 )]
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use mecab_ko_dict::trie::{Trie, TrieBuilder};
+use mecab_ko_dict::trie::{Trie, TrieBackend, TrieBuilder};
 
 /// 테스트용 사전 엔트리 생성
 fn create_small_dictionary() -> Vec<(&'static str, u32)> {
@@ -340,6 +340,66 @@ fn bench_trie_build(c: &mut Criterion) {
     group.finish();
 }
 
+/// TrieBackend 비교: Owned vs Mmap
+fn bench_trie_backend_comparison(c: &mut Criterion) {
+    // 임시 파일에 trie 바이트 기록
+    let tmp_dir = tempfile::TempDir::new().expect("Failed to create temp dir");
+    let trie_file = tmp_dir.path().join("trie.da");
+
+    // 중형 사전으로 trie 빌드
+    let mut entries = create_medium_dictionary();
+    entries.sort_by(|a, b| a.0.as_bytes().cmp(b.0.as_bytes()));
+    let bytes = TrieBuilder::build(
+        &entries
+            .iter()
+            .map(|(k, v)| (k.as_str(), *v))
+            .collect::<Vec<_>>(),
+    )
+    .expect("Failed to build trie");
+
+    // 파일에 trie 바이트 작성
+    std::fs::write(&trie_file, &bytes).expect("Failed to write trie file");
+
+    let mut group = c.benchmark_group("trie_backend_comparison");
+    group.throughput(Throughput::Elements(1));
+
+    // Owned 백엔드로 exact_match 벤치마크
+    group.bench_function(BenchmarkId::new("exact_match", "owned"), |b| {
+        let backend = TrieBackend::from_file(&trie_file).expect("Failed to load owned trie");
+        b.iter(|| {
+            black_box(backend.exact_match(black_box("선생님의")));
+        });
+    });
+
+    // Mmap 백엔드로 exact_match 벤치마크
+    group.bench_function(BenchmarkId::new("exact_match", "mmap"), |b| {
+        let backend = TrieBackend::from_mmap_file(&trie_file).expect("Failed to load mmap trie");
+        b.iter(|| {
+            black_box(backend.exact_match(black_box("선생님의")));
+        });
+    });
+
+    // Owned 백엔드로 common_prefix_search 벤치마크
+    group.bench_function(BenchmarkId::new("common_prefix_search", "owned"), |b| {
+        let backend = TrieBackend::from_file(&trie_file).expect("Failed to load owned trie");
+        b.iter(|| {
+            let results = backend.common_prefix_search(black_box("학교에서"));
+            black_box(results);
+        });
+    });
+
+    // Mmap 백엔드로 common_prefix_search 벤치마크
+    group.bench_function(BenchmarkId::new("common_prefix_search", "mmap"), |b| {
+        let backend = TrieBackend::from_mmap_file(&trie_file).expect("Failed to load mmap trie");
+        b.iter(|| {
+            let results = backend.common_prefix_search(black_box("학교에서"));
+            black_box(results);
+        });
+    });
+
+    group.finish();
+}
+
 /// 메모리 효율성 테스트
 fn bench_trie_memory_efficiency(c: &mut Criterion) {
     let mut group = c.benchmark_group("trie_memory");
@@ -379,6 +439,7 @@ criterion_group!(
     bench_morpheme_analysis_scenario,
     bench_trie_build,
     bench_trie_memory_efficiency,
+    bench_trie_backend_comparison,
 );
 
 criterion_main!(benches);

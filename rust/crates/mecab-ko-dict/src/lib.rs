@@ -59,7 +59,10 @@ pub use lazy_entries::LazyEntries;
 pub use loader::{LazyDictionary, LoaderConfig, MmapDictionary};
 pub use matrix::{ConnectionMatrix, DenseMatrix, Matrix, MatrixLoader, MmapMatrix, SparseMatrix};
 pub use string_pool::{ConcurrentStringPool, StringPool, StringPoolStats};
-pub use trie::{DictionarySearcher, EntryIndex, MmapTrie, PrefixMatch, Trie, TrieBackend, TrieBuilder};
+pub use trie::{
+    DictionarySearcher, EntryIndex, MmapTrie, PrefixMatch, PrefixSearchResult, Trie, TrieBackend,
+    TrieBuilder,
+};
 pub use user_dict::{UserDictionary, UserDictionaryBuilder, UserEntry};
 
 /// 사전 엔트리
