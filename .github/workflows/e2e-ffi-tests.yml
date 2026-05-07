@@ -170,11 +170,11 @@ jobs:
         continue-on-error: true
 
       - name: Install test dependencies
-        working-directory: tests/e2e/nodejs
+        working-directory: tests/e2e/node
         run: npm install
 
       - name: Run Node.js E2E tests
-        working-directory: tests/e2e/nodejs
+        working-directory: tests/e2e/node
         run: npm test
         continue-on-error: true
 

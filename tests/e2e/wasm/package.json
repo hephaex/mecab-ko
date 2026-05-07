@@ -1,0 +1,8 @@
+{
+  "name": "mecab-ko-e2e-wasm",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test_basic.mjs"
+  }
+}

@@ -1,14 +1,94 @@
-"""Basic E2E test for mecab-ko Python bindings."""
+"""E2E tests for mecab-ko Python bindings."""
 import pytest
 
 
+# -- Import tests (no dict needed) --
+
 def test_import():
-    """Verify mecab_ko can be imported."""
+    """Module imports successfully."""
     import mecab_ko
     assert hasattr(mecab_ko, "Mecab")
 
 
-def test_version():
-    """Verify version is accessible."""
+def test_version_format():
+    """Version follows semver pattern."""
     import mecab_ko
-    assert hasattr(mecab_ko, "__version__")
+    version = mecab_ko.__version__
+    assert isinstance(version, str)
+    parts = version.split(".")
+    assert len(parts) >= 2
+    assert all(p.isdigit() for p in parts[:2])
+
+
+def test_mecab_constructor_default():
+    """Mecab() constructor works."""
+    import mecab_ko
+    try:
+        m = mecab_ko.Mecab()
+        assert m is not None
+    except Exception:
+        pytest.skip("No dictionary available")
+
+
+def test_mecab_constructor_invalid_dicpath():
+    """Mecab with invalid dicpath raises error."""
+    import mecab_ko
+    with pytest.raises(Exception):
+        mecab_ko.Mecab(dicpath="/nonexistent_dict_xyz")
+
+
+# -- Dict-dependent tests (skip if no dict) --
+
+def test_morphs_returns_list(mecab):
+    result = mecab.morphs("테스트 문장입니다")
+    assert isinstance(result, list)
+    assert len(result) > 0
+    assert all(isinstance(m, str) for m in result)
+
+
+def test_nouns_returns_list(mecab):
+    result = mecab.nouns("아버지가 방에 들어가신다")
+    assert isinstance(result, list)
+    assert all(isinstance(n, str) for n in result)
+
+
+def test_pos_returns_tuples(mecab):
+    result = mecab.pos("나는 학생이다")
+    assert isinstance(result, list)
+    assert len(result) > 0
+    for item in result:
+        assert isinstance(item, tuple)
+        assert len(item) == 2
+        assert isinstance(item[0], str)
+        assert isinstance(item[1], str)
+
+
+def test_parse_contains_eos(mecab):
+    result = mecab.parse("안녕하세요")
+    assert isinstance(result, str)
+    assert "EOS" in result
+
+
+def test_parse_tab_separated(mecab):
+    result = mecab.parse("형태소 분석")
+    lines = [l for l in result.strip().split("\n") if l and l != "EOS"]
+    assert len(lines) > 0
+    assert all("\t" in line for line in lines)
+
+
+def test_wakati_returns_list(mecab):
+    result = mecab.wakati("테스트 문장")
+    assert isinstance(result, list)
+    assert len(result) > 0
+    morphs_result = mecab.morphs("테스트 문장")
+    assert result == morphs_result
+
+
+def test_empty_input_morphs(mecab):
+    result = mecab.morphs("")
+    assert isinstance(result, list)
+
+
+def test_empty_input_parse(mecab):
+    result = mecab.parse("")
+    assert isinstance(result, str)
