@@ -1,26 +1,43 @@
-# Phase 77 - Sprint 111 (Benchmark CI + trie 분할 + Golden Test 확장)
+# Phase 78 - Sprint 112 (SystemDictionary TrieBackend 전환 + entries.bin v3 PoC)
+
+## Sprint 112 목표
+SystemDictionary가 TrieBackend를 직접 사용하도록 전환하고, entries.bin v3 포맷 PoC를 시작한다.
+
+## Sprint 112 로드맵
+
+### P1: SystemDictionary TrieBackend 전환
+- dictionary.rs의 `trie: Trie<'static>` → `trie: TrieBackend`
+- DictLoader의 TrieBackend를 SystemDictionary로 전달
+- mmap 모드에서 SystemDictionary 전체 경로 검증
+
+### P2: entries.bin v3 PoC
+- v3-dict-schema.md 기반 entries.bin 새 포맷 프로토타입
+- mmap 가능한 고정 크기 엔트리 레코드 설계
+- mini-dict로 v3 entries 라운드트립 테스트
+
+### P3: Benchmark CI threshold 설정
+- benchmark.yml에 성능 회귀 10% threshold 추가
+- PR 코멘트에 벤치마크 변화율 표시
+
+### P4: Golden Test 300건 목표
+- 미커버 POS 태그 추가 (현재 40/45)
+- 오분석 사례 수집 (mecab-ko-dic 알려진 오류)
+
+---
+
+# 완료: Phase 77 - Sprint 111 (trie 분할 + SmallVec + Golden Test 250건)
 
 ## Sprint 111 목표
-벤치마크 CI를 개선하고, trie.rs를 분할하고, golden test를 250건으로 확장한다.
+trie.rs를 분할하고, Box<dyn Iterator>를 SmallVec으로 교체하고, golden test를 250건으로 확장한다.
 
-## Sprint 111 로드맵
-
-### P1: Benchmark CI 개선
-- full-dict 벤치마크 결과 자동 비교
-- 성능 회귀 threshold 설정
-- mmap vs owned trie 로딩 벤치마크
-
-### P2: trie.rs 분할
-- trie.rs (809줄) → trie/mod.rs + trie/mmap.rs + trie/backend.rs
-- matrix 분할과 동일 패턴 적용
-
-### P3: Golden Test 250건 목표
-- 미커버 POS 태그 XR(어근) 추가 시도
-- 도메인별 균형 강화 (과학/기술 추가)
-
-### P4: Box<dyn Iterator> 대안
-- TrieBackend::common_prefix_search 힙 할당 제거
-- SmallVec collect 또는 enum iterator 검토
+## Sprint 111 결과
+- trie.rs (808줄) → trie/mod.rs(681) + mmap.rs(59) + backend.rs(93)
+- TrieBackend: Box<dyn Iterator> → SmallVec<[(u32, usize); 16]> (힙 할당 제거)
+- PrefixSearchResult 타입 별칭 추가
+- mmap vs owned trie 벤치마크 추가 (trie_bench.rs)
+- Golden Test: 200→250건 (basic 115, nouns 70, complex 65)
+- POS 커버리지: 39→40/45 (XR 어근 추가)
+- 테스트: 1,176 pass / 0 fail / 49 ignored, clippy 0 warnings
 
 ---
 

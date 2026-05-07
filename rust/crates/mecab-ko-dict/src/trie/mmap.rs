@@ -22,7 +22,8 @@ impl MmapTrie {
     #[allow(unsafe_code)]
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = std::fs::File::open(path.as_ref()).map_err(DictError::Io)?;
-        // SAFETY: file is not modified while mapped
+        // SAFETY: The mapped file is a read-only dictionary installed immutably.
+        // Caller must ensure no concurrent writes or truncation to this path.
         let mmap = unsafe { memmap2::Mmap::map(&file).map_err(DictError::Io)? };
         Ok(Self {
             da: DoubleArray::new(mmap),

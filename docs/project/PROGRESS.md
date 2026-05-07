@@ -1,6 +1,41 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-08 (Sprint 110 완료 — TrieBackend 통합 + matrix 분할)
+## 마지막 업데이트: 2026-05-08 (Sprint 111 완료 — trie 분할 + SmallVec + Golden Test 250건)
+
+### ✅ Sprint 111 - trie 모듈 분할 + SmallVec prefix search + Golden Test 250건
+
+**기간**: 2026-05-08
+**목표**: trie.rs 분할, Box<dyn Iterator> 제거, golden test 250건 확장
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| trie.rs | 808줄 단일 파일 | mod.rs(681) + mmap.rs(59) + backend.rs(93) |
+| TrieBackend prefix search | Box<dyn Iterator<Item=(u32,usize)>> | SmallVec<[(u32,usize); 16]> |
+| PrefixSearchResult | 없음 | 타입 별칭 (SmallVec) |
+| Golden Test | 200건 (basic 95, nouns 55, complex 50) | 250건 (basic 115, nouns 70, complex 65) |
+| POS 커버리지 | 39/45 | 40/45 (XR 어근 추가) |
+| trie 벤치마크 | exact_match/prefix_search만 | + backend comparison (Owned vs Mmap) |
+
+#### 수정/추가된 파일 (11개)
+- crates/mecab-ko-dict/src/trie.rs → trie/mod.rs (split, re-exports)
+- crates/mecab-ko-dict/src/trie/mmap.rs (MmapTrie 분리)
+- crates/mecab-ko-dict/src/trie/backend.rs (TrieBackend + SmallVec)
+- crates/mecab-ko-dict/src/lib.rs (PrefixSearchResult 내보내기)
+- crates/mecab-ko-dict/Cargo.toml (smallvec 추가)
+- crates/benchmarks/benches/trie_bench.rs (backend comparison 벤치마크)
+- crates/benchmarks/Cargo.toml (tempfile dev-dep)
+- crates/mecab-ko/tests/golden/basic.json (+20건)
+- crates/mecab-ko/tests/golden/nouns.json (+15건)
+- crates/mecab-ko/tests/golden/complex.json (+15건)
+- Cargo.lock (smallvec direct dep)
+
+#### 테스트 결과
+- 1,176 pass / 0 fail / 49 ignored
+- clippy: 0 warnings (all targets)
+
+---
 
 ### ✅ Sprint 110 - TrieBackend 로더 통합 + matrix 모듈 분할
 
