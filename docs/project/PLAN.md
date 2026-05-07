@@ -1,3 +1,42 @@
+# 완료: Phase 68 - Sprint 102 (E2E CLI 테스트 확장 + full-dict 벤치마크 CI)
+
+## Sprint 102 목표
+E2E CLI 테스트를 stub에서 실제 테스트로 확장, full-dict 벤치마크 CI job 추가
+
+## Sprint 102 작업 목록
+
+- [x] S102-01: E2E CLI 테스트 확장 (2 stub → 7 real tests) ✅
+- [x] S102-02: benchmark.yml에 full-dict-benchmark job 추가 ✅
+- [x] S102-03: 빌드/테스트/clippy 검증 + 커밋 ✅
+
+### 수정 내용
+- `tests/e2e/cli/test_basic.sh`: PASS/FAIL/SKIP 추적, 사전 게이팅, portable grep
+- `benchmark.yml`: workflow_dispatch `full_dict` 입력, bitbucket 다운로드 + SHA256 검증
+- macOS grep -P 비호환 수정 (grep -E + literal tab 사용)
+
+---
+
+## Sprint 103 로드맵
+
+### P1: dict-build CI 전체 결과 검증
+- Push 후 dict-build + benchmark 워크플로우 성공 확인
+- full-dict-benchmark manual trigger 테스트
+
+### P2: v0.8.0 기능 계획 구체화
+- DIC-010: Binary Dict v3.0 설계 (압축 효율 + mmap 지원)
+- DIC-009: 사전 검증 테스트셋 구축 (golden test 1,000+ 문장)
+- RST-011: 사용자 정의 사전 개선
+
+### P3: E2E 테스트 추가 확장
+- Python/Node.js FFI E2E 테스트 실질 구현
+- e2e-ffi-tests 워크플로우와 연동
+
+### P4: 코드 품질 + 문서
+- README에 E2E 테스트 실행 방법 추가
+- CI 워크플로우 문서 정리
+
+---
+
 # 완료: Phase 67 - Sprint 101 (dict-build CI .zst 검증 수정 + SHA256 checksum)
 
 ## Sprint 101 목표
@@ -8,34 +47,6 @@ dict-build.yml CI 실패 수정 — 압축 출력 파일(.zst) 검증, SHA256 ch
 - [x] S101-01: dict-build.yml 파일 검증 — .zst 압축 파일 지원 ✅
 - [x] S101-02: bitbucket 다운로드에 SHA256 checksum 추가 ✅
 - [x] S101-03: tokenize-test/generate-report 조건부 실행 (빌드 성공 시만) ✅
-
-### 수정 내용
-- `get_file_size()`: sys.dic / sys.dic.zst 양쪽 모두 크기 반환
-- `check_file()`: 필수/선택 파일 검증에서 .zst 변형도 인정
-- `tokenize-test`: `if: always()` → `if: needs.build-dictionary.result == 'success'`
-- `generate-report`: `if: always()` → `if: always() && needs.build-dictionary.result == 'success'`
-- SHA256: `fd62d3d6...5b330` 검증 추가 (download 직후)
-
----
-
-## Sprint 102 로드맵
-
-### P1: dict-build CI 결과 검증
-- Push 후 dict-build 워크플로우 전체 성공 확인
-- User dict validation 경고 개선 여부 확인
-
-### P2: v0.8.0 기능 계획 구체화
-- DIC-010: Binary Dict v3.0 설계 (압축 효율 + mmap 지원)
-- DIC-009: 사전 검증 테스트셋 구축 (golden test 1,000+ 문장)
-- RST-011: 사용자 정의 사전 개선
-
-### P3: E2E 테스트 실질 구현
-- tests/e2e/ stub을 실제 테스트로 확장
-- e2e-ffi-tests 워크플로우와 연동
-
-### P4: Full-dict 벤치마크 기준선 자동화
-- CI Performance Benchmarks에 MECAB_DICDIR 옵션 추가
-- full-dict 벤치마크 regression 자동 감지
 
 ---
 

@@ -1,6 +1,33 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-06 (Sprint 101 완료 -- dict-build CI .zst 검증 + SHA256)
+## 마지막 업데이트: 2026-05-07 (Sprint 102 완료 -- E2E CLI 테스트 확장 + full-dict 벤치마크 CI)
+
+### ✅ Sprint 102 - E2E CLI 테스트 확장 + full-dict 벤치마크 CI
+
+**기간**: 2026-05-07
+**목표**: E2E CLI 테스트 실질 구현 (7 tests), full-dict 벤치마크 CI job 추가
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| E2E CLI 테스트 | 2개 stub (echo PASS) | 7개 real tests (PASS/FAIL/SKIP) |
+| grep 호환성 | `grep -P` (GNU only) | `grep -E` + literal tab (POSIX) |
+| 테스트 구조 | set -euo (전체 중단) | set -uo + pass/fail 카운터 |
+| benchmark.yml | full-dict 없음 | `full-dict-benchmark` job (workflow_dispatch) |
+| 사전 다운로드 | — | bitbucket + SHA256 검증 (dict-build와 동일 해시) |
+
+#### 수정된 파일 (2개)
+- tests/e2e/cli/test_basic.sh
+- .github/workflows/benchmark.yml
+
+#### 상태
+- E2E 테스트: 7 pass / 0 fail
+- 빌드: clean
+- clippy: 0 warnings
+- 커밋: c8482fd
+
+---
 
 ### ✅ Sprint 101 - dict-build CI .zst 검증 수정 + SHA256 checksum
 
