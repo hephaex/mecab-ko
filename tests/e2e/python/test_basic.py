@@ -40,20 +40,23 @@ def test_mecab_constructor_invalid_dicpath():
 # -- Dict-dependent tests (skip if no dict) --
 
 def test_morphs_returns_list(mecab):
-    result = mecab.morphs("테스트 문장입니다")
+    # Use words present in the mini-dict (안녕+하+세요)
+    result = mecab.morphs("안녕하세요")
     assert isinstance(result, list)
     assert len(result) > 0
     assert all(isinstance(m, str) for m in result)
 
 
 def test_nouns_returns_list(mecab):
-    result = mecab.nouns("아버지가 방에 들어가신다")
+    # Use a mini-dict word; don't assert len > 0 — noun extraction may be sparse
+    result = mecab.nouns("한국어 사람")
     assert isinstance(result, list)
     assert all(isinstance(n, str) for n in result)
 
 
 def test_pos_returns_tuples(mecab):
-    result = mecab.pos("나는 학생이다")
+    # Use words present in the mini-dict (한국어, 사람)
+    result = mecab.pos("한국어 사람")
     assert isinstance(result, list)
     assert len(result) > 0
     for item in result:
@@ -70,17 +73,19 @@ def test_parse_contains_eos(mecab):
 
 
 def test_parse_tab_separated(mecab):
-    result = mecab.parse("형태소 분석")
+    # 안녕하세요 tokenizes to 3 morphemes in the mini-dict (안녕+하+세요)
+    result = mecab.parse("안녕하세요")
     lines = [l for l in result.strip().split("\n") if l and l != "EOS"]
     assert len(lines) > 0
     assert all("\t" in line for line in lines)
 
 
 def test_wakati_returns_list(mecab):
-    result = mecab.wakati("테스트 문장")
+    # Use words present in the mini-dict
+    result = mecab.wakati("안녕하세요")
     assert isinstance(result, list)
     assert len(result) > 0
-    morphs_result = mecab.morphs("테스트 문장")
+    morphs_result = mecab.morphs("안녕하세요")
     assert result == morphs_result
 
 

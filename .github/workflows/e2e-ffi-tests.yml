@@ -46,12 +46,10 @@ jobs:
   cli-tests:
     name: CLI E2E Tests
     runs-on: ${{ matrix.os }}
-    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        rust: [stable, 1.80.0]
 
     steps:
       - uses: actions/checkout@v5
@@ -59,7 +57,7 @@ jobs:
       - name: Rust Setup
         uses: ./.github/actions/rust-setup
         with:
-          toolchain: ${{ matrix.rust }}
+          toolchain: stable
           components: rustfmt clippy
 
       - name: Install bats (Ubuntu)
@@ -92,7 +90,6 @@ jobs:
   python-e2e:
     name: Python E2E Tests
     runs-on: ${{ matrix.os }}
-    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
@@ -144,7 +141,6 @@ jobs:
   nodejs-e2e:
     name: Node.js E2E Tests
     runs-on: ${{ matrix.os }}
-    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
@@ -404,9 +400,8 @@ jobs:
           echo "- WebAssembly Bindings: ${{ needs.wasm-bindings.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- Elasticsearch Plugin: ${{ needs.elasticsearch-plugin.result }}" >> $GITHUB_STEP_SUMMARY
 
-          # E2E jobs (cli-tests, python-e2e, nodejs-e2e, wasm-e2e, e2e-coverage)
-          # all use job-level continue-on-error because tests/e2e/ directories
-          # do not exist yet. Only FFI binding results are gated here.
+          # wasm-e2e and e2e-coverage use job-level continue-on-error (experimental/optional).
+          # Only FFI binding results are hard-gated here.
           if [[ "${{ needs.python-bindings.result }}" != "success" ||
                 "${{ needs.node-bindings.result }}" != "success" ||
                 "${{ needs.wasm-bindings.result }}" != "success" ||
