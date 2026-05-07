@@ -1421,6 +1421,7 @@ dependencies = [
  "criterion",
  "crossbeam-channel",
  "fst",
+ "lru",
  "mecab-ko-hangul",
  "memmap2",
  "notify",

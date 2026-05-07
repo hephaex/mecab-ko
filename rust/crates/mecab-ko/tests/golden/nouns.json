@@ -763,5 +763,305 @@
       ]
     ],
     "difficulty": 1
+  },
+  {
+    "input": "줄기 세포",
+    "description": "의학 도메인 한자어 복합",
+    "category": "medical",
+    "expected_morphs": [
+      "줄기",
+      "세포"
+    ],
+    "expected_pos": [
+      [
+        "줄기",
+        "NNG"
+      ],
+      [
+        "세포",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "유전자 치료",
+    "description": "의학 도메인 한자어 복합",
+    "category": "medical",
+    "expected_morphs": [
+      "유전자",
+      "치료"
+    ],
+    "expected_pos": [
+      [
+        "유전자",
+        "NNG"
+      ],
+      [
+        "치료",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "항체 단백질",
+    "description": "의학 도메인 한자어+한자어",
+    "category": "medical",
+    "expected_morphs": [
+      "항체",
+      "단백질"
+    ],
+    "expected_pos": [
+      [
+        "항체",
+        "NNG"
+      ],
+      [
+        "단백질",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "뉴런 시냅스",
+    "description": "의학 도메인 외래어 복합",
+    "category": "medical",
+    "expected_morphs": [
+      "뉴런",
+      "시냅스"
+    ],
+    "expected_pos": [
+      [
+        "뉴런",
+        "NNG"
+      ],
+      [
+        "시냅스",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "면역 반응",
+    "description": "의학 도메인 한자어 복합",
+    "category": "medical",
+    "expected_morphs": [
+      "면역",
+      "반응"
+    ],
+    "expected_pos": [
+      [
+        "면역",
+        "NNG"
+      ],
+      [
+        "반응",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "헌법 재판소",
+    "description": "법률 도메인 한자어 복합",
+    "category": "legal",
+    "expected_morphs": [
+      "헌법",
+      "재판소"
+    ],
+    "expected_pos": [
+      [
+        "헌법",
+        "NNG"
+      ],
+      [
+        "재판소",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "행정 소송",
+    "description": "법률 도메인 한자어 복합",
+    "category": "legal",
+    "expected_morphs": [
+      "행정",
+      "소송"
+    ],
+    "expected_pos": [
+      [
+        "행정",
+        "NNG"
+      ],
+      [
+        "소송",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "위헌 결정",
+    "description": "법률 도메인 한자어 복합",
+    "category": "legal",
+    "expected_morphs": [
+      "위헌",
+      "결정"
+    ],
+    "expected_pos": [
+      [
+        "위헌",
+        "NNG"
+      ],
+      [
+        "결정",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "시행 규칙",
+    "description": "법률/행정 도메인 한자어 복합",
+    "category": "legal",
+    "expected_morphs": [
+      "시행",
+      "규칙"
+    ],
+    "expected_pos": [
+      [
+        "시행",
+        "NNG"
+      ],
+      [
+        "규칙",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "국무 회의",
+    "description": "행정 도메인 한자어 복합",
+    "category": "legal",
+    "expected_morphs": [
+      "국무",
+      "회의"
+    ],
+    "expected_pos": [
+      [
+        "국무",
+        "NNG"
+      ],
+      [
+        "회의",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "클라우드 서버",
+    "description": "IT 도메인 외래어 복합",
+    "category": "tech",
+    "expected_morphs": [
+      "클라우드",
+      "서버"
+    ],
+    "expected_pos": [
+      [
+        "클라우드",
+        "NNG"
+      ],
+      [
+        "서버",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "사이버 보안",
+    "description": "IT 도메인 외래어+한자어",
+    "category": "tech",
+    "expected_morphs": [
+      "사이버",
+      "보안"
+    ],
+    "expected_pos": [
+      [
+        "사이버",
+        "NNG"
+      ],
+      [
+        "보안",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "데이터 센터",
+    "description": "IT 도메인 외래어 복합",
+    "category": "tech",
+    "expected_morphs": [
+      "데이터",
+      "센터"
+    ],
+    "expected_pos": [
+      [
+        "데이터",
+        "NNG"
+      ],
+      [
+        "센터",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "오픈 소스",
+    "description": "IT 도메인 외래어 복합",
+    "category": "tech",
+    "expected_morphs": [
+      "오픈",
+      "소스"
+    ],
+    "expected_pos": [
+      [
+        "오픈",
+        "NNG"
+      ],
+      [
+        "소스",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "블록 체인",
+    "description": "IT 도메인 외래어 복합",
+    "category": "tech",
+    "expected_morphs": [
+      "블록",
+      "체인"
+    ],
+    "expected_pos": [
+      [
+        "블록",
+        "NNG"
+      ],
+      [
+        "체인",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
   }
 ]

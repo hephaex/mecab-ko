@@ -20,6 +20,7 @@ serde.workspace = true
 fst.workspace = true
 yada.workspace = true
 byteorder.workspace = true
+lru = "0.16"
 memmap2.workspace = true
 zstd = { workspace = true, optional = true }
 compact_str = { workspace = true, optional = true }

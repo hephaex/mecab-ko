@@ -23,8 +23,8 @@
 //!   ...
 //! ```
 
-use std::collections::HashMap;
 use std::io::{Read, Seek, SeekFrom};
+use std::num::NonZeroUsize;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
 
@@ -44,6 +44,15 @@ const HEADER_SIZE: usize = 20;
 /// LRU 캐시 기본 크기 (핫스팟 엔트리 캐싱)
 const DEFAULT_CACHE_SIZE: usize = 10000;
 
+/// `DEFAULT_CACHE_SIZE` as a `NonZeroUsize` (compile-time guaranteed non-zero)
+// SAFETY: DEFAULT_CACHE_SIZE = 10000 > 0, so this is always Some.
+const DEFAULT_CACHE_SIZE_NZ: NonZeroUsize = {
+    match NonZeroUsize::new(DEFAULT_CACHE_SIZE) {
+        Some(n) => n,
+        None => panic!("DEFAULT_CACHE_SIZE must be > 0"),
+    }
+};
+
 /// 지연 로딩 엔트리 저장소
 ///
 /// 엔트리를 필요할 때만 디스크에서 읽어옵니다.
@@ -59,61 +68,9 @@ pub struct LazyEntries {
     /// 인덱스 테이블 오프셋
     index_offset: u64,
     /// LRU 캐시 (인덱스 -> 엔트리)
-    cache: RwLock<LruCache>,
+    cache: RwLock<lru::LruCache<u32, Arc<DictEntry>>>,
 }
 
-/// 간단한 LRU 캐시 구현
-struct LruCache {
-    /// 캐시 맵
-    entries: HashMap<u32, Arc<DictEntry>>,
-    /// 최대 크기
-    max_size: usize,
-    /// 접근 순서 (가장 최근 접근이 뒤로)
-    access_order: Vec<u32>,
-}
-
-impl LruCache {
-    fn new(max_size: usize) -> Self {
-        Self {
-            entries: HashMap::with_capacity(max_size),
-            max_size,
-            access_order: Vec::with_capacity(max_size),
-        }
-    }
-
-    fn get(&mut self, index: u32) -> Option<Arc<DictEntry>> {
-        if let Some(entry) = self.entries.get(&index) {
-            // 접근 순서 업데이트
-            self.access_order.retain(|&i| i != index);
-            self.access_order.push(index);
-            Some(Arc::clone(entry))
-        } else {
-            None
-        }
-    }
-
-    fn insert(&mut self, index: u32, entry: DictEntry) -> Arc<DictEntry> {
-        // 캐시가 가득 찼으면 가장 오래된 항목 제거
-        if self.entries.len() >= self.max_size && !self.access_order.is_empty() {
-            let oldest = self.access_order.remove(0);
-            self.entries.remove(&oldest);
-        }
-
-        let arc_entry = Arc::new(entry);
-        self.entries.insert(index, Arc::clone(&arc_entry));
-        self.access_order.push(index);
-        arc_entry
-    }
-
-    fn len(&self) -> usize {
-        self.entries.len()
-    }
-
-    fn clear(&mut self) {
-        self.entries.clear();
-        self.access_order.clear();
-    }
-}
 
 impl LazyEntries {
     /// entries.bin v2 파일에서 로드
@@ -178,7 +135,7 @@ impl LazyEntries {
             mmap,
             count,
             index_offset,
-            cache: RwLock::new(LruCache::new(DEFAULT_CACHE_SIZE)),
+            cache: RwLock::new(lru::LruCache::new(DEFAULT_CACHE_SIZE_NZ)),
         })
     }
 
@@ -203,7 +160,7 @@ impl LazyEntries {
     /// 캐시 크기 설정
     pub fn set_cache_size(&self, size: usize) {
         if let Ok(mut cache) = self.cache.write() {
-            cache.max_size = size;
+            cache.resize(NonZeroUsize::new(size).unwrap_or(NonZeroUsize::new(1).unwrap()));
         }
     }
 
@@ -252,26 +209,27 @@ impl LazyEntries {
     /// - 인덱스가 범위를 벗어난 경우
     /// - 엔트리 읽기 실패한 경우
     pub fn get(&self, index: u32) -> Result<Arc<DictEntry>> {
-        // 1. 캐시 확인
+        // 1. 캐시 확인 (read lock — LRU 순서 업데이트 없이 peek)
         {
-            let mut cache = self
+            let cache = self
                 .cache
-                .write()
+                .read()
                 .map_err(|_| DictError::Format("cache lock poisoned".into()))?;
-            if let Some(entry) = cache.get(index) {
-                return Ok(entry);
+            if let Some(entry) = cache.peek(&index) {
+                return Ok(Arc::clone(entry));
             }
         }
 
         // 2. 디스크에서 읽기
         let entry = self.load_entry_from_disk(index)?;
 
-        // 3. 캐시에 저장
-        let mut cache = self
-            .cache
+        // 3. 캐시에 저장 (write lock — guard dropped immediately after put)
+        let arc_entry = Arc::new(entry);
+        self.cache
             .write()
-            .map_err(|_| DictError::Format("cache lock poisoned".into()))?;
-        Ok(cache.insert(index, entry))
+            .map_err(|_| DictError::Format("cache lock poisoned".into()))?
+            .put(index, Arc::clone(&arc_entry));
+        Ok(arc_entry)
     }
 
     /// 디스크에서 엔트리 로드
@@ -651,21 +609,18 @@ mod tests {
 
     #[test]
     fn test_lru_cache_eviction() {
-        let mut cache = LruCache::new(2);
+        let mut cache =
+            lru::LruCache::<u32, Arc<DictEntry>>::new(NonZeroUsize::new(2).unwrap());
 
-        let e1 = DictEntry::new("가", 1, 1, 100, "");
-        let e2 = DictEntry::new("나", 2, 2, 200, "");
-        let e3 = DictEntry::new("다", 3, 3, 300, "");
-
-        cache.insert(0, e1);
-        cache.insert(1, e2);
+        cache.put(0, Arc::new(DictEntry::new("가", 1, 1, 100, "")));
+        cache.put(1, Arc::new(DictEntry::new("나", 2, 2, 200, "")));
         assert_eq!(cache.len(), 2);
 
         // 새 항목 추가 시 가장 오래된 것(0) 제거
-        cache.insert(2, e3);
+        cache.put(2, Arc::new(DictEntry::new("다", 3, 3, 300, "")));
         assert_eq!(cache.len(), 2);
-        assert!(cache.get(0).is_none()); // 제거됨
-        assert!(cache.get(1).is_some());
-        assert!(cache.get(2).is_some());
+        assert!(cache.peek(&0).is_none()); // 제거됨
+        assert!(cache.peek(&1).is_some());
+        assert!(cache.peek(&2).is_some());
     }
 }

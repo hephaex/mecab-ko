@@ -2553,5 +2553,465 @@
       ]
     ],
     "difficulty": 2
+  },
+  {
+    "input": "그러니까...",
+    "description": "접속 부사 + 줄임표 SE",
+    "category": "particle",
+    "expected_morphs": [
+      "그러니까",
+      "..."
+    ],
+    "expected_pos": [
+      [
+        "그러니까",
+        "MAJ"
+      ],
+      [
+        "...",
+        "SE"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "음...",
+    "description": "감탄사 IC + 줄임표 SE",
+    "category": "interjection",
+    "expected_morphs": [
+      "음",
+      "..."
+    ],
+    "expected_pos": [
+      [
+        "음",
+        "IC"
+      ],
+      [
+        "...",
+        "SE"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "이런...",
+    "description": "관형사 MM + 줄임표 SE",
+    "category": "particle",
+    "expected_morphs": [
+      "이런",
+      "..."
+    ],
+    "expected_pos": [
+      [
+        "이런",
+        "MM"
+      ],
+      [
+        "...",
+        "SE"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "아이고 힘들다",
+    "description": "감탄사 IC + VA 힘들다",
+    "category": "interjection",
+    "expected_morphs": [
+      "아이고",
+      "힘들",
+      "다"
+    ],
+    "expected_pos": [
+      [
+        "아이고",
+        "IC"
+      ],
+      [
+        "힘들",
+        "VA"
+      ],
+      [
+        "다",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "와 정말 멋지다",
+    "description": "감탄사 IC + MAG + VA",
+    "category": "interjection",
+    "expected_morphs": [
+      "와",
+      "정말",
+      "멋지",
+      "다"
+    ],
+    "expected_pos": [
+      [
+        "와",
+        "IC"
+      ],
+      [
+        "정말",
+        "MAG"
+      ],
+      [
+        "멋지",
+        "VA"
+      ],
+      [
+        "다",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "어머 세상에",
+    "description": "감탄사 IC + NNG + 부사격",
+    "category": "interjection",
+    "expected_morphs": [
+      "어머",
+      "세상",
+      "에"
+    ],
+    "expected_pos": [
+      [
+        "어머",
+        "IC"
+      ],
+      [
+        "세상",
+        "NNG"
+      ],
+      [
+        "에",
+        "JKB"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "새 옷을 샀다",
+    "description": "관형사 MM 새 + NNG + 과거",
+    "category": "modifier",
+    "expected_morphs": [
+      "새",
+      "옷",
+      "을",
+      "사",
+      "았",
+      "다"
+    ],
+    "expected_pos": [
+      [
+        "새",
+        "MM"
+      ],
+      [
+        "옷",
+        "NNG"
+      ],
+      [
+        "을",
+        "JKO"
+      ],
+      [
+        "사",
+        "VV"
+      ],
+      [
+        "았",
+        "EP"
+      ],
+      [
+        "다",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "온 세상이 하얗다",
+    "description": "관형사 MM 온 + NNG + ㅎ-불규칙 VA",
+    "category": "modifier",
+    "expected_morphs": [
+      "온",
+      "세상",
+      "이",
+      "하얗",
+      "다"
+    ],
+    "expected_pos": [
+      [
+        "온",
+        "MM"
+      ],
+      [
+        "세상",
+        "NNG"
+      ],
+      [
+        "이",
+        "JKS"
+      ],
+      [
+        "하얗",
+        "VA"
+      ],
+      [
+        "다",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "첫 만남이었다",
+    "description": "관형사 MM 첫 + NNG + VCP 과거",
+    "category": "modifier",
+    "expected_morphs": [
+      "첫",
+      "만남",
+      "이",
+      "었",
+      "다"
+    ],
+    "expected_pos": [
+      [
+        "첫",
+        "MM"
+      ],
+      [
+        "만남",
+        "NNG"
+      ],
+      [
+        "이",
+        "VCP"
+      ],
+      [
+        "었",
+        "EP"
+      ],
+      [
+        "다",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "먹어 보다",
+    "description": "VV + EC 어 + 보조동사 VX 보다",
+    "category": "auxiliary",
+    "expected_morphs": [
+      "먹",
+      "어",
+      "보",
+      "다"
+    ],
+    "expected_pos": [
+      [
+        "먹",
+        "VV"
+      ],
+      [
+        "어",
+        "EC"
+      ],
+      [
+        "보",
+        "VX"
+      ],
+      [
+        "다",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "가고 있다",
+    "description": "VV + EC 고 + 보조동사 VX 있다 (진행)",
+    "category": "auxiliary",
+    "expected_morphs": [
+      "가",
+      "고",
+      "있",
+      "다"
+    ],
+    "expected_pos": [
+      [
+        "가",
+        "VV"
+      ],
+      [
+        "고",
+        "EC"
+      ],
+      [
+        "있",
+        "VX"
+      ],
+      [
+        "다",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "해 놓다",
+    "description": "VV 하다 + EC 어 + 보조동사 VX 놓다",
+    "category": "auxiliary",
+    "expected_morphs": [
+      "하",
+      "여",
+      "놓",
+      "다"
+    ],
+    "expected_pos": [
+      [
+        "하",
+        "VV"
+      ],
+      [
+        "여",
+        "EC"
+      ],
+      [
+        "놓",
+        "VX"
+      ],
+      [
+        "다",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "풋사과를 먹었다",
+    "description": "접두사 XPN 풋 + NNG + 과거",
+    "category": "prefix",
+    "expected_morphs": [
+      "풋",
+      "사과",
+      "를",
+      "먹",
+      "었",
+      "다"
+    ],
+    "expected_pos": [
+      [
+        "풋",
+        "XPN"
+      ],
+      [
+        "사과",
+        "NNG"
+      ],
+      [
+        "를",
+        "JKO"
+      ],
+      [
+        "먹",
+        "VV"
+      ],
+      [
+        "었",
+        "EP"
+      ],
+      [
+        "다",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "맨손으로 잡았다",
+    "description": "접두사 XPN 맨 + NNG + 도구 부사격 으로",
+    "category": "prefix",
+    "expected_morphs": [
+      "맨",
+      "손",
+      "으로",
+      "잡",
+      "았",
+      "다"
+    ],
+    "expected_pos": [
+      [
+        "맨",
+        "XPN"
+      ],
+      [
+        "손",
+        "NNG"
+      ],
+      [
+        "으로",
+        "JKB"
+      ],
+      [
+        "잡",
+        "VV"
+      ],
+      [
+        "았",
+        "EP"
+      ],
+      [
+        "다",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "헛소문이 났다",
+    "description": "접두사 XPN 헛 + NNG + 주격 + VV",
+    "category": "prefix",
+    "expected_morphs": [
+      "헛",
+      "소문",
+      "이",
+      "나",
+      "았",
+      "다"
+    ],
+    "expected_pos": [
+      [
+        "헛",
+        "XPN"
+      ],
+      [
+        "소문",
+        "NNG"
+      ],
+      [
+        "이",
+        "JKS"
+      ],
+      [
+        "나",
+        "VV"
+      ],
+      [
+        "았",
+        "EP"
+      ],
+      [
+        "다",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
   }
 ]
