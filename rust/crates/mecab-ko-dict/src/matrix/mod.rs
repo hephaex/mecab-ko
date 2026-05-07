@@ -48,6 +48,64 @@ const MATRIX_HEADER_SIZE: usize = 4;
 const MKM3_MAGIC: &[u8; 4] = b"MKM3";
 const MKM3_HEADER_SIZE: usize = 16;
 
+/// 행렬 헤더 정보
+struct MatrixHeader {
+    /// 좌문맥 크기
+    lsize: usize,
+    /// 우문맥 크기
+    rsize: usize,
+    /// 헤더 크기 (v2: 4, v3: 16)
+    header_size: usize,
+}
+
+/// 행렬 헤더를 파싱하는 내부 함수
+///
+/// v2/v3 포맷을 자동 감지하고 헤더 정보를 추출합니다.
+///
+/// # Arguments
+///
+/// * `data` - 파싱할 바이트 데이터 (헤더 크기 이상)
+///
+/// # Returns
+///
+/// 성공 시 `MatrixHeader`, 형식 오류 시 에러
+fn parse_matrix_header(data: &[u8]) -> Result<MatrixHeader> {
+    let is_v3 = data.len() >= 4 && &data[..4] == MKM3_MAGIC;
+    let header_size = if is_v3 {
+        MKM3_HEADER_SIZE
+    } else {
+        MATRIX_HEADER_SIZE
+    };
+
+    if data.len() < header_size {
+        return Err(DictError::Format(
+            "Matrix binary too short for header".to_string(),
+        ));
+    }
+
+    let mut cursor = io::Cursor::new(data);
+
+    let (lsize, rsize) = if is_v3 {
+        cursor.set_position(4);
+        let _version = cursor.read_u8().map_err(DictError::Io)?;
+        let _flags = cursor.read_u8().map_err(DictError::Io)?;
+        let _reserved = cursor.read_u16::<LittleEndian>().map_err(DictError::Io)?;
+        let l = cursor.read_u32::<LittleEndian>().map_err(DictError::Io)? as usize;
+        let r = cursor.read_u32::<LittleEndian>().map_err(DictError::Io)? as usize;
+        (l, r)
+    } else {
+        let l = cursor.read_u16::<LittleEndian>().map_err(DictError::Io)? as usize;
+        let r = cursor.read_u16::<LittleEndian>().map_err(DictError::Io)? as usize;
+        (l, r)
+    };
+
+    Ok(MatrixHeader {
+        lsize,
+        rsize,
+        header_size,
+    })
+}
+
 /// 기본 비용 (연결 불가능한 경우)
 pub const INVALID_CONNECTION_COST: i32 = i32::MAX;
 
@@ -261,37 +319,10 @@ impl DenseMatrix {
     ///
     /// 데이터가 유효한 바이너리 형식이 아닌 경우 에러를 반환합니다.
     pub fn from_bin_bytes(data: &[u8]) -> Result<Self> {
-        let is_v3 = data.len() >= 4 && &data[..4] == MKM3_MAGIC;
-        let header_size = if is_v3 {
-            MKM3_HEADER_SIZE
-        } else {
-            MATRIX_HEADER_SIZE
-        };
+        let header = parse_matrix_header(data)?;
 
-        if data.len() < header_size {
-            return Err(DictError::Format(
-                "Matrix binary too short for header".to_string(),
-            ));
-        }
-
-        let mut cursor = io::Cursor::new(data);
-
-        let (lsize, rsize) = if is_v3 {
-            cursor.set_position(4);
-            let _version = cursor.read_u8().map_err(DictError::Io)?;
-            let _flags = cursor.read_u8().map_err(DictError::Io)?;
-            let _reserved = cursor.read_u16::<LittleEndian>().map_err(DictError::Io)?;
-            let l = cursor.read_u32::<LittleEndian>().map_err(DictError::Io)? as usize;
-            let r = cursor.read_u32::<LittleEndian>().map_err(DictError::Io)? as usize;
-            (l, r)
-        } else {
-            let l = cursor.read_u16::<LittleEndian>().map_err(DictError::Io)? as usize;
-            let r = cursor.read_u16::<LittleEndian>().map_err(DictError::Io)? as usize;
-            (l, r)
-        };
-
-        let expected_size = lsize * rsize * 2;
-        let data_size = data.len() - header_size;
+        let expected_size = header.lsize * header.rsize * 2;
+        let data_size = data.len() - header.header_size;
 
         if data_size != expected_size {
             return Err(DictError::Format(format!(
@@ -299,14 +330,17 @@ impl DenseMatrix {
             )));
         }
 
-        let mut costs = Vec::with_capacity(lsize * rsize);
-        for _ in 0..(lsize * rsize) {
+        let mut cursor = io::Cursor::new(data);
+        cursor.set_position(header.header_size as u64);
+
+        let mut costs = Vec::with_capacity(header.lsize * header.rsize);
+        for _ in 0..(header.lsize * header.rsize) {
             costs.push(cursor.read_i16::<LittleEndian>().map_err(DictError::Io)?);
         }
 
         Ok(Self {
-            lsize,
-            rsize,
+            lsize: header.lsize,
+            rsize: header.rsize,
             costs,
         })
     }
@@ -490,35 +524,10 @@ impl MmapMatrix {
         // memmap2::Mmap::map은 파일 내용이 변경되지 않을 때 안전합니다.
         let mmap = unsafe { memmap2::Mmap::map(&file).map_err(DictError::Io)? };
 
-        let is_v3 = mmap.len() >= 4 && &mmap[..4] == MKM3_MAGIC;
-        let header_size = if is_v3 {
-            MKM3_HEADER_SIZE
-        } else {
-            MATRIX_HEADER_SIZE
-        };
+        // 헤더만 파싱할 만큼만 전달
+        let header = parse_matrix_header(&mmap)?;
 
-        if mmap.len() < header_size {
-            return Err(DictError::Format(
-                "Matrix file too short for header".to_string(),
-            ));
-        }
-
-        let (lsize, rsize) = if is_v3 {
-            let mut cursor = io::Cursor::new(&mmap[4..header_size]);
-            let _version = cursor.read_u8().map_err(DictError::Io)?;
-            let _flags = cursor.read_u8().map_err(DictError::Io)?;
-            let _reserved = cursor.read_u16::<LittleEndian>().map_err(DictError::Io)?;
-            let l = cursor.read_u32::<LittleEndian>().map_err(DictError::Io)? as usize;
-            let r = cursor.read_u32::<LittleEndian>().map_err(DictError::Io)? as usize;
-            (l, r)
-        } else {
-            let mut cursor = io::Cursor::new(&mmap[..header_size]);
-            let l = cursor.read_u16::<LittleEndian>().map_err(DictError::Io)? as usize;
-            let r = cursor.read_u16::<LittleEndian>().map_err(DictError::Io)? as usize;
-            (l, r)
-        };
-
-        let expected_size = header_size + lsize * rsize * 2;
+        let expected_size = header.header_size + header.lsize * header.rsize * 2;
         if mmap.len() != expected_size {
             return Err(DictError::Format(format!(
                 "Matrix file size mismatch: expected {} bytes, got {}",
@@ -528,9 +537,9 @@ impl MmapMatrix {
         }
 
         Ok(Self {
-            lsize,
-            rsize,
-            header_size,
+            lsize: header.lsize,
+            rsize: header.rsize,
+            header_size: header.header_size,
             mmap,
         })
     }
