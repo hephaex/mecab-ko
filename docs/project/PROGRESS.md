@@ -1,6 +1,38 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-07 (Sprint 104 완료 -- E2E CI false-green 수정)
+## 마지막 업데이트: 2026-05-07 (Sprint 105 완료 -- Golden Test 확장 + v2 Dict 분석)
+
+### ✅ Sprint 105 - Golden Test 100→144 확장 + v2 Dict 코드 분석
+
+**기간**: 2026-05-07
+**목표**: Golden Test 100건→150건+ 확장, POS 커버리지 갭 해소, v2 dict 포맷 분석
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| basic.json | 50건 (20 POS) | 75건 (+25, JKO/JKG/JKC/ETN/XSN/SN/SL/SW/SP/SS/NR/NNP 추가) |
+| nouns.json | 30건 (2 POS) | 40건 (+10, 양자컴퓨터/탄소중립/전기자동차 등) |
+| complex.json | 20건 (31 POS) | 29건 (+9, 반사실조건/역접/이중관형절/피동연쇄 등) |
+| 전체 POS 커버리지 | 33/45 태그 | 33/45 태그 (30+ assert 추가) |
+| category/description | 일부 있음 | 전 케이스 추가 (15개 카테고리) |
+| POS 커버리지 테스트 | 없음 | test_golden_pos_coverage (30+ assert) |
+| 카테고리 통계 테스트 | 없음 | test_golden_category_statistics |
+| v2 dict 분석 | 없음 | docs/design/v2-dict-code-analysis.md (473줄) |
+
+#### 수정/추가된 파일 (6개)
+- rust/crates/mecab-ko/tests/golden/basic.json (+25건, category/description)
+- rust/crates/mecab-ko/tests/golden/nouns.json (+10건, category/description)
+- rust/crates/mecab-ko/tests/golden/complex.json (+9건, category/description)
+- rust/crates/mecab-ko/tests/integration_golden.rs (+2 테스트)
+- docs/design/v2-dict-code-analysis.md (신규, entries/trie/matrix 분석)
+- docs/project/PLAN.md (Sprint 106 로드맵)
+
+#### 테스트 결과
+- 1,169 pass / 0 fail / 96 ignored
+- clippy: 0 warnings (all targets)
+
+---
 
 ### ✅ Sprint 104 - E2E CI false-green 수정 (mini-dict + graceful skip + MSRV)
 

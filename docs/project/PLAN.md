@@ -1,7 +1,45 @@
-# Phase 71 - Sprint 105 (Golden Test 100문장 확장 + v2 Dict 분석)
+# Phase 72 - Sprint 106 (v0.8.0 Binary Dict v3 설계 + Golden Test 확장)
+
+## Sprint 106 목표
+v2 dict 코드 분석 결과를 바탕으로 v3 바이너리 사전 포맷 설계를 시작하고, golden test를 200건 이상으로 확장한다.
+
+## Sprint 106 로드맵
+
+### P1: v0.8.0 Binary Dict v3.0 설계 (DIC-010)
+- v2-dict-code-analysis.md 기반 v3 스키마 초안 작성
+- entries.bin: LRU 캐시 O(1) 개선 (lru 크레이트), read-lock 기반 조회
+- matrix.bin: magic number + version header 추가
+- mmap 경로 통합 PoC (sys.dic에 mmap 옵션 추가)
+
+### P2: Golden Test 200건 확장 (DIC-009 계속)
+- complex.json 6건 추가 (구어체/이중부정/피동사동 등) → 35건
+- 구문 난이도 Level 1-5 분류 체계 도입
+- 오분석 사례 수집 (mecab-ko-dic 알려진 오류 기반 테스트)
+- mini-dict 확장 검토 (21 → 50 엔트리)
+
+### P3: 사용자 사전 개선 설계 (RST-011)
+- hot-reload v2 안정화
+- domain overlay API 설계 초안
+- 사용자 사전 포맷 표준화
+
+### P4: Benchmark CI 개선
+- full-dict 벤치마크 결과 자동 비교
+- 성능 회귀 threshold 설정
+
+---
+
+# 완료: Phase 71 - Sprint 105 (Golden Test 100→144 확장 + v2 Dict 분석)
 
 ## Sprint 105 목표
 Golden Test 테스트셋을 현재 100건 → 150건 이상으로 확장하고, 문법 카테고리별 커버리지 갭을 해소한다. 부수적으로 v2 바이너리 사전 포맷 분석 문서를 작성하여 v0.8.0 설계 기반을 마련한다.
+
+## Sprint 105 결과
+- Golden Test: 100건 → 144건 (basic 75, nouns 40, complex 29)
+- POS 커버리지: 33/45 태그 (30+ 목표 달성)
+- 카테고리/설명: 전 테스트 케이스에 category/description 추가
+- POS 커버리지 리포트 테스트 + 카테고리 통계 테스트 추가
+- v2 dict 코드 분석 문서 작성 (docs/design/v2-dict-code-analysis.md, 473줄)
+- 테스트: 1,169 pass / 0 fail / 96 ignored, clippy 0 warnings
 
 ## 배경
 - Sprint 101-104: CI/테스트 인프라 정비 완료 (4개 연속 스프린트)
