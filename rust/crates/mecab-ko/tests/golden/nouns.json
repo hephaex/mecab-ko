@@ -1,152 +1,282 @@
 [
   {
     "input": "인공지능",
+    "description": "기술 용어 2음절+2음절 합성",
+    "category": "tech",
     "expected_morphs": ["인공", "지능"],
     "expected_pos": [["인공", "NNG"], ["지능", "NNG"]]
   },
   {
     "input": "머신러닝",
+    "description": "외래어 기술 용어",
+    "category": "tech",
     "expected_morphs": ["머신", "러닝"],
     "expected_pos": [["머신", "NNG"], ["러닝", "NNG"]]
   },
   {
     "input": "딥러닝 모델",
+    "description": "외래어 복합 기술 용어",
+    "category": "tech",
     "expected_morphs": ["딥러닝", "모델"],
     "expected_pos": [["딥러닝", "NNG"], ["모델", "NNG"]]
   },
   {
     "input": "자연어처리",
+    "description": "한자어 3음절+2음절",
+    "category": "tech",
     "expected_morphs": ["자연어", "처리"],
     "expected_pos": [["자연어", "NNG"], ["처리", "NNG"]]
   },
   {
     "input": "클라우드 컴퓨팅",
+    "description": "외래어 기술 용어",
+    "category": "tech",
     "expected_morphs": ["클라우드", "컴퓨팅"],
     "expected_pos": [["클라우드", "NNG"], ["컴퓨팅", "NNG"]]
   },
   {
     "input": "블록체인 기술",
+    "description": "외래어+한자어 혼합",
+    "category": "tech",
     "expected_morphs": ["블록체인", "기술"],
     "expected_pos": [["블록체인", "NNG"], ["기술", "NNG"]]
   },
   {
     "input": "메타버스 플랫폼",
+    "description": "외래어 신기술 용어",
+    "category": "tech",
     "expected_morphs": ["메타버스", "플랫폼"],
     "expected_pos": [["메타버스", "NNG"], ["플랫폼", "NNG"]]
   },
   {
     "input": "스마트폰 어플리케이션",
+    "description": "외래어 복합 명사구",
+    "category": "tech",
     "expected_morphs": ["스마트폰", "어플리케이션"],
     "expected_pos": [["스마트폰", "NNG"], ["어플리케이션", "NNG"]]
   },
   {
     "input": "빅데이터 분석",
+    "description": "외래어+한자어",
+    "category": "tech",
     "expected_morphs": ["빅데이터", "분석"],
     "expected_pos": [["빅데이터", "NNG"], ["분석", "NNG"]]
   },
   {
     "input": "사이버 보안",
+    "description": "외래어+한자어",
+    "category": "tech",
     "expected_morphs": ["사이버", "보안"],
     "expected_pos": [["사이버", "NNG"], ["보안", "NNG"]]
   },
   {
     "input": "갓생",
+    "description": "신조어 1음절",
+    "category": "neologism",
     "expected_morphs": ["갓생"],
     "expected_pos": [["갓생", "NNG"]]
   },
   {
     "input": "혼코노",
+    "description": "신조어 약어 (혼자 코인 노래방)",
+    "category": "neologism",
     "expected_morphs": ["혼코노"],
     "expected_pos": [["혼코노", "NNG"]]
   },
   {
     "input": "워라밸",
+    "description": "신조어 약어 (work-life balance)",
+    "category": "neologism",
     "expected_morphs": ["워라밸"],
     "expected_pos": [["워라밸", "NNG"]]
   },
   {
     "input": "소확행",
+    "description": "신조어 약어 (소소하지만 확실한 행복)",
+    "category": "neologism",
     "expected_morphs": ["소확행"],
     "expected_pos": [["소확행", "NNG"]]
   },
   {
     "input": "플렉스",
+    "description": "외래어 신조어",
+    "category": "neologism",
     "expected_morphs": ["플렉스"],
     "expected_pos": [["플렉스", "NNG"]]
   },
   {
     "input": "서울특별시",
+    "description": "고유명사+일반명사 행정구역",
+    "category": "proper-noun",
     "expected_morphs": ["서울", "특별시"],
     "expected_pos": [["서울", "NNP"], ["특별시", "NNG"]]
   },
   {
     "input": "대한민국",
+    "description": "고유명사 국명",
+    "category": "proper-noun",
     "expected_morphs": ["대한민국"],
     "expected_pos": [["대한민국", "NNP"]]
   },
   {
     "input": "삼성전자",
+    "description": "고유명사+일반명사 기업명",
+    "category": "proper-noun",
     "expected_morphs": ["삼성", "전자"],
     "expected_pos": [["삼성", "NNP"], ["전자", "NNG"]]
   },
   {
     "input": "현대자동차",
+    "description": "고유명사+일반명사 기업명",
+    "category": "proper-noun",
     "expected_morphs": ["현대", "자동차"],
     "expected_pos": [["현대", "NNP"], ["자동차", "NNG"]]
   },
   {
     "input": "네이버",
+    "description": "고유명사 기업명 단독",
+    "category": "proper-noun",
     "expected_morphs": ["네이버"],
     "expected_pos": [["네이버", "NNP"]]
   },
   {
     "input": "카카오톡",
+    "description": "고유명사 서비스명",
+    "category": "proper-noun",
     "expected_morphs": ["카카오톡"],
     "expected_pos": [["카카오톡", "NNP"]]
   },
   {
     "input": "프로그래밍 언어",
+    "description": "외래어+한자어 복합 명사구",
+    "category": "compound-noun",
     "expected_morphs": ["프로그래밍", "언어"],
     "expected_pos": [["프로그래밍", "NNG"], ["언어", "NNG"]]
   },
   {
     "input": "오픈소스 소프트웨어",
+    "description": "외래어 복합 명사구",
+    "category": "compound-noun",
     "expected_morphs": ["오픈소스", "소프트웨어"],
     "expected_pos": [["오픈소스", "NNG"], ["소프트웨어", "NNG"]]
   },
   {
     "input": "데이터베이스 관리",
+    "description": "외래어+한자어 복합",
+    "category": "compound-noun",
     "expected_morphs": ["데이터베이스", "관리"],
     "expected_pos": [["데이터베이스", "NNG"], ["관리", "NNG"]]
   },
   {
     "input": "사용자 인터페이스",
+    "description": "한자어+외래어 혼합",
+    "category": "compound-noun",
     "expected_morphs": ["사용자", "인터페이스"],
     "expected_pos": [["사용자", "NNG"], ["인터페이스", "NNG"]]
   },
   {
     "input": "알고리즘 최적화",
+    "description": "외래어+한자어 복합",
+    "category": "compound-noun",
     "expected_morphs": ["알고리즘", "최적화"],
     "expected_pos": [["알고리즘", "NNG"], ["최적화", "NNG"]]
   },
   {
     "input": "버전 관리 시스템",
+    "description": "3어절 명사구",
+    "category": "compound-noun",
     "expected_morphs": ["버전", "관리", "시스템"],
     "expected_pos": [["버전", "NNG"], ["관리", "NNG"], ["시스템", "NNG"]]
   },
   {
     "input": "서버 클러스터",
+    "description": "외래어 복합",
+    "category": "compound-noun",
     "expected_morphs": ["서버", "클러스터"],
     "expected_pos": [["서버", "NNG"], ["클러스터", "NNG"]]
   },
   {
     "input": "네트워크 프로토콜",
+    "description": "외래어 복합",
+    "category": "compound-noun",
     "expected_morphs": ["네트워크", "프로토콜"],
     "expected_pos": [["네트워크", "NNG"], ["프로토콜", "NNG"]]
   },
   {
     "input": "가상현실 콘텐츠",
+    "description": "한자어+외래어 복합",
+    "category": "compound-noun",
     "expected_morphs": ["가상현실", "콘텐츠"],
     "expected_pos": [["가상현실", "NNG"], ["콘텐츠", "NNG"]]
+  },
+  {
+    "input": "양자 컴퓨터",
+    "description": "한자어+외래어 과학 용어",
+    "category": "tech",
+    "expected_morphs": ["양자", "컴퓨터"],
+    "expected_pos": [["양자", "NNG"], ["컴퓨터", "NNG"]]
+  },
+  {
+    "input": "자율 주행",
+    "description": "한자어 복합 2어절",
+    "category": "tech",
+    "expected_morphs": ["자율", "주행"],
+    "expected_pos": [["자율", "NNG"], ["주행", "NNG"]]
+  },
+  {
+    "input": "탄소 중립",
+    "description": "환경 도메인 한자어",
+    "category": "tech",
+    "expected_morphs": ["탄소", "중립"],
+    "expected_pos": [["탄소", "NNG"], ["중립", "NNG"]]
+  },
+  {
+    "input": "재생 에너지",
+    "description": "한자어+외래어 환경 용어",
+    "category": "tech",
+    "expected_morphs": ["재생", "에너지"],
+    "expected_pos": [["재생", "NNG"], ["에너지", "NNG"]]
+  },
+  {
+    "input": "전기 자동차",
+    "description": "한자어 복합 산업 용어",
+    "category": "tech",
+    "expected_morphs": ["전기", "자동차"],
+    "expected_pos": [["전기", "NNG"], ["자동차", "NNG"]]
+  },
+  {
+    "input": "반도체 공장",
+    "description": "한자어 복합 산업 용어",
+    "category": "tech",
+    "expected_morphs": ["반도체", "공장"],
+    "expected_pos": [["반도체", "NNG"], ["공장", "NNG"]]
+  },
+  {
+    "input": "우주 정거장",
+    "description": "한자어 복합 3음절",
+    "category": "tech",
+    "expected_morphs": ["우주", "정거장"],
+    "expected_pos": [["우주", "NNG"], ["정거장", "NNG"]]
+  },
+  {
+    "input": "운영 체제",
+    "description": "한자어 IT 용어",
+    "category": "tech",
+    "expected_morphs": ["운영", "체제"],
+    "expected_pos": [["운영", "NNG"], ["체제", "NNG"]]
+  },
+  {
+    "input": "국립 박물관",
+    "description": "한자어 문화 시설",
+    "category": "compound-noun",
+    "expected_morphs": ["국립", "박물관"],
+    "expected_pos": [["국립", "NNG"], ["박물관", "NNG"]]
+  },
+  {
+    "input": "공공 데이터",
+    "description": "한자어+외래어 공공 분야",
+    "category": "compound-noun",
+    "expected_morphs": ["공공", "데이터"],
+    "expected_pos": [["공공", "NNG"], ["데이터", "NNG"]]
   }
 ]

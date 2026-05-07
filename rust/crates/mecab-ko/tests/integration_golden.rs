@@ -542,6 +542,101 @@ fn test_golden_coverage() {
     );
 }
 
+/// POS tag coverage report across all golden test files.
+///
+/// Collects every POS tag that appears in `expected_pos` across all golden
+/// test files and asserts that at least 30 of the 45 standard POS tags
+/// are covered. Prints a detailed coverage report.
+#[test]
+fn test_golden_pos_coverage() {
+    let golden_files = ["basic.json", "nouns.json", "complex.json"];
+
+    let all_pos_tags = [
+        "NNG", "NNP", "NNB", "NR", "NP", "VV", "VA", "VX", "VCP", "VCN", "MM", "MAG", "MAJ",
+        "IC", "JKS", "JKC", "JKG", "JKO", "JKB", "JKV", "JKQ", "JX", "JC", "EP", "EF", "EC",
+        "ETN", "ETM", "XPN", "XSN", "XSV", "XSA", "XR", "SF", "SE", "SS", "SP", "SO", "SW",
+        "SL", "SH", "SK", "SN", "NF", "NV",
+    ];
+
+    let mut covered: std::collections::HashSet<String> = std::collections::HashSet::new();
+
+    for file in &golden_files {
+        let test_cases = load_golden_tests(file).unwrap_or_else(|e| panic!("Failed to load {file}: {e}"));
+        for tc in &test_cases {
+            for (_, pos) in &tc.expected_pos {
+                for part in pos.split('+') {
+                    covered.insert(part.to_string());
+                }
+            }
+        }
+    }
+
+    let total_standard = all_pos_tags.len();
+    let covered_count = all_pos_tags.iter().filter(|t| covered.contains(**t)).count();
+
+    println!("\nPOS Tag Coverage Report:");
+    println!("  Covered: {covered_count}/{total_standard}");
+    println!("  Tags present:");
+    for tag in &all_pos_tags {
+        let mark = if covered.contains(*tag) { "+" } else { "-" };
+        println!("    [{mark}] {tag}");
+    }
+
+    let uncovered: Vec<&&str> = all_pos_tags.iter().filter(|t| !covered.contains(**t)).collect();
+    if !uncovered.is_empty() {
+        println!("  Uncovered tags: {uncovered:?}");
+    }
+
+    assert!(
+        covered_count >= 30,
+        "POS coverage too low: {covered_count}/{total_standard} (need >= 30). Uncovered: {uncovered:?}"
+    );
+}
+
+/// Category-based statistics for golden test files.
+///
+/// Reports how many test cases fall into each category and the total per
+/// golden file. Asserts that every test case has a category assigned.
+#[test]
+fn test_golden_category_statistics() {
+    let golden_files = ["basic.json", "nouns.json", "complex.json"];
+    let mut category_counts: std::collections::BTreeMap<String, usize> = std::collections::BTreeMap::new();
+    let mut total_with_category = 0usize;
+    let mut total_without_category = 0usize;
+    let mut total_cases = 0usize;
+
+    for file in &golden_files {
+        let test_cases = load_golden_tests(file).unwrap_or_else(|e| panic!("Failed to load {file}: {e}"));
+        let mut file_with = 0usize;
+        let mut file_without = 0usize;
+
+        for tc in &test_cases {
+            total_cases += 1;
+            if let Some(cat) = &tc.category {
+                *category_counts.entry(cat.clone()).or_insert(0) += 1;
+                file_with += 1;
+                total_with_category += 1;
+            } else {
+                file_without += 1;
+                total_without_category += 1;
+            }
+        }
+
+        println!("{file}: {file_with} categorized, {file_without} uncategorized");
+    }
+
+    println!("\nCategory Statistics:");
+    for (cat, count) in &category_counts {
+        println!("  {cat}: {count}");
+    }
+    println!("  Total: {total_cases} cases ({total_with_category} categorized, {total_without_category} uncategorized)");
+
+    assert!(
+        total_with_category > 0,
+        "At least some test cases should have categories"
+    );
+}
+
 #[cfg(test)]
 mod golden_utils {
     use super::*;

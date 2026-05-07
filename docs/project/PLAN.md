@@ -1,3 +1,144 @@
+# Phase 71 - Sprint 105 (Golden Test 100문장 확장 + v2 Dict 분석)
+
+## Sprint 105 목표
+Golden Test 테스트셋을 현재 100건 → 150건 이상으로 확장하고, 문법 카테고리별 커버리지 갭을 해소한다. 부수적으로 v2 바이너리 사전 포맷 분석 문서를 작성하여 v0.8.0 설계 기반을 마련한다.
+
+## 배경
+- Sprint 101-104: CI/테스트 인프라 정비 완료 (4개 연속 스프린트)
+- 현재 golden test: basic.json 50건, nouns.json 30건, complex.json 20건 = **총 100건**
+- 목표 DIC-009: 정확도 검증용 golden test 1,000+문장 (이번 스프린트에서 150+ 달성)
+- POS 커버리지 갭: basic.json에 JKO, JKG, ETN, SN, SL, SP, SS, SW, NR, XPN, XSN 미포함
+- mini-dict는 21 엔트리 → 대부분 golden test가 mini-dict에서는 structural 검증만 수행
+- v2 dict 포맷 분석 문서가 이미 존재 (`docs/dictionary-format-v2.md`) — v3 설계 전 코드 기반 gap 분석 필요
+
+## Sprint 105 작업 목록
+
+### Track A: Golden Test 데이터 확장 (DIC-009)
+
+- [ ] S105-01: basic.json 조사/어미 커버리지 확장 (+15건)
+  - **설명**: JKO(목적격), JKG(관형격), JKB(부사격), JKC(보격) 등 조사 분류별 테스트 추가. ETN(명사형 전성어미), ETM(관형형 전성어미), EC(연결어미) 유형별 예문 추가.
+  - **난이도**: Medium
+  - **트랙**: Data
+  - **파일**: `rust/crates/mecab-ko/tests/golden/basic.json`
+  - **POS 갭 해소**: JKO, JKG, JKC, ETN 추가
+
+- [ ] S105-02: basic.json 숫자/외래어/기호 커버리지 (+10건)
+  - **설명**: SN(숫자), SL(외국어), SW(기타기호), SP(쉼표), SS(따옴표) 등 기호계 POS 테스트 추가. "100개", "API 호출", "2026년" 등 혼합형 문장.
+  - **난이도**: Easy
+  - **트랙**: Data
+  - **파일**: `rust/crates/mecab-ko/tests/golden/basic.json`
+  - **POS 갭 해소**: SN, SL, SW, SP, SS, NR 추가
+
+- [ ] S105-03: nouns.json 복합명사/신조어 확장 (+10건)
+  - **설명**: 3음절+ 복합명사, 의학/법률/학술 도메인 명사, 최신 신조어 추가. "생성형인공지능", "탄소중립", "메타인지" 등.
+  - **난이도**: Easy
+  - **트랙**: Data
+  - **파일**: `rust/crates/mecab-ko/tests/golden/nouns.json`
+
+- [ ] S105-04: complex.json 다양한 문체 확장 (+15건)
+  - **설명**: 구어체, 문어체, 뉴스체, 학술체 등 문체별 긴 문장 추가. 이중 부정, 피동/사동 구문, 관계절 중첩 등 통사적 복잡성 높은 문장.
+  - **난이도**: Hard
+  - **트랙**: Data
+  - **파일**: `rust/crates/mecab-ko/tests/golden/complex.json`
+
+### Track B: Golden Test 인프라 개선
+
+- [ ] S105-05: category/description 필드 체계화
+  - **설명**: 모든 golden test case에 `description` (한줄 설명)과 `category` (문법 분류) 필드 추가. category 값: "greeting", "question", "particle", "number", "foreign", "compound-noun", "colloquial", "formal", "news", "academic", "passive", "causative" 등.
+  - **난이도**: Medium
+  - **트랙**: Code + Data
+  - **파일**: `rust/crates/mecab-ko/tests/golden/*.json`
+
+- [ ] S105-06: POS 커버리지 리포트 테스트 추가
+  - **설명**: `integration_golden.rs`에 전체 golden test의 POS 태그 커버리지를 집계하는 테스트 추가. 전체 45개 POS 태그 중 몇 개가 커버되는지 리포트. 30개 이상 커버 필수 assert.
+  - **난이도**: Medium
+  - **트랙**: Code
+  - **파일**: `rust/crates/mecab-ko/tests/integration_golden.rs`
+
+- [ ] S105-07: golden test 카테고리별 통계 테스트 추가
+  - **설명**: category 필드 기반으로 카테고리별 테스트 수, 통과율을 출력하는 테스트 함수 추가.
+  - **난이도**: Easy
+  - **트랙**: Code
+  - **파일**: `rust/crates/mecab-ko/tests/integration_golden.rs`
+
+### Track C: v2 Dict 코드 분석 (DIC-010 준비, lightweight)
+
+- [ ] S105-08: v2 바이너리 포맷 코드 분석 메모
+  - **설명**: `lazy_entries.rs` (entries.bin v2), `trie.rs` (sys.dic), `matrix/mod.rs` (matrix.bin)의 실제 코드를 읽고, 현재 v2 포맷의 구조/제약/성능 특성을 정리. `docs/dictionary-format-v2.md`의 코드 맵 섹션 갱신 또는 `docs/design/v2-dict-code-analysis.md` 신규 작성.
+  - **난이도**: Medium
+  - **트랙**: Design
+  - **파일**: `docs/design/v2-dict-code-analysis.md` (신규)
+  - **산출물**: v3 설계 시 참조할 v2 제약 목록 (mmap 부재, 압축 미지원, 엔디안 이슈 등)
+
+### Track D: 검증
+
+- [ ] S105-09: cargo test 전체 통과 확인 + clippy 검증
+  - **설명**: 추가된 golden test 데이터와 코드가 빌드/테스트/clippy를 모두 통과하는지 검증.
+  - **난이도**: Easy
+  - **트랙**: Verify
+  - **파일**: 전체
+
+- [ ] S105-10: Sprint 106 로드맵 작성
+  - **설명**: PLAN.md에 Sprint 106 로드맵 추가.
+  - **난이도**: Easy
+  - **트랙**: Planning
+  - **파일**: `docs/project/PLAN.md`
+
+## 의존성
+
+```
+S105-01 ──┐
+S105-02 ──┤
+S105-03 ──┼──→ S105-05 (category/description 추가) ──→ S105-07 (카테고리 통계)
+S105-04 ──┘                                        └──→ S105-06 (POS 커버리지)
+                                                         │
+S105-08 (독립, 병렬 진행 가능)                              ↓
+                                                    S105-09 (검증)
+                                                         ↓
+                                                    S105-10 (로드맵)
+```
+
+## 현재 Golden Test 현황 (Sprint 105 시작 시점)
+
+| 파일 | 건수 | POS 커버리지 |
+|------|------|-------------|
+| basic.json | 50 | EC, EF, EP, EP+EF, ETM, IC, JKB, JKS, JX, MAG, MM, NNB, NNG, NP, SF, VA, VCP, VV, VX, XSV (20개) |
+| nouns.json | 30 | NNG, NNP (2개) |
+| complex.json | 20 | EC, EF, EP, ETM, ETN, JKB, JKG, JKO, JKQ, JKS, JX, MAG, MM, NNB, NNG, NNP, NP, NR, SF, SL, SN, SP, SS, SW, VA, VCP, VV, VX, XPN, XSN, XSV (31개) |
+| **전체 (중복 제거)** | **100** | **33개** |
+
+### Sprint 105 목표
+
+| 파일 | 목표 건수 | 주요 추가 항목 |
+|------|----------|--------------|
+| basic.json | 75 | 조사 분류, 어미 유형, 숫자/외래어/기호 |
+| nouns.json | 40 | 복합명사, 도메인 전문어, 신조어 |
+| complex.json | 35 | 구어체, 문어체, 피동/사동, 이중부정 |
+| **전체** | **150** | POS 35개+ 커버리지 |
+
+## Sprint 106 로드맵 (미리보기)
+
+### P1: v0.8.0 Binary Dict v3.0 설계 착수 (DIC-010)
+- S105-08 분석 결과를 바탕으로 v3 스키마 구체화
+- mmap 지원 PoC (memmap2 크레이트 통합)
+- Zstd 압축 레이어 설계
+
+### P2: Golden Test 250건 확장 (DIC-009 계속)
+- 구문 분석 난이도별 분류 (Level 1-5)
+- 오분석 사례 수집 (mecab-ko-dic 알려진 오류)
+- mini-dict 확장 (21 → 50 엔트리) 검토
+
+### P3: 사용자 사전 개선 설계 (RST-011)
+- hot-reload v2 안정화
+- domain overlay API 설계
+- 사용자 사전 포맷 표준화
+
+### P4: Benchmark CI 개선
+- full-dict 벤치마크 결과 자동 비교
+- 성능 회귀 자동 감지 threshold 설정
+
+---
+
 # 완료: Phase 70 - Sprint 104 (E2E CI false-green 수정 — mini-dict + graceful skip + MSRV)
 
 ## Sprint 104 목표
@@ -16,24 +157,6 @@ E2E CI의 continue-on-error로 마스킹된 실제 실패 19건 수정
 - Node.js: mecab-ko-node 패키지 미설치 → import 실패 → 전체 12 테스트 실패
 - CLI MSRV: icu_* v2.1.1이 Rust 1.83+ 요구 → 1.80.0 빌드 실패
 - 모든 실패가 job-level continue-on-error로 마스킹되어 CI는 false green
-
----
-
-## Sprint 105 로드맵
-
-### P1: E2E CI 결과 검증
-- Sprint 104 push 후 e2e-ffi-tests 워크플로우 실제 green 확인
-- 남은 step-level continue-on-error 정리 가능 여부 평가
-
-### P2: v0.8.0 Binary Dict v3.0 설계
-- DIC-010: mmap 지원, 압축 효율 개선 설계 문서
-- 현 v2 포맷 분석 + v3 스키마 초안
-
-### P3: Golden Test 테스트셋 구축 시작
-- DIC-009: 정확도 검증용 golden test 100문장 (최종 1,000+)
-
-### P4: 사용자 정의 사전 개선 설계
-- RST-011: hot-reload, 도메인 오버레이 방향 구체화
 
 ---
 
