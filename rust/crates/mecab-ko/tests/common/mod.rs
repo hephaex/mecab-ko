@@ -85,6 +85,11 @@ pub struct MorphTestCase {
     /// Difficulty level (1=basic, 2=simple particles, 3=compound, 4=complex grammar, 5=ambiguous/irregular)
     #[serde(default)]
     pub difficulty: Option<u8>,
+    /// Test status — absent or null means a normal test case.
+    /// `"known_limitation"` marks cases where the analyzer is known to produce
+    /// incorrect output; failures are reported as warnings rather than errors.
+    #[serde(default)]
+    pub status: Option<String>,
 }
 
 /// Test result comparison

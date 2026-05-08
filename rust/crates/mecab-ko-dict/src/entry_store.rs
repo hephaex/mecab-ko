@@ -107,97 +107,90 @@ impl EntryStore for EagerStore {
     }
 }
 
-/// Lazy 로드 저장소
+/// Lazy 저장소 구조체와 [`EntryStore`] 구현을 생성하는 매크로.
 ///
-/// 엔트리를 필요할 때만 디스크에서 읽어옵니다.
-/// 메모리 사용량을 줄이고 싶을 때 사용합니다.
-pub struct LazyStore {
-    /// 지연 로딩 엔트리
-    lazy_entries: LazyEntries,
-}
-
-impl LazyStore {
-    /// 새 Lazy 저장소 생성
-    #[must_use]
-    pub const fn new(lazy_entries: LazyEntries) -> Self {
-        Self { lazy_entries }
-    }
-
-    /// 캐시된 엔트리 수 반환
-    #[must_use]
-    pub fn cached_count(&self) -> usize {
-        self.lazy_entries.cached_count()
-    }
-
-    /// 캐시 크기 설정
-    pub fn set_cache_size(&self, size: usize) {
-        self.lazy_entries.set_cache_size(size);
-    }
-
-    /// 캐시 초기화
-    pub fn clear_cache(&self) {
-        self.lazy_entries.clear_cache();
-    }
-}
-
-impl EntryStore for LazyStore {
-    fn get(&self, index: u32) -> Result<Arc<DictEntry>> {
-        self.lazy_entries.get(index)
-    }
-
-    fn get_entries_at(&self, first_index: u32, surface: &str) -> Result<Vec<Arc<DictEntry>>> {
-        self.lazy_entries.get_entries_at(first_index, surface)
-    }
-
-    fn len(&self) -> usize {
-        self.lazy_entries.len()
-    }
-}
-
-/// Lazy 로드 저장소 (v3 포맷)
+/// # Parameters
+/// - `$struct_doc`: 구조체 doc comment (리터럴 문자열)
+/// - `$new_doc`: `new` 함수 doc comment (리터럴 문자열)
+/// - `$name`: 생성할 구조체 이름
+/// - `$inner_type`: 내부 `LazyEntries` 타입 (`LazyEntries` 또는 `LazyEntriesV3`)
 ///
-/// MKE3 v3 포맷의 엔트리를 필요할 때만 디스크에서 읽어옵니다.
-pub struct LazyStoreV3 {
-    lazy_entries: LazyEntriesV3,
+/// # Generated API
+/// - `pub struct $name { lazy_entries: $inner_type }`
+/// - `$name::new(lazy_entries: $inner_type) -> Self`
+/// - `$name::cached_count(&self) -> usize`
+/// - `$name::set_cache_size(&self, size: usize)`
+/// - `$name::clear_cache(&self)`
+/// - `impl EntryStore for $name`
+macro_rules! impl_lazy_store {
+    (
+        struct_doc = $struct_doc:literal,
+        new_doc = $new_doc:literal,
+        $name:ident,
+        $inner_type:ty
+    ) => {
+        #[doc = $struct_doc]
+        pub struct $name {
+            lazy_entries: $inner_type,
+        }
+
+        impl $name {
+            #[doc = $new_doc]
+            #[must_use]
+            pub const fn new(lazy_entries: $inner_type) -> Self {
+                Self { lazy_entries }
+            }
+
+            /// 캐시된 엔트리 수 반환
+            #[must_use]
+            pub fn cached_count(&self) -> usize {
+                self.lazy_entries.cached_count()
+            }
+
+            /// 캐시 크기 설정
+            pub fn set_cache_size(&self, size: usize) {
+                self.lazy_entries.set_cache_size(size);
+            }
+
+            /// 캐시 초기화
+            pub fn clear_cache(&self) {
+                self.lazy_entries.clear_cache();
+            }
+        }
+
+        impl EntryStore for $name {
+            fn get(&self, index: u32) -> Result<Arc<DictEntry>> {
+                self.lazy_entries.get(index)
+            }
+
+            fn get_entries_at(
+                &self,
+                first_index: u32,
+                surface: &str,
+            ) -> Result<Vec<Arc<DictEntry>>> {
+                self.lazy_entries.get_entries_at(first_index, surface)
+            }
+
+            fn len(&self) -> usize {
+                self.lazy_entries.len()
+            }
+        }
+    };
 }
 
-impl LazyStoreV3 {
-    /// 새 v3 Lazy 저장소 생성
-    #[must_use]
-    pub const fn new(lazy_entries: LazyEntriesV3) -> Self {
-        Self { lazy_entries }
-    }
+impl_lazy_store!(
+    struct_doc = "Lazy 로드 저장소.\n\n엔트리를 필요할 때만 디스크에서 읽어옵니다.\n메모리 사용량을 줄이고 싶을 때 사용합니다.",
+    new_doc = "새 Lazy 저장소 생성.",
+    LazyStore,
+    LazyEntries
+);
 
-    /// 캐시된 엔트리 수 반환
-    #[must_use]
-    pub fn cached_count(&self) -> usize {
-        self.lazy_entries.cached_count()
-    }
-
-    /// 캐시 크기 설정
-    pub fn set_cache_size(&self, size: usize) {
-        self.lazy_entries.set_cache_size(size);
-    }
-
-    /// 캐시 초기화
-    pub fn clear_cache(&self) {
-        self.lazy_entries.clear_cache();
-    }
-}
-
-impl EntryStore for LazyStoreV3 {
-    fn get(&self, index: u32) -> Result<Arc<DictEntry>> {
-        self.lazy_entries.get(index)
-    }
-
-    fn get_entries_at(&self, first_index: u32, surface: &str) -> Result<Vec<Arc<DictEntry>>> {
-        self.lazy_entries.get_entries_at(first_index, surface)
-    }
-
-    fn len(&self) -> usize {
-        self.lazy_entries.len()
-    }
-}
+impl_lazy_store!(
+    struct_doc = "Lazy 로드 저장소 (v3 포맷).\n\nMKE3 v3 포맷의 엔트리를 필요할 때만 디스크에서 읽어옵니다.",
+    new_doc = "새 v3 Lazy 저장소 생성.",
+    LazyStoreV3,
+    LazyEntriesV3
+);
 
 #[cfg(test)]
 mod tests {

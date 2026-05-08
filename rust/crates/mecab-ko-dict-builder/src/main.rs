@@ -81,10 +81,11 @@ enum Commands {
         no_progress: bool,
     },
 
-    /// entries.bin을 v2 포맷(MKE2)으로 변환
+    /// entries.bin을 v2/v3 포맷으로 변환
     ///
-    /// `LazyEntries` 지원을 위해 v1(MKED) 포맷을 v2(MKE2) 포맷으로 변환합니다.
-    /// v2 포맷은 메모리 매핑과 지연 로딩을 지원하여 메모리 사용량을 최대 77% 절감합니다.
+    /// `LazyEntries` 지원을 위해 v1(MKED) 포맷을 v2(MKE2) 또는 v3(MKE3) 포맷으로 변환합니다.
+    /// v2/v3 포맷은 메모리 매핑과 지연 로딩을 지원하여 메모리 사용량을 최대 77% 절감합니다.
+    /// v3는 feature 문자열 길이 제한(64 KiB)을 u32로 확장합니다.
     Convert {
         /// 사전 디렉토리 (entries.bin 또는 entries.csv 포함)
         #[arg(short, long)]
@@ -101,6 +102,10 @@ enum Commands {
         /// 자세한 출력
         #[arg(short, long)]
         verbose: bool,
+
+        /// 출력 포맷 (v2 또는 v3, 기본값: v2)
+        #[arg(long, default_value = "v2")]
+        output_format: String,
     },
 
     /// 사전 정보 표시
@@ -136,7 +141,8 @@ fn main() -> Result<()> {
             output,
             backup,
             verbose,
-        }) => run_convert(&dict, output.as_deref(), backup, verbose),
+            output_format,
+        }) => run_convert(&dict, output.as_deref(), backup, verbose, &output_format),
 
         Some(Commands::Info { dict }) => run_info(&dict),
 
@@ -246,16 +252,32 @@ fn run_build(
     Ok(())
 }
 
+#[allow(clippy::too_many_lines)]
 fn run_convert(
     dict: &PathBuf,
     output: Option<&std::path::Path>,
     backup: bool,
     verbose: bool,
+    output_format: &str,
 ) -> Result<()> {
     use mecab_ko_dict::dictionary::{LoadOptions, SystemDictionary};
+    use mecab_ko_dict::lazy_entries_v3::{detect_entries_format, save_entries_v3, EntriesFormat};
     use mecab_ko_dict::LazyEntries;
 
-    println!("=== entries.bin v2 Format Converter ===\n");
+    let target_format = match output_format.to_lowercase().as_str() {
+        "v2" => "v2",
+        "v3" => "v3",
+        other => {
+            anyhow::bail!(
+                "Unknown --output-format '{other}'. Valid values: v2, v3"
+            );
+        }
+    };
+
+    println!(
+        "=== entries.bin {} Format Converter ===\n",
+        target_format.to_uppercase()
+    );
     println!("Dictionary: {}", dict.display());
 
     let entries_bin = dict.join("entries.bin");
@@ -263,27 +285,24 @@ fn run_convert(
 
     // 기존 포맷 확인
     if entries_bin.exists() {
-        let magic = std::fs::read(&entries_bin)
-            .map(|data| {
-                if data.len() >= 4 {
-                    String::from_utf8_lossy(&data[0..4]).to_string()
-                } else {
-                    "????".to_string()
-                }
-            })
-            .unwrap_or_else(|_| "????".to_string());
+        let current_fmt = detect_entries_format(&entries_bin);
+        let current_label = match &current_fmt {
+            Ok(EntriesFormat::V1) => "v1 (MKED) - Eager only",
+            Ok(EntriesFormat::V2) => "v2 (MKE2) - LazyEntries supported",
+            Ok(EntriesFormat::V3) => "v3 (MKE3) - LazyEntries v3 supported",
+            _ => "Unknown",
+        };
+        println!("Current format: {current_label}");
 
-        println!(
-            "Current format: {}",
-            match magic.as_str() {
-                "MKED" => "v1 (MKED) - Eager only",
-                "MKE2" => "v2 (MKE2) - LazyEntries supported",
-                _ => "Unknown",
-            }
-        );
-
-        if magic == "MKE2" {
-            println!("\n이미 v2 포맷입니다. 변환이 필요하지 않습니다.");
+        // Skip if already in the requested format.
+        if matches!(
+            (&current_fmt, target_format),
+            (Ok(EntriesFormat::V2), "v2") | (Ok(EntriesFormat::V3), "v3")
+        ) {
+            println!(
+                "\n이미 {} 포맷입니다. 변환이 필요하지 않습니다.",
+                target_format.to_uppercase()
+            );
             return Ok(());
         }
     }
@@ -309,36 +328,58 @@ fn run_convert(
 
     // 백업
     if backup && entries_bin.exists() && output_path == entries_bin {
-        let backup_path = dict.join("entries.bin.v1.bak");
+        let bak_suffix = if target_format == "v3" { "v2.bak" } else { "v1.bak" };
+        let backup_path = dict.join(format!("entries.bin.{bak_suffix}"));
         println!("3. Backing up to {}", backup_path.display());
         std::fs::copy(&entries_bin, &backup_path)?;
     }
 
-    // v2 포맷으로 저장
-    println!("4. Saving as v2 format (MKE2)...");
+    // 지정된 포맷으로 저장
+    let (fmt_label, magic_label) = if target_format == "v3" {
+        ("v3", "MKE3")
+    } else {
+        ("v2", "MKE2")
+    };
+    println!("4. Saving as {fmt_label} format ({magic_label})...");
     let save_start = Instant::now();
-    LazyEntries::save_entries(&entries, &output_path)?;
+    if target_format == "v3" {
+        save_entries_v3(&entries, &output_path)?;
+    } else {
+        LazyEntries::save_entries(&entries, &output_path)?;
+    }
     println!("   Saved in {:?}", save_start.elapsed());
 
     // 결과 확인
-    let v2_size = std::fs::metadata(&output_path)?.len();
+    let out_size = std::fs::metadata(&output_path)?.len();
     println!("\n=== Conversion Complete ===");
     println!("Output: {}", output_path.display());
-    println!("Size: {:.1} MB", v2_size as f64 / 1024.0 / 1024.0);
+    println!("Size: {:.1} MB", out_size as f64 / 1024.0 / 1024.0);
 
     // 검증
     if verbose {
-        println!("\n5. Verifying v2 format...");
-        let lazy = LazyEntries::from_file(&output_path)?;
-        println!("   LazyEntries loaded: {} entries", lazy.len());
-        if let Ok(first) = lazy.get(0) {
-            println!("   First entry: {}", first.surface);
+        println!("\n5. Verifying {fmt_label} format...");
+        if target_format == "v3" {
+            use mecab_ko_dict::lazy_entries_v3::LazyEntriesV3;
+            let lazy = LazyEntriesV3::from_file(&output_path)?;
+            println!("   LazyEntriesV3 loaded: {} entries", lazy.len());
+            if let Ok(first) = lazy.get(0) {
+                println!("   First entry: {}", first.surface);
+            }
+        } else {
+            let lazy = LazyEntries::from_file(&output_path)?;
+            println!("   LazyEntries loaded: {} entries", lazy.len());
+            if let Ok(first) = lazy.get(0) {
+                println!("   First entry: {}", first.surface);
+            }
         }
     }
 
     println!("\n메모리 절감 효과:");
     println!("  - Lazy 모드 사용 시 메모리 최대 77% 절감");
     println!("  - 로드 시간 최대 95% 단축");
+    if target_format == "v3" {
+        println!("  - v3: feature 문자열 길이 제한 u16 → u32 (최대 4 GiB)");
+    }
     println!("\n사용법:");
     println!("  let dict = SystemDictionary::load_with_options(path, LoadOptions::default())?;");
 
@@ -347,6 +388,7 @@ fn run_convert(
 
 fn run_info(dict: &PathBuf) -> Result<()> {
     use mecab_ko_dict::dictionary::{LoadOptions, SystemDictionary};
+    use mecab_ko_dict::lazy_entries_v3::{detect_entries_format, EntriesFormat};
 
     println!("=== Dictionary Info ===\n");
     println!("Path: {}", dict.display());
@@ -374,26 +416,18 @@ fn run_info(dict: &PathBuf) -> Result<()> {
     // entries.bin 포맷 확인
     let entries_bin = dict.join("entries.bin");
     if entries_bin.exists() {
-        let magic = std::fs::read(&entries_bin)
-            .map(|data| {
-                if data.len() >= 4 {
-                    String::from_utf8_lossy(&data[0..4]).to_string()
-                } else {
-                    "????".to_string()
-                }
-            })
-            .unwrap_or_else(|_| "????".to_string());
+        let fmt_label = match detect_entries_format(&entries_bin) {
+            Ok(EntriesFormat::V1) => "V1 (MKED) - Eager loading only",
+            Ok(EntriesFormat::V2) => "V2 (MKE2) - LazyEntries supported",
+            Ok(EntriesFormat::V3) => "V3 (MKE3) - LazyEntries v3 supported",
+            Ok(_) | Err(_) => "Unknown format",
+        };
+        println!("\nentries.bin format: {fmt_label}");
 
-        println!(
-            "\nentries.bin format: {}",
-            match magic.as_str() {
-                "MKED" => "v1 (MKED) - Eager loading only",
-                "MKE2" => "v2 (MKE2) - LazyEntries supported ✓",
-                _ => "Unknown format",
-            }
-        );
-
-        if magic == "MKED" {
+        if matches!(
+            detect_entries_format(&entries_bin),
+            Ok(EntriesFormat::V1)
+        ) {
             println!("  → Run 'convert' command for memory optimization");
         }
     }

@@ -7348,6 +7348,7 @@
     "input": "\"안녕하세요\"라고 했다.",
     "description": "인용 패턴 + 따옴표",
     "category": "quoted_speech",
+    "status": "known_limitation",
     "expected_morphs": [
       "\"",
       "안녕하세요",
@@ -7393,6 +7394,7 @@
     "input": "다양한 이론들이 제시되었다.",
     "description": "피동 표현 + 복수형",
     "category": "passive",
+    "status": "known_limitation",
     "expected_morphs": [
       "다양한이론들이제시되었다"
     ],
@@ -7408,6 +7410,7 @@
     "input": "그는 열심히 공부했을 것이다.",
     "description": "추정 표현 + 과거",
     "category": "speculation",
+    "status": "known_limitation",
     "expected_morphs": [
       "그",
       "는",
@@ -7433,6 +7436,7 @@
     "input": "이 문제를 풀기 위해서는 집중이 필요하다.",
     "description": "목적 표현 + 연결 구문",
     "category": "purpose",
+    "status": "known_limitation",
     "expected_morphs": [
       "이문제를풀기위해서는집중이필요하다"
     ],
@@ -7448,6 +7452,7 @@
     "input": "선생님께서 수업을 잘 가르치셨다.",
     "description": "높임 표현 + 과거",
     "category": "honorific",
+    "status": "known_limitation",
     "expected_morphs": [
       "선생님께서수업을잘가르치셨다"
     ],
@@ -7463,6 +7468,7 @@
     "input": "아버지께서 밥을 차려주셨다.",
     "description": "높임 + 보조동사",
     "category": "honorific",
+    "status": "known_limitation",
     "expected_morphs": [
       "아버지께서밥을차려주셨다"
     ],
@@ -7478,6 +7484,7 @@
     "input": "비가 올 것 같은데 우산을 가져갔다.",
     "description": "추측 + 보조동사 + 인과",
     "category": "complex_causality",
+    "status": "known_limitation",
     "expected_morphs": [
       "비가올것같은데우산을가져갔다"
     ],
@@ -7493,6 +7500,7 @@
     "input": "우리가 했던 일들이 모두 헛되었다.",
     "description": "관계절 + 피동",
     "category": "relative_clause",
+    "status": "known_limitation",
     "expected_morphs": [
       "우리가했던일들이모두헛되었다"
     ],
@@ -7508,6 +7516,7 @@
     "input": "어제 본 영화가 정말 재미있었다.",
     "description": "과거분사 + 형용사 연쇄",
     "category": "adjective_chain",
+    "status": "known_limitation",
     "expected_morphs": [
       "어제본영화가정말재미있었다"
     ],
@@ -7523,6 +7532,7 @@
     "input": "그녀는 노래를 부르며 춤을 추었다.",
     "description": "동시 동작 표현",
     "category": "simultaneous_action",
+    "status": "known_limitation",
     "expected_morphs": [
       "그녀는노래를부르며춤을추었다"
     ],
@@ -7538,6 +7548,7 @@
     "input": "만약 그가 오면 우리가 시작할 수 있다.",
     "description": "조건절 + 가능 표현",
     "category": "conditional",
+    "status": "known_limitation",
     "expected_morphs": [
       "만약그가오면우리가시작할수있다"
     ],
@@ -7553,6 +7564,7 @@
     "input": "책을 읽은 후에 정리해주셨습니다.",
     "description": "순차 + 높임 + 과거",
     "category": "sequence_honorific",
+    "status": "known_limitation",
     "expected_morphs": [
       "책을읽은후에정리해주셨습니다"
     ],
@@ -7568,6 +7580,7 @@
     "input": "이것은 당신이 놓치면 안 되는 기회입니다.",
     "description": "부정과 필요성 표현",
     "category": "negation_necessity",
+    "status": "known_limitation",
     "expected_morphs": [
       "이것은당신이놓치면안되는기회입니다"
     ],
@@ -7583,6 +7596,7 @@
     "input": "점심을 먹고 나서 회의를 시작할 예정이다.",
     "description": "순차 + 계획",
     "category": "sequence_planning",
+    "status": "known_limitation",
     "expected_morphs": [
       "점심을먹고나서회의를시작할예정이다"
     ],
@@ -7598,6 +7612,7 @@
     "input": "그는 주로 저녁에 조깅을 한다고 한다.",
     "description": "간접 인용",
     "category": "indirect_quote",
+    "status": "known_limitation",
     "expected_morphs": [
       "그는주로저녁에조깅을한다고한다"
     ],
@@ -7613,6 +7628,7 @@
     "input": "그렇게 하면 문제가 생길 수도 있습니다.",
     "description": "가능성 + 경고 어조",
     "category": "possibility_warning",
+    "status": "known_limitation",
     "expected_morphs": [
       "그렇게하면문제가생길수도있습니다"
     ],

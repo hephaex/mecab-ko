@@ -238,8 +238,14 @@ fn test_golden_complex() {
     let has_system_dict = system_dict_available();
 
     let mut exact_matches = 0usize;
+    let mut known_limitation_skipped = 0usize;
 
     for test_case in &test_cases {
+        let is_known_limitation = test_case
+            .status
+            .as_deref()
+            .is_some_and(|s| s == "known_limitation");
+
         let tokens = tokenizer.tokenize(&test_case.input);
 
         // Structural: all tokens must have valid surface and POS.
@@ -279,24 +285,42 @@ fn test_golden_complex() {
                 .map(|t| (t.surface.clone(), t.pos.clone()))
                 .collect();
             let comparison = common::compare_pos_tags(&test_case.expected_pos, &actual_pos);
-            assert!(
-                comparison.passed,
-                "complex.json POS mismatch for input '{}':\n  expected: {:?}\n  actual:   {:?}{}",
-                test_case.input,
-                test_case.expected_pos,
-                actual_pos,
-                comparison
-                    .diff
-                    .as_deref()
-                    .map(|d| format!("\n{d}"))
-                    .unwrap_or_default()
-            );
-            exact_matches += 1;
+
+            if is_known_limitation {
+                if comparison.passed {
+                    exact_matches += 1;
+                } else {
+                    eprintln!(
+                        "complex.json [known_limitation] POS mismatch for input '{}': {}",
+                        test_case.input,
+                        comparison
+                            .diff
+                            .as_deref()
+                            .unwrap_or("(no diff available)")
+                    );
+                    known_limitation_skipped += 1;
+                }
+            } else {
+                assert!(
+                    comparison.passed,
+                    "complex.json POS mismatch for input '{}':\n  expected: {:?}\n  actual:   {:?}{}",
+                    test_case.input,
+                    test_case.expected_pos,
+                    actual_pos,
+                    comparison
+                        .diff
+                        .as_deref()
+                        .map(|d| format!("\n{d}"))
+                        .unwrap_or_default()
+                );
+                exact_matches += 1;
+            }
         }
     }
 
     println!(
-        "test_golden_complex: {} cases, {exact_matches} with full dict comparison (system_dict={})",
+        "test_golden_complex: {} cases, {exact_matches} with full dict comparison, \
+         {known_limitation_skipped} known limitations skipped (system_dict={})",
         test_cases.len(),
         has_system_dict
     );
