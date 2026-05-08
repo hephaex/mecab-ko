@@ -570,6 +570,69 @@ jobs:
           - ✓ Artifacts uploaded
           EOF
 
+  test-v3-format:
+    name: Test v3 Format Conversion
+    runs-on: ubuntu-latest
+    needs: build-dictionary
+    if: needs.build-dictionary.result == 'success'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
+        with:
+          toolchain: stable
+          cache-key: dict-build
+
+      - name: Download dictionary artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: dict-binary-${{ github.run_number }}
+          path: dict-output
+
+      - name: Build dict-builder
+        run: |
+          cargo build --manifest-path rust/Cargo.toml \
+            --release \
+            --bin mecab-ko-dict-builder
+
+      - name: Test v3 format conversion
+        if: success()
+        run: |
+          BUILDER=./rust/target/release/mecab-ko-dict-builder
+
+          echo "=== entries.bin before conversion ==="
+          "$BUILDER" info --dict ./dict-output
+
+          echo ""
+          echo "=== Converting to v3 ==="
+          "$BUILDER" convert --dict ./dict-output --output-format v3 --verbose
+
+          echo ""
+          echo "=== Verify v3 format ==="
+          INFO_V3=$("$BUILDER" info --dict ./dict-output)
+          echo "$INFO_V3"
+          if ! echo "$INFO_V3" | grep -q "V3 (MKE3)"; then
+            echo "ERROR: entries.bin format is not V3 (MKE3) after conversion" >&2
+            exit 1
+          fi
+          echo "V3 format verified."
+
+          echo ""
+          echo "=== Converting back to v2 (round-trip) ==="
+          "$BUILDER" convert --dict ./dict-output --output-format v2 --verbose
+
+          echo ""
+          echo "=== Verify v2 format ==="
+          INFO_V2=$("$BUILDER" info --dict ./dict-output)
+          echo "$INFO_V2"
+          if ! echo "$INFO_V2" | grep -q "V2 (MKE2)"; then
+            echo "ERROR: entries.bin format is not V2 (MKE2) after round-trip conversion" >&2
+            exit 1
+          fi
+          echo "Round-trip v2 format verified."
+
   tokenize-test:
     name: Tokenization Test
     runs-on: ubuntu-latest
@@ -651,7 +714,7 @@ jobs:
   accuracy-test:
     name: Accuracy Evaluation
     runs-on: ubuntu-latest
-    needs: [tokenize-test]
+    needs: [tokenize-test, test-v3-format]
     outputs:
       token_accuracy: ${{ steps.evaluate.outputs.token_accuracy }}
       sentence_accuracy: ${{ steps.evaluate.outputs.sentence_accuracy }}
@@ -748,7 +811,7 @@ jobs:
   generate-report:
     name: Generate Build Report
     runs-on: ubuntu-latest
-    needs: [build-dictionary, tokenize-test, accuracy-test]
+    needs: [build-dictionary, tokenize-test, test-v3-format, accuracy-test]
     if: always() && needs.build-dictionary.result == 'success'
     steps:
       - name: Checkout code
@@ -834,7 +897,7 @@ jobs:
   notify-status:
     name: Workflow Status
     runs-on: ubuntu-latest
-    needs: [validate-user-dict, validate-domain-dict, build-dictionary, tokenize-test, accuracy-test, generate-report]
+    needs: [validate-user-dict, validate-domain-dict, build-dictionary, tokenize-test, test-v3-format, accuracy-test, generate-report]
     if: always()
     steps:
       - name: Determine workflow status
@@ -844,10 +907,11 @@ jobs:
           VALIDATE_DOMAIN_STATUS="${{ needs.validate-domain-dict.result }}"
           BUILD_STATUS="${{ needs.build-dictionary.result }}"
           TEST_STATUS="${{ needs.tokenize-test.result }}"
+          V3_STATUS="${{ needs.test-v3-format.result }}"
           ACCURACY_STATUS="${{ needs.accuracy-test.result }}"
           REPORT_STATUS="${{ needs.generate-report.result }}"
 
-          if [ "$VALIDATE_USER_STATUS" = "failure" ] || [ "$VALIDATE_DOMAIN_STATUS" = "failure" ] || [ "$BUILD_STATUS" = "failure" ] || [ "$TEST_STATUS" = "failure" ] || [ "$ACCURACY_STATUS" = "failure" ] || [ "$REPORT_STATUS" = "failure" ]; then
+          if [ "$VALIDATE_USER_STATUS" = "failure" ] || [ "$VALIDATE_DOMAIN_STATUS" = "failure" ] || [ "$BUILD_STATUS" = "failure" ] || [ "$TEST_STATUS" = "failure" ] || [ "$V3_STATUS" = "failure" ] || [ "$ACCURACY_STATUS" = "failure" ] || [ "$REPORT_STATUS" = "failure" ]; then
             echo "workflow_status=failed" >> $GITHUB_OUTPUT
             exit 1
           else
@@ -866,6 +930,7 @@ jobs:
           | Domain Dict Validation | ${{ needs.validate-domain-dict.result }} |
           | Dictionary Build | ${{ needs.build-dictionary.result }} |
           | Tokenization Tests | ${{ needs.tokenize-test.result }} |
+          | v3 Format Conversion | ${{ needs.test-v3-format.result }} |
           | Accuracy Evaluation | ${{ needs.accuracy-test.result }} |
           | Report Generation | ${{ needs.generate-report.result }} |
 

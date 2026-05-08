@@ -75,6 +75,14 @@ impl<'a> Trie<'a> {
     }
 
     /// 정확히 일치하는 키 검색
+    ///
+    /// ```rust
+    /// use mecab_ko_dict::trie::{Trie, TrieBuilder};
+    ///
+    /// let bytes = TrieBuilder::build(&[("가다", 1u32)]).unwrap();
+    /// let trie = Trie::new(&bytes);
+    /// assert_eq!(trie.exact_match("가다"), Some(1));
+    /// ```
     #[must_use]
     pub fn exact_match(&self, key: &str) -> Option<u32> {
         self.da.exact_match_search(key.as_bytes())
@@ -89,6 +97,16 @@ impl<'a> Trie<'a> {
     /// 공통 접두사 검색
     ///
     /// 주어진 텍스트의 접두사와 일치하는 모든 키를 찾습니다.
+    ///
+    /// ```rust
+    /// use mecab_ko_dict::trie::{Trie, TrieBuilder};
+    ///
+    /// let entries = vec![("가", 0u32), ("가방", 2)];
+    /// let bytes = TrieBuilder::build(&entries).unwrap();
+    /// let trie = Trie::new(&bytes);
+    /// let results: Vec<_> = trie.common_prefix_search("가방에").collect();
+    /// assert_eq!(results.len(), 2);
+    /// ```
     pub fn common_prefix_search<'b>(
         &'b self,
         text: &'b str,
@@ -134,6 +152,14 @@ impl TrieBuilder {
     /// # Errors
     ///
     /// 엔트리가 비어있거나 Trie 빌드에 실패한 경우 에러를 반환합니다.
+    ///
+    /// ```rust
+    /// use mecab_ko_dict::trie::TrieBuilder;
+    ///
+    /// let entries = vec![("가", 0u32), ("가다", 1), ("가방", 2)];
+    /// let bytes = TrieBuilder::build(&entries).unwrap();
+    /// assert!(!bytes.is_empty());
+    /// ```
     pub fn build(entries: &[(&str, u32)]) -> Result<Vec<u8>> {
         if entries.is_empty() {
             return Err(DictError::Format(
