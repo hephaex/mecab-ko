@@ -328,7 +328,12 @@ fn run_convert(
 
     // 백업
     if backup && entries_bin.exists() && output_path == entries_bin {
-        let bak_suffix = if target_format == "v3" { "v2.bak" } else { "v1.bak" };
+        let bak_suffix = match detect_entries_format(&entries_bin) {
+            Ok(EntriesFormat::V1) => "v1.bak",
+            Ok(EntriesFormat::V2) => "v2.bak",
+            Ok(EntriesFormat::V3) => "v3.bak",
+            _ => "orig.bak",
+        };
         let backup_path = dict.join(format!("entries.bin.{bak_suffix}"));
         println!("3. Backing up to {}", backup_path.display());
         std::fs::copy(&entries_bin, &backup_path)?;
@@ -416,7 +421,8 @@ fn run_info(dict: &PathBuf) -> Result<()> {
     // entries.bin 포맷 확인
     let entries_bin = dict.join("entries.bin");
     if entries_bin.exists() {
-        let fmt_label = match detect_entries_format(&entries_bin) {
+        let fmt = detect_entries_format(&entries_bin);
+        let fmt_label = match &fmt {
             Ok(EntriesFormat::V1) => "V1 (MKED) - Eager loading only",
             Ok(EntriesFormat::V2) => "V2 (MKE2) - LazyEntries supported",
             Ok(EntriesFormat::V3) => "V3 (MKE3) - LazyEntries v3 supported",
@@ -424,10 +430,7 @@ fn run_info(dict: &PathBuf) -> Result<()> {
         };
         println!("\nentries.bin format: {fmt_label}");
 
-        if matches!(
-            detect_entries_format(&entries_bin),
-            Ok(EntriesFormat::V1)
-        ) {
+        if matches!(fmt, Ok(EntriesFormat::V1)) {
             println!("  → Run 'convert' command for memory optimization");
         }
     }
