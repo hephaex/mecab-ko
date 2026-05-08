@@ -1,25 +1,42 @@
-# Phase 80 - Sprint 114 (entries.bin v3 SystemDictionary 통합 + mmap trie test)
+# Phase 81 - Sprint 115 (trie/mod.rs 분할 + dict-builder v3 옵션 + entry_store 통합 리팩토링)
+
+## Sprint 115 목표
+trie/mod.rs 추가 분할로 코드 품질 향상, dict-builder에 v3 출력 옵션 추가, entry_store v2/v3 공통 로직 정리.
+
+## Sprint 115 로드맵
+
+### P1: trie/mod.rs 분할 (681줄 → owned.rs 추출)
+- Trie<'a> + TrieBuilder → trie/owned.rs 분리
+- trie/mod.rs는 re-export + 공통 타입만 유지
+- 목표: mod.rs 300줄 이하
+
+### P2: dict-builder --output-format v3 옵션
+- dict-build CLI에 --output-format=v2|v3 옵션 추가
+- 기본값 v2 유지, v3 옵션 시 save_entries_v3() 사용
+- CI dict-build 워크플로우에서 v3 출력 검증
+
+### P3: entry_store v2/v3 캐시 로직 통합 검토
+- LazyStore와 LazyStoreV3의 cache 관리 메서드 중복 제거 가능성
+- 공통 trait 또는 매크로 검토
+
+### P4: golden test known_limitation 플래그
+- complex.json UNKNOWN 앵커링 케이스에 status 필드 추가
+- 테스트 러너에서 known_limitation 필터링 지원
+
+---
+
+# 완료: Phase 80 - Sprint 114 (entries.bin v3 SystemDictionary 통합 + mmap trie test)
 
 ## Sprint 114 목표
 entries.bin v3(MKE3)를 SystemDictionary 로더에 통합하고, mmap trie 통합 테스트를 추가한다.
 
-## Sprint 114 로드맵
-
-### P1: SystemDictionary v3 entries 통합
-- dictionary.rs의 load_with_options()에 MKE3 분기 추가
-- detect_entries_format()으로 v1/v2/v3 자동 감지
-- LazyEntriesV3를 EntryStore trait으로 통합
-
-### P2: mmap trie integration test
-- memory_optimized()로 전체 사전 로드 + 토크나이징 검증
-- mmap trie vs owned trie 결과 동일성 테스트
-
-### P3: entries.bin v2→v3 마이그레이션 유틸리티
-- migrate_entries_v2_to_v3() 함수 구현
-- dict-builder에 --upgrade-entries 옵션 검토
-
-### P4: trie/mod.rs 추가 분할 검토
-- trie/mod.rs(681줄)에서 Trie+TrieBuilder → trie/owned.rs 추출 가능성
+## Sprint 114 결과
+- LazyStoreV3: EntryStore trait 구현 (LazyEntriesV3 래핑)
+- dictionary.rs: detect_entries_format()으로 V1/V2/V3 자동 감지 + 분기 로드
+- get_entries_at(): LazyEntriesV3에 연속 surface 조회 추가
+- migrate_v2_to_v3(): v2→v3 마이그레이션 유틸리티
+- mmap trie integration test: 3건 (로드, 결과 동일성, memory_optimized)
+- 테스트: 1,184 pass / 0 fail / 52 ignored, clippy 0 warnings
 
 ---
 

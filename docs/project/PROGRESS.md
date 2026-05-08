@@ -1,6 +1,33 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-08 (Sprint 113 완료 — entries.bin v3 MKE3 PoC + Golden Test 300)
+## 마지막 업데이트: 2026-05-08 (Sprint 114 완료 — entries.bin v3 SystemDictionary 통합 + mmap trie test)
+
+### ✅ Sprint 114 - entries.bin v3 SystemDictionary 통합 + mmap trie test + v2→v3 migration
+
+**기간**: 2026-05-08
+**목표**: LazyEntriesV3를 SystemDictionary에 통합, mmap trie 통합 테스트, v2→v3 마이그레이션 유틸리티
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| entry_store | EagerStore, LazyStore (v2만) | + LazyStoreV3 (v3 MKE3 지원) |
+| dictionary.rs load | v2 시도 → eager 폴백 | detect_entries_format() V3→V2→V1 자동 분기 |
+| LazyEntriesV3 | get()만 | + get_entries_at() 연속 surface 조회 |
+| 마이그레이션 | 없음 | migrate_v2_to_v3() 유틸리티 |
+| mmap trie 테스트 | 없음 | 3건 (로드, 결과 동일성, memory_optimized) |
+
+#### 수정/추가된 파일 (4개)
+- crates/mecab-ko-dict/src/dictionary.rs (detect_entries_format 분기, import 추가)
+- crates/mecab-ko-dict/src/entry_store.rs (LazyStoreV3 struct + EntryStore impl)
+- crates/mecab-ko-dict/src/lazy_entries_v3.rs (get_entries_at, migrate_v2_to_v3, 테스트)
+- crates/mecab-ko-dict/tests/mmap_trie_integration.rs (신규 — 3건 integration test)
+
+#### 테스트 결과
+- 1,184 pass / 0 fail / 52 ignored (+4 unit, +3 ignored integration)
+- clippy: 0 warnings (all targets)
+
+---
 
 ### ✅ Sprint 113 - entries.bin v3 MKE3 PoC + SmallVec 통일 + Golden Test 300
 
