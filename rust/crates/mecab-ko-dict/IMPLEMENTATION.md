@@ -125,7 +125,7 @@ cargo run -p mecab-ko-dict --example dictionary_usage
 
 ### 1. 타입 안전성
 - Entry와 DictEntry 명확히 구분
-- u32 인덱스를 EntryIndex로 래핑 (trie 모듈)
+- u32 인덱스를 직접 사용 (trie 모듈)
 - Result 타입 일관성 있게 사용
 
 ### 2. 메모리 효율성

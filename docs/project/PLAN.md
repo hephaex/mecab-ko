@@ -1,22 +1,37 @@
-# Phase 82 - Sprint 116 (owned.rs doc-test 복원 + dict-builder v3 CI + trie/mod.rs 추가 정리)
+# Phase 83 - Sprint 117 (미지 단어 공백 분할 + dict-builder ValueEnum + mini-dict 확장)
 
-## Sprint 116 로드맵
+## Sprint 117 로드맵
 
-### P1: owned.rs doc-test 복원
-- trie/owned.rs에 Trie::exact_match, common_prefix_search, TrieBuilder::build doc 예제 복원
-- 테스트 수 1,184+ 복원 목표
+### P1: 미지 단어 공백 기반 사전 분할 (UNKNOWN fallback)
+- tokenizer에서 미지 단어 폴백 시 공백 경계를 유지하도록 수정
+- 현재: 연속 미지 문자를 단일 UNKNOWN 토큰으로 병합
+- 목표: 공백 경계에서 분할하여 각 단어를 개별 UNKNOWN 토큰으로 생성
+- 15건 known_limitation 해소 기대
 
-### P2: dict-builder v3 CI 검증
-- dict-build.yml에 --output-format v3 테스트 스텝 추가
-- v3 변환 → v3 Info 검증 → v3 로드 검증 파이프라인
+### P2: dict-builder --output-format ValueEnum 전환
+- String → clap::ValueEnum 전환 (컴파일 타임 검증)
+- Sprint 115 코드 리뷰 MEDIUM 지적 반영
 
-### P3: trie/mod.rs EntryIndex/PrefixMatch/DictionarySearcher 정리
-- DictionarySearcher가 실제 사용처가 있는지 확인 (사용 안 되면 제거 후보)
-- EntryIndex/PrefixMatch를 별도 types.rs로 분리 검토 (mod.rs 380→250줄 이하)
+### P3: mini-dict 확장 (하세요/라고/했 등 기본 어미)
+- known_limitation 분석에서 식별된 누락 엔트리 추가
+- 43→50+ 엔트리 목표
+- mini-dict 바이너리 재빌드 (create_mini_dict.rs)
 
-### P4: golden test known_limitation 개선
-- known_limitation 케이스 분석 — 분석기 개선으로 해결 가능한 케이스 식별
-- mini-dict 확장으로 일부 UNKNOWN 해소 가능 여부 검토
+### P4: dict-builder run_convert 함수 분할
+- Sprint 115 코드 리뷰 LOW 지적: #[allow(clippy::too_many_lines)] 제거
+- save_and_verify_v2/v3 헬퍼 추출
+
+---
+
+# 완료: Phase 82 - Sprint 116 (doc-test 복원 + 미사용 API 정리 + v3 CI)
+
+## Sprint 116 결과
+- trie/owned.rs: doc-test 3건 복원
+- trie/mod.rs: 380→221줄 (DictionarySearcher/EntryIndex/PrefixMatch 제거)
+- lib.rs: 미사용 re-export 제거
+- dict-build.yml: test-v3-format job (v2→v3→v2 round-trip)
+- known_limitation 분석: 15/16건 구조적 문제 (공백 미분할), 1건 mini-dict 확장 가능
+- 테스트: 1,181 pass / 0 fail / 52 ignored, clippy 0 warnings
 
 ---
 

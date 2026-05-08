@@ -1,6 +1,38 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-08 (Sprint 115 완료 — trie 분할 + entry_store 매크로 + dict-builder v3 + golden known_limitation)
+## 마지막 업데이트: 2026-05-09 (Sprint 116 완료 — doc-test 복원 + 미사용 API 정리 + v3 CI)
+
+### ✅ Sprint 116 - doc-test 복원 + 미사용 public API 정리 + dict-builder v3 CI
+
+**기간**: 2026-05-09
+**목표**: doc-test 복원, 미사용 public API 제거, dict-builder v3 CI 검증, known_limitation 분석
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| trie/owned.rs | doc-test 0건 | doc-test 3건 복원 (exact_match, common_prefix_search, build) |
+| trie/mod.rs | 380줄 (EntryIndex/PrefixMatch/DictionarySearcher 포함) | 221줄 (미사용 타입 3종 + 테스트 3건 제거) |
+| lib.rs | DictionarySearcher/EntryIndex/PrefixMatch re-export | 미사용 re-export 제거 |
+| dict-build.yml | v2 변환만 | + test-v3-format job (v2→v3→v2 round-trip) |
+| known_limitation | 16건 미분석 | 분석 완료: 15건 구조적, 1건 mini-dict 확장 가능 |
+
+#### 수정/추가된 파일 (4개)
+- .github/workflows/dict-build.yml (test-v3-format job 추가)
+- crates/mecab-ko-dict/src/lib.rs (미사용 re-export 제거)
+- crates/mecab-ko-dict/src/trie/mod.rs (미사용 타입 + 테스트 제거)
+- crates/mecab-ko-dict/src/trie/owned.rs (doc-test 3건 복원)
+
+#### 테스트 결과
+- 1,181 pass / 0 fail / 52 ignored (+3 doc-test, -3 removed type tests)
+- clippy: 0 warnings (all targets)
+
+#### known_limitation 분석 결과
+- 16건 중 15건: 구조적 문제 (공백 미분할 → 전체 입력이 단일 UNKNOWN 토큰)
+- 1건: mini-dict 확장으로 부분 해결 가능 (하세요/라고/했 추가)
+- 근본 원인: 미지 단어 폴백 시 공백 기반 사전 분할 미수행
+
+---
 
 ### ✅ Sprint 115 - trie/mod.rs 분할 + entry_store 매크로 + dict-builder v3 옵션 + golden known_limitation
 
