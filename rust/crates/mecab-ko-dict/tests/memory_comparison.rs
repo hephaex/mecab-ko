@@ -186,6 +186,7 @@ fn test_lazy_cache_size_effect() {
 
     // 작은 캐시
     let small_cache_opts = LoadOptions {
+        use_mmap_trie: false,
         use_mmap_matrix: false,
         use_lazy_entries: true,
         lazy_cache_size: Some(2), // 아주 작은 캐시

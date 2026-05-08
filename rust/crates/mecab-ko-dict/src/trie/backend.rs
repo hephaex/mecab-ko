@@ -86,4 +86,13 @@ impl TrieBackend {
             Self::Mmap(t) => t.common_prefix_search_bytes(key).collect(),
         }
     }
+
+    /// 특정 위치에서 공통 접두사 검색
+    #[must_use]
+    pub fn common_prefix_search_at(&self, text: &str, start_byte: usize) -> Vec<(u32, usize)> {
+        match self {
+            Self::Owned(t) => t.common_prefix_search_at(text, start_byte),
+            Self::Mmap(t) => t.common_prefix_search_at(text, start_byte),
+        }
+    }
 }

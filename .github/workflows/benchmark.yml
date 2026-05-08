@@ -277,13 +277,16 @@ jobs:
             comment += prBench.substring(0, 5000);
             comment += '\n```\n</details>';
 
-            github.rest.issues.createComment({
+            await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: comment
             });
-        continue-on-error: true
+
+            if (hasError) {
+              core.setFailed(`Critical performance regression detected (>10%): ${errorDetails.join(', ')}`);
+            }
 
       - name: Convert PR results to JSON
         if: always()

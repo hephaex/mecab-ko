@@ -206,6 +206,7 @@ fn bench_cache_efficiency(c: &mut Criterion) {
         let dict = SystemDictionary::load_with_options(
             get_dicdir(),
             LoadOptions {
+                use_mmap_trie: false,
                 use_mmap_matrix: false,
                 use_lazy_entries: true,
                 lazy_cache_size: Some(100), // 작은 캐시

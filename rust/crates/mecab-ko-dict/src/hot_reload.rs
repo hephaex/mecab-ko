@@ -862,7 +862,7 @@ mod tests {
     fn create_test_system_dict() -> SystemDictionary {
         let entries = vec![("가", 0u32), ("가다", 1), ("가방", 2)];
         let trie_bytes = TrieBuilder::build(&entries).expect("should build trie");
-        let trie = crate::trie::Trie::from_vec(trie_bytes);
+        let trie = crate::trie::TrieBackend::Owned(crate::trie::Trie::from_vec(trie_bytes));
         let matrix = crate::matrix::ConnectionMatrix::Dense(DenseMatrix::new(10, 10, 100));
 
         let mut dict_entries = Vec::new();

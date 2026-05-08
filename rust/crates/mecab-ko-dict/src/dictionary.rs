@@ -37,7 +37,7 @@ use crate::entry_store::{EagerStore, EntryStore, LazyStore};
 use crate::error::{DictError, Result};
 use crate::lazy_entries::LazyEntries;
 use crate::matrix::{ConnectionMatrix, Matrix};
-use crate::trie::Trie;
+use crate::trie::TrieBackend;
 use crate::user_dict::UserDictionary;
 use crate::{Dictionary, Entry};
 
@@ -72,7 +72,7 @@ pub struct SystemDictionary {
     /// 사전 디렉토리 경로
     dicdir: PathBuf,
     /// Trie (형태소 검색)
-    trie: Trie<'static>,
+    trie: TrieBackend,
     /// 연접 비용 행렬
     matrix: ConnectionMatrix,
     /// 엔트리 저장소 (Eager/Lazy 추상화)
@@ -150,6 +150,8 @@ impl From<Entry> for DictEntry {
 /// 속도 우선 모드가 필요하면 `LoadOptions::speed_optimized()`를 사용하세요.
 #[derive(Debug, Clone, Copy)]
 pub struct LoadOptions {
+    /// Trie에 mmap 사용 (zero-copy, 멀티프로세스 메모리 공유)
+    pub use_mmap_trie: bool,
     /// Matrix에 mmap 사용 (멀티프로세스 메모리 공유, 물리 메모리 절약)
     pub use_mmap_matrix: bool,
     /// entries에 lazy loading 사용 (메모리 절약, 첫 조회 시 로드)
@@ -161,11 +163,13 @@ pub struct LoadOptions {
 impl Default for LoadOptions {
     /// 기본값: 메모리 최적화 모드
     ///
+    /// - `use_mmap_trie`: false
     /// - `use_mmap_matrix`: false
     /// - `use_lazy_entries`: true (`LazyEntries` 사용)
     /// - `lazy_cache_size`: Some(10000)
     fn default() -> Self {
         Self {
+            use_mmap_trie: false,
             use_mmap_matrix: false,
             use_lazy_entries: true,
             lazy_cache_size: Some(10000),
@@ -178,6 +182,7 @@ impl LoadOptions {
     #[must_use]
     pub const fn memory_optimized() -> Self {
         Self {
+            use_mmap_trie: true,
             use_mmap_matrix: true,
             use_lazy_entries: true,
             lazy_cache_size: Some(10000),
@@ -191,6 +196,7 @@ impl LoadOptions {
     #[must_use]
     pub const fn speed_optimized() -> Self {
         Self {
+            use_mmap_trie: false,
             use_mmap_matrix: false,
             use_lazy_entries: false,
             lazy_cache_size: None,
@@ -244,15 +250,19 @@ impl SystemDictionary {
     pub fn load_with_options<P: AsRef<Path>>(dicdir: P, options: LoadOptions) -> Result<Self> {
         let dicdir = dicdir.as_ref().to_path_buf();
 
-        // Trie 로드
+        // Trie 로드 (옵션에 따라 mmap 사용)
         let trie_path = dicdir.join(TRIE_FILE);
         let trie = if trie_path.exists() {
-            Trie::from_file(&trie_path)?
+            if options.use_mmap_trie {
+                TrieBackend::from_mmap_file(&trie_path)?
+            } else {
+                TrieBackend::from_file(&trie_path)?
+            }
         } else {
-            // 압축 파일 시도
+            // 압축 파일 시도 (mmap 불가 → 항상 owned)
             let compressed_path = dicdir.join(format!("{TRIE_FILE}.zst"));
             if compressed_path.exists() {
-                Trie::from_compressed_file(&compressed_path)?
+                TrieBackend::from_compressed_file(&compressed_path)?
             } else {
                 return Err(DictError::Format(format!(
                     "Trie file not found: {}",
@@ -340,12 +350,12 @@ impl SystemDictionary {
         // Trie 로드
         let trie_path = dicdir.join(TRIE_FILE);
         let trie = if trie_path.exists() {
-            Trie::from_file(&trie_path)?
+            TrieBackend::from_file(&trie_path)?
         } else {
             // 압축 파일 시도
             let compressed_path = dicdir.join(format!("{TRIE_FILE}.zst"));
             if compressed_path.exists() {
-                Trie::from_compressed_file(&compressed_path)?
+                TrieBackend::from_compressed_file(&compressed_path)?
             } else {
                 return Err(DictError::Format(format!(
                     "Trie file not found: {}",
@@ -679,7 +689,7 @@ impl SystemDictionary {
 
     /// Trie 참조 반환
     #[must_use]
-    pub const fn trie(&self) -> &Trie<'static> {
+    pub const fn trie(&self) -> &TrieBackend {
         &self.trie
     }
 
@@ -861,7 +871,7 @@ impl SystemDictionary {
     #[must_use]
     pub fn new_test(
         dicdir: PathBuf,
-        trie: Trie<'static>,
+        trie: TrieBackend,
         matrix: ConnectionMatrix,
         entries: Vec<DictEntry>,
     ) -> Self {
@@ -1029,7 +1039,7 @@ impl DictionaryLoader {
 mod tests {
     use super::*;
     use crate::matrix::DenseMatrix;
-    use crate::trie::TrieBuilder;
+    use crate::trie::{Trie, TrieBuilder};
 
     fn create_test_dictionary() -> SystemDictionary {
         // 테스트용 Trie 생성
@@ -1041,7 +1051,7 @@ mod tests {
             ("나다", 4),
         ];
         let trie_bytes = TrieBuilder::build(&entries).expect("should build trie");
-        let trie = Trie::from_vec(trie_bytes);
+        let trie = TrieBackend::Owned(Trie::from_vec(trie_bytes));
 
         // 테스트용 Matrix 생성
         let matrix = DenseMatrix::new(10, 10, 100);
@@ -1294,7 +1304,7 @@ mod tests {
         // 같은 surface에 복수 엔트리가 있는 경우
         let trie_input = vec![("가", 0u32), ("나", 2u32)];
         let trie_bytes = TrieBuilder::build(&trie_input).expect("build trie");
-        let trie = Trie::from_vec(trie_bytes);
+        let trie = TrieBackend::Owned(Trie::from_vec(trie_bytes));
         let matrix = ConnectionMatrix::Dense(DenseMatrix::new(5, 5, 100));
 
         let dict_entries = vec![

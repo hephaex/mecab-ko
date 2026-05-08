@@ -24,13 +24,13 @@ use mecab_ko_dict::hot_reload_v2::HotReloadDictV2;
 use mecab_ko_dict::matrix::{ConnectionMatrix, DenseMatrix};
 use mecab_ko_dict::trie::TrieBuilder;
 use mecab_ko_dict::user_dict::UserDictionary;
-use mecab_ko_dict::Trie;
+use mecab_ko_dict::{Trie, TrieBackend};
 
 /// Helper: build a minimal `SystemDictionary` with a small trie for testing.
 fn build_test_dict() -> SystemDictionary {
     let trie_entries = vec![("가", 0u32), ("가방", 1)];
     let trie_bytes = TrieBuilder::build(&trie_entries).expect("should build trie");
-    let trie = Trie::from_vec(trie_bytes);
+    let trie = TrieBackend::Owned(Trie::from_vec(trie_bytes));
 
     let matrix = ConnectionMatrix::Dense(DenseMatrix::new(10, 10, 100));
 

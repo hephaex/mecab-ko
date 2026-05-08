@@ -57,4 +57,17 @@ impl MmapTrie {
     ) -> impl Iterator<Item = (u32, usize)> + 'a {
         self.da.common_prefix_search(key)
     }
+
+    /// 특정 위치에서 공통 접두사 검색
+    #[must_use]
+    pub fn common_prefix_search_at(&self, text: &str, start_byte: usize) -> Vec<(u32, usize)> {
+        if start_byte >= text.len() {
+            return Vec::new();
+        }
+        let suffix = &text[start_byte..];
+        self.da
+            .common_prefix_search(suffix.as_bytes())
+            .map(|(value, len)| (value, start_byte + len))
+            .collect()
+    }
 }
