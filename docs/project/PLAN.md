@@ -1,27 +1,33 @@
-# Phase 81 - Sprint 115 (trie/mod.rs 분할 + dict-builder v3 옵션 + entry_store 통합 리팩토링)
+# Phase 82 - Sprint 116 (owned.rs doc-test 복원 + dict-builder v3 CI + trie/mod.rs 추가 정리)
 
-## Sprint 115 목표
-trie/mod.rs 추가 분할로 코드 품질 향상, dict-builder에 v3 출력 옵션 추가, entry_store v2/v3 공통 로직 정리.
+## Sprint 116 로드맵
 
-## Sprint 115 로드맵
+### P1: owned.rs doc-test 복원
+- trie/owned.rs에 Trie::exact_match, common_prefix_search, TrieBuilder::build doc 예제 복원
+- 테스트 수 1,184+ 복원 목표
 
-### P1: trie/mod.rs 분할 (681줄 → owned.rs 추출)
-- Trie<'a> + TrieBuilder → trie/owned.rs 분리
-- trie/mod.rs는 re-export + 공통 타입만 유지
-- 목표: mod.rs 300줄 이하
+### P2: dict-builder v3 CI 검증
+- dict-build.yml에 --output-format v3 테스트 스텝 추가
+- v3 변환 → v3 Info 검증 → v3 로드 검증 파이프라인
 
-### P2: dict-builder --output-format v3 옵션
-- dict-build CLI에 --output-format=v2|v3 옵션 추가
-- 기본값 v2 유지, v3 옵션 시 save_entries_v3() 사용
-- CI dict-build 워크플로우에서 v3 출력 검증
+### P3: trie/mod.rs EntryIndex/PrefixMatch/DictionarySearcher 정리
+- DictionarySearcher가 실제 사용처가 있는지 확인 (사용 안 되면 제거 후보)
+- EntryIndex/PrefixMatch를 별도 types.rs로 분리 검토 (mod.rs 380→250줄 이하)
 
-### P3: entry_store v2/v3 캐시 로직 통합 검토
-- LazyStore와 LazyStoreV3의 cache 관리 메서드 중복 제거 가능성
-- 공통 trait 또는 매크로 검토
+### P4: golden test known_limitation 개선
+- known_limitation 케이스 분석 — 분석기 개선으로 해결 가능한 케이스 식별
+- mini-dict 확장으로 일부 UNKNOWN 해소 가능 여부 검토
 
-### P4: golden test known_limitation 플래그
-- complex.json UNKNOWN 앵커링 케이스에 status 필드 추가
-- 테스트 러너에서 known_limitation 필터링 지원
+---
+
+# 완료: Phase 81 - Sprint 115 (trie/mod.rs 분할 + dict-builder v3 옵션 + entry_store 통합 리팩토링)
+
+## Sprint 115 결과
+- trie/mod.rs 681→380줄: Trie + TrieBuilder → trie/owned.rs 추출
+- impl_lazy_store! 매크로: LazyStore/LazyStoreV3 중복 86줄 제거
+- dict-builder: --output-format v2|v3 옵션 + Info MKE3 감지
+- golden test: 16건 complex.json에 known_limitation 플래그
+- 테스트: 1,181 pass / 0 fail / 52 ignored, clippy 0 warnings
 
 ---
 

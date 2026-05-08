@@ -1,6 +1,36 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-08 (Sprint 114 완료 — entries.bin v3 SystemDictionary 통합 + mmap trie test)
+## 마지막 업데이트: 2026-05-08 (Sprint 115 완료 — trie 분할 + entry_store 매크로 + dict-builder v3 + golden known_limitation)
+
+### ✅ Sprint 115 - trie/mod.rs 분할 + entry_store 매크로 + dict-builder v3 옵션 + golden known_limitation
+
+**기간**: 2026-05-08
+**목표**: 코드 품질 개선 (trie 분할, 매크로 중복 제거), dict-builder v3 출력, golden test known_limitation 플래그
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| trie/mod.rs | 681줄 (Trie+TrieBuilder 인라인) | 380줄 (owned.rs로 분리, re-export) |
+| entry_store.rs | LazyStore/LazyStoreV3 중복 코드 | impl_lazy_store! 매크로로 통합 |
+| dict-builder Convert | v2 출력만 | --output-format v2\|v3 옵션 |
+| dict-builder Info | 수동 매직 바이트 | detect_entries_format() V1/V2/V3 |
+| golden test complex.json | status 없음 | 16건 known_limitation 플래그 |
+
+#### 수정/추가된 파일 (7개)
+- crates/mecab-ko-dict/src/trie/owned.rs (신규 — Trie + TrieBuilder 추출)
+- crates/mecab-ko-dict/src/trie/mod.rs (Trie/TrieBuilder 제거, re-export)
+- crates/mecab-ko-dict/src/entry_store.rs (impl_lazy_store! 매크로)
+- crates/mecab-ko-dict-builder/src/main.rs (--output-format v3, Info MKE3)
+- crates/mecab-ko/tests/common/mod.rs (status: Option<String> 추가)
+- crates/mecab-ko/tests/golden/complex.json (16건 known_limitation)
+- crates/mecab-ko/tests/integration_golden.rs (known_limitation 핸들링)
+
+#### 테스트 결과
+- 1,181 pass / 0 fail / 52 ignored
+- clippy: 0 warnings (all targets)
+
+---
 
 ### ✅ Sprint 114 - entries.bin v3 SystemDictionary 통합 + mmap trie test + v2→v3 migration
 
