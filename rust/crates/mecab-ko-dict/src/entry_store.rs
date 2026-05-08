@@ -13,6 +13,7 @@ use std::sync::Arc;
 use crate::dictionary::DictEntry;
 use crate::error::{DictError, Result};
 use crate::lazy_entries::LazyEntries;
+use crate::lazy_entries_v3::LazyEntriesV3;
 
 /// 사전 엔트리 저장소 인터페이스
 ///
@@ -153,6 +154,51 @@ impl EntryStore for LazyStore {
     }
 }
 
+/// Lazy 로드 저장소 (v3 포맷)
+///
+/// MKE3 v3 포맷의 엔트리를 필요할 때만 디스크에서 읽어옵니다.
+pub struct LazyStoreV3 {
+    lazy_entries: LazyEntriesV3,
+}
+
+impl LazyStoreV3 {
+    /// 새 v3 Lazy 저장소 생성
+    #[must_use]
+    pub const fn new(lazy_entries: LazyEntriesV3) -> Self {
+        Self { lazy_entries }
+    }
+
+    /// 캐시된 엔트리 수 반환
+    #[must_use]
+    pub fn cached_count(&self) -> usize {
+        self.lazy_entries.cached_count()
+    }
+
+    /// 캐시 크기 설정
+    pub fn set_cache_size(&self, size: usize) {
+        self.lazy_entries.set_cache_size(size);
+    }
+
+    /// 캐시 초기화
+    pub fn clear_cache(&self) {
+        self.lazy_entries.clear_cache();
+    }
+}
+
+impl EntryStore for LazyStoreV3 {
+    fn get(&self, index: u32) -> Result<Arc<DictEntry>> {
+        self.lazy_entries.get(index)
+    }
+
+    fn get_entries_at(&self, first_index: u32, surface: &str) -> Result<Vec<Arc<DictEntry>>> {
+        self.lazy_entries.get_entries_at(first_index, surface)
+    }
+
+    fn len(&self) -> usize {
+        self.lazy_entries.len()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     #![allow(clippy::expect_used, clippy::unwrap_used)]
@@ -254,6 +300,49 @@ mod tests {
         let _ = store.get(0).expect("get 0");
         assert_eq!(store.cached_count(), 1);
 
+        store.clear_cache();
+        assert_eq!(store.cached_count(), 0);
+    }
+
+    #[test]
+    fn test_lazy_store_v3_roundtrip() {
+        use crate::lazy_entries_v3::{save_entries_v3, LazyEntriesV3};
+        use tempfile::tempdir;
+
+        let entries = sample_entries();
+        let dir = tempdir().expect("create temp dir");
+        let path = dir.path().join("entries_v3.bin");
+
+        save_entries_v3(&entries, &path).expect("save");
+
+        let lazy = LazyEntriesV3::from_file(&path).expect("load");
+        let store = LazyStoreV3::new(lazy);
+
+        assert_eq!(store.len(), 3);
+
+        let entry = store.get(0).expect("get 0");
+        assert_eq!(entry.surface, "가");
+
+        let entries = store.get_entries_at(0, "가").expect("get_entries_at");
+        assert_eq!(entries.len(), 2);
+    }
+
+    #[test]
+    fn test_lazy_store_v3_cache() {
+        use crate::lazy_entries_v3::{save_entries_v3, LazyEntriesV3};
+        use tempfile::tempdir;
+
+        let entries = sample_entries();
+        let dir = tempdir().expect("create temp dir");
+        let path = dir.path().join("entries_v3.bin");
+
+        save_entries_v3(&entries, &path).expect("save");
+        let lazy = LazyEntriesV3::from_file(&path).expect("load");
+        let store = LazyStoreV3::new(lazy);
+
+        assert_eq!(store.cached_count(), 0);
+        let _ = store.get(0).expect("get 0");
+        assert_eq!(store.cached_count(), 1);
         store.clear_cache();
         assert_eq!(store.cached_count(), 0);
     }

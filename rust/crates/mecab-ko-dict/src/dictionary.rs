@@ -33,9 +33,10 @@ use std::sync::Arc;
 
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
-use crate::entry_store::{EagerStore, EntryStore, LazyStore};
+use crate::entry_store::{EagerStore, EntryStore, LazyStore, LazyStoreV3};
 use crate::error::{DictError, Result};
 use crate::lazy_entries::LazyEntries;
+use crate::lazy_entries_v3::{detect_entries_format, EntriesFormat, LazyEntriesV3};
 use crate::matrix::{ConnectionMatrix, Matrix};
 use crate::trie::TrieBackend;
 use crate::user_dict::UserDictionary;
@@ -302,19 +303,35 @@ impl SystemDictionary {
         let entry_store: Arc<dyn EntryStore> = if options.use_lazy_entries {
             let entries_path = dicdir.join(ENTRIES_BIN_FILE);
             if entries_path.exists() {
-                // LazyEntries (v2 포맷) 시도, 실패 시 EagerStore로 폴백
-                if let Ok(lazy) = LazyEntries::from_file(&entries_path) {
-                    if let Some(cache_size) = options.lazy_cache_size {
-                        lazy.set_cache_size(cache_size);
+                match detect_entries_format(&entries_path) {
+                    Ok(EntriesFormat::V3) => {
+                        if let Ok(lazy) = LazyEntriesV3::from_file(&entries_path) {
+                            if let Some(cache_size) = options.lazy_cache_size {
+                                lazy.set_cache_size(cache_size);
+                            }
+                            Arc::new(LazyStoreV3::new(lazy))
+                        } else {
+                            let entries = Self::load_entries(&dicdir)?;
+                            Arc::new(EagerStore::new(entries))
+                        }
                     }
-                    Arc::new(LazyStore::new(lazy))
-                } else {
-                    // v1 포맷이거나 다른 형식이면 EagerStore로 폴백
-                    let entries = Self::load_entries(&dicdir)?;
-                    Arc::new(EagerStore::new(entries))
+                    Ok(EntriesFormat::V2) => {
+                        if let Ok(lazy) = LazyEntries::from_file(&entries_path) {
+                            if let Some(cache_size) = options.lazy_cache_size {
+                                lazy.set_cache_size(cache_size);
+                            }
+                            Arc::new(LazyStore::new(lazy))
+                        } else {
+                            let entries = Self::load_entries(&dicdir)?;
+                            Arc::new(EagerStore::new(entries))
+                        }
+                    }
+                    Ok(EntriesFormat::V1) | Err(_) => {
+                        let entries = Self::load_entries(&dicdir)?;
+                        Arc::new(EagerStore::new(entries))
+                    }
                 }
             } else {
-                // entries.bin이 없으면 eager로 폴백
                 let entries = Self::load_entries(&dicdir)?;
                 Arc::new(EagerStore::new(entries))
             }

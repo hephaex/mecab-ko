@@ -248,6 +248,29 @@ impl LazyEntriesV3 {
         Ok(entry)
     }
 
+    /// Collect all consecutive entries starting at `first_index` that share `surface`.
+    ///
+    /// Iterates forward from `first_index` until either the end of the file or
+    /// an entry whose surface differs from `surface`.
+    ///
+    /// # Errors
+    ///
+    /// Returns `DictError::Format` if any individual entry cannot be loaded.
+    pub fn get_entries_at(&self, first_index: u32, surface: &str) -> Result<Vec<Arc<DictEntry>>> {
+        let mut results = Vec::new();
+        let mut index = first_index;
+        while index < self.count {
+            let entry = self.get(index)?;
+            if entry.surface == surface {
+                results.push(entry);
+                index += 1;
+            } else {
+                break;
+            }
+        }
+        Ok(results)
+    }
+
     fn entry_offset(&self, index: u32) -> Result<u64> {
         if index >= self.count {
             return Err(DictError::Format(format!(
@@ -402,6 +425,27 @@ pub fn save_entries_v3<P: AsRef<Path>>(entries: &[DictEntry], path: P) -> Result
     Ok(())
 }
 
+/// Migrate an entries.bin file from v2 (MKE2) format to v3 (MKE3).
+///
+/// Reads all entries from the v2 file, then writes them in v3 format.
+///
+/// # Errors
+///
+/// Returns an error if the source cannot be read or the destination
+/// cannot be written.
+pub fn migrate_v2_to_v3<P: AsRef<Path>, Q: AsRef<Path>>(
+    v2_path: P,
+    v3_path: Q,
+) -> Result<usize> {
+    use crate::lazy_entries::LazyEntries;
+
+    let v2 = LazyEntries::from_file(v2_path)?;
+    let count = v2.len();
+    let entries = v2.load_all()?;
+    save_entries_v3(&entries, v3_path)?;
+    Ok(count)
+}
+
 #[cfg(test)]
 mod tests {
     #![allow(clippy::expect_used, clippy::unwrap_used)]
@@ -510,6 +554,33 @@ mod tests {
     }
 
     #[test]
+    fn test_get_entries_at() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("entries_v3.bin");
+
+        let entries = vec![
+            DictEntry::new("가", 1, 1, 100, "NNG"),
+            DictEntry::new("가", 2, 2, 50, "JKS"),
+            DictEntry::new("나", 3, 3, 200, "NP"),
+        ];
+        save_entries_v3(&entries, &path).expect("save");
+
+        let lazy = LazyEntriesV3::from_file(&path).expect("load");
+
+        let results = lazy.get_entries_at(0, "가").expect("get_entries_at");
+        assert_eq!(results.len(), 2);
+        assert_eq!(results[0].feature, "NNG");
+        assert_eq!(results[1].feature, "JKS");
+
+        let results = lazy.get_entries_at(2, "나").expect("get_entries_at");
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].surface, "나");
+
+        let results = lazy.get_entries_at(0, "다").expect("get_entries_at");
+        assert!(results.is_empty());
+    }
+
+    #[test]
     fn test_v3_cache() {
         let entries = sample_entries();
         let dir = tempdir().expect("tempdir");
@@ -538,5 +609,42 @@ mod tests {
         let _ = lazy.get(0).expect("get 0");
         let _ = lazy.get(1).expect("get 1");
         assert_eq!(lazy.cached_count(), 1);
+    }
+
+    #[test]
+    fn test_migrate_v2_to_v3() {
+        use crate::lazy_entries::LazyEntries;
+
+        let entries = vec![
+            DictEntry::new("가", 1, 1, 100, "NNG"),
+            DictEntry::new("가", 2, 2, 50, "JKS"),
+            DictEntry::new("나", 3, 3, 200, "NP"),
+        ];
+
+        let dir = tempdir().expect("tempdir");
+        let v2_path = dir.path().join("entries_v2.bin");
+        let v3_path = dir.path().join("entries_v3.bin");
+
+        LazyEntries::save_entries(&entries, &v2_path).expect("save v2");
+
+        let count = migrate_v2_to_v3(&v2_path, &v3_path).expect("migrate");
+        assert_eq!(count, 3);
+
+        assert_eq!(
+            detect_entries_format(&v3_path).expect("detect"),
+            EntriesFormat::V3
+        );
+
+        let v3 = LazyEntriesV3::from_file(&v3_path).expect("load v3");
+        assert_eq!(v3.len(), 3);
+
+        let e0 = v3.get(0).expect("get 0");
+        assert_eq!(e0.surface, "가");
+        assert_eq!(e0.left_id, 1);
+        assert_eq!(e0.feature, "NNG");
+
+        let e2 = v3.get(2).expect("get 2");
+        assert_eq!(e2.surface, "나");
+        assert_eq!(e2.feature, "NP");
     }
 }
