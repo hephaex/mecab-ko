@@ -158,6 +158,14 @@ impl LazyEntriesV3 {
             .read_u64::<LittleEndian>()
             .map_err(|e| DictError::Format(format!("MKE3: cannot read index_offset: {e}")))?;
 
+        let expected_index_end = index_offset + u64::from(count) * 8;
+        if expected_index_end > mmap.len() as u64 {
+            return Err(DictError::Format(format!(
+                "MKE3: index table extends beyond file (offset={index_offset}, count={count}, file_len={})",
+                mmap.len()
+            )));
+        }
+
         Ok(Self {
             path,
             mmap,
@@ -227,10 +235,16 @@ impl LazyEntriesV3 {
         }
 
         let entry = Arc::new(self.load_entry_from_mmap(index)?);
-        self.cache
-            .write()
-            .map_err(|_| DictError::Format("MKE3: cache lock poisoned".into()))?
-            .put(index, Arc::clone(&entry));
+        {
+            let mut cache = self
+                .cache
+                .write()
+                .map_err(|_| DictError::Format("MKE3: cache lock poisoned".into()))?;
+            if let Some(existing) = cache.get(&index) {
+                return Ok(Arc::clone(existing));
+            }
+            cache.put(index, Arc::clone(&entry));
+        }
         Ok(entry)
     }
 
@@ -285,6 +299,14 @@ impl LazyEntriesV3 {
             .read_u32::<LittleEndian>()
             .map_err(|e| DictError::Format(format!("MKE3 entry {index} feature_len: {e}")))?
             as usize;
+
+        let record_header = 2 + 2 + 2 + 2 + 4;
+        let remaining = self.mmap.len().saturating_sub(offset_usize + record_header);
+        if surface_len + feature_len > remaining {
+            return Err(DictError::Format(format!(
+                "MKE3 entry {index}: surface_len({surface_len}) + feature_len({feature_len}) exceeds remaining bytes({remaining})"
+            )));
+        }
 
         let mut surface_bytes = vec![0u8; surface_len];
         cur.read_exact(&mut surface_bytes)
