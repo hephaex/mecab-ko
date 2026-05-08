@@ -1,6 +1,38 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-08 (Sprint 111 완료 — trie 분할 + SmallVec + Golden Test 250건)
+## 마지막 업데이트: 2026-05-08 (Sprint 112 완료 — SystemDictionary TrieBackend 전환 + Benchmark CI)
+
+### ✅ Sprint 112 - SystemDictionary TrieBackend 전환 + Benchmark CI threshold
+
+**기간**: 2026-05-08
+**목표**: SystemDictionary의 trie를 TrieBackend로 전환, benchmark CI에 10% 회귀 감지 추가
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| SystemDictionary.trie | `Trie<'static>` | `TrieBackend` (Owned/Mmap) |
+| LoadOptions | use_mmap_matrix, use_lazy_entries | + use_mmap_trie (memory_optimized=true) |
+| TrieBackend API | common_prefix_search만 | + common_prefix_search_at |
+| MmapTrie API | common_prefix_search만 | + common_prefix_search_at |
+| Benchmark CI | continue-on-error: true | core.setFailed() (>10% 회귀 시 실패) |
+
+#### 수정된 파일 (9개)
+- crates/mecab-ko-dict/src/dictionary.rs (Trie→TrieBackend, LoadOptions 확장)
+- crates/mecab-ko-dict/src/trie/backend.rs (common_prefix_search_at 추가)
+- crates/mecab-ko-dict/src/trie/mmap.rs (common_prefix_search_at 추가)
+- crates/mecab-ko-dict/src/hot_reload.rs (TrieBackend::Owned 래핑)
+- crates/mecab-ko-core/src/tokenizer.rs (TrieBackend::Owned 래핑)
+- crates/mecab-ko-dict/tests/hot_reload_v2_integration.rs (TrieBackend 임포트)
+- crates/mecab-ko-dict/tests/memory_comparison.rs (use_mmap_trie 필드)
+- crates/benchmarks/benches/dict_loading_bench.rs (use_mmap_trie 필드)
+- .github/workflows/benchmark.yml (core.setFailed 추가)
+
+#### 테스트 결과
+- 1,176 pass / 0 fail / 49 ignored
+- clippy: 0 warnings (all targets)
+
+---
 
 ### ✅ Sprint 111 - trie 모듈 분할 + SmallVec prefix search + Golden Test 250건
 

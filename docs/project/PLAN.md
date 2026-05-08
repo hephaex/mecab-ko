@@ -1,27 +1,39 @@
-# Phase 78 - Sprint 112 (SystemDictionary TrieBackend 전환 + entries.bin v3 PoC)
+# Phase 79 - Sprint 113 (entries.bin v3 PoC + Golden Test 300)
 
-## Sprint 112 목표
-SystemDictionary가 TrieBackend를 직접 사용하도록 전환하고, entries.bin v3 포맷 PoC를 시작한다.
+## Sprint 113 목표
+entries.bin v3 포맷 PoC를 시작하고, golden test를 300건으로 확장한다.
 
-## Sprint 112 로드맵
+## Sprint 113 로드맵
 
-### P1: SystemDictionary TrieBackend 전환
-- dictionary.rs의 `trie: Trie<'static>` → `trie: TrieBackend`
-- DictLoader의 TrieBackend를 SystemDictionary로 전달
-- mmap 모드에서 SystemDictionary 전체 경로 검증
-
-### P2: entries.bin v3 PoC
+### P1: entries.bin v3 PoC
 - v3-dict-schema.md 기반 entries.bin 새 포맷 프로토타입
 - mmap 가능한 고정 크기 엔트리 레코드 설계
 - mini-dict로 v3 entries 라운드트립 테스트
 
-### P3: Benchmark CI threshold 설정
-- benchmark.yml에 성능 회귀 10% threshold 추가
-- PR 코멘트에 벤치마크 변화율 표시
-
-### P4: Golden Test 300건 목표
+### P2: Golden Test 300건 목표
 - 미커버 POS 태그 추가 (현재 40/45)
 - 오분석 사례 수집 (mecab-ko-dic 알려진 오류)
+
+### P3: LoadOptions mmap trie integration test
+- memory_optimized()로 전체 사전 로드 + 토크나이징 검증
+- mmap trie vs owned trie 결과 동일성 테스트
+
+### P4: mod.rs 681줄 추가 분할 검토
+- trie/mod.rs에서 Trie+TrieBuilder → trie/owned.rs 추출 가능성
+
+---
+
+# 완료: Phase 78 - Sprint 112 (SystemDictionary TrieBackend 전환 + Benchmark CI)
+
+## Sprint 112 목표
+SystemDictionary가 TrieBackend를 직접 사용하도록 전환하고, benchmark CI threshold를 설정한다.
+
+## Sprint 112 결과
+- SystemDictionary: `trie: Trie<'static>` → `trie: TrieBackend` 전환
+- LoadOptions: `use_mmap_trie: bool` 추가 (memory_optimized에서 true)
+- common_prefix_search_at: MmapTrie + TrieBackend에 추가 (API 완전성)
+- benchmark CI: continue-on-error → core.setFailed() (10% 회귀 시 CI 실패)
+- 테스트: 1,176 pass / 0 fail / 49 ignored, clippy 0 warnings
 
 ---
 
