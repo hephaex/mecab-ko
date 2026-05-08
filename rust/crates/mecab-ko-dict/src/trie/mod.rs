@@ -197,9 +197,13 @@ impl<'a> Trie<'a> {
     /// - value: 일치하는 키의 값
     /// - `end_byte`: 일치하는 키의 끝 바이트 위치
     #[must_use]
-    pub fn common_prefix_search_at(&self, text: &str, start_byte: usize) -> Vec<(u32, usize)> {
+    pub fn common_prefix_search_at(
+        &self,
+        text: &str,
+        start_byte: usize,
+    ) -> PrefixSearchResult {
         if start_byte >= text.len() {
-            return Vec::new();
+            return PrefixSearchResult::new();
         }
 
         let suffix = &text[start_byte..];

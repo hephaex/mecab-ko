@@ -1398,5 +1398,260 @@
       ]
     ],
     "difficulty": 2
+  },
+  {
+    "input": "면역학",
+    "description": "의학 분야 용어",
+    "category": "medical",
+    "expected_morphs": [
+      "면역학"
+    ],
+    "expected_pos": [
+      [
+        "면역학",
+        "UNKNOWN"
+      ]
+    ],
+    "difficulty": 1
+  },
+  {
+    "input": "항생제",
+    "description": "의학 약품 용어",
+    "category": "medical",
+    "expected_morphs": [
+      "항생제"
+    ],
+    "expected_pos": [
+      [
+        "항생제",
+        "UNKNOWN"
+      ]
+    ],
+    "difficulty": 1
+  },
+  {
+    "input": "민사소송",
+    "description": "법률 용어",
+    "category": "legal",
+    "expected_morphs": [
+      "민사소송"
+    ],
+    "expected_pos": [
+      [
+        "민사소송",
+        "UNKNOWN"
+      ]
+    ],
+    "difficulty": 1
+  },
+  {
+    "input": "형사재판",
+    "description": "법률 용어 형사",
+    "category": "legal",
+    "expected_morphs": [
+      "형사재판"
+    ],
+    "expected_pos": [
+      [
+        "형사재판",
+        "UNKNOWN"
+      ]
+    ],
+    "difficulty": 1
+  },
+  {
+    "input": "블록체인",
+    "description": "기술 용어",
+    "category": "tech",
+    "expected_morphs": [
+      "블록체인"
+    ],
+    "expected_pos": [
+      [
+        "블록체인",
+        "UNKNOWN"
+      ]
+    ],
+    "difficulty": 1
+  },
+  {
+    "input": "클라우드컴퓨팅",
+    "description": "기술 복합어",
+    "category": "tech",
+    "expected_morphs": [
+      "클라우드컴퓨팅"
+    ],
+    "expected_pos": [
+      [
+        "클라우드컴퓨팅",
+        "UNKNOWN"
+      ]
+    ],
+    "difficulty": 1
+  },
+  {
+    "input": "인터넷",
+    "description": "외래어 기술 용어",
+    "category": "tech",
+    "expected_morphs": [
+      "인터넷"
+    ],
+    "expected_pos": [
+      [
+        "인터넷",
+        "UNKNOWN"
+      ]
+    ],
+    "difficulty": 1
+  },
+  {
+    "input": "컴퓨터",
+    "description": "외래어 기술 명사",
+    "category": "tech",
+    "expected_morphs": [
+      "컴퓨터"
+    ],
+    "expected_pos": [
+      [
+        "컴퓨터",
+        "UNKNOWN"
+      ]
+    ],
+    "difficulty": 1
+  },
+  {
+    "input": "서버와 클라이언트",
+    "description": "복합 기술 명사",
+    "category": "tech",
+    "expected_morphs": [
+      "서버와클라이언트"
+    ],
+    "expected_pos": [
+      [
+        "서버와클라이언트",
+        "UNKNOWN"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "약물치료",
+    "description": "의학 치료 용어",
+    "category": "medical",
+    "expected_morphs": [
+      "약물치료"
+    ],
+    "expected_pos": [
+      [
+        "약물치료",
+        "UNKNOWN"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "신경과",
+    "description": "의료 분과",
+    "category": "medical",
+    "expected_morphs": [
+      "신경과"
+    ],
+    "expected_pos": [
+      [
+        "신경과",
+        "UNKNOWN"
+      ]
+    ],
+    "difficulty": 1
+  },
+  {
+    "input": "헌법",
+    "description": "법률 기본",
+    "category": "legal",
+    "expected_morphs": [
+      "헌법"
+    ],
+    "expected_pos": [
+      [
+        "헌법",
+        "UNKNOWN"
+      ]
+    ],
+    "difficulty": 1
+  },
+  {
+    "input": "계약서",
+    "description": "법률 문서",
+    "category": "legal",
+    "expected_morphs": [
+      "계약서"
+    ],
+    "expected_pos": [
+      [
+        "계약서",
+        "UNKNOWN"
+      ]
+    ],
+    "difficulty": 1
+  },
+  {
+    "input": "데이터베이스",
+    "description": "IT 외래어",
+    "category": "tech",
+    "expected_morphs": [
+      "데이터베이스"
+    ],
+    "expected_pos": [
+      [
+        "데이터베이스",
+        "UNKNOWN"
+      ]
+    ],
+    "difficulty": 1
+  },
+  {
+    "input": "알고리즘",
+    "description": "컴공 용어",
+    "category": "tech",
+    "expected_morphs": [
+      "알고리즘"
+    ],
+    "expected_pos": [
+      [
+        "알고리즘",
+        "UNKNOWN"
+      ]
+    ],
+    "difficulty": 1
+  },
+  {
+    "input": "프로토콜",
+    "description": "네트워킹 용어",
+    "category": "tech",
+    "expected_morphs": [
+      "프로토콜"
+    ],
+    "expected_pos": [
+      [
+        "프로토콜",
+        "UNKNOWN"
+      ]
+    ],
+    "difficulty": 1
+  },
+  {
+    "input": "병원",
+    "description": "기본 의료 기관",
+    "category": "medical",
+    "expected_morphs": [
+      "병원"
+    ],
+    "expected_pos": [
+      [
+        "병원",
+        "UNKNOWN"
+      ]
+    ],
+    "difficulty": 1
   }
 ]

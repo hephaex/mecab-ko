@@ -60,9 +60,13 @@ impl MmapTrie {
 
     /// 특정 위치에서 공통 접두사 검색
     #[must_use]
-    pub fn common_prefix_search_at(&self, text: &str, start_byte: usize) -> Vec<(u32, usize)> {
+    pub fn common_prefix_search_at(
+        &self,
+        text: &str,
+        start_byte: usize,
+    ) -> super::backend::PrefixSearchResult {
         if start_byte >= text.len() {
-            return Vec::new();
+            return super::backend::PrefixSearchResult::new();
         }
         let suffix = &text[start_byte..];
         self.da

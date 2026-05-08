@@ -3898,5 +3898,343 @@
       ]
     ],
     "difficulty": 3
+  },
+  {
+    "input": "AI기술",
+    "description": "영문자+한글 합성어",
+    "category": "mixed",
+    "expected_morphs": [
+      "AI기술"
+    ],
+    "expected_pos": [
+      [
+        "AI기술",
+        "UNKNOWN"
+      ]
+    ],
+    "difficulty": 1
+  },
+  {
+    "input": "GPU서버",
+    "description": "영문 약자+명사 합성",
+    "category": "mixed",
+    "expected_morphs": [
+      "GPU서버"
+    ],
+    "expected_pos": [
+      [
+        "GPU서버",
+        "UNKNOWN"
+      ]
+    ],
+    "difficulty": 1
+  },
+  {
+    "input": "먹을 수 있다",
+    "description": "미래 표현 + 가능 보조동사",
+    "category": "verb_conjugation",
+    "expected_morphs": [
+      "먹",
+      "을",
+      "수",
+      "있",
+      "다"
+    ],
+    "expected_pos": [
+      [
+        "먹",
+        "VV"
+      ],
+      [
+        "을",
+        "ETM"
+      ],
+      [
+        "수",
+        "NNB"
+      ],
+      [
+        "있",
+        "VV"
+      ],
+      [
+        "다",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "100원짜리",
+    "description": "숫자 + 단위 + 접미사",
+    "category": "number",
+    "expected_morphs": [
+      "100원짜리"
+    ],
+    "expected_pos": [
+      [
+        "100원짜리",
+        "UNKNOWN"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "3시간",
+    "description": "숫자 + 시간 단위",
+    "category": "number",
+    "expected_morphs": [
+      "3시간"
+    ],
+    "expected_pos": [
+      [
+        "3시간",
+        "UNKNOWN"
+      ]
+    ],
+    "difficulty": 1
+  },
+  {
+    "input": "하다.",
+    "description": "동사 + 마침표 punctuation",
+    "category": "punctuation",
+    "expected_morphs": [
+      "하",
+      "다",
+      "."
+    ],
+    "expected_pos": [
+      [
+        "하",
+        "XSV"
+      ],
+      [
+        "다",
+        "EF"
+      ],
+      [
+        ".",
+        "S"
+      ]
+    ],
+    "difficulty": 1
+  },
+  {
+    "input": "가나요?",
+    "description": "의문사 + 의문 부호",
+    "category": "punctuation",
+    "expected_morphs": [
+      "가나요",
+      "?"
+    ],
+    "expected_pos": [
+      [
+        "가나요",
+        "UNKNOWN"
+      ],
+      [
+        "?",
+        "S"
+      ]
+    ],
+    "difficulty": 1
+  },
+  {
+    "input": "나",
+    "description": "단일 대명사",
+    "category": "single",
+    "expected_morphs": [
+      "나"
+    ],
+    "expected_pos": [
+      [
+        "나",
+        "NP"
+      ]
+    ],
+    "difficulty": 1
+  },
+  {
+    "input": "일",
+    "description": "단일 명사 (work)",
+    "category": "single",
+    "expected_morphs": [
+      "일"
+    ],
+    "expected_pos": [
+      [
+        "일",
+        "NNG"
+      ]
+    ],
+    "difficulty": 1
+  },
+  {
+    "input": "크다",
+    "description": "형용사 크다",
+    "category": "adjective",
+    "expected_morphs": [
+      "크",
+      "다"
+    ],
+    "expected_pos": [
+      [
+        "크",
+        "VA"
+      ],
+      [
+        "다",
+        "EF"
+      ]
+    ],
+    "difficulty": 1
+  },
+  {
+    "input": "작은 것",
+    "description": "관형형 + 의존명사",
+    "category": "determiner",
+    "expected_morphs": [
+      "작",
+      "은",
+      "것"
+    ],
+    "expected_pos": [
+      [
+        "작",
+        "VA"
+      ],
+      [
+        "은",
+        "ETM"
+      ],
+      [
+        "것",
+        "NNB"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "  ",
+    "description": "공백만",
+    "category": "whitespace",
+    "expected_morphs": [],
+    "expected_pos": [],
+    "difficulty": 1
+  },
+  {
+    "input": "오늘은?",
+    "description": "명사 + 주제 표지 + 의문부호",
+    "category": "question",
+    "expected_morphs": [
+      "오늘",
+      "은",
+      "?"
+    ],
+    "expected_pos": [
+      [
+        "오늘",
+        "NNG"
+      ],
+      [
+        "은",
+        "JX"
+      ],
+      [
+        "?",
+        "S"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "더 크다",
+    "description": "부사 + 형용사",
+    "category": "adverb",
+    "expected_morphs": [
+      "더",
+      "크",
+      "다"
+    ],
+    "expected_pos": [
+      [
+        "더",
+        "MAG"
+      ],
+      [
+        "크",
+        "VA"
+      ],
+      [
+        "다",
+        "EF"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "좋은 날씨",
+    "description": "관형형 + 명사",
+    "category": "noun_modifier",
+    "expected_morphs": [
+      "좋",
+      "은",
+      "날씨"
+    ],
+    "expected_pos": [
+      [
+        "좋",
+        "VA"
+      ],
+      [
+        "은",
+        "ETM"
+      ],
+      [
+        "날씨",
+        "NNG"
+      ]
+    ],
+    "difficulty": 2
+  },
+  {
+    "input": "우리는",
+    "description": "대명사 + 주제표지",
+    "category": "pronoun",
+    "expected_morphs": [
+      "우리",
+      "는"
+    ],
+    "expected_pos": [
+      [
+        "우리",
+        "NP"
+      ],
+      [
+        "는",
+        "JX"
+      ]
+    ],
+    "difficulty": 1
+  },
+  {
+    "input": "그것",
+    "description": "지시형 + 명사",
+    "category": "demonstrative",
+    "expected_morphs": [
+      "그",
+      "것"
+    ],
+    "expected_pos": [
+      [
+        "그",
+        "MM"
+      ],
+      [
+        "것",
+        "NNB"
+      ]
+    ],
+    "difficulty": 1
   }
 ]

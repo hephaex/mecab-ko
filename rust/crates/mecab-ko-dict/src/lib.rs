@@ -39,6 +39,7 @@ pub mod entry_store;
 pub mod file_watcher;
 pub mod hot_reload;
 pub mod lazy_entries;
+pub mod lazy_entries_v3;
 pub mod loader;
 pub mod matrix;
 pub mod string_pool;
