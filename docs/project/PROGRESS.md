@@ -1,6 +1,41 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-08 (Sprint 112 완료 — SystemDictionary TrieBackend 전환 + Benchmark CI)
+## 마지막 업데이트: 2026-05-08 (Sprint 113 완료 — entries.bin v3 MKE3 PoC + Golden Test 300)
+
+### ✅ Sprint 113 - entries.bin v3 MKE3 PoC + SmallVec 통일 + Golden Test 300
+
+**기간**: 2026-05-08
+**목표**: entries.bin v3 (MKE3) 포맷 PoC, common_prefix_search_at 반환 타입 통일, golden test 300건 확장
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| entries.bin | v2 (MKE2, feature_len u16) | + v3 (MKE3, feature_len u32, 24B 헤더) |
+| LazyEntriesV3 | 없음 | mmap + LRU 캐시, TOCTOU-safe, 바운드 검증 |
+| detect_entries_format() | 없음 | 매직 바이트로 V1/V2/V3 자동 감지 |
+| common_prefix_search_at | Trie: Vec, MmapTrie: Vec | 모두 PrefixSearchResult (SmallVec) |
+| Golden Test | 250건 (basic 115, nouns 70, complex 65) | 300건 (basic 132, nouns 87, complex 81) |
+
+#### 수정/추가된 파일 (7개)
+- crates/mecab-ko-dict/src/lazy_entries_v3.rs (신규 — MKE3 포맷 구현)
+- crates/mecab-ko-dict/src/lib.rs (lazy_entries_v3 모듈 등록)
+- crates/mecab-ko-dict/src/trie/mod.rs (common_prefix_search_at → PrefixSearchResult)
+- crates/mecab-ko-dict/src/trie/mmap.rs (common_prefix_search_at → PrefixSearchResult)
+- crates/mecab-ko/tests/golden/basic.json (+17건)
+- crates/mecab-ko/tests/golden/nouns.json (+17건)
+- crates/mecab-ko/tests/golden/complex.json (+16건)
+
+#### 코드 리뷰 반영 (3건)
+- [HIGH] feature_len u32 바운드 검증 추가 (OOM 방지)
+- [MEDIUM] index_offset from_file() 시 검증 (fail-fast)
+- [MEDIUM] get() TOCTOU 방어 (write lock 재확인)
+
+#### 테스트 결과
+- 1,180 pass / 0 fail / 49 ignored (+4 from v3 tests)
+- clippy: 0 warnings (all targets)
+
+---
 
 ### ✅ Sprint 112 - SystemDictionary TrieBackend 전환 + Benchmark CI threshold
 

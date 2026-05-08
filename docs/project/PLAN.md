@@ -1,25 +1,40 @@
-# Phase 79 - Sprint 113 (entries.bin v3 PoC + Golden Test 300)
+# Phase 80 - Sprint 114 (entries.bin v3 SystemDictionary 통합 + mmap trie test)
 
-## Sprint 113 목표
-entries.bin v3 포맷 PoC를 시작하고, golden test를 300건으로 확장한다.
+## Sprint 114 목표
+entries.bin v3(MKE3)를 SystemDictionary 로더에 통합하고, mmap trie 통합 테스트를 추가한다.
 
-## Sprint 113 로드맵
+## Sprint 114 로드맵
 
-### P1: entries.bin v3 PoC
-- v3-dict-schema.md 기반 entries.bin 새 포맷 프로토타입
-- mmap 가능한 고정 크기 엔트리 레코드 설계
-- mini-dict로 v3 entries 라운드트립 테스트
+### P1: SystemDictionary v3 entries 통합
+- dictionary.rs의 load_with_options()에 MKE3 분기 추가
+- detect_entries_format()으로 v1/v2/v3 자동 감지
+- LazyEntriesV3를 EntryStore trait으로 통합
 
-### P2: Golden Test 300건 목표
-- 미커버 POS 태그 추가 (현재 40/45)
-- 오분석 사례 수집 (mecab-ko-dic 알려진 오류)
-
-### P3: LoadOptions mmap trie integration test
+### P2: mmap trie integration test
 - memory_optimized()로 전체 사전 로드 + 토크나이징 검증
 - mmap trie vs owned trie 결과 동일성 테스트
 
-### P4: mod.rs 681줄 추가 분할 검토
-- trie/mod.rs에서 Trie+TrieBuilder → trie/owned.rs 추출 가능성
+### P3: entries.bin v2→v3 마이그레이션 유틸리티
+- migrate_entries_v2_to_v3() 함수 구현
+- dict-builder에 --upgrade-entries 옵션 검토
+
+### P4: trie/mod.rs 추가 분할 검토
+- trie/mod.rs(681줄)에서 Trie+TrieBuilder → trie/owned.rs 추출 가능성
+
+---
+
+# 완료: Phase 79 - Sprint 113 (entries.bin v3 PoC + Golden Test 300)
+
+## Sprint 113 목표
+entries.bin v3 포맷 PoC를 구현하고, golden test를 300건으로 확장한다.
+
+## Sprint 113 결과
+- entries.bin v3 (MKE3): 24B 헤더, feature_len u32, LazyEntriesV3 mmap 저장소
+- detect_entries_format(): v1(MKED)/v2(MKE2)/v3(MKE3) 자동 감지
+- save_entries_v3(): MKE3 직렬화 (인덱스 테이블 포함)
+- common_prefix_search_at: Vec → PrefixSearchResult (SmallVec) 일관성 수정
+- Golden Test: 250→300건 (basic 132, nouns 87, complex 81)
+- 테스트: 1,180 pass / 0 fail / 49 ignored, clippy 0 warnings
 
 ---
 
