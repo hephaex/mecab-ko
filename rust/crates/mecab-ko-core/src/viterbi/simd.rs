@@ -15,7 +15,7 @@
 #![allow(unsafe_code)]
 
 use crate::lattice::{Lattice, NodeId};
-use crate::viterbi::{ConnectionCost, SpacePenalty, DEFAULT_OOB_CONNECTION_COST};
+use crate::viterbi::{ConnectionCost, SpacePenalty, clamp_oob_cost};
 use std::simd::{cmp::SimdPartialOrd, i32x8, num::SimdInt, Select};
 
 /// SIMD 레인 크기
@@ -123,12 +123,7 @@ fn simd_batch_cost_calculation<C: ConnectionCost>(
             continue;
         }
 
-        let raw_connection = conn_cost.cost(*prev_right_id, left_id);
-        let connection = if raw_connection == i32::MAX {
-            DEFAULT_OOB_CONNECTION_COST
-        } else {
-            raw_connection
-        };
+        let connection = clamp_oob_cost(conn_cost.cost(*prev_right_id, left_id));
         let total = saturating_add_chain(*prev_cost, connection, word_cost, space_penalty);
 
         if total < best_cost {
@@ -161,9 +156,7 @@ fn process_chunk_simd<C: ConnectionCost>(
     // 연접 비용 조회 - SIMD로 배치 처리
     let mut conn_costs = batch_connection_cost_lookup(conn_cost, &right_ids, left_id);
     for c in &mut conn_costs {
-        if *c == i32::MAX {
-            *c = DEFAULT_OOB_CONNECTION_COST;
-        }
+        *c = clamp_oob_cost(*c);
     }
 
     // SIMD 벡터화된 비용 계산
