@@ -1,6 +1,45 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-09 (Sprint 116 완료 — doc-test 복원 + 미사용 API 정리 + v3 CI)
+## 마지막 업데이트: 2026-05-09 (Sprint 117 완료 — ValueEnum + run_convert 분할 + mini-dict 확장)
+
+### ✅ Sprint 117 - dict-builder ValueEnum + run_convert 분할 + mini-dict 56 엔트리
+
+**기간**: 2026-05-09
+**목표**: dict-builder 코드 리뷰 지적 반영 (ValueEnum, 함수 분할), mini-dict 확장, UNKNOWN 공백 분할 조사
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| dict-builder --output-format | String (런타임 검증) | clap::ValueEnum OutputFormat (컴파일 타임) |
+| dict-builder run_convert | #[allow(clippy::too_many_lines)] | save_entries_format/verify_entries_format 헬퍼 추출 |
+| mini-dict entries | 43 엔트리 | 56 엔트리 (+고,도,면,서,며,되,수,후,문제,안,모두,정말,그녀) |
+| create_mini_dict | entries.csv + sys.dic + matrix.bin | + entries.bin 자동 생성 (LazyEntries) |
+| UNKNOWN 공백 분할 | 미조사 | 조사 완료: group loop 정상, Viterbi chain이 근본 원인 |
+
+#### 수정/추가된 파일 (8개)
+- crates/mecab-ko-dict-builder/src/main.rs (OutputFormat enum, 헬퍼 추출)
+- test-fixtures/Cargo.toml (mecab-ko-dict 의존성 추가)
+- test-fixtures/Cargo.lock (의존성 추가)
+- test-fixtures/create_mini_dict.rs (13 엔트리 추가, entries.bin 생성)
+- test-fixtures/mini-dict/entries.bin (56 엔트리 MKE2)
+- test-fixtures/mini-dict/entries.csv (56 엔트리)
+- test-fixtures/mini-dict/matrix.bin (57×57 매트릭스)
+- test-fixtures/mini-dict/sys.dic (56 엔트리 trie)
+
+#### 테스트 결과
+- 1,181 pass / 0 fail / 52 ignored
+- clippy: 0 warnings (all targets)
+
+#### UNKNOWN 공백 분할 조사 결과
+- lattice.rs: 공백 제거 → SpacePositions로 공백 위치 추적
+- unknown.rs: generate_candidates group loop는 has_space_before()로 공백 경계에서 정상 분할
+- HANGUL category: length=2, 최대 2문자 후보 생성
+- 근본 원인: Viterbi가 2-char UNKNOWN 노드를 chain하여 전체 입력을 단일 경로로 선택
+- Space penalty (6000) 존재하지만 UNKNOWN→UNKNOWN 연결이 여전히 최적 경로
+- → Sprint 118 P1에서 Viterbi 레벨 수정 필요
+
+---
 
 ### ✅ Sprint 116 - doc-test 복원 + 미사용 public API 정리 + dict-builder v3 CI
 

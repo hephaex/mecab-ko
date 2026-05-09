@@ -1,25 +1,37 @@
-# Phase 83 - Sprint 117 (미지 단어 공백 분할 + dict-builder ValueEnum + mini-dict 확장)
+# Phase 84 - Sprint 118 (UNKNOWN 공백 분할 Viterbi + known_limitation 해소)
 
-## Sprint 117 로드맵
+## Sprint 118 로드맵
 
-### P1: 미지 단어 공백 기반 사전 분할 (UNKNOWN fallback)
-- tokenizer에서 미지 단어 폴백 시 공백 경계를 유지하도록 수정
-- 현재: 연속 미지 문자를 단일 UNKNOWN 토큰으로 병합
-- 목표: 공백 경계에서 분할하여 각 단어를 개별 UNKNOWN 토큰으로 생성
+### P1: UNKNOWN 토큰 공백 분할 — Viterbi 레벨 수정
+- 조사: unknown handler의 group loop는 이미 공백에서 분할됨
+- 근본 원인: Viterbi가 2-char UNKNOWN 노드를 chain하여 단일 경로 생성
+- 방안 A: unknown handler에서 공백 경계 노드에 추가 비용 부여
+- 방안 B: Viterbi forward pass에서 unknown→unknown 연결 시 공백 패널티 강화
+- 방안 C: build_lattice에서 공백 위치에 barrier 노드 삽입
 - 15건 known_limitation 해소 기대
 
-### P2: dict-builder --output-format ValueEnum 전환
-- String → clap::ValueEnum 전환 (컴파일 타임 검증)
-- Sprint 115 코드 리뷰 MEDIUM 지적 반영
+### P2: golden test known_limitation 업데이트
+- P1 수정 후 16건 중 해소된 케이스의 expected_pos를 실제 분할 결과로 갱신
+- status 필드 제거 (정상 테스트 전환)
 
-### P3: mini-dict 확장 (하세요/라고/했 등 기본 어미)
-- known_limitation 분석에서 식별된 누락 엔트리 추가
-- 43→50+ 엔트리 목표
-- mini-dict 바이너리 재빌드 (create_mini_dict.rs)
+### P3: tokenizer 공백 분할 단위 테스트
+- unknown word + space boundary 조합의 regression test 추가
+- 엣지 케이스: 연속 공백, 탭, 혼합 공백
 
-### P4: dict-builder run_convert 함수 분할
-- Sprint 115 코드 리뷰 LOW 지적: #[allow(clippy::too_many_lines)] 제거
-- save_and_verify_v2/v3 헬퍼 추출
+### P4: mini-dict entries.csv → entries.bin 자동 동기화 CI
+- create_mini_dict 실행 → diff 확인 → 불일치 시 CI 실패
+
+---
+
+# 완료: Phase 83 - Sprint 117 (ValueEnum + run_convert 분할 + mini-dict 확장)
+
+## Sprint 117 결과
+- dict-builder: --output-format String → clap::ValueEnum (컴파일 타임 검증)
+- dict-builder: run_convert → save_entries_format/verify_entries_format 헬퍼 추출
+- mini-dict: 43→56 엔트리 (고/도/면/서/며/되/수/후/문제/안/모두/정말/그녀)
+- create_mini_dict: entries.bin 자동 생성 (mecab-ko-dict LazyEntries::save_entries)
+- UNKNOWN 공백 분할 조사: group loop는 정상, Viterbi chain이 근본 원인 → Sprint 118 P1
+- 테스트: 1,181 pass / 0 fail / 52 ignored, clippy 0 warnings
 
 ---
 
