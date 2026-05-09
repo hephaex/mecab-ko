@@ -871,7 +871,8 @@ impl UnknownHandler {
                     .left_id(candidate.left_id)
                     .right_id(candidate.right_id)
                     .word_cost(i32::from(candidate.cost))
-                    .node_type(NodeType::Unknown),
+                    .node_type(NodeType::Unknown)
+                    .feature(&candidate.pos),
             );
             count += 1;
         }

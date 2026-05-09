@@ -53,6 +53,14 @@ const fn saturating_add_chain(a: i32, b: i32, c: i32, d: i32) -> i32 {
     a.saturating_add(b).saturating_add(c).saturating_add(d)
 }
 
+/// Out-of-range matrix lookup fallback cost.
+///
+/// When `DenseMatrix::get()` returns `i32::MAX` (ID pair outside the matrix
+/// dimensions), this value is substituted so that UNKNOWN nodes can still
+/// participate in the Viterbi search.  In-range cells store `i16` costs
+/// (max 32 767), so `i32::MAX` unambiguously signals an OOB lookup.
+pub(crate) const DEFAULT_OOB_CONNECTION_COST: i32 = 10_000;
+
 /// 연접 비용 조회 인터페이스
 ///
 /// 두 형태소 간의 연결 비용을 반환합니다.
@@ -392,7 +400,12 @@ impl ViterbiSearcher {
             }
 
             // 연접 비용 계산
-            let connection = conn_cost.cost(prev_right_id, left_id);
+            let raw_connection = conn_cost.cost(prev_right_id, left_id);
+            let connection = if raw_connection == i32::MAX {
+                DEFAULT_OOB_CONNECTION_COST
+            } else {
+                raw_connection
+            };
 
             // 총 비용 = 이전 비용 + 연접 비용 + 단어 비용 + 띄어쓰기 패널티
             let total = saturating_add_chain(prev_cost, connection, word_cost, space_penalty);
@@ -442,7 +455,12 @@ impl ViterbiSearcher {
                 continue;
             }
 
-            let connection = conn_cost.cost(prev_right_id, left_id);
+            let raw_connection = conn_cost.cost(prev_right_id, left_id);
+            let connection = if raw_connection == i32::MAX {
+                DEFAULT_OOB_CONNECTION_COST
+            } else {
+                raw_connection
+            };
 
             let space_penalty = if has_space {
                 self.space_penalty.get(left_id)

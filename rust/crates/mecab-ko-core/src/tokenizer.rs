@@ -394,10 +394,16 @@ impl Tokenizer {
             .viterbi_searcher
             .search(&mut self.lattice, self.dictionary.matrix());
 
-        // Token 변환
+        // Token 변환 (byte positions mapped to original text)
         path.iter()
             .filter_map(|&node_id| self.lattice.node(node_id))
-            .map(Token::from_node)
+            .map(|node| {
+                let mut token = Token::from_node(node);
+                let orig_start = self.lattice.original_byte_pos(node.start_pos);
+                token.start_byte = orig_start;
+                token.end_byte = orig_start + node.surface.len();
+                token
+            })
             .collect()
     }
 

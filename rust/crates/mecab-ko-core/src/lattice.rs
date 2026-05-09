@@ -429,6 +429,10 @@ pub struct Lattice {
     /// 띄어쓰기 위치 정보
     space_positions: SpacePositions,
 
+    /// Stripped char position → original-text byte offset.
+    /// Length = stripped char count + 1 (sentinel for EOS).
+    stripped_to_original_byte: Vec<usize>,
+
     /// 모든 노드 (ID로 인덱싱)
     /// 메모리 최적화: 재사용을 위해 용량 유지
     nodes: Vec<Node>,
@@ -471,6 +475,7 @@ impl Lattice {
 
         let char_positions = CharPositions::new(&text_no_space);
         let space_positions = SpacePositions::new(text);
+        let stripped_to_original_byte = Self::build_stripped_to_original(text);
 
         let char_len = char_positions.char_count();
         let byte_len = char_positions.byte_count();
@@ -500,6 +505,7 @@ impl Lattice {
             text: text_no_space,
             char_positions,
             space_positions,
+            stripped_to_original_byte,
             nodes,
             ends_at,
             starts_at,
@@ -520,6 +526,30 @@ impl Lattice {
     #[must_use]
     pub fn original_text(&self) -> &str {
         &self.original_text
+    }
+
+    /// Map a stripped-text char position to the corresponding byte offset in
+    /// the original (space-included) text.
+    #[inline]
+    #[must_use]
+    pub fn original_byte_pos(&self, stripped_char_pos: usize) -> usize {
+        self.stripped_to_original_byte
+            .get(stripped_char_pos)
+            .copied()
+            .unwrap_or(self.original_text.len())
+    }
+
+    fn build_stripped_to_original(original: &str) -> Vec<usize> {
+        let mut map = Vec::new();
+        let mut byte_offset = 0;
+        for c in original.chars() {
+            if !c.is_whitespace() {
+                map.push(byte_offset);
+            }
+            byte_offset += c.len_utf8();
+        }
+        map.push(byte_offset);
+        map
     }
 
     /// 문자 개수
@@ -725,6 +755,7 @@ impl Lattice {
         }
 
         self.char_positions = CharPositions::new(&self.text);
+        self.stripped_to_original_byte = Self::build_stripped_to_original(text);
         self.space_positions = SpacePositions::new(text);
 
         let char_len = self.char_positions.char_count();

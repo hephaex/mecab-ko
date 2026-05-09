@@ -207,9 +207,9 @@ fn test_analyzer_preserves_content_words() {
 
     // Content words should not be filtered
     let tokens = result.unwrap();
-    // Since we have a stub tokenizer, we can't verify exact behavior yet
-    // but we can verify the analyzer doesn't crash
-    assert!(tokens.len() <= 1); // Should be <= original token count
+    // With mini-dict, "테스트" is unknown and may produce multiple UNKNOWN
+    // tokens.  Verify the analyzer doesn't crash and produces output.
+    assert!(!tokens.is_empty());
 }
 
 #[test]

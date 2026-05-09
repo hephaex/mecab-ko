@@ -460,3 +460,117 @@ fn test_alternating_empty_and_text() {
 
     println!("Completed alternating empty/text calls");
 }
+
+// ========================================
+// UNKNOWN Token Space Boundary Tests
+// ========================================
+
+#[test]
+fn test_unknown_single_word_produces_tokens() {
+    let mut tokenizer = create_tokenizer();
+    let tokens = tokenizer.tokenize("다양한");
+    assert!(!tokens.is_empty(), "single unknown word must produce tokens");
+}
+
+#[test]
+fn test_unknown_words_separated_by_space() {
+    let mut tokenizer = create_tokenizer();
+    let tokens = tokenizer.tokenize("다양한 이론들이");
+    assert!(
+        tokens.len() >= 2,
+        "space-separated unknowns must produce at least 2 tokens, got {}",
+        tokens.len()
+    );
+}
+
+#[test]
+fn test_unknown_tokens_respect_space_boundary() {
+    let mut tokenizer = create_tokenizer();
+    let tokens = tokenizer.tokenize("다양한 이론들이 제시되었다");
+
+    for token in &tokens {
+        assert!(
+            !token.surface.is_empty(),
+            "every token must have non-empty surface"
+        );
+        assert!(
+            !token.pos.is_empty(),
+            "token '{}' must have non-empty POS",
+            token.surface
+        );
+    }
+
+    let surfaces: Vec<&str> = tokens.iter().map(|t| t.surface.as_str()).collect();
+    let joined = surfaces.join("");
+    assert_eq!(
+        joined, "다양한이론들이제시되었다",
+        "concatenated surfaces must equal space-stripped input"
+    );
+}
+
+#[test]
+fn test_unknown_byte_positions_in_original_text() {
+    let mut tokenizer = create_tokenizer();
+    let input = "다양한 이론들이";
+    let tokens = tokenizer.tokenize(input);
+
+    for token in &tokens {
+        assert!(
+            input.is_char_boundary(token.start_byte),
+            "token '{}' start_byte {} must be char boundary",
+            token.surface,
+            token.start_byte
+        );
+        assert!(
+            input.is_char_boundary(token.end_byte),
+            "token '{}' end_byte {} must be char boundary",
+            token.surface,
+            token.end_byte
+        );
+        assert_eq!(
+            &input[token.start_byte..token.end_byte],
+            token.surface,
+            "byte slice must match surface for '{}'",
+            token.surface
+        );
+    }
+}
+
+#[test]
+fn test_dict_then_unknown_across_space() {
+    let mut tokenizer = create_tokenizer();
+    let tokens = tokenizer.tokenize("안녕 테스트");
+    assert!(
+        tokens.len() >= 2,
+        "dict + unknown across space must produce >= 2 tokens"
+    );
+    assert_eq!(tokens[0].surface, "안녕");
+    assert_eq!(tokens[0].pos, "NNG");
+}
+
+#[test]
+fn test_unknown_then_dict_across_space() {
+    let mut tokenizer = create_tokenizer();
+    let tokens = tokenizer.tokenize("테스트 안녕");
+    assert!(
+        tokens.len() >= 2,
+        "unknown + dict across space must produce >= 2 tokens"
+    );
+    let last = tokens.last().unwrap();
+    assert_eq!(last.surface, "안녕");
+    assert_eq!(last.pos, "NNG");
+}
+
+#[test]
+fn test_unknown_pos_is_valid() {
+    let mut tokenizer = create_tokenizer();
+    let tokens = tokenizer.tokenize("다양한");
+    for token in &tokens {
+        assert!(
+            !token.pos.is_empty() && token.pos.chars().all(|c| c.is_ascii_alphanumeric() || c == '+'),
+            "UNKNOWN token '{}' has invalid POS '{}'",
+            token.surface,
+            token.pos
+        );
+    }
+}
