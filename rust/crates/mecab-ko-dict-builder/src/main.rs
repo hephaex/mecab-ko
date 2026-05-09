@@ -9,13 +9,24 @@
 )]
 
 use anyhow::Result;
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use indicatif::{ProgressBar, ProgressStyle};
 use mecab_ko_dict_builder::builder::BuildConfig;
 use mecab_ko_dict_builder::csv_parser::Encoding;
 use mecab_ko_dict_builder::DictionaryBuilder;
 use std::path::PathBuf;
 use std::time::Instant;
+
+/// Dictionary entries binary format version
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum OutputFormat {
+    /// v2 format (MKE2) - `LazyEntries` with u16 feature length limit
+    #[value(name = "v2")]
+    V2,
+    /// v3 format (MKE3) - `LazyEntries` v3 with u32 feature length limit
+    #[value(name = "v3")]
+    V3,
+}
 
 /// 한국어 형태소 사전 빌더
 #[derive(Parser, Debug)]
@@ -104,8 +115,8 @@ enum Commands {
         verbose: bool,
 
         /// 출력 포맷 (v2 또는 v3, 기본값: v2)
-        #[arg(long, default_value = "v2")]
-        output_format: String,
+        #[arg(long, value_enum, default_value = "v2")]
+        output_format: OutputFormat,
     },
 
     /// 사전 정보 표시
@@ -142,7 +153,7 @@ fn main() -> Result<()> {
             backup,
             verbose,
             output_format,
-        }) => run_convert(&dict, output.as_deref(), backup, verbose, &output_format),
+        }) => run_convert(&dict, output.as_deref(), backup, verbose, output_format),
 
         Some(Commands::Info { dict }) => run_info(&dict),
 
@@ -252,31 +263,79 @@ fn run_build(
     Ok(())
 }
 
-#[allow(clippy::too_many_lines)]
+fn save_entries_format(
+    entries: &[mecab_ko_dict::DictEntry],
+    output_path: &std::path::Path,
+    output_format: OutputFormat,
+) -> Result<()> {
+    use mecab_ko_dict::lazy_entries_v3::save_entries_v3;
+    use mecab_ko_dict::LazyEntries;
+
+    let (fmt_label, magic_label) = match output_format {
+        OutputFormat::V3 => ("v3", "MKE3"),
+        OutputFormat::V2 => ("v2", "MKE2"),
+    };
+    println!("4. Saving as {fmt_label} format ({magic_label})...");
+    let save_start = Instant::now();
+    match output_format {
+        OutputFormat::V3 => save_entries_v3(entries, output_path)?,
+        OutputFormat::V2 => LazyEntries::save_entries(entries, output_path)?,
+    }
+    println!("   Saved in {:?}", save_start.elapsed());
+
+    Ok(())
+}
+
+fn verify_entries_format(
+    output_path: &std::path::Path,
+    output_format: OutputFormat,
+) -> Result<()> {
+    use mecab_ko_dict::LazyEntries;
+    use mecab_ko_dict::lazy_entries_v3::LazyEntriesV3;
+
+    let fmt_label = match output_format {
+        OutputFormat::V3 => "v3",
+        OutputFormat::V2 => "v2",
+    };
+    println!("\n5. Verifying {fmt_label} format...");
+    match output_format {
+        OutputFormat::V3 => {
+            let lazy = LazyEntriesV3::from_file(output_path)?;
+            println!("   LazyEntriesV3 loaded: {} entries", lazy.len());
+            if let Ok(first) = lazy.get(0) {
+                println!("   First entry: {}", first.surface);
+            }
+        }
+        OutputFormat::V2 => {
+            let lazy = LazyEntries::from_file(output_path)?;
+            println!("   LazyEntries loaded: {} entries", lazy.len());
+            if let Ok(first) = lazy.get(0) {
+                println!("   First entry: {}", first.surface);
+            }
+        }
+    }
+
+    Ok(())
+}
+
 fn run_convert(
     dict: &PathBuf,
     output: Option<&std::path::Path>,
     backup: bool,
     verbose: bool,
-    output_format: &str,
+    output_format: OutputFormat,
 ) -> Result<()> {
     use mecab_ko_dict::dictionary::{LoadOptions, SystemDictionary};
-    use mecab_ko_dict::lazy_entries_v3::{detect_entries_format, save_entries_v3, EntriesFormat};
-    use mecab_ko_dict::LazyEntries;
+    use mecab_ko_dict::lazy_entries_v3::{detect_entries_format, EntriesFormat};
 
-    let target_format = match output_format.to_lowercase().as_str() {
-        "v2" => "v2",
-        "v3" => "v3",
-        other => {
-            anyhow::bail!(
-                "Unknown --output-format '{other}'. Valid values: v2, v3"
-            );
-        }
+    let target_format_label = match output_format {
+        OutputFormat::V2 => "v2",
+        OutputFormat::V3 => "v3",
     };
 
     println!(
         "=== entries.bin {} Format Converter ===\n",
-        target_format.to_uppercase()
+        target_format_label.to_uppercase()
     );
     println!("Dictionary: {}", dict.display());
 
@@ -296,12 +355,12 @@ fn run_convert(
 
         // Skip if already in the requested format.
         if matches!(
-            (&current_fmt, target_format),
-            (Ok(EntriesFormat::V2), "v2") | (Ok(EntriesFormat::V3), "v3")
+            (&current_fmt, output_format),
+            (Ok(EntriesFormat::V2), OutputFormat::V2) | (Ok(EntriesFormat::V3), OutputFormat::V3)
         ) {
             println!(
                 "\n이미 {} 포맷입니다. 변환이 필요하지 않습니다.",
-                target_format.to_uppercase()
+                target_format_label.to_uppercase()
             );
             return Ok(());
         }
@@ -340,19 +399,7 @@ fn run_convert(
     }
 
     // 지정된 포맷으로 저장
-    let (fmt_label, magic_label) = if target_format == "v3" {
-        ("v3", "MKE3")
-    } else {
-        ("v2", "MKE2")
-    };
-    println!("4. Saving as {fmt_label} format ({magic_label})...");
-    let save_start = Instant::now();
-    if target_format == "v3" {
-        save_entries_v3(&entries, &output_path)?;
-    } else {
-        LazyEntries::save_entries(&entries, &output_path)?;
-    }
-    println!("   Saved in {:?}", save_start.elapsed());
+    save_entries_format(&entries, &output_path, output_format)?;
 
     // 결과 확인
     let out_size = std::fs::metadata(&output_path)?.len();
@@ -362,27 +409,13 @@ fn run_convert(
 
     // 검증
     if verbose {
-        println!("\n5. Verifying {fmt_label} format...");
-        if target_format == "v3" {
-            use mecab_ko_dict::lazy_entries_v3::LazyEntriesV3;
-            let lazy = LazyEntriesV3::from_file(&output_path)?;
-            println!("   LazyEntriesV3 loaded: {} entries", lazy.len());
-            if let Ok(first) = lazy.get(0) {
-                println!("   First entry: {}", first.surface);
-            }
-        } else {
-            let lazy = LazyEntries::from_file(&output_path)?;
-            println!("   LazyEntries loaded: {} entries", lazy.len());
-            if let Ok(first) = lazy.get(0) {
-                println!("   First entry: {}", first.surface);
-            }
-        }
+        verify_entries_format(&output_path, output_format)?;
     }
 
     println!("\n메모리 절감 효과:");
     println!("  - Lazy 모드 사용 시 메모리 최대 77% 절감");
     println!("  - 로드 시간 최대 95% 단축");
-    if target_format == "v3" {
+    if matches!(output_format, OutputFormat::V3) {
         println!("  - v3: feature 문자열 길이 제한 u16 → u32 (최대 4 GiB)");
     }
     println!("\n사용법:");

@@ -21,6 +21,9 @@ pub fn create_mini_dict<P: AsRef<Path>>(dict_dir: P) -> Result<(), Box<dyn std::
     // Create entries.csv with common Korean words
     create_entries_csv(dict_dir)?;
 
+    // Create entries.bin (MKE2 lazy format) from the same entries
+    create_entries_bin(dict_dir)?;
+
     // Create sys.dic (Trie) with the same words
     create_trie(dict_dir)?;
 
@@ -79,11 +82,52 @@ fn create_entries_csv<P: AsRef<Path>>(dict_dir: P) -> Result<(), Box<dyn std::er
         ("더", 41, 41, 60, "MAG,*,F,더,*,*,*,*"),
         ("우리", 42, 42, 100, "NP,*,F,우리,*,*,*,*"),
         ("그", 43, 43, 100, "MM,*,F,그,*,*,*,*"),
+        // Sprint 117: mini-dict expansion (43→56 entries)
+        ("고", 44, 44, 40, "JC,*,F,고,*,*,*,*"),
+        ("도", 45, 45, 40, "JX,*,F,도,*,*,*,*"),
+        ("면", 46, 46, 40, "EC,*,T,면,*,*,*,*"),
+        ("서", 47, 47, 40, "EC,*,F,서,*,*,*,*"),
+        ("며", 48, 48, 40, "EC,*,F,며,*,*,*,*"),
+        ("되", 49, 49, 80, "VV,*,F,되,*,*,*,*"),
+        ("수", 50, 50, 80, "NNB,*,F,수,*,*,*,*"),
+        ("후", 51, 51, 100, "NNG,*,F,후,*,*,*,*"),
+        ("문제", 52, 52, 100, "NNG,*,F,문제,*,*,*,*"),
+        ("안", 53, 53, 60, "MAG,*,T,안,*,*,*,*"),
+        ("모두", 54, 54, 60, "MAG,*,F,모두,*,*,*,*"),
+        ("정말", 55, 55, 60, "MAG,*,T,정말,*,*,*,*"),
+        ("그녀", 56, 56, 100, "NP,*,F,그녀,*,*,*,*"),
     ];
 
     for (surface, left_id, right_id, cost, feature) in &entries {
         writeln!(file, "{},{},{},{},{}", surface, left_id, right_id, cost, feature)?;
     }
+
+    Ok(())
+}
+
+/// Creates entries.bin (MKE2 lazy format) from the CSV entries
+fn create_entries_bin<P: AsRef<Path>>(dict_dir: P) -> Result<(), Box<dyn std::error::Error>> {
+    use mecab_ko_dict::{DictEntry, LazyEntries};
+
+    let csv_path = dict_dir.as_ref().join("entries.csv");
+    let content = std::fs::read_to_string(&csv_path)?;
+
+    let mut entries = Vec::new();
+    for line in content.lines() {
+        let parts: Vec<&str> = line.splitn(5, ',').collect();
+        if parts.len() < 5 {
+            continue;
+        }
+        let surface = parts[0];
+        let left_id: u16 = parts[1].parse()?;
+        let right_id: u16 = parts[2].parse()?;
+        let cost: i16 = parts[3].parse()?;
+        let feature = parts[4];
+        entries.push(DictEntry::new(surface, left_id, right_id, cost, feature));
+    }
+
+    let bin_path = dict_dir.as_ref().join("entries.bin");
+    LazyEntries::save_entries(&entries, &bin_path)?;
 
     Ok(())
 }
@@ -138,6 +182,20 @@ fn create_trie<P: AsRef<Path>>(dict_dir: P) -> Result<(), Box<dyn std::error::Er
         ("더".as_bytes(), 40u32),
         ("우리".as_bytes(), 41u32),
         ("그".as_bytes(), 42u32),
+        // Sprint 117 additions
+        ("고".as_bytes(), 43u32),
+        ("도".as_bytes(), 44u32),
+        ("면".as_bytes(), 45u32),
+        ("서".as_bytes(), 46u32),
+        ("며".as_bytes(), 47u32),
+        ("되".as_bytes(), 48u32),
+        ("수".as_bytes(), 49u32),
+        ("후".as_bytes(), 50u32),
+        ("문제".as_bytes(), 51u32),
+        ("안".as_bytes(), 52u32),
+        ("모두".as_bytes(), 53u32),
+        ("정말".as_bytes(), 54u32),
+        ("그녀".as_bytes(), 55u32),
     ];
 
     // Sort entries by key (required by yada)
@@ -160,8 +218,8 @@ fn create_matrix<P: AsRef<Path>>(dict_dir: P) -> Result<(), Box<dyn std::error::
     let mut file = File::create(path)?;
 
     // Matrix dimensions
-    let lsize: u16 = 44;
-    let rsize: u16 = 44;
+    let lsize: u16 = 57;
+    let rsize: u16 = 57;
 
     // Write header
     file.write_u16::<LittleEndian>(lsize)?;
