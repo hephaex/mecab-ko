@@ -82,7 +82,7 @@ fn create_entries_csv<P: AsRef<Path>>(dict_dir: P) -> Result<(), Box<dyn std::er
         ("더", 41, 41, 60, "MAG,*,F,더,*,*,*,*"),
         ("우리", 42, 42, 100, "NP,*,F,우리,*,*,*,*"),
         ("그", 43, 43, 100, "MM,*,F,그,*,*,*,*"),
-        // Sprint 117: mini-dict expansion (43→56 entries)
+        // Sprint 117: 13 entries added (left_id 44→56, total 57 entries)
         ("고", 44, 44, 40, "JC,*,F,고,*,*,*,*"),
         ("도", 45, 45, 40, "JX,*,F,도,*,*,*,*"),
         ("면", 46, 46, 40, "EC,*,T,면,*,*,*,*"),
@@ -252,6 +252,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Success! Dictionary created at {}", output_dir);
     println!("Files:");
     println!("  - entries.csv");
+    println!("  - entries.bin");
     println!("  - sys.dic");
     println!("  - matrix.bin");
 
@@ -270,6 +271,7 @@ mod tests {
 
         // Verify files exist
         assert!(temp_dir.path().join("entries.csv").exists());
+        assert!(temp_dir.path().join("entries.bin").exists());
         assert!(temp_dir.path().join("sys.dic").exists());
         assert!(temp_dir.path().join("matrix.bin").exists());
     }

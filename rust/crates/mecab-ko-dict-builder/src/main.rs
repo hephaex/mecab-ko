@@ -298,21 +298,29 @@ fn verify_entries_format(
         OutputFormat::V2 => "v2",
     };
     println!("\n5. Verifying {fmt_label} format...");
-    match output_format {
+    let entry_count = match output_format {
         OutputFormat::V3 => {
             let lazy = LazyEntriesV3::from_file(output_path)?;
-            println!("   LazyEntriesV3 loaded: {} entries", lazy.len());
+            let count = lazy.len();
+            println!("   LazyEntriesV3 loaded: {count} entries");
             if let Ok(first) = lazy.get(0) {
                 println!("   First entry: {}", first.surface);
             }
+            count
         }
         OutputFormat::V2 => {
             let lazy = LazyEntries::from_file(output_path)?;
-            println!("   LazyEntries loaded: {} entries", lazy.len());
+            let count = lazy.len();
+            println!("   LazyEntries loaded: {count} entries");
             if let Ok(first) = lazy.get(0) {
                 println!("   First entry: {}", first.surface);
             }
+            count
         }
+    };
+
+    if entry_count == 0 {
+        anyhow::bail!("Verification failed: entries.bin contains 0 entries");
     }
 
     Ok(())
