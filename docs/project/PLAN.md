@@ -1,25 +1,36 @@
-# Phase 84 - Sprint 118 (UNKNOWN 공백 분할 Viterbi + known_limitation 해소)
+# Phase 85 - Sprint 119 (UNKNOWN 품질 개선 + CI 강화)
 
-## Sprint 118 로드맵
+## Sprint 119 로드맵
 
-### P1: UNKNOWN 토큰 공백 분할 — Viterbi 레벨 수정
-- 조사: unknown handler의 group loop는 이미 공백에서 분할됨
-- 근본 원인: Viterbi가 2-char UNKNOWN 노드를 chain하여 단일 경로 생성
-- 방안 A: unknown handler에서 공백 경계 노드에 추가 비용 부여
-- 방안 B: Viterbi forward pass에서 unknown→unknown 연결 시 공백 패널티 강화
-- 방안 C: build_lattice에서 공백 위치에 barrier 노드 삽입
-- 15건 known_limitation 해소 기대
+### P1: UNKNOWN 노드 POS 정밀화
+- 현재 모든 UNKNOWN 노드가 UNKNOWN POS — 한글/영문/숫자/기호 기본 분류
+- CharCategory 기반 POS 매핑: HANGUL→NNG, ALPHA→SL, NUMERIC→SN, SYMBOL→SW
+- unknown.rs의 candidate 생성 시 category별 POS 설정
 
-### P2: golden test known_limitation 업데이트
-- P1 수정 후 16건 중 해소된 케이스의 expected_pos를 실제 분할 결과로 갱신
-- status 필드 제거 (정상 테스트 전환)
+### P2: OOB connection cost 튜닝
+- DEFAULT_OOB_CONNECTION_COST=10,000 → 실제 사전 연결 비용 분포 대비 적정성 검증
+- full dict 환경에서 UNKNOWN 분할 품질 벤치마크
+- 필요시 cost 조정 또는 category별 차등 비용
 
-### P3: tokenizer 공백 분할 단위 테스트
-- unknown word + space boundary 조합의 regression test 추가
-- 엣지 케이스: 연속 공백, 탭, 혼합 공백
-
-### P4: mini-dict entries.csv → entries.bin 자동 동기화 CI
+### P3: mini-dict entries.csv → entries.bin 자동 동기화 CI
 - create_mini_dict 실행 → diff 확인 → 불일치 시 CI 실패
+
+### P4: stripped_to_original_byte 최적화
+- 현재 매 reset마다 Vec 재생성 — 입력 길이에 비례
+- 대량 텍스트 프로파일링 후 필요시 lazy 계산 또는 인라인 변환
+
+---
+
+# 완료: Phase 84 - Sprint 118 (Viterbi OOB 수정 + UNKNOWN 정상화 + known_limitation 16건 해소)
+
+## Sprint 118 결과
+- 근본 원인 발견: UNKNOWN left_id=1800/right_id=3565이 57×57 mini-dict 매트릭스 범위 밖 → DenseMatrix가 i32::MAX 반환 → UNKNOWN 노드 완전 도달 불가
+- Viterbi OOB fallback: DEFAULT_OOB_CONNECTION_COST=10,000 (scalar + SIMD 모두)
+- Lattice: stripped_to_original_byte 매핑 추가 → 토큰 바이트 위치를 원본 텍스트 기준으로 정정
+- unknown.rs: .feature(&candidate.pos) 추가 → UNKNOWN 노드에 POS 전파
+- golden test: 16건 known_limitation → 정상 테스트 전환 (expected_pos + expected_morphs 갱신)
+- edge_cases.rs: 7건 UNKNOWN 공백 경계 회귀 테스트 추가
+- 테스트: all pass / 0 fail, clippy 0 warnings
 
 ---
 

@@ -1,6 +1,43 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-09 (Sprint 117 완료 — ValueEnum + run_convert 분할 + mini-dict 확장)
+## 마지막 업데이트: 2026-05-09 (Sprint 118 완료 — Viterbi OOB 수정 + UNKNOWN 정상화)
+
+### ✅ Sprint 118 - Viterbi OOB connection cost fallback + UNKNOWN 노드 정상화
+
+**기간**: 2026-05-09
+**목표**: UNKNOWN 노드가 완전히 도달 불가했던 근본 원인 수정, golden known_limitation 16건 해소
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| Viterbi OOB | i32::MAX → 경로 불가 | DEFAULT_OOB_CONNECTION_COST=10,000 fallback |
+| SIMD Viterbi | 동일 OOB 문제 | batch + scalar 모두 fallback 적용 |
+| Lattice | 바이트 위치가 공백 제거된 텍스트 기준 | stripped_to_original_byte 매핑으로 원본 기준 |
+| unknown.rs | UNKNOWN 노드 feature="" (POS 빈값) | .feature(&candidate.pos) 추가 |
+| golden complex.json | 16건 known_limitation | 16건 정상 테스트 전환 |
+| edge_cases.rs | UNKNOWN 테스트 없음 | 7건 공백 경계 회귀 테스트 추가 |
+
+#### 수정/추가된 파일 (9개)
+- crates/mecab-ko-core/src/viterbi/mod.rs (DEFAULT_OOB_CONNECTION_COST, OOB fallback)
+- crates/mecab-ko-core/src/viterbi/simd.rs (SIMD batch + scalar OOB fallback)
+- crates/mecab-ko-core/src/lattice.rs (stripped_to_original_byte 매핑)
+- crates/mecab-ko-core/src/tokenizer.rs (original_byte_pos 적용)
+- crates/mecab-ko-core/src/unknown.rs (.feature 전파)
+- crates/mecab-ko-core/src/streaming.rs (테스트 기댓값 수정)
+- crates/mecab-ko-core/tests/edge_cases.rs (7건 UNKNOWN 테스트)
+- crates/mecab-ko-core/tests/nori_compat_integration.rs (테스트 기댓값 수정)
+- crates/mecab-ko/tests/golden/complex.json (16건 known_limitation 해소)
+
+#### 테스트 결과
+- all pass / 0 fail
+- clippy: 0 warnings (all targets)
+
+#### 핵심 발견
+- Sprint 117의 분석이 부분적으로 틀렸음: "Viterbi가 UNKNOWN 노드를 chain한다"가 아니라, UNKNOWN 노드가 매트릭스 OOB로 **완전히 도달 불가**였음
+- 4개 이상의 테스트가 UNKNOWN 버그로 인해 우연히 통과하고 있었음 (false positive)
+
+---
 
 ### ✅ Sprint 117 - dict-builder ValueEnum + run_convert 분할 + mini-dict 56 엔트리
 
