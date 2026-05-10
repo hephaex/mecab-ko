@@ -2436,6 +2436,99 @@ fn test_accuracy_gate_verified() {
     );
 }
 
+/// Sprint 124 Phase 1: KLUE DP dual-metric evaluation
+///
+/// Evaluates mecab-ko on the KLUE DP validation set (1,995 sentences,
+/// CC BY-SA 4.0). Reports both morpheme-level and eojeol-level accuracy.
+///
+/// Phase 0 baseline (2026-05-11): morpheme 65.8%. Phase 1 adds eojeol metric.
+/// Threshold floor set conservatively below baseline so the test catches
+/// regressions but does not block on tag-scheme micro-differences that are
+/// known to inflate the error rate (planned for Sprint 125 tag equivalence map).
+#[test]
+#[ignore = "requires KLUE DP eval data + system dictionary"]
+fn test_klue_dp_dual_metric() {
+    use mecab_ko_core::evaluate::evaluate_dataset_dual;
+
+    // Sprint 124 Phase 1 baseline:
+    //   morpheme (greedy-aligned): 65.8%
+    //   eojeol (strict per-eojeol): 19.2% (4,299 / 22,404)
+    // Eojeol metric is intentionally strict — every morpheme within an
+    // eojeol must match. Low absolute number; 80%+ of eojeols fail due to
+    // KLUE-vs-mecab tag scheme differences (SP/SC, SS/SY/SSO/SSC,
+    // MMD/MMN/MMA/MM, NNG/NNP boundary), planned for Sprint 125 tag
+    // equivalence map.
+    //
+    // Floors set ~5%p below measurement so genuine regressions trigger
+    // failure but routine variance does not.
+    const MORPHEME_FLOOR: f64 = 0.60;
+    const EOJEOL_FLOOR: f64 = 0.15;
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or_else(|| std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
+
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict
+            .load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let eval_path = project_root.join("data/eval/klue_dp_val.tsv");
+    if !eval_path.exists() {
+        println!("Skipping: data/eval/klue_dp_val.tsv not found");
+        return;
+    }
+
+    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
+        .expect("Failed to load KLUE DP val");
+
+    println!("\n=== KLUE DP Dual-Metric Evaluation ===");
+    println!("Dataset: {} sentences", dataset.len());
+
+    let result = evaluate_dataset_dual(&mut tokenizer, &dataset);
+    println!("{}", result.format_report());
+
+    let morpheme_pct = result.morpheme.token_accuracy * 100.0;
+    let eojeol_pct = result.eojeol_accuracy * 100.0;
+
+    assert!(
+        result.morpheme.token_accuracy >= MORPHEME_FLOOR,
+        "KLUE DP morpheme accuracy {:.1}% is below {:.0}% floor (Sprint 124 Phase 1)",
+        morpheme_pct,
+        MORPHEME_FLOOR * 100.0
+    );
+    assert!(
+        result.eojeol_accuracy >= EOJEOL_FLOOR,
+        "KLUE DP eojeol accuracy {:.1}% is below {:.0}% floor (Sprint 124 Phase 1)",
+        eojeol_pct,
+        EOJEOL_FLOOR * 100.0
+    );
+
+    println!(
+        "PASSED — morpheme {:.1}% >= {:.0}%, eojeol {:.1}% >= {:.0}%",
+        morpheme_pct,
+        MORPHEME_FLOOR * 100.0,
+        eojeol_pct,
+        EOJEOL_FLOOR * 100.0
+    );
+}
+
 /// Sprint 121: Error case classification
 ///
 /// Categorize every mismatch from full dict evaluation into:

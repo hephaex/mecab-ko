@@ -103,6 +103,9 @@ pub struct GoldSentence {
     pub text: String,
     /// 정답 토큰 리스트
     pub tokens: Vec<GoldToken>,
+    /// 어절별 형태소 개수 (선택). 어절 단위 평가에 사용.
+    /// `None`이면 어절 정보가 TSV에 없음을 의미 (legacy format).
+    pub eojeol_counts: Option<Vec<usize>>,
 }
 
 impl GoldSentence {
@@ -114,12 +117,21 @@ impl GoldSentence {
     /// * `tokens` - 정답 토큰 리스트
     #[must_use]
     pub const fn new(text: String, tokens: Vec<GoldToken>) -> Self {
-        Self { text, tokens }
+        Self {
+            text,
+            tokens,
+            eojeol_counts: None,
+        }
     }
 
     /// TSV 라인에서 파싱
     ///
-    /// 형식: 원문\t정답토큰1 정답토큰2 ...
+    /// 형식:
+    /// - `text\ttokens` (legacy 2-column)
+    /// - `text\ttokens\teojeol_counts` (3-column with eojeol info)
+    ///   - `eojeol_counts`: comma-separated, e.g. "5,2,2,2,2,4"
+    ///   - 합이 tokens 개수와 일치해야 함
+    ///
     /// 각 토큰: surface/pos
     ///
     /// # Arguments
@@ -131,9 +143,9 @@ impl GoldSentence {
     /// 파싱 실패 시 에러 반환
     pub fn parse_tsv_line(line: &str) -> Result<Self> {
         let parts: Vec<&str> = line.split('\t').collect();
-        if parts.len() != 2 {
+        if parts.len() < 2 || parts.len() > 3 {
             return Err(EvaluateError::Parse(format!(
-                "Invalid TSV line: {line} (expected text\\ttokens)"
+                "Invalid TSV line: {line} (expected 2 or 3 tab-separated columns)"
             )));
         }
 
@@ -151,7 +163,34 @@ impl GoldSentence {
             )));
         }
 
-        Ok(Self { text, tokens })
+        let eojeol_counts = if parts.len() == 3 {
+            let counts: Vec<usize> = parts[2]
+                .trim()
+                .split(',')
+                .map(|s| {
+                    s.trim().parse::<usize>().map_err(|e| {
+                        EvaluateError::Parse(format!("Invalid eojeol count '{s}': {e}"))
+                    })
+                })
+                .collect::<Result<Vec<_>>>()?;
+
+            let sum: usize = counts.iter().sum();
+            if sum != tokens.len() {
+                return Err(EvaluateError::Data(format!(
+                    "eojeol_counts sum ({sum}) does not match tokens len ({}) for text: {text}",
+                    tokens.len()
+                )));
+            }
+            Some(counts)
+        } else {
+            None
+        };
+
+        Ok(Self {
+            text,
+            tokens,
+            eojeol_counts,
+        })
     }
 }
 
@@ -732,6 +771,151 @@ pub fn evaluate_dataset_sejong(
     }
 
     result
+}
+
+/// 이중 메트릭 평가 결과 (Sprint 124)
+///
+/// 형태소 레벨과 어절 레벨 정확도를 함께 보고합니다.
+/// - **Morpheme-level**: 개별 형태소의 surface + POS 일치
+/// - **Eojeol-level**: 한 어절 내 모든 형태소가 정확해야 어절 정답
+///
+/// 어절 단위 평가는 KLUE DP처럼 어절 정보가 포함된 데이터셋에서만 의미 있음.
+#[derive(Debug, Clone)]
+pub struct DualMetricResult {
+    /// 형태소 레벨 평가 결과 (기존 `evaluate_dataset_sejong`와 동일)
+    pub morpheme: EvaluationResult,
+    /// 어절 단위 정답 개수
+    pub eojeol_correct: usize,
+    /// 어절 단위 전체 개수
+    pub eojeol_total: usize,
+    /// 어절 정확도 (0.0 ~ 1.0). 어절 정보 없는 데이터셋에서는 0.0.
+    pub eojeol_accuracy: f64,
+}
+
+impl DualMetricResult {
+    /// 포맷된 보고서 생성
+    #[must_use]
+    pub fn format_report(&self) -> String {
+        use std::fmt::Write;
+        let mut report = self.morpheme.format_report();
+        report.push('\n');
+        report.push_str("=== 어절 레벨 (Eojeol-level) ===\n");
+        if self.eojeol_total > 0 {
+            writeln!(
+                report,
+                "Eojeol Accuracy: {:.1}% ({} / {})",
+                self.eojeol_accuracy * 100.0,
+                self.eojeol_correct,
+                self.eojeol_total
+            )
+            .unwrap();
+        } else {
+            report.push_str("어절 정보 없음 (legacy 2-column TSV)\n");
+        }
+        report
+    }
+}
+
+/// 이중 메트릭 평가
+///
+/// 형태소 레벨(morpheme) + 어절 레벨(eojeol) 두 메트릭을 함께 측정합니다.
+///
+/// 어절 레벨 평가:
+/// - 정답 데이터셋에 `eojeol_counts`가 있어야 측정 가능
+/// - 예측 토큰을 정답 어절 경계 기준 슬라이스로 분할 (정답과 같은 형태소 수)
+/// - 어절 내 모든 형태소가 surface + POS 일치 시 어절 정답
+///
+/// 어절 정보가 없는 데이터셋에서는 `eojeol_total = 0`으로 보고.
+///
+/// # Arguments
+///
+/// * `tokenizer` - `MeCab-Ko` 토크나이저
+/// * `dataset` - 테스트 데이터셋
+///
+/// # Returns
+///
+/// 이중 메트릭 결과
+#[allow(clippy::cast_precision_loss)]
+pub fn evaluate_dataset_dual(
+    tokenizer: &mut Tokenizer,
+    dataset: &TestDataset,
+) -> DualMetricResult {
+    // 형태소 레벨은 기존 함수 재사용
+    let morpheme = evaluate_dataset_sejong(tokenizer, dataset);
+
+    // 어절 레벨 별도 측정
+    let converter = SejongConverter::new();
+    let mut eojeol_correct: usize = 0;
+    let mut eojeol_total: usize = 0;
+
+    for gold_sentence in &dataset.sentences {
+        let Some(counts) = &gold_sentence.eojeol_counts else {
+            continue;
+        };
+
+        let pred_raw = tokenizer.tokenize(&gold_sentence.text);
+        let pred_sejong = converter.convert_tokens(&pred_raw);
+
+        let pred_morphs: Vec<(String, String)> = pred_sejong
+            .iter()
+            .map(|t| {
+                (
+                    SejongConverter::normalize_jamo(&t.surface),
+                    t.pos.clone(),
+                )
+            })
+            .collect();
+
+        let mut gold_idx = 0;
+        let mut pred_idx = 0;
+
+        for &count in counts {
+            eojeol_total += 1;
+
+            // 골드 어절: gold_tokens[gold_idx..gold_idx+count]
+            // 예측 어절: pred_morphs[pred_idx..pred_idx+count] (같은 개수만 슬라이스)
+            //
+            // 어절이 일치하려면:
+            //   1. 예측 토큰 수가 충분 (pred_idx + count <= pred_morphs.len)
+            //   2. 슬라이스 내 모든 (surface, pos) 쌍 일치
+            let gold_end = gold_idx + count;
+            let pred_end = pred_idx + count;
+
+            if gold_end > gold_sentence.tokens.len() || pred_end > pred_morphs.len() {
+                gold_idx = gold_end.min(gold_sentence.tokens.len());
+                pred_idx = pred_end.min(pred_morphs.len());
+                continue;
+            }
+
+            let gold_slice = &gold_sentence.tokens[gold_idx..gold_end];
+            let pred_slice = &pred_morphs[pred_idx..pred_end];
+
+            let matches = gold_slice
+                .iter()
+                .zip(pred_slice.iter())
+                .all(|(g, (p_surf, p_pos))| g.surface == *p_surf && g.pos == *p_pos);
+
+            if matches {
+                eojeol_correct += 1;
+            }
+
+            gold_idx = gold_end;
+            pred_idx = pred_end;
+        }
+    }
+
+    let eojeol_accuracy = if eojeol_total > 0 {
+        eojeol_correct as f64 / eojeol_total as f64
+    } else {
+        0.0
+    };
+
+    DualMetricResult {
+        morpheme,
+        eojeol_correct,
+        eojeol_total,
+        eojeol_accuracy,
+    }
 }
 
 #[cfg(test)]

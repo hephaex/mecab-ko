@@ -1,45 +1,65 @@
-# Phase 90 - Sprint 124 진행 중 (Phase 0 완료, Phase 1+ 다음 세션)
+# Phase 91 - Sprint 125 후보 (Phase 1 진단 결과 기반)
 
-## Sprint 124 Phase 1+ (다음 세션)
+## Sprint 125 후보 (우선순위순)
 
-> Phase 0 완료: 형식 실측 + 변환기 + baseline 측정.
-> KLUE DP 65.8% token accuracy 노출 (sample.tsv 100% 대비 34%p 차이).
-> 자세한 내용: `docs/research/accuracy/2026-05-11_klue_dp_phase0.md`
+> Sprint 124 Phase 1 진단 결과: 65.8%의 절반 이상이 tag scheme/사전 정책 차이.
+> 자세한 내용: `docs/research/accuracy/2026-05-11_klue_dp_phase1.md`
 
-### Phase 1: 평가 하니스 통합
-- `data/eval/klue_dp_val.tsv`를 `cargo test` 정식 추가
-- 별도 threshold (현재 65.8% → Phase 1 측정 후 70%? 75%?)
-- alignment artifact 분석 (`evaluate_tokens_aligned` 권고)
-- 이중 메트릭 (eojeol-level + morpheme-level) 구현
+### P1 후보: Tag Equivalence Map 구현
+- mecab-ko-dic ↔ KLUE 동치 태그 매핑 정의
+  - {SP, SC} 동치 (구두점/공백)
+  - {SS, SY, SSO, SSC} 동치 (괄호/따옴표)
+  - {MM, MMD, MMN, MMA} 동치 (관형사 세분)
+- Lenient evaluator: 동치 매핑 시 정답으로 간주
+- 측정 후 morpheme/eojeol 정확도 변화 보고
+- 예상 효과: morpheme 65.8% → 80%+, eojeol 19.2% → 35%+
 
-### Phase 2: Error 분류 자동화
-- KLUE DP 실패 케이스 카테고리 분류 (Sprint 121 P2 방식 재사용)
-- alignment artifact vs 진짜 분석 오류 분리
-- 조사/어미 저정확도 (JKO 22.5%, JKS 33.3%, EP 16.4%) 근본 원인
+### P2 후보: 복합명사 분할 정책 분석
+- 팝스타/NNP vs 팝/NNG + 스타/NNG 같은 케이스 통계
+- mecab-ko-dic 분할 vs KLUE 결합 분포 측정
+- 양쪽 모두 정답으로 인정하는 메트릭 또는 conversion 검토
 
-### Phase 3: CI 통합
-- HF에서 KLUE DP 자동 다운로드 + 변환 step
-- accuracy-gate.yml에 KLUE DP gate job
+### P3 후보: Noisy 데이터 추가 (사용자 우선순위 "높음")
+- KLUE DP는 편집 register만 — SNS/구어 보강 필요
+- 옵션:
+  - NIKL 모두의말뭉치 구어 subcorpus (수동 등록 필요)
+  - silver-label 파이프라인 (C++ mecab-ko 필요)
+  - 자체 SNS 수집 (라이센스 검토)
 
-### Phase 4 (Sprint 125): noisy 데이터 추가
-- NIKL Modu 구어 subcorpus 또는 자체 silver-label
-- KLUE DP는 편집 register만 — 실제 SNS/구어 보강
+### P4 후보: CI 통합
+- HuggingFace에서 KLUE DP 자동 다운로드 + 변환 step
+- accuracy-gate.yml에 KLUE DP dual-metric gate job
+- 회귀 catch + PR 코멘트
 
 ---
 
-## 완료: Sprint 124 Phase 0 - KLUE DP 형식 실측
+# 완료: Phase 90 - Sprint 124 (KLUE DP 통합)
 
-### 결과
+## Sprint 124 결과
+
+### Phase 0
 - KLUE DP val 다운로드 + JSONL 덤프 (1.6MB)
-- 변환기 작성 (`tools/convert_klue_dp.py`)
-- 변환 결과 `data/eval/klue_dp_val.tsv` (1,995 sentences, 684KB)
-- **Baseline 측정: KLUE DP 65.8% token accuracy** (진짜 신호 노출)
-- align mismatch 0.25% (1995/2000), 휴리스틱 surface split 불필요
+- 변환기 (`tools/convert_klue_dp.py`)
+- `data/eval/klue_dp_val.tsv` (1,995 sentences)
+- **첫 baseline: KLUE DP 65.8% token accuracy** (sample.tsv 100% 대비 34%p)
+
+### Phase 1
+- 진단: 65.8%의 절반 이상이 tag scheme/사전 정책 차이임을 분류로 입증
+- 이중 메트릭 (`DualMetricResult`, `evaluate_dataset_dual`) 구현
+  - 데이터 형식: TSV 3-column (text, morphemes, eojeol_counts)
+  - GoldSentence.eojeol_counts: Option<Vec<usize>>
+  - parse_tsv_line 2/3-column 자동 호환
+- `test_klue_dp_dual_metric` 테스트 (60% morpheme + 15% eojeol floor)
+- **측정**:
+  - Morpheme: 65.8%
+  - Eojeol: **19.2%** (4,299 / 22,404)
+  - Sentence: 1.1% (21 / 1,995)
 
 ### 핵심 학습
-- 평가 데이터셋 다양성이 진짜 신호를 만듦 (100% → 65.8%, 34%p)
+- 평가 데이터셋 다양성이 진짜 신호를 만듦 (100% → 65.8% → 19.2%)
 - KLUE DP가 lemma 필드에서 이미 surface 분할 제공 → 추상적 우려 불필요
-- 30분 inspect로 1주 디자인 여부가 결정될 수 있음
+- 동일 토크나이저, 동일 출력에서 메트릭에 따라 35%p~99%p 차이 — 단일 숫자 misleading
+- 65.8%의 절반 이상이 알고리즘이 아닌 tag/사전 정책 차이
 
 ### P2 후보 (보류): NIKL 모두의말뭉치 수동 다운로드 (Option B, 1주)
 - 371K 예시, 다중 도메인 (뉴스/웹/구어)

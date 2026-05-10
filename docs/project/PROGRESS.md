@@ -1,6 +1,58 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-11 (Sprint 124 Phase 0 완료 — KLUE DP 통합 시작)
+## 마지막 업데이트: 2026-05-11 (Sprint 124 Phase 1 완료 — 이중 메트릭 + 진단)
+
+### ✅ Sprint 124 Phase 1 - 이중 메트릭 (eojeol + morpheme) + KLUE 정식 평가 + 진단
+
+**기간**: 2026-05-11
+**목표**: KLUE DP 통합 마무리. 이중 메트릭 구현 + 정식 평가 테스트 + 65.8% 원인 진단.
+
+#### 측정 결과
+
+| 메트릭 | sample.tsv | KLUE DP | 비고 |
+|--------|-----------|---------|------|
+| Token (greedy aligned) | 100% | 65.8% | partial match |
+| **Eojeol (strict)** | (미측정) | **19.2%** | 4,299 / 22,404 |
+| Sentence (perfect) | 99.9% | 1.1% | 21 / 1,995 |
+
+#### 진단 결과 — 65.8%의 진짜 원인
+
+| 분류 | 추정 비율 |
+|------|-----------|
+| Tag scheme 차이 (SP/SC, SS/SY, MMD/MM 등) | ~31% |
+| 사전 정책 차이 (NNG/NNP/NNB) | ~22% |
+| 복합명사 분할 정책 차이 | ~20% |
+| 진짜 disambiguation 오류 | ~25% |
+
+**핵심**: 절반 이상이 분석 알고리즘이 아닌 표기/사전/세분도 차이.
+Sprint 125에서 tag equivalence map 구현 시 진짜 정확도가 분리되어 측정됨.
+
+#### 구현 (4개 파일)
+
+- `tools/convert_klue_dp.py`: 3-column 형식 출력 (eojeol_counts 컬럼 추가)
+- `data/eval/klue_dp_val.tsv`: 재생성 (eojeol_counts 포함, 1,995 문장)
+- `rust/crates/mecab-ko-core/src/evaluate.rs`:
+  - `GoldSentence.eojeol_counts: Option<Vec<usize>>` 필드 추가
+  - `parse_tsv_line` 2/3-column 자동 감지
+  - `DualMetricResult` 구조체 + `format_report`
+  - `evaluate_dataset_dual()` 함수 (morpheme + eojeol 동시 측정)
+- `rust/crates/mecab-ko-core/tests/accuracy_eval.rs`:
+  - `test_klue_dp_dual_metric` (MORPHEME_FLOOR=60%, EOJEOL_FLOOR=15%)
+
+#### 보고서
+- `docs/research/accuracy/2026-05-11_klue_dp_phase1.md`
+
+#### 테스트 결과
+- test_klue_dp_dual_metric: PASS (morpheme 65.8% >= 60%, eojeol 19.2% >= 15%)
+- workspace 전체: all pass / 0 fail / clippy 0 warnings
+
+#### Sprint 125 권고 (Sprint 124 Phase 1에서 도출)
+1. **P1: Tag equivalence map** — 동치 태그 매핑으로 진짜 정확도 분리
+2. **P2: 복합명사 분할 정책 분석** — 팝스타 vs 팝+스타 같은 케이스
+3. **P3: noisy 데이터 추가** (사용자 우선순위 "높음") — NIKL/silver-label
+4. **P4: CI 통합** — HF 자동 다운로드 + KLUE DP gate
+
+---
 
 ### 🚧 Sprint 124 Phase 0 - KLUE DP 형식 실측 + 변환기 프로토타입 + Baseline 측정
 

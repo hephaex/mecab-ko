@@ -42,7 +42,11 @@ HEADER = """\
 #           NeurIPS 2021 Datasets & Benchmarks
 #
 # Converted by tools/convert_klue_dp.py from KLUE DP {split} split.
-# Format: <sentence>\\t<surface1/POS1> <surface2/POS2> ...
+# Format: <sentence>\\t<surface1/POS1> <surface2/POS2> ...\\t<eojeol_count1,count2,...>
+#
+# 3rd column: comma-separated morpheme counts per eojeol, enabling
+# eojeol-level evaluation. Optional — parsers that read 2 columns continue
+# to work (the 3rd column is ignored for legacy TSVs without it).
 #
 # Sentences with eojeol-level alignment mismatch (lemma vs POS count differ)
 # are skipped. Surface forms are KLUE's lemmatized morphemes, matching
@@ -71,6 +75,7 @@ def convert(split: str, output_path: Path) -> tuple[int, int, int]:
         for ex in ds:
             sentence = ex["sentence"]
             morpheme_pairs: list[str] = []
+            eojeol_counts: list[int] = []
             sentence_ok = True
 
             for lemma_str, pos_str in zip(ex["lemma"], ex["pos"]):
@@ -79,6 +84,7 @@ def convert(split: str, output_path: Path) -> tuple[int, int, int]:
                 if len(morphs) != len(tags):
                     sentence_ok = False
                     break
+                eojeol_counts.append(len(morphs))
                 for m, t in zip(morphs, tags):
                     # Skip empty morpheme strings (defensive; should not occur)
                     if not m:
@@ -94,7 +100,8 @@ def convert(split: str, output_path: Path) -> tuple[int, int, int]:
 
             line = sentence.replace("\t", " ").replace("\n", " ")
             gold = " ".join(morpheme_pairs)
-            out.write(f"{line}\t{gold}\n")
+            counts = ",".join(str(c) for c in eojeol_counts)
+            out.write(f"{line}\t{gold}\t{counts}\n")
             written += 1
 
     return total, written, skipped
