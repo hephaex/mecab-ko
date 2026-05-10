@@ -1,6 +1,32 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-09 (Sprint 118 완료 — Viterbi OOB 수정 + UNKNOWN 정상화)
+## 마지막 업데이트: 2026-05-10 (Sprint 119 완료 — HANGUL POS NNG + mini-dict CI)
+
+### ✅ Sprint 119 - HANGUL UNKNOWN POS → NNG 분류 + mini-dict CI sync
+
+**기간**: 2026-05-10
+**목표**: UNKNOWN 노드의 POS를 표준 태그로 정밀화, mini-dict 동기화 CI 추가
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| HANGUL unknown POS | "UNKNOWN" | "NNG" (일반명사) |
+| golden test UNKNOWN tags | 88건 "UNKNOWN" | 88건 "NNG" |
+| CI mini-dict sync | 없음 | create_mini_dict → diff 검증 job |
+
+#### 수정/추가된 파일 (5개)
+- crates/mecab-ko-core/src/unknown.rs (HANGUL POS "NNG", unit test 3건 수정)
+- crates/mecab-ko/tests/golden/basic.json (5건 UNKNOWN→NNG)
+- crates/mecab-ko/tests/golden/nouns.json (17건 UNKNOWN→NNG)
+- crates/mecab-ko/tests/golden/complex.json (66건 UNKNOWN→NNG)
+- .github/workflows/ci.yml (mini-dict-sync job 추가)
+
+#### 테스트 결과
+- all pass / 0 fail
+- clippy: 0 warnings (all targets)
+
+---
 
 ### ✅ Sprint 118 - Viterbi OOB connection cost fallback + UNKNOWN 노드 정상화
 

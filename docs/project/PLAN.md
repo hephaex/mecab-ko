@@ -1,23 +1,33 @@
-# Phase 85 - Sprint 119 (UNKNOWN 품질 개선 + CI 강화)
+# Phase 86 - Sprint 120 (UNKNOWN 품질 고도화 + 스트리밍 바이트 위치)
 
-## Sprint 119 로드맵
+## Sprint 120 로드맵
 
-### P1: UNKNOWN 노드 POS 정밀화
-- 현재 모든 UNKNOWN 노드가 UNKNOWN POS — 한글/영문/숫자/기호 기본 분류
-- CharCategory 기반 POS 매핑: HANGUL→NNG, ALPHA→SL, NUMERIC→SN, SYMBOL→SW
-- unknown.rs의 candidate 생성 시 category별 POS 설정
-
-### P2: OOB connection cost 튜닝
+### P1: OOB connection cost 튜닝
 - DEFAULT_OOB_CONNECTION_COST=10,000 → 실제 사전 연결 비용 분포 대비 적정성 검증
 - full dict 환경에서 UNKNOWN 분할 품질 벤치마크
 - 필요시 cost 조정 또는 category별 차등 비용
 
-### P3: mini-dict entries.csv → entries.bin 자동 동기화 CI
-- create_mini_dict 실행 → diff 확인 → 불일치 시 CI 실패
+### P2: 스트리밍 토크나이저 바이트 위치 수정
+- streaming.rs에서 start_byte/end_byte가 청크 로컬 — 문서 전체 기준으로 누적 필요
+- total_bytes_processed 추적 추가
 
-### P4: stripped_to_original_byte 최적화
+### P3: stripped_to_original_byte 최적화
 - 현재 매 reset마다 Vec 재생성 — 입력 길이에 비례
 - 대량 텍스트 프로파일링 후 필요시 lazy 계산 또는 인라인 변환
+
+### P4: UNKNOWN 노드 세분화 POS 추정
+- 한글+숫자 혼합 (예: "123호") → SN or NNG 판정 개선
+- estimate_pos 함수의 WordPattern 활용 확대
+
+---
+
+# 완료: Phase 85 - Sprint 119 (HANGUL POS NNG 분류 + mini-dict CI)
+
+## Sprint 119 결과
+- HANGUL UNKNOWN POS → NNG: unknown.rs korean_default() 수정
+- 88건 golden test expected_pos 업데이트 (basic 5, nouns 17, complex 66)
+- mini-dict-sync CI job: create_mini_dict → diff → 불일치 시 CI 실패
+- 테스트: all pass / 0 fail, clippy 0 warnings
 
 ---
 
