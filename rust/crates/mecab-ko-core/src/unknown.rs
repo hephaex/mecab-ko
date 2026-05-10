@@ -387,14 +387,7 @@ impl UnknownDictionary {
         let defaults = [
             (DEFAULT_CATEGORY, 1800, 3562, 7000, "SY", "SY,*,*,*,*,*,*,*"),
             (SPACE_CATEGORY, 1799, 3559, 0, "SP", "SP,*,*,*,*,*,*,*"),
-            (
-                HANGUL_CATEGORY,
-                1800,
-                3565,
-                5000,
-                "UNKNOWN",
-                "UNKNOWN,*,*,*,*,*,*,*",
-            ),
+            (HANGUL_CATEGORY, 1800, 3565, 5000, "NNG", "NNG,*,*,*,*,*,*,*"),
             (HANJA_CATEGORY, 1800, 3560, 6000, "SH", "SH,*,*,*,*,*,*,*"),
             (ALPHA_CATEGORY, 1800, 3558, 4000, "SL", "SL,*,*,*,*,*,*,*"),
             (NUMERIC_CATEGORY, 1800, 3561, 3000, "SN", "SN,*,*,*,*,*,*,*"),
@@ -930,7 +923,7 @@ mod tests {
 
         let hangul_entries = dict.get_entries(HANGUL_CATEGORY);
         assert!(!hangul_entries.is_empty());
-        assert_eq!(hangul_entries[0].pos, "UNKNOWN");
+        assert_eq!(hangul_entries[0].pos, "NNG");
 
         let alpha_entries = dict.get_entries(ALPHA_CATEGORY);
         assert!(!alpha_entries.is_empty());
@@ -1144,7 +1137,7 @@ mod tests {
     fn test_pos_estimation_hangul_alpha_mix() {
         let handler = UnknownHandler::korean_default();
 
-        let pos = handler.estimate_pos(WordPattern::HangulAlphaMix, HANGUL_CATEGORY, "UNKNOWN");
+        let pos = handler.estimate_pos(WordPattern::HangulAlphaMix, HANGUL_CATEGORY, "NNG");
         assert_eq!(pos, "NNG");
     }
 

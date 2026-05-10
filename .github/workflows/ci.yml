@@ -214,11 +214,46 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
+  mini-dict-sync:
+    name: Mini-dict Sync Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Rust
+        uses: ./.github/actions/rust-setup
+        with:
+          toolchain: stable
+          cache-key: mini-dict
+
+      - name: Build create_mini_dict
+        working-directory: rust/test-fixtures
+        run: cargo build --release
+
+      - name: Regenerate and diff
+        run: |
+          mkdir -p /tmp/mini-dict-check
+          cd rust/test-fixtures
+          ./target/release/create_mini_dict /tmp/mini-dict-check
+
+          for FILE in entries.csv entries.bin sys.dic matrix.bin; do
+            if [ -f "mini-dict/$FILE" ] && [ -f "/tmp/mini-dict-check/$FILE" ]; then
+              if ! diff -q "mini-dict/$FILE" "/tmp/mini-dict-check/$FILE" >/dev/null 2>&1; then
+                echo "::error::mini-dict/$FILE is out of sync with create_mini_dict output"
+                echo "Run: cd rust/test-fixtures && cargo run --release -- mini-dict"
+                exit 1
+              fi
+              echo "✓ $FILE in sync"
+            fi
+          done
+          echo "All mini-dict files in sync"
+
   # Summary of all checks
   ci-status:
     name: CI Status
     runs-on: ubuntu-latest
-    needs: [fmt, clippy, test, async-tests, profiler-allocator, build, coverage]
+    needs: [fmt, clippy, test, async-tests, profiler-allocator, build, coverage, mini-dict-sync]
     if: always()
     steps:
       - name: Check CI Status
@@ -230,7 +265,8 @@ jobs:
                 "${{ needs.async-tests.result }}" != "success" ||
                 "${{ needs.profiler-allocator.result }}" != "success" ||
                 "${{ needs.build.result }}" != "success" ||
-                "${{ needs.coverage.result }}" != "success" ]]; then
+                "${{ needs.coverage.result }}" != "success" ||
+                "${{ needs.mini-dict-sync.result }}" != "success" ]]; then
             echo "CI Status: FAILED"
             echo "Some checks did not pass. Please review the logs."
             exit 1

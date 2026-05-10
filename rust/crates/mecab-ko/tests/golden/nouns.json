@@ -1409,7 +1409,7 @@
     "expected_pos": [
       [
         "면역학",
-        "UNKNOWN"
+        "NNG"
       ]
     ],
     "difficulty": 1
@@ -1424,7 +1424,7 @@
     "expected_pos": [
       [
         "항생제",
-        "UNKNOWN"
+        "NNG"
       ]
     ],
     "difficulty": 1
@@ -1439,7 +1439,7 @@
     "expected_pos": [
       [
         "민사소송",
-        "UNKNOWN"
+        "NNG"
       ]
     ],
     "difficulty": 1
@@ -1454,7 +1454,7 @@
     "expected_pos": [
       [
         "형사재판",
-        "UNKNOWN"
+        "NNG"
       ]
     ],
     "difficulty": 1
@@ -1469,7 +1469,7 @@
     "expected_pos": [
       [
         "블록체인",
-        "UNKNOWN"
+        "NNG"
       ]
     ],
     "difficulty": 1
@@ -1484,7 +1484,7 @@
     "expected_pos": [
       [
         "클라우드컴퓨팅",
-        "UNKNOWN"
+        "NNG"
       ]
     ],
     "difficulty": 1
@@ -1499,7 +1499,7 @@
     "expected_pos": [
       [
         "인터넷",
-        "UNKNOWN"
+        "NNG"
       ]
     ],
     "difficulty": 1
@@ -1514,7 +1514,7 @@
     "expected_pos": [
       [
         "컴퓨터",
-        "UNKNOWN"
+        "NNG"
       ]
     ],
     "difficulty": 1
@@ -1529,7 +1529,7 @@
     "expected_pos": [
       [
         "서버와클라이언트",
-        "UNKNOWN"
+        "NNG"
       ]
     ],
     "difficulty": 2
@@ -1544,7 +1544,7 @@
     "expected_pos": [
       [
         "약물치료",
-        "UNKNOWN"
+        "NNG"
       ]
     ],
     "difficulty": 2
@@ -1559,7 +1559,7 @@
     "expected_pos": [
       [
         "신경과",
-        "UNKNOWN"
+        "NNG"
       ]
     ],
     "difficulty": 1
@@ -1574,7 +1574,7 @@
     "expected_pos": [
       [
         "헌법",
-        "UNKNOWN"
+        "NNG"
       ]
     ],
     "difficulty": 1
@@ -1589,7 +1589,7 @@
     "expected_pos": [
       [
         "계약서",
-        "UNKNOWN"
+        "NNG"
       ]
     ],
     "difficulty": 1
@@ -1604,7 +1604,7 @@
     "expected_pos": [
       [
         "데이터베이스",
-        "UNKNOWN"
+        "NNG"
       ]
     ],
     "difficulty": 1
@@ -1619,7 +1619,7 @@
     "expected_pos": [
       [
         "알고리즘",
-        "UNKNOWN"
+        "NNG"
       ]
     ],
     "difficulty": 1
@@ -1634,7 +1634,7 @@
     "expected_pos": [
       [
         "프로토콜",
-        "UNKNOWN"
+        "NNG"
       ]
     ],
     "difficulty": 1
@@ -1649,7 +1649,7 @@
     "expected_pos": [
       [
         "병원",
-        "UNKNOWN"
+        "NNG"
       ]
     ],
     "difficulty": 1

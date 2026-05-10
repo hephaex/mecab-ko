@@ -3909,7 +3909,7 @@
     "expected_pos": [
       [
         "AI기술",
-        "UNKNOWN"
+        "NNG"
       ]
     ],
     "difficulty": 1
@@ -3924,7 +3924,7 @@
     "expected_pos": [
       [
         "GPU서버",
-        "UNKNOWN"
+        "NNG"
       ]
     ],
     "difficulty": 1
@@ -3974,7 +3974,7 @@
     "expected_pos": [
       [
         "100원짜리",
-        "UNKNOWN"
+        "NNG"
       ]
     ],
     "difficulty": 2
@@ -3989,7 +3989,7 @@
     "expected_pos": [
       [
         "3시간",
-        "UNKNOWN"
+        "NNG"
       ]
     ],
     "difficulty": 1
@@ -4030,7 +4030,7 @@
     "expected_pos": [
       [
         "가나요",
-        "UNKNOWN"
+        "NNG"
       ],
       [
         "?",
