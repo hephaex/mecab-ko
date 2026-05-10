@@ -468,23 +468,31 @@ pub fn evaluate_tokens(
     (true_positives, false_positives, false_negatives, pos_match)
 }
 
-/// Greedy alignment 기반 토큰 평가
+/// Greedy alignment 기반 토큰 평가 (strict 기본).
+///
+/// `evaluate_tokens_aligned_with_pos_match`를 `pos_eq_strict`로 호출.
+#[must_use]
+pub fn evaluate_tokens_aligned(
+    gold_tokens: &[GoldToken],
+    pred_tokens: &[Token],
+) -> (usize, usize, usize, usize) {
+    evaluate_tokens_aligned_with_pos_match(gold_tokens, pred_tokens, pos_eq_strict)
+}
+
+/// Greedy alignment 기반 토큰 평가 (POS 비교 함수 주입, Sprint 125).
 ///
 /// 순서를 고려하되, 토큰 갯수 차이가 있어도 최선의 매칭을 시도합니다.
-/// 예를 들어 gold와 pred의 토큰 갯수가 다르면, 건너뛰면서 매칭을 시도합니다.
-///
-/// # Arguments
-///
-/// * `gold_tokens` - 정답 토큰 리스트
-/// * `pred_tokens` - 예측 토큰 리스트
+/// `pos_eq`로 strict(`pos_eq_strict`) 또는 lenient(`pos_tags_equivalent`)
+/// 모드 선택.
 ///
 /// # Returns
 ///
 /// (`true_positives`, `false_positives`, `false_negatives`, `pos_match`)
 #[must_use]
-pub fn evaluate_tokens_aligned(
+pub fn evaluate_tokens_aligned_with_pos_match(
     gold_tokens: &[GoldToken],
     pred_tokens: &[Token],
+    pos_eq: PosMatchFn,
 ) -> (usize, usize, usize, usize) {
     let mut true_positives = 0;
     let mut pos_match = 0;
@@ -497,23 +505,18 @@ pub fn evaluate_tokens_aligned(
         let pred = &pred_tokens[pred_idx];
 
         if gold.surface == pred.surface {
-            // Surface가 일치하면 매칭
             pos_match += 1;
-            if gold.pos == pred.pos {
+            if pos_eq(&gold.pos, &pred.pos) {
                 true_positives += 1;
             }
             gold_idx += 1;
             pred_idx += 1;
         } else {
-            // Surface가 불일치하면 다음 pred에서 현재 gold를 찾아봄
             let mut found = false;
-
-            // pred에서 최대 3개 앞까지 탐색
             for look_ahead in 1..=3 {
                 if pred_idx + look_ahead < pred_tokens.len()
                     && pred_tokens[pred_idx + look_ahead].surface == gold.surface
                 {
-                    // 중간 pred 토큰들은 false positive로 처리
                     pred_idx += look_ahead;
                     found = true;
                     break;
@@ -521,12 +524,10 @@ pub fn evaluate_tokens_aligned(
             }
 
             if !found {
-                // gold에서 최대 3개 앞까지 탐색
                 for look_ahead in 1..=3 {
                     if gold_idx + look_ahead < gold_tokens.len()
                         && gold_tokens[gold_idx + look_ahead].surface == pred.surface
                     {
-                        // 중간 gold 토큰들은 false negative로 처리
                         gold_idx += look_ahead;
                         found = true;
                         break;
@@ -535,7 +536,6 @@ pub fn evaluate_tokens_aligned(
             }
 
             if !found {
-                // 매칭 실패 - 둘 다 한 칸씩 전진
                 gold_idx += 1;
                 pred_idx += 1;
             }
@@ -643,23 +643,38 @@ pub fn evaluate_dataset(tokenizer: &mut Tokenizer, dataset: &TestDataset) -> Eva
     result
 }
 
-/// 세종 코퍼스 호환 모드로 데이터셋 평가
+/// 세종 코퍼스 호환 모드로 데이터셋 평가 (strict 기본).
 ///
 /// `MeCab-Ko`의 복합 태그(VV+EF 등)를 세종 코퍼스 형식으로 변환하여 평가합니다.
 /// 이를 통해 토큰화 기준 차이를 보정하고 더 공정한 정확도를 측정합니다.
-///
-/// # Arguments
-///
-/// * `tokenizer` - `MeCab-Ko` 토크나이저
-/// * `dataset` - 테스트 데이터셋
-///
-/// # Returns
-///
-/// 세종 호환 모드로 평가된 결과
-#[allow(clippy::cast_precision_loss)]
+#[must_use]
 pub fn evaluate_dataset_sejong(
     tokenizer: &mut Tokenizer,
     dataset: &TestDataset,
+) -> EvaluationResult {
+    evaluate_dataset_sejong_with_pos_match(tokenizer, dataset, pos_eq_strict)
+}
+
+/// 세종 호환 모드 평가 (lenient, Sprint 125).
+///
+/// `pos_tags_equivalent`을 사용하여 동치 태그 그룹을 동일하게 취급.
+#[must_use]
+pub fn evaluate_dataset_sejong_lenient(
+    tokenizer: &mut Tokenizer,
+    dataset: &TestDataset,
+) -> EvaluationResult {
+    evaluate_dataset_sejong_with_pos_match(tokenizer, dataset, pos_tags_equivalent)
+}
+
+/// 세종 호환 모드 평가 (POS 비교 함수 주입, Sprint 125).
+///
+/// strict / lenient 둘 다 지원. 자세한 내용은 `evaluate_dataset_sejong`,
+/// `evaluate_dataset_sejong_lenient` 참고.
+#[allow(clippy::cast_precision_loss)]
+pub fn evaluate_dataset_sejong_with_pos_match(
+    tokenizer: &mut Tokenizer,
+    dataset: &TestDataset,
+    pos_eq: PosMatchFn,
 ) -> EvaluationResult {
     let converter = SejongConverter::new();
     let mut result = EvaluationResult::new();
@@ -667,11 +682,8 @@ pub fn evaluate_dataset_sejong(
 
     for gold_sentence in &dataset.sentences {
         let pred_tokens = tokenizer.tokenize(&gold_sentence.text);
-
-        // 세종 형식으로 변환
         let sejong_tokens = converter.convert_tokens(&pred_tokens);
 
-        // 변환된 토큰을 GoldToken 형식으로 변환하여 비교
         let converted_pred: Vec<Token> = sejong_tokens
             .iter()
             .map(|st| Token {
@@ -692,19 +704,20 @@ pub fn evaluate_dataset_sejong(
         result.total_gold_tokens += gold_sentence.tokens.len();
         result.total_pred_tokens += converted_pred.len();
 
-        let (tp, fp, fn_, _pos_match) =
-            evaluate_tokens_aligned(&gold_sentence.tokens, &converted_pred);
+        let (tp, fp, fn_, _pos_match) = evaluate_tokens_aligned_with_pos_match(
+            &gold_sentence.tokens,
+            &converted_pred,
+            pos_eq,
+        );
 
         result.true_positives += tp;
         result.false_positives += fp;
         result.false_negatives += fn_;
 
-        // 문장 완전 일치 확인
         if gold_sentence.tokens.len() == converted_pred.len() && tp == gold_sentence.tokens.len() {
             result.exact_match_sentences += 1;
         }
 
-        // 품사별 통계 수집
         for (i, gold_token) in gold_sentence.tokens.iter().enumerate() {
             let pos_stat = result
                 .pos_stats
@@ -721,7 +734,7 @@ pub fn evaluate_dataset_sejong(
                 let pred_token = &converted_pred[i];
                 if gold_token.surface == pred_token.surface {
                     pos_stat.pred_count += 1;
-                    if gold_token.pos == pred_token.pos {
+                    if pos_eq(&gold_token.pos, &pred_token.pos) {
                         pos_stat.correct += 1;
                     }
                 }
@@ -729,7 +742,6 @@ pub fn evaluate_dataset_sejong(
         }
     }
 
-    // 메트릭 계산 (기존과 동일)
     let total_tokens = result.total_gold_tokens;
     if total_tokens > 0 {
         result.token_accuracy = result.true_positives as f64 / total_tokens as f64;
@@ -754,7 +766,6 @@ pub fn evaluate_dataset_sejong(
             2.0 * (result.precision * result.recall) / (result.precision + result.recall);
     }
 
-    // 품사 정확도
     let mut total_pos_correct = 0;
     let mut total_pos_gold = 0;
 
@@ -771,6 +782,50 @@ pub fn evaluate_dataset_sejong(
     }
 
     result
+}
+
+/// POS 태그 동치 그룹 (Sprint 125).
+///
+/// 같은 그룹 내 태그는 lenient 평가 시 동일한 것으로 간주됩니다.
+///
+/// 출처: Sprint 124 Phase 1 KLUE DP 진단에서 발견된 convention 차이.
+/// - 구두점/공백: SP, SC (구분자성격)
+/// - 괄호/따옴표/기호: SS, SY, SSO, SSC (열림/닫힘/일반 기호)
+/// - 관형사: MM, MMD, MMN, MMA (KLUE 세분화 vs mecab-ko-dic 통합)
+///
+/// **포함하지 않는 그룹** (의미적으로 다른 태그):
+/// - NNG/NNP/NNB — 일반/고유/의존명사는 진짜 구분
+/// - VV/VA — 동사/형용사는 진짜 구분
+/// - EC/EF — 연결/종결어미는 진짜 구분
+pub const TAG_EQUIVALENCE_GROUPS: &[&[&str]] = &[
+    &["SP", "SC"],
+    &["SS", "SY", "SSO", "SSC"],
+    &["MM", "MMD", "MMN", "MMA"],
+];
+
+/// 두 POS 태그가 동치 그룹 기준 동일한지 확인 (Sprint 125).
+///
+/// `a == b`이거나 같은 `TAG_EQUIVALENCE_GROUPS` 그룹에 속하면 true.
+#[must_use]
+pub fn pos_tags_equivalent(a: &str, b: &str) -> bool {
+    if a == b {
+        return true;
+    }
+    TAG_EQUIVALENCE_GROUPS
+        .iter()
+        .any(|group| group.contains(&a) && group.contains(&b))
+}
+
+/// POS 일치 판단 함수 타입 (Sprint 125).
+///
+/// 평가 함수에 주입하여 strict(`==`) 또는 lenient(`pos_tags_equivalent`)
+/// 모드를 선택할 수 있게 합니다.
+pub type PosMatchFn = fn(&str, &str) -> bool;
+
+/// 엄격(strict) POS 비교 — 기본 동작.
+#[must_use]
+pub fn pos_eq_strict(a: &str, b: &str) -> bool {
+    a == b
 }
 
 /// 이중 메트릭 평가 결과 (Sprint 124)
@@ -816,34 +871,51 @@ impl DualMetricResult {
     }
 }
 
-/// 이중 메트릭 평가
+/// 이중 메트릭 평가 (strict 모드, 기본).
 ///
-/// 형태소 레벨(morpheme) + 어절 레벨(eojeol) 두 메트릭을 함께 측정합니다.
-///
-/// 어절 레벨 평가:
-/// - 정답 데이터셋에 `eojeol_counts`가 있어야 측정 가능
-/// - 예측 토큰을 정답 어절 경계 기준 슬라이스로 분할 (정답과 같은 형태소 수)
-/// - 어절 내 모든 형태소가 surface + POS 일치 시 어절 정답
-///
-/// 어절 정보가 없는 데이터셋에서는 `eojeol_total = 0`으로 보고.
-///
-/// # Arguments
-///
-/// * `tokenizer` - `MeCab-Ko` 토크나이저
-/// * `dataset` - 테스트 데이터셋
-///
-/// # Returns
-///
-/// 이중 메트릭 결과
-#[allow(clippy::cast_precision_loss)]
+/// `evaluate_dataset_dual_with_pos_match`를 `pos_eq_strict`으로 호출.
+#[must_use]
 pub fn evaluate_dataset_dual(
     tokenizer: &mut Tokenizer,
     dataset: &TestDataset,
 ) -> DualMetricResult {
-    // 형태소 레벨은 기존 함수 재사용
-    let morpheme = evaluate_dataset_sejong(tokenizer, dataset);
+    evaluate_dataset_dual_with_pos_match(tokenizer, dataset, pos_eq_strict)
+}
 
-    // 어절 레벨 별도 측정
+/// 이중 메트릭 평가 (lenient 모드, Sprint 125).
+///
+/// `pos_tags_equivalent`을 사용하여 동치 태그 그룹(SP/SC, SS/SY/SSO/SSC,
+/// MM/MMD/MMN/MMA)을 동일하게 취급합니다. KLUE DP 같은 외부 코퍼스의
+/// tag scheme 차이를 흡수하여 진짜 분석 정확도를 측정.
+#[must_use]
+pub fn evaluate_dataset_dual_lenient(
+    tokenizer: &mut Tokenizer,
+    dataset: &TestDataset,
+) -> DualMetricResult {
+    evaluate_dataset_dual_with_pos_match(tokenizer, dataset, pos_tags_equivalent)
+}
+
+/// 이중 메트릭 평가 (POS 비교 함수 주입).
+///
+/// 형태소 레벨(morpheme) + 어절 레벨(eojeol) 두 메트릭을 함께 측정합니다.
+/// `pos_eq` 함수로 strict/lenient 모드를 선택. **양쪽 메트릭 모두에 동일 `pos_eq`** 적용.
+///
+/// 어절 레벨 평가:
+/// - 정답 데이터셋에 `eojeol_counts`가 있어야 측정 가능
+/// - 예측 토큰을 정답 어절 경계 기준 슬라이스로 분할 (정답과 같은 형태소 수)
+/// - 어절 내 모든 형태소가 surface + POS 일치(주입된 `pos_eq` 기준) 시 어절 정답
+///
+/// 어절 정보가 없는 데이터셋에서는 `eojeol_total = 0`으로 보고.
+#[allow(clippy::cast_precision_loss)]
+pub fn evaluate_dataset_dual_with_pos_match(
+    tokenizer: &mut Tokenizer,
+    dataset: &TestDataset,
+    pos_eq: PosMatchFn,
+) -> DualMetricResult {
+    // 형태소 레벨도 동일 pos_eq로 측정 (Sprint 125: lenient 지원)
+    let morpheme = evaluate_dataset_sejong_with_pos_match(tokenizer, dataset, pos_eq);
+
+    // 어절 레벨 별도 측정 (pos_eq 적용)
     let converter = SejongConverter::new();
     let mut eojeol_correct: usize = 0;
     let mut eojeol_total: usize = 0;
@@ -872,12 +944,6 @@ pub fn evaluate_dataset_dual(
         for &count in counts {
             eojeol_total += 1;
 
-            // 골드 어절: gold_tokens[gold_idx..gold_idx+count]
-            // 예측 어절: pred_morphs[pred_idx..pred_idx+count] (같은 개수만 슬라이스)
-            //
-            // 어절이 일치하려면:
-            //   1. 예측 토큰 수가 충분 (pred_idx + count <= pred_morphs.len)
-            //   2. 슬라이스 내 모든 (surface, pos) 쌍 일치
             let gold_end = gold_idx + count;
             let pred_end = pred_idx + count;
 
@@ -893,7 +959,7 @@ pub fn evaluate_dataset_dual(
             let matches = gold_slice
                 .iter()
                 .zip(pred_slice.iter())
-                .all(|(g, (p_surf, p_pos))| g.surface == *p_surf && g.pos == *p_pos);
+                .all(|(g, (p_surf, p_pos))| g.surface == *p_surf && pos_eq(&g.pos, p_pos));
 
             if matches {
                 eojeol_correct += 1;
@@ -921,6 +987,45 @@ pub fn evaluate_dataset_dual(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_pos_tags_equivalent_strict_match() {
+        assert!(pos_tags_equivalent("NNG", "NNG"));
+        assert!(pos_tags_equivalent("VV", "VV"));
+    }
+
+    #[test]
+    fn test_pos_tags_equivalent_groups() {
+        // 구두점/공백 그룹
+        assert!(pos_tags_equivalent("SP", "SC"));
+        assert!(pos_tags_equivalent("SC", "SP"));
+        // 괄호/기호 그룹
+        assert!(pos_tags_equivalent("SS", "SY"));
+        assert!(pos_tags_equivalent("SS", "SSO"));
+        assert!(pos_tags_equivalent("SSC", "SY"));
+        // 관형사 그룹
+        assert!(pos_tags_equivalent("MM", "MMD"));
+        assert!(pos_tags_equivalent("MMA", "MMN"));
+    }
+
+    #[test]
+    fn test_pos_tags_equivalent_distinct() {
+        // 의미적으로 다른 태그는 lenient에서도 다름
+        assert!(!pos_tags_equivalent("NNG", "NNP"));
+        assert!(!pos_tags_equivalent("NNG", "NNB"));
+        assert!(!pos_tags_equivalent("VV", "VA"));
+        assert!(!pos_tags_equivalent("EC", "EF"));
+        // 다른 그룹 간 비동치
+        assert!(!pos_tags_equivalent("SP", "SS"));
+        assert!(!pos_tags_equivalent("MM", "SP"));
+    }
+
+    #[test]
+    fn test_pos_eq_strict() {
+        assert!(pos_eq_strict("NNG", "NNG"));
+        assert!(!pos_eq_strict("NNG", "NNP"));
+        assert!(!pos_eq_strict("SP", "SC")); // strict는 동치 그룹 무시
+    }
 
     #[test]
     fn test_gold_token_parse() {

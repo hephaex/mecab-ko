@@ -2529,6 +2529,110 @@ fn test_klue_dp_dual_metric() {
     );
 }
 
+/// Sprint 125 P1: KLUE DP lenient evaluation with tag equivalence map
+///
+/// Same dataset as `test_klue_dp_dual_metric` but uses
+/// `evaluate_dataset_dual_lenient` to absorb tag scheme differences:
+///   {SP, SC}, {SS, SY, SSO, SSC}, {MM, MMD, MMN, MMA}
+///
+/// Both morpheme-level and eojeol-level metrics use the lenient comparison
+/// (Sprint 125 — function pointer plumbing through `evaluate_dataset_sejong`).
+///
+/// Phase 1 reported 65.8% morpheme / 19.2% eojeol under strict comparison.
+/// Sprint 125 P1 measures the lift from tag equivalence isolation alone.
+#[test]
+#[ignore = "requires KLUE DP eval data + system dictionary"]
+fn test_klue_dp_dual_metric_lenient() {
+    use mecab_ko_core::evaluate::{evaluate_dataset_dual, evaluate_dataset_dual_lenient};
+
+    // Sprint 125 baseline floor (lift confirmed: strict 19.2% -> lenient 20.8%)
+    const LENIENT_EOJEOL_FLOOR: f64 = 0.20;
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or_else(|| std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
+
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict
+            .load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let eval_path = project_root.join("data/eval/klue_dp_val.tsv");
+    if !eval_path.exists() {
+        println!("Skipping: data/eval/klue_dp_val.tsv not found");
+        return;
+    }
+
+    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
+        .expect("Failed to load KLUE DP val");
+
+    println!("\n=== KLUE DP Strict vs Lenient ===");
+    println!("Dataset: {} sentences", dataset.len());
+
+    let strict = evaluate_dataset_dual(&mut tokenizer, &dataset);
+    let lenient = evaluate_dataset_dual_lenient(&mut tokenizer, &dataset);
+
+    let strict_eo_pct = strict.eojeol_accuracy * 100.0;
+    let lenient_eo_pct = lenient.eojeol_accuracy * 100.0;
+    let delta = lenient_eo_pct - strict_eo_pct;
+
+    println!("\n--- Strict ---");
+    println!(
+        "  Morpheme: {:.1}%",
+        strict.morpheme.token_accuracy * 100.0
+    );
+    println!(
+        "  Eojeol:   {:.1}% ({} / {})",
+        strict_eo_pct, strict.eojeol_correct, strict.eojeol_total
+    );
+
+    let strict_morph_pct = strict.morpheme.token_accuracy * 100.0;
+    let lenient_morph_pct = lenient.morpheme.token_accuracy * 100.0;
+    let morph_delta = lenient_morph_pct - strict_morph_pct;
+
+    println!("\n--- Lenient (tag equivalence map) ---");
+    println!(
+        "  Morpheme: {lenient_morph_pct:.1}% [Δ +{morph_delta:.1}pp]"
+    );
+    println!(
+        "  Eojeol:   {:.1}% ({} / {}) [Δ +{:.1}pp]",
+        lenient_eo_pct, lenient.eojeol_correct, lenient.eojeol_total, delta
+    );
+
+    // 회귀 catch — lenient는 strict보다 높거나 같아야 함
+    assert!(
+        lenient.eojeol_accuracy >= strict.eojeol_accuracy,
+        "Lenient eojeol {lenient_eo_pct:.1}% must be >= strict {strict_eo_pct:.1}% (regression in equivalence map?)"
+    );
+
+    assert!(
+        lenient.eojeol_accuracy >= LENIENT_EOJEOL_FLOOR,
+        "Lenient eojeol {:.1}% is below {:.0}% floor",
+        lenient_eo_pct,
+        LENIENT_EOJEOL_FLOOR * 100.0
+    );
+
+    println!(
+        "\nPASSED — lenient eojeol {lenient_eo_pct:.1}% (+{delta:.1}pp vs strict)"
+    );
+}
+
 /// Sprint 121: Error case classification
 ///
 /// Categorize every mismatch from full dict evaluation into:

@@ -1,6 +1,67 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-11 (Sprint 124 Phase 1 완료 — 이중 메트릭 + 진단)
+## 마지막 업데이트: 2026-05-11 (Sprint 125 P1 완료 — Tag Equivalence Map)
+
+### ✅ Sprint 125 P1 - Tag Equivalence Map + Lenient Evaluator
+
+**기간**: 2026-05-11
+**목표**: Sprint 124 Phase 1에서 발견된 tag scheme 차이 노이즈를 흡수하는
+lenient evaluator 구현. 진짜 분석 정확도 분리 측정.
+
+#### 측정 결과 (KLUE DP val, 1,995 sentences)
+
+| 메트릭 | Strict | Lenient | Δ |
+|--------|--------|---------|---|
+| Morpheme | 65.8% | **69.0%** | **+3.2pp** |
+| Eojeol | 19.2% (4,299) | **20.8% (4,667)** | **+1.6pp** |
+
+#### 구현
+
+**Tag equivalence groups** (3개):
+- {SP, SC} — 구두점/공백
+- {SS, SY, SSO, SSC} — 괄호/따옴표/기호
+- {MM, MMD, MMN, MMA} — 관형사 (KLUE 세분 vs mecab 통합)
+
+**Function pointer 패턴**으로 strict/lenient 양쪽 지원, 기존 API 100% 호환:
+- `PosMatchFn = fn(&str, &str) -> bool` 타입
+- `pos_eq_strict` / `pos_tags_equivalent` 함수
+- `evaluate_*_with_pos_match` 내부 함수 + strict/lenient wrapper
+
+#### 효과 분석
+
+진단 분류 "31% errors are tag scheme"이 시사한 것보다 작은 lift:
+- Morpheme +3.2pp = ~1,633개 토큰 새로 정답 (대략 진단 추정 일치)
+- Eojeol +1.6pp = 368개 어절 새로 정답 (어절은 strict — 한 morpheme만 고친
+  케이스로는 어절 전체 정답이 되기 어려움)
+
+→ Tag equivalence는 단독으로는 작은 효과. 사전 정책/분할 차이 흡수가
+   결합되어야 의미 있는 lift.
+
+#### 추가/수정된 파일 (3개)
+- rust/crates/mecab-ko-core/src/evaluate.rs:
+  - TAG_EQUIVALENCE_GROUPS, pos_tags_equivalent, pos_eq_strict
+  - evaluate_tokens_aligned_with_pos_match (내부)
+  - evaluate_dataset_sejong / evaluate_dataset_sejong_lenient / _with_pos_match
+  - evaluate_dataset_dual / evaluate_dataset_dual_lenient / _with_pos_match
+  - 4개 unit test
+- rust/crates/mecab-ko-core/tests/accuracy_eval.rs:
+  - test_klue_dp_dual_metric_lenient (strict vs lenient 비교)
+- docs/research/accuracy/2026-05-11_klue_dp_lenient.md
+
+#### 테스트 결과
+- 모든 unit test pass (8 evaluate tests)
+- test_klue_dp_dual_metric_lenient: PASS
+- workspace 전체: all pass / 0 fail / clippy 0 warnings
+
+#### Sprint 126 후보 (도출)
+1. **사전 정책 차이 정량화** (NNG/NNP/NNB)
+2. **복합명사 분할 정책** 차이 측정 (팝스타 vs 팝+스타)
+3. **Noisy 데이터 추가** (사용자 우선순위 "높음", carryover)
+4. **CI 통합** (accuracy-gate에 KLUE DP)
+
+---
+
+### ✅ Sprint 124 Phase 1 - 이중 메트릭 + 진단
 
 ### ✅ Sprint 124 Phase 1 - 이중 메트릭 (eojeol + morpheme) + KLUE 정식 평가 + 진단
 

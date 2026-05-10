@@ -1,35 +1,44 @@
-# Phase 91 - Sprint 125 후보 (Phase 1 진단 결과 기반)
+# Phase 92 - Sprint 126 후보 (Sprint 125 P1 결과 기반)
 
-## Sprint 125 후보 (우선순위순)
+## Sprint 126 후보 (우선순위순)
 
-> Sprint 124 Phase 1 진단 결과: 65.8%의 절반 이상이 tag scheme/사전 정책 차이.
-> 자세한 내용: `docs/research/accuracy/2026-05-11_klue_dp_phase1.md`
+> Sprint 125 P1 결과: tag equivalence만으로 morpheme +3.2pp / eojeol +1.6pp.
+> 진단 추정(31%)보다 작은 lift — 다른 차이도 함께 흡수해야 큰 lift 가능.
+> 자세한 내용: `docs/research/accuracy/2026-05-11_klue_dp_lenient.md`
 
-### P1 후보: Tag Equivalence Map 구현
-- mecab-ko-dic ↔ KLUE 동치 태그 매핑 정의
-  - {SP, SC} 동치 (구두점/공백)
-  - {SS, SY, SSO, SSC} 동치 (괄호/따옴표)
-  - {MM, MMD, MMN, MMA} 동치 (관형사 세분)
-- Lenient evaluator: 동치 매핑 시 정답으로 간주
-- 측정 후 morpheme/eojeol 정확도 변화 보고
-- 예상 효과: morpheme 65.8% → 80%+, eojeol 19.2% → 35%+
+### P1 후보: 사전 정책 차이 정량화
+- NNG↔NNP, NNB↔NNG, XSA↔XSV 등 사전 분류 차이 측정
+- KLUE 기준 vs mecab-ko-dic 기준 차이 분포
+- 가능하면 별도 equivalence map 또는 정답 보정 옵션 (어떤 케이스가 진짜 오류 vs convention)
 
 ### P2 후보: 복합명사 분할 정책 분석
-- 팝스타/NNP vs 팝/NNG + 스타/NNG 같은 케이스 통계
-- mecab-ko-dic 분할 vs KLUE 결합 분포 측정
-- 양쪽 모두 정답으로 인정하는 메트릭 또는 conversion 검토
+- 팝스타/NNP vs 팝+스타/NNG+NNG 같은 케이스 통계
+- 양쪽 모두 정답으로 인정하는 매칭 룰 (slice-level 일치)
 
-### P3 후보: Noisy 데이터 추가 (사용자 우선순위 "높음")
-- KLUE DP는 편집 register만 — SNS/구어 보강 필요
-- 옵션:
-  - NIKL 모두의말뭉치 구어 subcorpus (수동 등록 필요)
-  - silver-label 파이프라인 (C++ mecab-ko 필요)
-  - 자체 SNS 수집 (라이센스 검토)
+### P3 후보: Noisy 데이터 추가 (사용자 우선순위 "높음", carryover)
+- KLUE DP는 편집 register만
+- 옵션: NIKL 구어 / silver-label / SNS 자체 수집
 
 ### P4 후보: CI 통합
-- HuggingFace에서 KLUE DP 자동 다운로드 + 변환 step
-- accuracy-gate.yml에 KLUE DP dual-metric gate job
-- 회귀 catch + PR 코멘트
+- HF 자동 다운로드 + KLUE DP dual-metric gate
+- accuracy-gate.yml에 새 job
+
+---
+
+# 완료: Phase 91 - Sprint 125 P1 (Tag Equivalence Map)
+
+## Sprint 125 P1 결과
+- TAG_EQUIVALENCE_GROUPS 정의 (3 그룹: SP/SC, SS/SY/SSO/SSC, MM/MMD/MMN/MMA)
+- pos_tags_equivalent + pos_eq_strict + PosMatchFn 타입
+- evaluate_dataset_dual_lenient + evaluate_dataset_sejong_lenient + with_pos_match 내부
+- 4개 unit test
+- test_klue_dp_dual_metric_lenient (strict vs lenient 비교)
+- **측정**: morpheme 65.8 → 69.0% (+3.2pp), eojeol 19.2 → 20.8% (+1.6pp)
+
+### 핵심 학습
+- 진단 분류 비율(31%)과 metric lift는 다른 차원
+- Tag equivalence 단독으로는 작은 효과
+- Function pointer 패턴으로 strict/lenient API 양쪽 호환
 
 ---
 
