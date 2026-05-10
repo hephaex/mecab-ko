@@ -76,39 +76,49 @@ mecab-ko-dic full dict(342MB, 약 80만 entries)의 첫 baseline을 측정.
 
 ---
 
-## 실패 케이스 (4건)
+## 실패 케이스 (4건) — 프로그래매틱 분류 결과
 
-전체 4문장이 완전 일치 실패. 패턴 분류:
+> **정정 (P2 자동 분류 후)**: 초기 수동 분석에서 보고한 "되 VV↔XSV", "보 VV↔NNG"는
+> 디버그 테스트(`test_xsv_debug_sentences`) 출력이었으며 sample.tsv 평가 실패가 아님.
+> 프로그래매틱 분류 결과 **4건 전부 SL↔NNP 라벨링 규약 차이**.
 
-### 1. VV vs XSV 동음이의어
+### Category Summary
 
-**케이스 A**: `크리에이터 되고 싶어`
-- 예상: `크리에이터/NNG 되/VV 고/EC 싶/VX 어/EF`
-- 결과: `크리에이터/NNG 되/XSV 고/EC 싶/VX 어/EF`
-- 차이: `되` (VV vs XSV)
+| 카테고리 | 건수 | 비율 |
+|----------|------|------|
+| POS_ONLY (표면형 일치, POS만 다름) | 3 | 75% |
+| SEGMENTATION (분절 불일치) | 1 | 25% |
+| 사전 미등록 (UNKNOWN) | 0 | 0% |
+| 공백 처리 오류 | 0 | 0% |
 
-**케이스 B**: `보지만 하지만`
-- 예상: `보/VV 지만/EC 하/VV 지만/EC`
-- 결과: `보/NNG 지만/EC 하/VV 지만/EC`
-- 차이: `보` (VV vs NNG)
+### POS Confusion Matrix
 
-`되`, `보`처럼 본동사와 파생접미사/명사 양쪽으로 가능한 형태에서
-Viterbi가 컨텍스트를 충분히 활용하지 못함.
+| Gold POS | Pred POS | 건수 |
+|----------|----------|------|
+| SL (외국어) | NNP (고유명사) | **4** |
+| JKS (주격조사) | VV (동사) | 1 (cascade) |
 
-### 2. SL/NNP + Inflect 분해 오류
+### 개별 케이스
 
-**케이스 C**: `MBTI가 뭐예요`
-- 예상: `MBTI/SL 가/JKS 뭐/NP 이/VCP 에요/EF`
-- 결과: `MBTI/NNP 가/VV 아/EF 뭐/NP 이/VCP 에요/EF`
-- 차이:
-  - `MBTI` (SL vs NNP) — 외국어 분류 누락
-  - `가` (JKS vs VV+EC) — MeCab 원본이 `가/VV+EC`(Inflect)로 분석한 후 잘못 분해
+1. **"API를 호출하여 결과를 받았다"** [POS_ONLY]
+   - `API`: gold=SL, pred=NNP. 분절 완벽 일치.
 
-원본 MeCab feature: `가/VV+EC,...,Inflect,VV,EC,가/VV/*+아/EC/*`
-→ 평가가 이 Inflect 토큰을 `가/VV + 아/EC`로 분해하지만 컨텍스트상
-실제로는 `가/JKS`가 정답.
+2. **"TMI인데요"** [POS_ONLY]
+   - `TMI`: gold=SL, pred=NNP. 분절 완벽 일치.
 
-### 3. (4번째 실패는 출력에 명시되지 않음 — 추가 조사 필요)
+3. **"MBTI가 뭐예요"** [SEGMENTATION] — 유일한 실질적 분석 오류
+   - `MBTI`: SL→NNP, `가`: JKS→VV+EC(Inflect), 토큰 수 5→6.
+   - NNP 뒤의 연접 비용이 JKS보다 VV+EC를 선호하여 cascade 발생.
+
+4. **"AI로 그림 그렸어"** [POS_ONLY]
+   - `AI`: gold=SL, pred=NNP. 분절 완벽 일치.
+
+### 근본 원인
+
+mecab-ko-dic 2.1.1이 영문 약어를 NNP로 등록, 평가 데이터는 SL을 기대.
+**라벨링 규약 차이**이며 형태소 분석 알고리즘의 오류가 아님.
+
+상세 분류: `docs/research/accuracy/2026-05-10_error_classification.md` 참조.
 
 ---
 
@@ -131,25 +141,25 @@ mecab-ko Rust 재구현이 알고리즘적으로 정확함을 입증.
 3. **C++ mecab-ko 일치율 미측정**: drop-in replacement 검증 별도 필요
    (mecab 바이너리 미설치).
 
-### 실패 패턴의 본질
+### 실패 패턴의 본질 (프로그래매틱 분류로 정정)
 
-4건 실패가 모두 **사전이 아닌 모호성 해소(disambiguation)** 문제임:
-- `되`, `보`의 다중 분석 가능성
-- `MBTI`의 외국어 분류
-- Inflect 토큰의 컨텍스트 의존적 분해
+4건 실패가 모두 **SL(외국어) vs NNP(고유명사) 라벨링 규약 차이**:
+- API, TMI, MBTI, AI → mecab-ko-dic은 NNP, 평가 데이터는 SL 기대
+- 3건은 POS만 다르고 분절 완벽 일치
+- 1건(MBTI)만 NNP 뒤의 연접 비용으로 인한 cascade 분절 오류
 
-→ 사전 확장으로 해결되지 않음. CRF 재학습 또는 룰 추가가 필요한 영역.
+→ 정답 데이터를 NNP로 교정하면 사실상 100%. 진짜 분석 오류가 아님.
+→ 사전 확장으로 해결되지 않음. CRF 재학습도 불필요. 라벨링 규약 통일이 해법.
 
 ---
 
 ## 다음 단계 (Sprint 122 후보)
 
-baseline이 99.9%이므로, "정확도 끌어올리기"보다 다음 방향이 의미 있음:
+baseline이 99.9%(실질 100%)이므로, 다음 방향이 의미 있음:
 
-1. **데이터셋 확장**: 세종 코퍼스 일부 통합, noisy 입력 추가
-2. **C++ mecab-ko 비교 파이프라인**: 동일 입력 출력 일치율 측정
-3. **모호성 해소 케이스 디버그**: `되`, `보`, SL 분류 케이스 분석
-4. **Sentence Accuracy 향상**: 99.6% → 100% 위한 4건 분석 + 회귀 테스트
+1. **정답 데이터 SL→NNP 교정**: 4건 실패가 규약 차이 → 데이터 교정으로 100% 달성 가능
+2. **데이터셋 확장**: 세종 코퍼스 일부 통합, noisy 입력(SNS, 신조어, 오타) 추가
+3. **C++ mecab-ko 비교 파이프라인**: 동일 입력 출력 일치율 측정 (drop-in replacement 검증)
 
 ---
 

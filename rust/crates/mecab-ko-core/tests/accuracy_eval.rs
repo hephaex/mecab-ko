@@ -2427,3 +2427,202 @@ fn test_accuracy_gate_verified() {
         VERIFIED_THRESHOLD * 100.0
     );
 }
+
+/// Sprint 121: Error case classification
+///
+/// Categorize every mismatch from full dict evaluation into:
+/// - `POS_ONLY`: surface matches but POS differs
+/// - SEGMENTATION: surface doesn't match (different tokenization)
+/// - `TOKEN_COUNT`: gold/pred have different token counts
+/// - UNKNOWN: pred token has NNG with features containing UNKNOWN markers
+#[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
+fn test_error_case_classification() {
+    use mecab_ko_core::sejong::SejongConverter;
+
+    #[derive(Debug)]
+    struct ErrorCase {
+        sentence: String,
+        category: String,
+        gold_tokens: Vec<String>,
+        pred_tokens: Vec<String>,
+        diff_details: Vec<String>,
+    }
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or_else(|| std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
+
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict
+            .load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let eval_path = std::env::var("MECAB_EVAL_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/eval/sample.tsv")
+            .to_string_lossy()
+            .to_string()
+    });
+
+    let dataset = TestDataset::from_tsv(&eval_path).expect("Failed to load dataset");
+    let converter = SejongConverter::new();
+
+    let mut errors: Vec<ErrorCase> = Vec::new();
+    let mut cat_counts: std::collections::HashMap<String, usize> =
+        std::collections::HashMap::new();
+    let mut pos_confusion: std::collections::HashMap<(String, String), usize> =
+        std::collections::HashMap::new();
+
+    for gold_sentence in &dataset.sentences {
+        let pred_raw = tokenizer.tokenize(&gold_sentence.text);
+        let sejong_tokens = converter.convert_tokens(&pred_raw);
+
+        let pred_strs: Vec<String> = sejong_tokens
+            .iter()
+            .map(|st| {
+                format!(
+                    "{}/{}",
+                    SejongConverter::normalize_jamo(&st.surface),
+                    st.pos
+                )
+            })
+            .collect();
+        let gold_strs: Vec<String> = gold_sentence
+            .tokens
+            .iter()
+            .map(|gt| format!("{}/{}", gt.surface, gt.pos))
+            .collect();
+
+        if gold_strs == pred_strs {
+            continue;
+        }
+
+        let mut diffs = Vec::new();
+        let mut categories = Vec::new();
+
+        if gold_sentence.tokens.len() != sejong_tokens.len() {
+            categories.push("TOKEN_COUNT".to_string());
+            diffs.push(format!(
+                "token count: gold={} pred={}",
+                gold_sentence.tokens.len(),
+                sejong_tokens.len()
+            ));
+        }
+
+        let min_len = gold_sentence.tokens.len().min(sejong_tokens.len());
+        for (i, (gold_tok, pred_sejong)) in gold_sentence.tokens.iter()
+            .zip(sejong_tokens.iter())
+            .enumerate()
+            .take(min_len)
+        {
+            let gold_surface = &gold_tok.surface;
+            let gold_pos = &gold_tok.pos;
+            let pred_surface = SejongConverter::normalize_jamo(&pred_sejong.surface);
+            let pred_pos = &pred_sejong.pos;
+
+            if gold_surface == &pred_surface && gold_pos == pred_pos {
+                continue;
+            }
+
+            if gold_surface == &pred_surface {
+                categories.push("POS_ONLY".to_string());
+                diffs.push(format!(
+                    "[{i}] {gold_surface}: gold={gold_pos} pred={pred_pos}"
+                ));
+                *pos_confusion
+                    .entry((gold_pos.clone(), pred_pos.clone()))
+                    .or_insert(0) += 1;
+            } else {
+                categories.push("SEGMENTATION".to_string());
+                diffs.push(format!(
+                    "[{i}] gold={gold_surface}/{gold_pos} pred={pred_surface}/{pred_pos}"
+                ));
+            }
+        }
+
+        let primary = if categories.contains(&"SEGMENTATION".to_string()) {
+            "SEGMENTATION"
+        } else if categories.contains(&"TOKEN_COUNT".to_string()) {
+            "TOKEN_COUNT"
+        } else if categories.contains(&"POS_ONLY".to_string()) {
+            "POS_ONLY"
+        } else {
+            "OTHER"
+        };
+
+        *cat_counts.entry(primary.to_string()).or_insert(0) += 1;
+
+        errors.push(ErrorCase {
+            sentence: gold_sentence.text.clone(),
+            category: primary.to_string(),
+            gold_tokens: gold_strs,
+            pred_tokens: pred_strs,
+            diff_details: diffs,
+        });
+    }
+
+    println!("\n{}", "=".repeat(70));
+    println!("  ERROR CASE CLASSIFICATION REPORT");
+    println!("  Dataset: {} sentences, {} errors", dataset.len(), errors.len());
+    println!("{}\n", "=".repeat(70));
+
+    println!("=== Category Summary ===");
+    let total_errors = errors.len();
+    let mut sorted_cats: Vec<_> = cat_counts.iter().collect();
+    sorted_cats.sort_by_key(|x| std::cmp::Reverse(*x.1));
+    for (cat, count) in &sorted_cats {
+        println!(
+            "  {:<15} {:>3} ({:.1}%)",
+            cat,
+            count,
+            **count as f64 / total_errors.max(1) as f64 * 100.0
+        );
+    }
+
+    println!("\n=== POS Confusion Matrix (gold → pred) ===");
+    let mut sorted_confusion: Vec<_> = pos_confusion.iter().collect();
+    sorted_confusion.sort_by_key(|x| std::cmp::Reverse(*x.1));
+    for ((gold_pos, pred_pos), count) in &sorted_confusion {
+        println!("  {gold_pos} → {pred_pos}  ({count}건)");
+    }
+
+    println!("\n=== Detailed Error Cases ===");
+    for (i, err) in errors.iter().enumerate() {
+        println!("\n--- Error #{} [{}] ---", i + 1, err.category);
+        println!("  Input: {}", err.sentence);
+        println!("  Gold:  {}", err.gold_tokens.join(" "));
+        println!("  Pred:  {}", err.pred_tokens.join(" "));
+        for diff in &err.diff_details {
+            println!("  Diff:  {diff}");
+        }
+    }
+
+    println!("\n=== Summary ===");
+    println!("Total sentences: {}", dataset.len());
+    println!("Error sentences: {}", errors.len());
+    println!(
+        "Sentence accuracy: {:.2}%",
+        (1.0 - errors.len() as f64 / dataset.len() as f64) * 100.0
+    );
+
+    for (cat, count) in &sorted_cats {
+        println!("  {cat}: {count}");
+    }
+}

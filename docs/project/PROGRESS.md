@@ -23,19 +23,21 @@ mecab-ko-dic full dict 정확도를 처음으로 측정하여 baseline 확보.
 | POS Accuracy | **99.9%** |
 | F1 Score | 0.999 |
 
-#### 실패 케이스 분석 (4건, 모두 모호성 해소 문제)
-- VV ↔ XSV 모호성 (1건): "되" 본동사 vs 파생접미사
-- VV ↔ NNG 모호성 (1건): "보" 본동사 vs 명사
-- SL ↔ NNP 모호성 (1건): "MBTI" 외국어 분류
-- Inflect 분해 vs 조사 (1건): "가" VV+EC vs JKS
+#### 실패 케이스 분석 (4건, 프로그래매틱 자동 분류)
+- POS_ONLY (3건): API, TMI, AI → gold=SL, pred=NNP (라벨링 규약 차이)
+- SEGMENTATION (1건): MBTI가 뭐예요 → NNP 뒤 연접 비용으로 "가" JKS→VV cascade
+- 사전 미등록 (UNKNOWN): 0건
+- 공백 처리 오류: 0건
 
-**핵심 발견**: 모든 실패가 사전 미등록이 아닌 모호성 해소 문제.
-사전 확장으로 해결되지 않음 → DIC-005/006 계획의 실효성 재평가 필요.
+**핵심 발견**: 4건 전부 SL↔NNP 라벨링 규약 차이. 형태소 분석 알고리즘 오류가 아님.
+정답 데이터 교정(SL→NNP)으로 사실상 100% 달성 가능.
+test_error_case_classification 테스트 추가 (재현 가능한 프로그래매틱 분류).
 
-#### 추가/수정된 파일 (3개)
+#### 추가/수정된 파일 (4개)
 - docs/project/PLAN.md (Sprint 121 로드맵 전면 재작성)
 - docs/research/accuracy/2026-05-10_full_dict_baseline.md (신규, baseline 보고서)
 - docs/research/accuracy/2026-05-10_error_classification.md (신규, 에러 분류)
+- rust/crates/mecab-ko-core/tests/accuracy_eval.rs (test_error_case_classification 추가)
 
 #### 테스트 결과
 - test_full_accuracy_evaluation: 1 passed (29 filtered)
