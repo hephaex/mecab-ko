@@ -1,6 +1,52 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-11 (Sprint 123 완료 — 평가 데이터셋 확장 조사)
+## 마지막 업데이트: 2026-05-11 (Sprint 124 Phase 0 완료 — KLUE DP 통합 시작)
+
+### 🚧 Sprint 124 Phase 0 - KLUE DP 형식 실측 + 변환기 프로토타입 + Baseline 측정
+
+**기간**: 2026-05-11
+**목표**: Sprint 123 권고에 따라 KLUE DP 통합. Phase 0는 형식 실측 + 변환기 +
+첫 baseline 측정. Phase 1+(평가 하니스 통합/CI/이중 메트릭)는 다음 세션.
+
+#### 사용자 결정 사항 (4건 사전 확정)
+1. 재배포: 원본 + 변환본 모두 commit (CC BY-SA 4.0 attribution)
+2. 평가 단위: 이중 메트릭 (eojeol + morpheme) — Phase 1에서 구현
+3. 복합 태그: surface도 보관적 매칭 — KLUE가 lemma에서 이미 split 제공으로 불필요
+4. Noisy 데이터: 우선순위 높음 — Sprint 125+에서 병행
+
+#### 핵심 발견 — 진짜 baseline 노출
+
+| 데이터셋 | 문장 수 | Token Accuracy |
+|----------|---------|----------------|
+| sample.tsv (정제) | 1,100 | **100.0%** (천장) |
+| **KLUE DP val (실제)** | **1,995** | **65.8%** |
+
+**~34%p 차이**. 99.9%는 데이터셋 천장 효과였음이 정량적으로 입증됨.
+
+#### KLUE DP 형식 실측 결과
+- 22,496 eojeols, align mismatch 단 5건 (0.02%)
+- 43개 unique POS 태그 (모두 Sejong 호환)
+- `lemma` 필드가 이미 surface 분할 제공 → 휴리스틱 분할 불필요
+- 어절당 형태소: 1개(25%) / 2개(43%) / 3개(18%) / 4+(14%)
+
+#### 추가/수정된 파일 (6개)
+- tools/inspect_klue_dp.py (포맷 실측)
+- tools/convert_klue_dp.py (변환기 프로토타입)
+- tools/dump_klue_dp_raw.py (원본 JSONL 덤프)
+- data/eval/klue_dp_val.tsv (1,995 sentences, 684KB)
+- data/raw/klue/klue_dp_val.jsonl (원본, 1.6MB)
+- data/raw/klue/LICENSE-KLUE.md (attribution)
+- docs/research/accuracy/2026-05-11_klue_dp_phase0.md
+
+#### Phase 1+ 권고 (다음 세션)
+- 평가 하니스 통합 (`cargo test` 정식 추가, 별도 threshold)
+- alignment artifact 분석 (`evaluate_tokens_aligned` 사용)
+- 이중 메트릭 (eojeol + morpheme) 구현
+- Error 분류 자동화 (KLUE DP 실패 케이스)
+- CI 통합 (accuracy-gate.yml에 KLUE job)
+- (Sprint 125) noisy 데이터 추가
+
+---
 
 ### ✅ Sprint 123 - 평가 데이터셋 확장 옵션 조사
 

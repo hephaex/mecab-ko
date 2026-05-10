@@ -1,17 +1,45 @@
-# Phase 90 - Sprint 124 후보 (Sprint 123 조사 결과 기반)
+# Phase 90 - Sprint 124 진행 중 (Phase 0 완료, Phase 1+ 다음 세션)
 
-## Sprint 124 후보 (우선순위순)
+## Sprint 124 Phase 1+ (다음 세션)
 
-> Sprint 123 조사 결과: KLUE DP가 즉시 가능한 최선의 옵션.
-> 자세한 내용: `docs/research/accuracy/2026-05-10_dataset_expansion_research.md`
+> Phase 0 완료: 형식 실측 + 변환기 + baseline 측정.
+> KLUE DP 65.8% token accuracy 노출 (sample.tsv 100% 대비 34%p 차이).
+> 자세한 내용: `docs/research/accuracy/2026-05-11_klue_dp_phase0.md`
 
-### P1 후보: KLUE DP 통합 (Option A, 3-5일)
-- CC BY-SA 4.0, 12K 문장 (10K train + 2K val), 자동 다운로드 가능
-- Python 변환 스크립트 작성 (NNG+JKO → 분리 형식)
-- `data/eval/klue_dp_val.tsv` 생성 (2,000 문장)
-- `cargo test` 평가 하니스에 통합
-- CI에 KLUE DP 다운로드 + eval step 추가
-- 예상: 99.9% baseline이 KLUE DP에서는 더 낮을 가능성 (편집 register만)
+### Phase 1: 평가 하니스 통합
+- `data/eval/klue_dp_val.tsv`를 `cargo test` 정식 추가
+- 별도 threshold (현재 65.8% → Phase 1 측정 후 70%? 75%?)
+- alignment artifact 분석 (`evaluate_tokens_aligned` 권고)
+- 이중 메트릭 (eojeol-level + morpheme-level) 구현
+
+### Phase 2: Error 분류 자동화
+- KLUE DP 실패 케이스 카테고리 분류 (Sprint 121 P2 방식 재사용)
+- alignment artifact vs 진짜 분석 오류 분리
+- 조사/어미 저정확도 (JKO 22.5%, JKS 33.3%, EP 16.4%) 근본 원인
+
+### Phase 3: CI 통합
+- HF에서 KLUE DP 자동 다운로드 + 변환 step
+- accuracy-gate.yml에 KLUE DP gate job
+
+### Phase 4 (Sprint 125): noisy 데이터 추가
+- NIKL Modu 구어 subcorpus 또는 자체 silver-label
+- KLUE DP는 편집 register만 — 실제 SNS/구어 보강
+
+---
+
+## 완료: Sprint 124 Phase 0 - KLUE DP 형식 실측
+
+### 결과
+- KLUE DP val 다운로드 + JSONL 덤프 (1.6MB)
+- 변환기 작성 (`tools/convert_klue_dp.py`)
+- 변환 결과 `data/eval/klue_dp_val.tsv` (1,995 sentences, 684KB)
+- **Baseline 측정: KLUE DP 65.8% token accuracy** (진짜 신호 노출)
+- align mismatch 0.25% (1995/2000), 휴리스틱 surface split 불필요
+
+### 핵심 학습
+- 평가 데이터셋 다양성이 진짜 신호를 만듦 (100% → 65.8%, 34%p)
+- KLUE DP가 lemma 필드에서 이미 surface 분할 제공 → 추상적 우려 불필요
+- 30분 inspect로 1주 디자인 여부가 결정될 수 있음
 
 ### P2 후보 (보류): NIKL 모두의말뭉치 수동 다운로드 (Option B, 1주)
 - 371K 예시, 다중 도메인 (뉴스/웹/구어)
