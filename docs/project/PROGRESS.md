@@ -1,6 +1,52 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-10 (Sprint 120 완료 — 스트리밍 바이트 위치 수정)
+## 마지막 업데이트: 2026-05-10 (Sprint 121 완료 — Full Dict Accuracy Baseline 측정)
+
+### ✅ Sprint 121 - Full Dict Accuracy Baseline (99.9%)
+
+**기간**: 2026-05-10
+**목표**: 두 전문가 리뷰 결과에 따라 로드맵을 전면 교체.
+mecab-ko-dic full dict 정확도를 처음으로 측정하여 baseline 확보.
+
+#### 배경
+- 기존 Sprint 121 P1-P4(POS 세분화/메모리 프로파일링/OOB 튜닝/streaming docs)가
+  언어학자 + 토크나이저 엔지니어 두 전문가 리뷰에서 모두 임팩트 작거나
+  mini-dict 전용 문제로 판정됨.
+- 진짜 우선순위: "Full dict 정확도가 한 번도 측정된 적 없음" → 측정부터.
+
+#### 측정 결과 (sample.tsv 1,100문장 / 5,833 토큰)
+
+| 지표 | 값 |
+|------|-----|
+| Token Accuracy | **99.9%** |
+| Sentence Accuracy | **99.6%** (1,096/1,100) |
+| POS Accuracy | **99.9%** |
+| F1 Score | 0.999 |
+
+#### 실패 케이스 분석 (4건, 모두 모호성 해소 문제)
+- VV ↔ XSV 모호성 (1건): "되" 본동사 vs 파생접미사
+- VV ↔ NNG 모호성 (1건): "보" 본동사 vs 명사
+- SL ↔ NNP 모호성 (1건): "MBTI" 외국어 분류
+- Inflect 분해 vs 조사 (1건): "가" VV+EC vs JKS
+
+**핵심 발견**: 모든 실패가 사전 미등록이 아닌 모호성 해소 문제.
+사전 확장으로 해결되지 않음 → DIC-005/006 계획의 실효성 재평가 필요.
+
+#### 추가/수정된 파일 (3개)
+- docs/project/PLAN.md (Sprint 121 로드맵 전면 재작성)
+- docs/research/accuracy/2026-05-10_full_dict_baseline.md (신규, baseline 보고서)
+- docs/research/accuracy/2026-05-10_error_classification.md (신규, 에러 분류)
+
+#### 테스트 결과
+- test_full_accuracy_evaluation: 1 passed (29 filtered)
+- 보조 분석 테스트: 30 passed / 0 failed (XSV, VV, VX, XPN 분석)
+
+#### 리뷰 아카이브 (3건)
+- ~/.claude/references/2026-05-10_mecab_ko_sprint121_roadmap_review.md (언어학자)
+- ~/.claude/references/2026-05-10_mecab_ko_sprint121_roadmap_engineering_review.md (엔지니어)
+- ~/.claude/references/2026-05-10_sprint121_full_dict_baseline.md (sprint 회고)
+
+---
 
 ### ✅ Sprint 120 - StreamingTokenizer document-relative byte positions
 

@@ -1,22 +1,75 @@
-# Phase 87 - Sprint 121 (UNKNOWN POS 세분화 + 성능 프로파일링)
+# Phase 88 - Sprint 122 후보 (Sprint 121 baseline 분석 결과 도출)
 
-## Sprint 121 로드맵
+## Sprint 122 후보 (우선순위순)
 
-### P1: UNKNOWN 노드 세분화 POS 추정
-- 한글+숫자 혼합 (예: "123호") → SN or NNG 판정 개선
-- estimate_pos 함수의 WordPattern 활용 확대
+> Sprint 121에서 full dict 99.9% baseline 확인. 4건 실패가 모두 모호성 문제.
+> 사전 확장(DIC-005/006)은 본 데이터셋의 정확도에 기여하지 못함을 확인.
 
-### P2: stripped_to_original_byte 메모리 사용량 측정
-- 현재 매 reset마다 Vec 재생성 — 입력 길이에 비례
-- 1MB+ 입력에서 프로파일링, 메모리 vs 속도 트레이드오프 확인
+### P1 후보: 평가 데이터셋 확장
+- 99.9%는 데이터셋이 너무 정제되었을 가능성
+- 세종 코퍼스 일부 통합 또는 noisy real-world 데이터(SNS, 신조어, 오타)
+- 진짜 약점이 드러날 수 있는 데이터 확보가 우선
 
-### P3: OOB connection cost 튜닝 (full dict 환경 필요)
-- DEFAULT_OOB_CONNECTION_COST=10,000 → 실제 사전 연결 비용 분포 대비 적정성 검증
-- 필요시 cost 조정 또는 category별 차등 비용
+### P2 후보: C++ mecab-ko 일치율 측정
+- drop-in replacement 검증 미실시
+- mecab 바이너리 설치 + 동일 입력 출력 비교 스크립트
+- baseline 99.9%가 C++ 원본과 동일한지 확인
 
-### P4: streaming 청크 토크나이저 사용 예시 문서화
-- byte position이 이제 정확하므로 외부 사용자에게 사용 예시 제공
-- 청크 경계 처리 가이드
+### P3 후보 (보류 가능): 모호성 4건 디버그
+- "되" VV/XSV, "보" VV/NNG, "MBTI" SL/NNP 케이스
+- Viterbi 비용이 baseline에 최적화되어 있어 1건 고치면 다른 케이스 회귀 위험
+- 단발성 회귀 테스트 추가 + 수정은 신중하게
+
+**중요**: P1/P2 결과를 본 뒤 Sprint 122 메인 테마 결정.
+P3는 단독으로 Sprint를 만들 만큼 가치 있는지 재평가 필요.
+
+---
+
+# 완료: Phase 87 - Sprint 121 (Full Dict Accuracy Baseline 99.9%)
+
+## Sprint 121 결과
+- **로드맵 전면 교체**: 두 전문가 리뷰(언어학자 + 엔지니어)에 따라 기존 P1-P4 폐기
+- **Full dict baseline 측정**: Token 99.9% / Sentence 99.6% (1,096/1,100)
+- **실패 4건 분류**: 모두 모호성 해소 문제, 사전 미등록 0건
+- **핵심 발견**: 사전 확장(DIC-005/006)이 본 데이터셋 정확도에 무효함
+- 산출물: docs/research/accuracy/{baseline, error_classification}.md
+- 코드 변경 없음 (측정 + 문서화 sprint)
+
+## Sprint 121 로드맵 (재작성됨)
+
+> **재작성 배경 (2026-05-10)**: 두 전문가(언어학자/토크나이저 엔지니어) 리뷰 결과,
+> 기존 Sprint 121 P1-P4(POS 세분화/메모리 프로파일링/OOB 튜닝/streaming docs)가
+> 모두 mini-dict 전용 문제이거나 조기 최적화로 판정됨.
+> 진짜 우선순위는 "측정조차 한 번도 안 된 full dict 정확도"이므로 로드맵 전면 교체.
+> 리뷰 아카이브:
+> - `~/.claude/references/2026-05-10_mecab_ko_sprint121_roadmap_review.md` (언어학자)
+> - `~/.claude/references/2026-05-10_mecab_ko_sprint121_roadmap_engineering_review.md` (엔지니어)
+
+## 목표
+
+mecab-ko-dic full dict(342MB, `data/mecab-ko-dic-2.1.1-20180720/`)에서
+**진짜 정확도가 얼마인지** 측정하고 baseline을 확보. 향후 모든 개선의 기준점.
+
+기존 mini-dict(56 entries) 기준 "100%"는 의미 없는 숫자였음을 명시.
+
+### P1: Full dict accuracy baseline 측정
+- `test_full_accuracy_evaluation`을 `#[ignore]` 유지하되 한 번 실제 실행
+- mecab-ko-dic full dict + sample.tsv(1,239줄) + sprint58_verified.tsv(108줄)
+- token accuracy, sentence accuracy, EOS 일치율 측정
+- 결과를 `docs/research/accuracy/2026-05-10_full_dict_baseline.md`에 기록
+- 각 데이터셋별 통계 + 상위 실패 케이스 샘플
+
+### P2: Error case 자동 분류
+- 평가 실패 케이스를 카테고리별 분류:
+  - 사전 미등록 (UNKNOWN으로 처리됨)
+  - POS 오류 (분절은 맞고 태그만 틀림)
+  - 분절 오류 (경계가 다름)
+  - 공백 처리 오류
+- top-N error pattern 보고서를 `docs/research/accuracy/`에 추가
+
+### P3 없음 (의도적)
+P1 baseline 결과를 본 뒤 Sprint 122 우선순위가 자연스럽게 결정됨.
+"스프린트를 채우기 위해 작업을 만들지 말 것" 원칙 적용.
 
 ---
 
