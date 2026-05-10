@@ -1,6 +1,51 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-10 (Sprint 122 완료 — SL→NNP 교정 + 99.9% gate)
+## 마지막 업데이트: 2026-05-11 (Sprint 123 완료 — 평가 데이터셋 확장 조사)
+
+### ✅ Sprint 123 - 평가 데이터셋 확장 옵션 조사
+
+**기간**: 2026-05-11
+**목표**: 99.9% baseline의 한계(데이터셋 정제도 과다)를 해소할 외부 평가 데이터셋
+조사. 라이센스/포맷/규모/호환성 검토 후 권고안 작성.
+
+#### 조사 대상 (10여 후보)
+
+| 데이터셋 | 라이센스 | 규모 | Sejong 호환 | 자동 다운로드 | 판정 |
+|----------|----------|------|-------------|--------------|------|
+| **KLUE DP** | CC BY-SA 4.0 | 12K 문장 | O (`+` split) | O (HF) | **GO (즉시)** |
+| **NIKL 모두의말뭉치 형태분석** | 학술용 | 371K | O (네이티브) | X (수동 등록) | GO (내부) |
+| 세종 코퍼스 | 비상업, 무재배포 | 175K | O (네이티브) | X | CAUTION |
+| KAIST Morpho | 학술용 | 70M words | X (KAIST 태그) | X | NO-GO |
+| UD Korean-Kaist | CC BY-SA 4.0 | 27K | X (UPOS) | O | NO-GO (태그 변환) |
+| OpenKorPOS | CC BY-SA | 변형 Sejong | - | O | CAUTION |
+| KoWiki silver-label | 자체 생성 | 50K+ | O | O | GO (장기) |
+
+#### 권고안 (3 옵션)
+
+- **Option A (Sprint 124, 3-5일)**: KLUE DP 통합 — CC BY-SA 4.0, 12K 문장,
+  자동 다운로드, Sejong 호환. 즉시 가능한 최선.
+- **Option B (Sprint 125-126)**: NIKL 모두의말뭉치 수동 다운로드 — 가장 큰 규모(371K),
+  다중 도메인. 등록 필요.
+- **Option C (Sprint 126-128)**: KoWiki silver-label 파이프라인 —
+  Rust vs C++ mecab-ko 일치율 측정. 재구현 검증의 정공법.
+
+#### 핵심 발견
+
+1. **자유롭게 재배포 가능한 한국어 형태소 정답 코퍼스가 사실상 없음**.
+   KLUE DP만 CC BY-SA 4.0으로 자동 다운로드 가능.
+2. **Sejong 태그 fragmentation**: 같은 "Sejong" 태그를 쓴다고 해도
+   `NNG+JKO` 결합 형식 vs 분리 형식 등 변형이 다양. 변환기마다 검증 필요.
+3. **재구현은 gold가 아닌 C++ 원본과의 diff가 더 정직한 지표**.
+   silver-label 파이프라인이 장기적으로 정공법.
+
+#### 추가/수정된 파일 (3개)
+- docs/research/accuracy/2026-05-10_dataset_expansion_research.md (신규, 257줄, 10+ 데이터셋)
+- docs/project/PLAN.md (Sprint 124 후보 갱신)
+- docs/project/PROGRESS.md
+
+#### 코드 변경 없음 (조사 + 문서화 sprint)
+
+---
 
 ### ✅ Sprint 122 - Quick Win: SL→NNP 교정 + Accuracy Gate 상향
 

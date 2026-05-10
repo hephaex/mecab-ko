@@ -1,27 +1,47 @@
-# Phase 89 - Sprint 123 후보 (Sprint 122 quick win 후 도출)
+# Phase 90 - Sprint 124 후보 (Sprint 123 조사 결과 기반)
 
-## Sprint 123 후보 (우선순위순)
+## Sprint 124 후보 (우선순위순)
 
-> Sprint 122에서 SL→NNP 교정으로 99.9% Sentence Accuracy 달성.
-> 1건 남은 MBTI cascade는 Viterbi disambiguation 문제로 별도 접근 필요.
+> Sprint 123 조사 결과: KLUE DP가 즉시 가능한 최선의 옵션.
+> 자세한 내용: `docs/research/accuracy/2026-05-10_dataset_expansion_research.md`
 
-### P1 후보: 평가 데이터셋 확장 (여전히 최우선)
-- 99.9%는 정제된 데이터셋의 한계. 진짜 약점 노출을 위한 데이터 필요
-- 세종 코퍼스 일부 통합 (라이센스 확인 필요)
-- noisy real-world 데이터 (SNS, 신조어, 오타) 추가
-- 다양성 확보로 다음 baseline 측정의 신뢰도 향상
+### P1 후보: KLUE DP 통합 (Option A, 3-5일)
+- CC BY-SA 4.0, 12K 문장 (10K train + 2K val), 자동 다운로드 가능
+- Python 변환 스크립트 작성 (NNG+JKO → 분리 형식)
+- `data/eval/klue_dp_val.tsv` 생성 (2,000 문장)
+- `cargo test` 평가 하니스에 통합
+- CI에 KLUE DP 다운로드 + eval step 추가
+- 예상: 99.9% baseline이 KLUE DP에서는 더 낮을 가능성 (편집 register만)
 
-### P2 후보: C++ mecab-ko drop-in replacement 검증
-- mecab 바이너리 설치 + 동일 입력 출력 비교 스크립트
-- 토큰 일치율, POS 일치율, feature 일치율 측정
-- 차이가 있다면 분류 (사전 차이 / 알고리즘 차이 / cost 차이)
+### P2 후보 (보류): NIKL 모두의말뭉치 수동 다운로드 (Option B, 1주)
+- 371K 예시, 다중 도메인 (뉴스/웹/구어)
+- 등록 필요 (1-5 영업일), 자동 다운로드 불가
+- KLUE DP 통합 후 더 큰 평가셋이 필요할 때 진행
 
-### P3 후보 (보류): MBTI cascade 디버그
-- "MBTI가 뭐예요"의 "가" → VV+EC(Inflect) 선호 문제
-- mecab-ko-dic의 "가/VV+EC" 항목과 NNP→VV/JKS 연접 비용 분석
-- 단발성 fix가 다른 cascade 회귀 가능성 → 신중하게
+### P3 후보 (장기): KoWiki silver-label 파이프라인 (Option C, 2-3주)
+- C++ mecab-ko로 50K Wikipedia 문장 자동 라벨링
+- Rust vs C++ 일치율 측정 — 재구현 검증의 정공법
+- 별도 sprint 필요
 
-**중요**: P1/P2 결과를 본 뒤 Sprint 123 메인 테마 결정.
+### 미정 항목 (사용자 결정 필요)
+1. **재배포 정책**: KLUE DP 변환 TSV를 repo에 직접 commit해도 되나? (CC BY-SA 4.0 attribution)
+2. **NIKL 등록**: 팀이 NIKL/모두의말뭉치 등록 절차를 거칠 의향?
+3. **C++ mecab-ko CI 환경**: silver labeling용 C++ binary CI에 설치 가능?
+4. **Noisy 데이터 우선순위**: SNS/구어 register가 단기 우선순위?
+5. **평가 단위**: 어절(eojeol) 레벨 vs 형태소(morpheme) 레벨?
+6. **KLUE 복합 태그**: `NNG+XSN+JKS` 같은 3+ 형태소 결합을 어떻게 처리?
+
+---
+
+# 완료: Phase 89 - Sprint 123 (평가 데이터셋 확장 조사)
+
+## Sprint 123 결과
+- **조사 보고서**: `docs/research/accuracy/2026-05-10_dataset_expansion_research.md` (257줄)
+- **10+ 후보 데이터셋 분석**: 라이센스/규모/포맷/Sejong 호환성/자동 다운로드 가능성
+- **3가지 권고 옵션**: KLUE DP (즉시) / NIKL Modu (1주) / KoWiki silver (2-3주)
+- **핵심 발견**: 자유롭게 재배포 가능한 한국어 형태소 정답 코퍼스 사실상 부재
+- **단일 최선 권고**: Sprint 124에서 KLUE DP 통합 (3-5일)
+- 코드 변경 없음 (조사 sprint)
 
 ---
 
