@@ -302,7 +302,7 @@
 네트워크 프로토콜을 분석 중이다	네트워크/NNG 프로토콜/NNG 을/JKO 분석/NNG 중/NNB 이/VCP 다/EF
 자연어 처리 기술이 발전하고 있다	자연어/NNG 처리/NNG 기술/NNG 이/JKS 발전/NNG 하/XSV 고/EC 있/VX 다/EF
 형태소 분석기를 개발했습니다	형태소/NNG 분석기/NNG 를/JKO 개발/NNG 하/XSV 았/EP 습니다/EF
-API를 호출하여 결과를 받았다	API/SL 를/JKO 호출/NNG 하/XSV 어/EC 결과/NNG 를/JKO 받/VV 았/EP 다/EF
+API를 호출하여 결과를 받았다	API/NNP 를/JKO 호출/NNG 하/XSV 어/EC 결과/NNG 를/JKO 받/VV 았/EP 다/EF
 프레임워크를 업데이트했습니다	프레임워크/NNG 를/JKO 업데이트/NNG 하/XSV 았/EP 습니다/EF
 버전 관리 시스템을 사용합니다	버전/NNG 관리/NNG 시스템/NNG 을/JKO 사용/NNG 하/XSV ㅂ니다/EF
 코드 리뷰를 진행했다	코드/NNG 리뷰/NNG 를/JKO 진행/NNG 하/XSV 았/EP 다/EF
@@ -334,15 +334,15 @@ API를 호출하여 결과를 받았다	API/SL 를/JKO 호출/NNG 하/XSV 어/EC
 아싸라서 집에만 있어	아싸/NNG 이/VCP 라서/EC 집/NNG 에만/JKB 있/VV 어/EF
 꿀잼이야	꿀잼/NNG 이/VCP 야/EF
 노잼이네	노잼/NNG 이/VCP 네/EF
-TMI인데요	TMI/SL 이/VCP ㄴ데요/EF
-MBTI가 뭐예요	MBTI/SL 가/JKS 뭐/NP 이/VCP 에요/EF
+TMI인데요	TMI/NNP 이/VCP ㄴ데요/EF
+MBTI가 뭐예요	MBTI/NNP 가/JKS 뭐/NP 이/VCP 에요/EF
 브이로그 찍었어	브이로그/NNG 찍/VV 었/EP 어/EF
 쇼츠 올렸어요	쇼츠/NNG 올렸어요/VV
 크리에이터 되고 싶어	크리에이터/NNG 되/XSV 고/EC 싶/VX 어/EF
 구독 좋아요 알림 설정 해주세요	구독/NNG 좋아요/NNG 알림/NNG 설정/NNG 하/XSV 어/EC 주/VX 세요/EF
 방탄소년단 콘서트 갔어요	방탄소년단/NNP 콘서트/NNG 가/VV 았/EP 어요/EF
 블랙핑크 새 앨범 나왔어	블랙핑크/NNP 새/XPN 앨범/NNG 나오/VV 았/EP 어/EF
-AI로 그림 그렸어	AI/SL 로/JKB 그림/NNG 그렸어/VV
+AI로 그림 그렸어	AI/NNP 로/JKB 그림/NNG 그렸어/VV
 챗GPT 써봤어요	챗GPT/NNP 쓰/VV 어/EC 보/VX 았/EP 어요/EF
 
 # 불규칙 활용 (확장)

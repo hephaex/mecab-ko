@@ -16,7 +16,7 @@ env:
 
 jobs:
   accuracy-check:
-    name: Token Accuracy Gate (95%+ required)
+    name: Token Accuracy Gate (99.9%+ required)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -62,12 +62,12 @@ jobs:
           echo "  ACCURACY GATE RESULT"
           echo "=================================="
           echo "Token Accuracy: ${ACCURACY}%"
-          echo "Required: 95%+"
+          echo "Required: 99.9%+"
           echo "Status: ${STATUS}"
           echo "=================================="
 
           if [ "$STATUS" = "failed" ]; then
-            echo "::error::Accuracy gate FAILED. Token accuracy is below 95% threshold."
+            echo "::error::Accuracy gate FAILED. Token accuracy is below 99.9% threshold."
             exit 1
           fi
 
@@ -87,7 +87,7 @@ jobs:
 
             | Metric | Value | Threshold |
             |--------|-------|-----------|
-            | Token Accuracy | **${accuracy}%** | 95%+ |
+            | Token Accuracy | **${accuracy}%** | 99.9%+ |
 
             ${status === 'passed'
               ? '🎉 All accuracy checks passed!'

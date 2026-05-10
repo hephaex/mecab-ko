@@ -65,11 +65,18 @@ fn test_full_accuracy_evaluation() {
     // 결과 출력
     println!("{}", result.format_report());
 
-    // 현재 목표: 50%+ 정확도
+    // Sprint 122 baseline: 100.0% token / 99.9% sentence (1099/1100)
+    // 1 known issue: MBTI cascade (가/JKS analyzed as 가/VV+EC Inflect after NNP).
+    // Threshold set to 99.9% to catch any regression beyond the known case.
     assert!(
-        result.token_accuracy >= 0.50,
-        "Token accuracy {:.1}% is below 50% target",
+        result.token_accuracy >= 0.999,
+        "Token accuracy {:.1}% is below 99.9% baseline (Sprint 122)",
         result.token_accuracy * 100.0
+    );
+    assert!(
+        result.sentence_accuracy >= 0.998,
+        "Sentence accuracy {:.1}% is below 99.8% baseline (Sprint 122)",
+        result.sentence_accuracy * 100.0
     );
 }
 
@@ -2294,14 +2301,15 @@ fn test_list_all_mismatches() {
     );
 }
 
-/// CI/CD Accuracy Gate: 95%+ 정확도 요구
+/// CI/CD Accuracy Gate: 99.9%+ token accuracy required
 ///
-/// PR 병합 전 정확도 검증을 위한 테스트
+/// PR 병합 전 정확도 검증을 위한 테스트.
+/// Sprint 122 baseline: 100.0% token / 99.9% sentence (1 known MBTI cascade).
 #[test]
 #[ignore = "requires system dictionary data (sys.dic)"]
 fn test_accuracy_gate() {
-    // 95% 정확도 게이트
-    const ACCURACY_THRESHOLD: f64 = 0.95;
+    // 99.9% 정확도 게이트 (Sprint 122 raised from 95%)
+    const ACCURACY_THRESHOLD: f64 = 0.999;
 
     // 프로젝트 루트 경로 계산
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
