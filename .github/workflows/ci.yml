@@ -238,14 +238,20 @@ jobs:
           ./target/release/create_mini_dict /tmp/mini-dict-check
 
           for FILE in entries.csv entries.bin sys.dic matrix.bin; do
-            if [ -f "mini-dict/$FILE" ] && [ -f "/tmp/mini-dict-check/$FILE" ]; then
-              if ! diff -q "mini-dict/$FILE" "/tmp/mini-dict-check/$FILE" >/dev/null 2>&1; then
-                echo "::error::mini-dict/$FILE is out of sync with create_mini_dict output"
-                echo "Run: cd rust/test-fixtures && cargo run --release -- mini-dict"
-                exit 1
-              fi
-              echo "✓ $FILE in sync"
+            if [ ! -f "/tmp/mini-dict-check/$FILE" ]; then
+              echo "::error::create_mini_dict did not produce $FILE"
+              exit 1
             fi
+            if [ ! -f "mini-dict/$FILE" ]; then
+              echo "::error::Committed mini-dict/$FILE is missing"
+              exit 1
+            fi
+            if ! diff -q "mini-dict/$FILE" "/tmp/mini-dict-check/$FILE" >/dev/null 2>&1; then
+              echo "::error::mini-dict/$FILE is out of sync with create_mini_dict output"
+              echo "Run: cd rust/test-fixtures && cargo run --release -- mini-dict"
+              exit 1
+            fi
+            echo "✓ $FILE in sync"
           done
           echo "All mini-dict files in sync"
 

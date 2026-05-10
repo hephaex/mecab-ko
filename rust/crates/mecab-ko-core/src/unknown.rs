@@ -387,6 +387,7 @@ impl UnknownDictionary {
         let defaults = [
             (DEFAULT_CATEGORY, 1800, 3562, 7000, "SY", "SY,*,*,*,*,*,*,*"),
             (SPACE_CATEGORY, 1799, 3559, 0, "SP", "SP,*,*,*,*,*,*,*"),
+            // NNG: statistically most likely POS for unknown hangul (unk.def uses "UNKNOWN" but that's not a valid Sejong tag)
             (HANGUL_CATEGORY, 1800, 3565, 5000, "NNG", "NNG,*,*,*,*,*,*,*"),
             (HANJA_CATEGORY, 1800, 3560, 6000, "SH", "SH,*,*,*,*,*,*,*"),
             (ALPHA_CATEGORY, 1800, 3558, 4000, "SL", "SL,*,*,*,*,*,*,*"),
