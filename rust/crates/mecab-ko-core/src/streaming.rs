@@ -56,6 +56,9 @@ pub struct StreamingTokenizer {
     /// 전체 처리된 문자 수
     total_chars_processed: usize,
 
+    /// 전체 처리된 바이트 수
+    total_bytes_processed: usize,
+
     /// 버퍼 최대 크기 (바이트). 초과 시 강제 flush.
     max_buffer_size: usize,
 }
@@ -90,6 +93,7 @@ impl StreamingTokenizer {
             chunk_size: Self::DEFAULT_CHUNK_SIZE,
             sentence_delimiters: vec!['.', '!', '?', '。', '．', '\n'],
             total_chars_processed: 0,
+            total_bytes_processed: 0,
             max_buffer_size: Self::DEFAULT_MAX_BUFFER_SIZE,
         }
     }
@@ -142,9 +146,12 @@ impl StreamingTokenizer {
             for token in &mut tokens {
                 token.start_pos += self.total_chars_processed;
                 token.end_pos += self.total_chars_processed;
+                token.start_byte += self.total_bytes_processed;
+                token.end_byte += self.total_bytes_processed;
             }
 
             self.total_chars_processed += to_process.chars().count();
+            self.total_bytes_processed += to_process.len();
             self.buffer = remaining;
 
             tokens
@@ -217,9 +224,12 @@ impl StreamingTokenizer {
         for token in &mut tokens {
             token.start_pos += self.total_chars_processed;
             token.end_pos += self.total_chars_processed;
+            token.start_byte += self.total_bytes_processed;
+            token.end_byte += self.total_bytes_processed;
         }
 
         self.total_chars_processed += to_process.chars().count();
+        self.total_bytes_processed += to_process.len();
         self.buffer = remaining;
 
         tokens
@@ -243,9 +253,12 @@ impl StreamingTokenizer {
         for token in &mut tokens {
             token.start_pos += self.total_chars_processed;
             token.end_pos += self.total_chars_processed;
+            token.start_byte += self.total_bytes_processed;
+            token.end_byte += self.total_bytes_processed;
         }
 
         self.total_chars_processed += to_process.chars().count();
+        self.total_bytes_processed += to_process.len();
 
         tokens
     }
@@ -319,10 +332,17 @@ impl StreamingTokenizer {
         self.total_chars_processed
     }
 
+    /// 처리된 바이트 수
+    #[must_use]
+    pub const fn total_bytes_processed(&self) -> usize {
+        self.total_bytes_processed
+    }
+
     /// 스트림 리셋
     pub fn reset(&mut self) {
         self.buffer.clear();
         self.total_chars_processed = 0;
+        self.total_bytes_processed = 0;
     }
 }
 
@@ -796,6 +816,38 @@ mod tests {
 
         assert_eq!(stream.buffer_len(), 0);
         assert_eq!(stream.total_chars_processed(), 0);
+        assert_eq!(stream.total_bytes_processed(), 0);
+    }
+
+    #[test]
+    fn test_byte_positions_accumulate_across_chunks() {
+        let tokenizer = create_test_tokenizer();
+        let mut stream = StreamingTokenizer::new(tokenizer);
+
+        let tokens1 = stream.process_chunk("안녕.\n");
+        let chunk1_bytes = "안녕.\n".len();
+
+        let tokens2 = stream.process_chunk("감사.\n");
+
+        for token in &tokens1 {
+            assert!(
+                token.start_byte < chunk1_bytes,
+                "first chunk token '{}' start_byte {} must be < chunk1 bytes {}",
+                token.surface,
+                token.start_byte,
+                chunk1_bytes
+            );
+        }
+
+        for token in &tokens2 {
+            assert!(
+                token.start_byte >= chunk1_bytes,
+                "second chunk token '{}' start_byte {} must be >= chunk1 bytes {}",
+                token.surface,
+                token.start_byte,
+                chunk1_bytes
+            );
+        }
     }
 
     #[test]
