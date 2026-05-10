@@ -1,6 +1,30 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-10 (Sprint 119 완료 — HANGUL POS NNG + mini-dict CI)
+## 마지막 업데이트: 2026-05-10 (Sprint 120 완료 — 스트리밍 바이트 위치 수정)
+
+### ✅ Sprint 120 - StreamingTokenizer document-relative byte positions
+
+**기간**: 2026-05-10
+**목표**: 스트리밍 토크나이저의 start_byte/end_byte가 chunk-local이라 청크 간 누적되지 않던 버그 수정 (Sprint 118 review 지적)
+
+#### 변경 사항
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| start_byte/end_byte 기준 | 각 청크 내부 (0부터 시작) | 문서 전체 누적 |
+| 추적 필드 | total_chars_processed만 | + total_bytes_processed |
+| 초기화 (reset) | total_chars만 | total_chars + total_bytes |
+| 회귀 테스트 | 없음 | test_byte_positions_accumulate_across_chunks |
+
+#### 수정/추가된 파일 (1개)
+- crates/mecab-ko-core/src/streaming.rs (3개 경로 + 회귀 테스트)
+
+#### 테스트 결과
+- streaming: 34/34 pass / 0 fail
+- workspace: all pass
+- clippy: 0 warnings (all targets)
+
+---
 
 ### ✅ Sprint 119 - HANGUL UNKNOWN POS → NNG 분류 + mini-dict CI sync
 

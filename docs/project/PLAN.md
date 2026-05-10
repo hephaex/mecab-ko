@@ -1,23 +1,34 @@
-# Phase 86 - Sprint 120 (UNKNOWN 품질 고도화 + 스트리밍 바이트 위치)
+# Phase 87 - Sprint 121 (UNKNOWN POS 세분화 + 성능 프로파일링)
 
-## Sprint 120 로드맵
+## Sprint 121 로드맵
 
-### P1: OOB connection cost 튜닝
-- DEFAULT_OOB_CONNECTION_COST=10,000 → 실제 사전 연결 비용 분포 대비 적정성 검증
-- full dict 환경에서 UNKNOWN 분할 품질 벤치마크
-- 필요시 cost 조정 또는 category별 차등 비용
-
-### P2: 스트리밍 토크나이저 바이트 위치 수정
-- streaming.rs에서 start_byte/end_byte가 청크 로컬 — 문서 전체 기준으로 누적 필요
-- total_bytes_processed 추적 추가
-
-### P3: stripped_to_original_byte 최적화
-- 현재 매 reset마다 Vec 재생성 — 입력 길이에 비례
-- 대량 텍스트 프로파일링 후 필요시 lazy 계산 또는 인라인 변환
-
-### P4: UNKNOWN 노드 세분화 POS 추정
+### P1: UNKNOWN 노드 세분화 POS 추정
 - 한글+숫자 혼합 (예: "123호") → SN or NNG 판정 개선
 - estimate_pos 함수의 WordPattern 활용 확대
+
+### P2: stripped_to_original_byte 메모리 사용량 측정
+- 현재 매 reset마다 Vec 재생성 — 입력 길이에 비례
+- 1MB+ 입력에서 프로파일링, 메모리 vs 속도 트레이드오프 확인
+
+### P3: OOB connection cost 튜닝 (full dict 환경 필요)
+- DEFAULT_OOB_CONNECTION_COST=10,000 → 실제 사전 연결 비용 분포 대비 적정성 검증
+- 필요시 cost 조정 또는 category별 차등 비용
+
+### P4: streaming 청크 토크나이저 사용 예시 문서화
+- byte position이 이제 정확하므로 외부 사용자에게 사용 예시 제공
+- 청크 경계 처리 가이드
+
+---
+
+# 완료: Phase 86 - Sprint 120 (스트리밍 바이트 위치 수정)
+
+## Sprint 120 결과
+- StreamingTokenizer: total_bytes_processed 추적 추가
+- start_byte/end_byte를 chunk-local에서 document-relative로 변경
+- process_chunk/force_flush_partial/flush 3개 경로 모두 수정
+- reset()에서 total_bytes_processed도 초기화
+- 회귀 테스트 추가: 청크 간 byte position 누적 확인
+- 테스트: 34/34 streaming pass / 0 fail, clippy 0 warnings
 
 ---
 
