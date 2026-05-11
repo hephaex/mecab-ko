@@ -784,34 +784,69 @@ pub fn evaluate_dataset_sejong_with_pos_match(
     result
 }
 
-/// POS 태그 동치 그룹 (Sprint 125).
+/// POS 태그 동치 그룹 — Conservative (Sprint 125 + 126).
 ///
 /// 같은 그룹 내 태그는 lenient 평가 시 동일한 것으로 간주됩니다.
+/// **언어학적으로 명백한 표기/관용 차이만 포함** — 의미적으로 다른 태그는 제외.
 ///
-/// 출처: Sprint 124 Phase 1 KLUE DP 진단에서 발견된 convention 차이.
-/// - 구두점/공백: SP, SC (구분자성격)
-/// - 괄호/따옴표/기호: SS, SY, SSO, SSC (열림/닫힘/일반 기호)
-/// - 관형사: MM, MMD, MMN, MMA (KLUE 세분화 vs mecab-ko-dic 통합)
+/// 출처:
+/// - Sprint 124 Phase 1: 구두점/괄호/관형사 (KLUE 세분 vs mecab 통합)
+/// - Sprint 126 P1: SL↔NNP (영문 약어 convention, KLUE는 SL, mecab은 NNP)
 ///
 /// **포함하지 않는 그룹** (의미적으로 다른 태그):
-/// - NNG/NNP/NNB — 일반/고유/의존명사는 진짜 구분
-/// - VV/VA — 동사/형용사는 진짜 구분
-/// - EC/EF — 연결/종결어미는 진짜 구분
+/// - NNG/NNP — 일반/고유명사 분류는 mecab의 real error로 분류됨 (NNG↔NNP 242건)
+/// - VV/VA — 동사/형용사 진짜 구분
+/// - EC/EF — 연결/종결어미 진짜 구분
+/// - NNB/NNG — Counter words(씨/명/회/일) convention. `_PRACTICAL` 그룹 참조
 pub const TAG_EQUIVALENCE_GROUPS: &[&[&str]] = &[
     &["SP", "SC"],
     &["SS", "SY", "SSO", "SSC"],
     &["MM", "MMD", "MMN", "MMA"],
+    &["SL", "NNP"],
 ];
 
-/// 두 POS 태그가 동치 그룹 기준 동일한지 확인 (Sprint 125).
+/// POS 태그 동치 그룹 — Practical (Sprint 126 P1).
+///
+/// Conservative 그룹에 **counter words 관용 차이**를 추가합니다.
+/// 언어학적으로는 NNB(의존명사)와 NNG(일반명사)가 다른 범주이지만, 실제
+/// 데이터에서는 KLUE-vs-mecab의 NNB↔NNG 차이의 절대 다수가 counter words
+/// (씨, 명, 회, 일, 달러 등)에 대한 convention 차이임이 Sprint 126 P1 분석으로
+/// 입증됨 (158건 / NNB→NNG 케이스).
+///
+/// **Trade-off**: 진짜 NNB/NNG 의미적 분류 오류도 함께 흡수됨.
+/// 검색/검색 인덱싱 등 downstream 사용에는 NNB/NNG 구분이 중요하지 않은 경우가
+/// 많아 practical mode가 유용. 정밀한 형태소 분석 평가에는 conservative 권장.
+pub const TAG_EQUIVALENCE_GROUPS_PRACTICAL: &[&[&str]] = &[
+    &["SP", "SC"],
+    &["SS", "SY", "SSO", "SSC"],
+    &["MM", "MMD", "MMN", "MMA"],
+    &["SL", "NNP"],
+    &["NNB", "NNG"],
+];
+
+/// 두 POS 태그가 conservative 동치 그룹 기준 동일한지 확인 (Sprint 125+126).
 ///
 /// `a == b`이거나 같은 `TAG_EQUIVALENCE_GROUPS` 그룹에 속하면 true.
 #[must_use]
 pub fn pos_tags_equivalent(a: &str, b: &str) -> bool {
+    pos_tags_equivalent_in(a, b, TAG_EQUIVALENCE_GROUPS)
+}
+
+/// 두 POS 태그가 practical 동치 그룹 기준 동일한지 확인 (Sprint 126 P1).
+///
+/// Conservative + counter words(NNB/NNG) convention 흡수.
+#[must_use]
+pub fn pos_tags_equivalent_practical(a: &str, b: &str) -> bool {
+    pos_tags_equivalent_in(a, b, TAG_EQUIVALENCE_GROUPS_PRACTICAL)
+}
+
+/// 주어진 그룹 집합에서 두 태그의 동치 여부 확인 (내부 헬퍼).
+#[must_use]
+fn pos_tags_equivalent_in(a: &str, b: &str, groups: &[&[&str]]) -> bool {
     if a == b {
         return true;
     }
-    TAG_EQUIVALENCE_GROUPS
+    groups
         .iter()
         .any(|group| group.contains(&a) && group.contains(&b))
 }
@@ -1010,14 +1045,41 @@ mod tests {
 
     #[test]
     fn test_pos_tags_equivalent_distinct() {
-        // 의미적으로 다른 태그는 lenient에서도 다름
-        assert!(!pos_tags_equivalent("NNG", "NNP"));
-        assert!(!pos_tags_equivalent("NNG", "NNB"));
+        // 의미적으로 다른 태그는 conservative lenient에서도 다름
+        assert!(!pos_tags_equivalent("NNG", "NNP")); // real classification error
+        assert!(!pos_tags_equivalent("NNG", "NNB")); // 의존명사 — practical만 동치
         assert!(!pos_tags_equivalent("VV", "VA"));
         assert!(!pos_tags_equivalent("EC", "EF"));
         // 다른 그룹 간 비동치
         assert!(!pos_tags_equivalent("SP", "SS"));
         assert!(!pos_tags_equivalent("MM", "SP"));
+    }
+
+    #[test]
+    fn test_pos_tags_equivalent_sl_nnp_added_in_sprint126() {
+        // Sprint 126 P1: 영문 약어 convention 흡수
+        assert!(pos_tags_equivalent("SL", "NNP"));
+        assert!(pos_tags_equivalent("NNP", "SL"));
+    }
+
+    #[test]
+    fn test_pos_tags_equivalent_practical_includes_nnb_nng() {
+        // Practical: counter words convention 흡수
+        assert!(pos_tags_equivalent_practical("NNB", "NNG"));
+        assert!(pos_tags_equivalent_practical("NNG", "NNB"));
+        // Conservative는 여전히 NNB/NNG 구분
+        assert!(!pos_tags_equivalent("NNB", "NNG"));
+    }
+
+    #[test]
+    fn test_pos_tags_equivalent_practical_inherits_conservative() {
+        // Practical은 conservative를 포함
+        assert!(pos_tags_equivalent_practical("SP", "SC"));
+        assert!(pos_tags_equivalent_practical("SS", "SSO"));
+        assert!(pos_tags_equivalent_practical("MM", "MMD"));
+        assert!(pos_tags_equivalent_practical("SL", "NNP"));
+        // Practical도 NNG/NNP 진짜 오류는 동치 안 함
+        assert!(!pos_tags_equivalent_practical("NNG", "NNP"));
     }
 
     #[test]

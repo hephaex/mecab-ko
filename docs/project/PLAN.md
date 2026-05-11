@@ -1,27 +1,48 @@
-# Phase 92 - Sprint 126 후보 (Sprint 125 P1 결과 기반)
+# Phase 93 - Sprint 127 후보 (Sprint 126 P1 결과 기반)
 
-## Sprint 126 후보 (우선순위순)
+## Sprint 127 후보 (우선순위순)
 
-> Sprint 125 P1 결과: tag equivalence만으로 morpheme +3.2pp / eojeol +1.6pp.
-> 진단 추정(31%)보다 작은 lift — 다른 차이도 함께 흡수해야 큰 lift 가능.
-> 자세한 내용: `docs/research/accuracy/2026-05-11_klue_dp_lenient.md`
+> Sprint 126 P1 결과: 3-mode 측정으로 strict 65.8% → practical 70.3% (+4.5pp 누적).
+> 진단 추정(~85-90%) 대비 14pp 부족 = 데이터셋 진짜 분석 오류 25%+ 차지.
+> 자세한 내용: `docs/research/accuracy/2026-05-11_klue_dp_dictionary_policy.md`
 
-### P1 후보: 사전 정책 차이 정량화
-- NNG↔NNP, NNB↔NNG, XSA↔XSV 등 사전 분류 차이 측정
-- KLUE 기준 vs mecab-ko-dic 기준 차이 분포
-- 가능하면 별도 equivalence map 또는 정답 보정 옵션 (어떤 케이스가 진짜 오류 vs convention)
+### P1 후보: 복합명사 분할 정책 분석
+- Phase 1 진단 ~20% 잔여 영역
+- "팝스타/NNP" vs "팝/NNG + 스타/NNG" 같은 케이스 통계
+- 양쪽 모두 정답으로 인정하는 slice-level matching 메트릭 검토
 
-### P2 후보: 복합명사 분할 정책 분석
-- 팝스타/NNP vs 팝+스타/NNG+NNG 같은 케이스 통계
-- 양쪽 모두 정답으로 인정하는 매칭 룰 (slice-level 일치)
+### P2 후보: 진짜 분석 오류 디버그 (25%+)
+- NNG↔NNP real errors (242건)
+- MAG↔NNG disambiguation (95건)
+- VV↔NNG (43건)
+- 사전 보강 vs CRF 재학습 vs 룰 추가 분류
 
-### P3 후보: Noisy 데이터 추가 (사용자 우선순위 "높음", carryover)
+### P3 후보: Noisy 데이터 추가 (carryover, 사용자 우선순위 "높음")
 - KLUE DP는 편집 register만
 - 옵션: NIKL 구어 / silver-label / SNS 자체 수집
 
 ### P4 후보: CI 통합
-- HF 자동 다운로드 + KLUE DP dual-metric gate
-- accuracy-gate.yml에 새 job
+- HF 자동 다운로드 + KLUE DP dual-metric gate (3-mode 보고)
+
+---
+
+# 완료: Phase 92 - Sprint 126 P1 (사전 정책 정량화)
+
+## Sprint 126 P1 결과
+- NNG/NNP/NNB confusion 추출 + case-by-case 분류 (809건 분석)
+- Conservative equivalence: + {SL, NNP} (영문 약어 convention)
+- Practical equivalence: + {NNB, NNG} (counter words convention)
+- 3-mode KLUE DP 측정: strict 65.8% / lenient 69.3% / practical 70.3%
+- Eojeol: 19.2% / 21.0% / 21.7%
+- 진단 추정(~85-90%)과 14pp 차이로 **진짜 분석 오류 25%+ 시사**
+- evaluate.rs +60줄, accuracy_eval.rs +120줄, 4 unit tests
+
+### 핵심 학습
+- 동치 그룹 추가 결정은 패턴별 case-by-case (샘플 10-20건 inspection 필수)
+- 이중 equivalence (conservative + practical)로 use case별 선택 가능
+- Cascade 효과로 lift는 패턴 건수의 30-50%
+
+---
 
 ---
 

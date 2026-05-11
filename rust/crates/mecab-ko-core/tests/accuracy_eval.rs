@@ -2543,7 +2543,10 @@ fn test_klue_dp_dual_metric() {
 #[test]
 #[ignore = "requires KLUE DP eval data + system dictionary"]
 fn test_klue_dp_dual_metric_lenient() {
-    use mecab_ko_core::evaluate::{evaluate_dataset_dual, evaluate_dataset_dual_lenient};
+    use mecab_ko_core::evaluate::{
+        evaluate_dataset_dual, evaluate_dataset_dual_lenient,
+        evaluate_dataset_dual_with_pos_match, pos_tags_equivalent_practical,
+    };
 
     // Sprint 125 baseline floor (lift confirmed: strict 19.2% -> lenient 20.8%)
     const LENIENT_EOJEOL_FLOOR: f64 = 0.20;
@@ -2587,50 +2590,171 @@ fn test_klue_dp_dual_metric_lenient() {
 
     let strict = evaluate_dataset_dual(&mut tokenizer, &dataset);
     let lenient = evaluate_dataset_dual_lenient(&mut tokenizer, &dataset);
+    let practical = evaluate_dataset_dual_with_pos_match(
+        &mut tokenizer, &dataset, pos_tags_equivalent_practical,
+    );
 
-    let strict_eo_pct = strict.eojeol_accuracy * 100.0;
-    let lenient_eo_pct = lenient.eojeol_accuracy * 100.0;
-    let delta = lenient_eo_pct - strict_eo_pct;
+    let strict_morph = strict.morpheme.token_accuracy * 100.0;
+    let strict_eo = strict.eojeol_accuracy * 100.0;
+    let lenient_morph = lenient.morpheme.token_accuracy * 100.0;
+    let lenient_eo = lenient.eojeol_accuracy * 100.0;
+    let practical_morph = practical.morpheme.token_accuracy * 100.0;
+    let practical_eo = practical.eojeol_accuracy * 100.0;
 
     println!("\n--- Strict ---");
-    println!(
-        "  Morpheme: {:.1}%",
-        strict.morpheme.token_accuracy * 100.0
-    );
-    println!(
-        "  Eojeol:   {:.1}% ({} / {})",
-        strict_eo_pct, strict.eojeol_correct, strict.eojeol_total
-    );
+    println!("  Morpheme: {strict_morph:.1}%");
+    println!("  Eojeol:   {strict_eo:.1}% ({} / {})",
+        strict.eojeol_correct, strict.eojeol_total);
 
-    let strict_morph_pct = strict.morpheme.token_accuracy * 100.0;
-    let lenient_morph_pct = lenient.morpheme.token_accuracy * 100.0;
-    let morph_delta = lenient_morph_pct - strict_morph_pct;
+    println!("\n--- Lenient (conservative): SP/SC, SS/SY/SSO/SSC, MM/MMD/MMN/MMA, SL/NNP ---");
+    println!("  Morpheme: {lenient_morph:.1}% [Δ +{:.1}pp vs strict]",
+        lenient_morph - strict_morph);
+    println!("  Eojeol:   {lenient_eo:.1}% ({} / {}) [Δ +{:.1}pp vs strict]",
+        lenient.eojeol_correct, lenient.eojeol_total, lenient_eo - strict_eo);
 
-    println!("\n--- Lenient (tag equivalence map) ---");
-    println!(
-        "  Morpheme: {lenient_morph_pct:.1}% [Δ +{morph_delta:.1}pp]"
-    );
-    println!(
-        "  Eojeol:   {:.1}% ({} / {}) [Δ +{:.1}pp]",
-        lenient_eo_pct, lenient.eojeol_correct, lenient.eojeol_total, delta
-    );
+    println!("\n--- Practical: + NNB/NNG (counter words convention) ---");
+    println!("  Morpheme: {practical_morph:.1}% [Δ +{:.1}pp vs lenient]",
+        practical_morph - lenient_morph);
+    println!("  Eojeol:   {practical_eo:.1}% ({} / {}) [Δ +{:.1}pp vs lenient]",
+        practical.eojeol_correct, practical.eojeol_total, practical_eo - lenient_eo);
 
-    // 회귀 catch — lenient는 strict보다 높거나 같아야 함
-    assert!(
-        lenient.eojeol_accuracy >= strict.eojeol_accuracy,
-        "Lenient eojeol {lenient_eo_pct:.1}% must be >= strict {strict_eo_pct:.1}% (regression in equivalence map?)"
-    );
+    // 회귀 catch
+    assert!(lenient.eojeol_accuracy >= strict.eojeol_accuracy,
+        "Lenient eojeol {lenient_eo:.1}% must be >= strict {strict_eo:.1}%");
+    assert!(practical.eojeol_accuracy >= lenient.eojeol_accuracy,
+        "Practical eojeol {practical_eo:.1}% must be >= lenient {lenient_eo:.1}%");
+    assert!(practical.morpheme.token_accuracy >= lenient.morpheme.token_accuracy,
+        "Practical morpheme {practical_morph:.1}% must be >= lenient {lenient_morph:.1}%");
 
-    assert!(
-        lenient.eojeol_accuracy >= LENIENT_EOJEOL_FLOOR,
-        "Lenient eojeol {:.1}% is below {:.0}% floor",
-        lenient_eo_pct,
-        LENIENT_EOJEOL_FLOOR * 100.0
-    );
+    assert!(lenient.eojeol_accuracy >= LENIENT_EOJEOL_FLOOR,
+        "Lenient eojeol {lenient_eo:.1}% is below {:.0}% floor",
+        LENIENT_EOJEOL_FLOOR * 100.0);
 
-    println!(
-        "\nPASSED — lenient eojeol {lenient_eo_pct:.1}% (+{delta:.1}pp vs strict)"
-    );
+    println!("\nPASSED — strict {strict_eo:.1}% / lenient {lenient_eo:.1}% / practical {practical_eo:.1}%");
+}
+
+/// Sprint 126 P1: NNG/NNP/NNB confusion case extraction
+///
+/// Extracts only `POS_ONLY` errors involving NNG, NNP, or NNB tags from
+/// the KLUE DP evaluation. Outputs samples grouped by confusion direction
+/// (e.g., gold=NNG / pred=NNP) for manual analysis.
+///
+/// Purpose: gather evidence to decide whether NNG/NNP/NNB should be added
+/// to `TAG_EQUIVALENCE_GROUPS`. The decision requires distinguishing:
+/// (a) real analysis errors — mecab clearly wrong
+/// (b) convention differences — both labels arguable
+/// (c) KLUE annotation errors — mecab right, KLUE wrong
+#[test]
+#[ignore = "requires KLUE DP eval data + system dictionary"]
+fn test_klue_dp_nng_nnp_analysis() {
+    use mecab_ko_core::sejong::SejongConverter;
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or_else(|| std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
+
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict
+            .load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let eval_path = project_root.join("data/eval/klue_dp_val.tsv");
+    if !eval_path.exists() {
+        println!("Skipping: data/eval/klue_dp_val.tsv not found");
+        return;
+    }
+
+    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
+        .expect("Failed to load KLUE DP val");
+    let converter = SejongConverter::new();
+
+    // (gold_pos, pred_pos) -> Vec<(sentence, surface, sentence_idx)>
+    let mut cases: std::collections::HashMap<(String, String), Vec<(String, String)>> =
+        std::collections::HashMap::new();
+
+    let target_tags = ["NNG", "NNP", "NNB"];
+
+    for gold_sentence in &dataset.sentences {
+        let pred_raw = tokenizer.tokenize(&gold_sentence.text);
+        let sejong_tokens = converter.convert_tokens(&pred_raw);
+
+        let pred_pairs: Vec<(String, String)> = sejong_tokens
+            .iter()
+            .map(|t| {
+                (
+                    SejongConverter::normalize_jamo(&t.surface),
+                    t.pos.clone(),
+                )
+            })
+            .collect();
+
+        let min_len = gold_sentence.tokens.len().min(pred_pairs.len());
+        for (g, (p_surf, p_pos)) in gold_sentence
+            .tokens
+            .iter()
+            .zip(pred_pairs.iter())
+            .take(min_len)
+        {
+
+            if g.surface != *p_surf {
+                continue; // SEGMENTATION case, skip
+            }
+            if g.pos == *p_pos {
+                continue; // Match
+            }
+            // POS_ONLY case
+            if !target_tags.contains(&g.pos.as_str())
+                && !target_tags.contains(&p_pos.as_str())
+            {
+                continue;
+            }
+            // At least one side is NNG/NNP/NNB
+            cases
+                .entry((g.pos.clone(), p_pos.clone()))
+                .or_default()
+                .push((gold_sentence.text.clone(), g.surface.clone()));
+        }
+    }
+
+    println!("\n=== NNG/NNP/NNB Confusion Analysis ===");
+    println!("Dataset: {} sentences\n", dataset.len());
+
+    let mut sorted: Vec<_> = cases.iter().collect();
+    sorted.sort_by_key(|x| std::cmp::Reverse(x.1.len()));
+
+    println!("Confusion summary (sorted by count):");
+    for ((g, p), v) in &sorted {
+        println!("  {} → {}  ({}건)", g, p, v.len());
+    }
+
+    println!("\nTotal NNG/NNP/NNB-related POS_ONLY errors: {}",
+        sorted.iter().map(|x| x.1.len()).sum::<usize>());
+
+    // Show top N samples for the largest confusion groups
+    let sample_count = 10;
+    println!("\n--- Top samples per confusion direction ({sample_count} each) ---");
+    for ((g, p), v) in sorted.iter().take(6) {
+        println!("\n>>> {} → {}  ({}건)", g, p, v.len());
+        for (text, surface) in v.iter().take(sample_count) {
+            println!("  surface={surface:<12}  in: {text}");
+        }
+    }
 }
 
 /// Sprint 121: Error case classification

@@ -1,6 +1,64 @@
 # 진행 상황
 
-## 마지막 업데이트: 2026-05-11 (Sprint 125 P1 완료 — Tag Equivalence Map)
+## 마지막 업데이트: 2026-05-11 (Sprint 126 P1 완료 — 사전 정책 정량화 + 이중 Equivalence)
+
+### ✅ Sprint 126 P1 - 사전 정책 차이 정량화 + Conservative/Practical Equivalence
+
+**기간**: 2026-05-11
+**목표**: NNG/NNP/NNB 혼동 사례 분석 → 동치 결정 → 측정.
+**핵심 결과**: 3-mode 측정으로 strict 65.8% → practical 70.3% morpheme.
+
+#### NNG/NNP/NNB 혼동 분석 (KLUE DP, 809건 추출)
+
+| 패턴 | 건수 | 분류 | 결정 |
+|------|------|------|------|
+| **NNB → NNG** (씨/명/회/일) | 158 | Convention (counter words) | → Practical |
+| NNG → NNP (한국어/이미지) | 147 | **Real error** (mecab over-tag) | × |
+| MAG → NNG (현재/지금) | 95 | Real disambig | × |
+| NNP → NNG (어벤져스/외무부) | 95 | **Real error** (mecab under-tag) | × |
+| **SL → NNP** (CCTV/IOC/MBC) | 52 | Convention (foreign abbr) | → Conservative |
+| VV → NNG (드리/벌이) | 43 | Real error | × |
+
+#### 이중 Equivalence
+
+```rust
+TAG_EQUIVALENCE_GROUPS              (Conservative): + {SL, NNP}
+TAG_EQUIVALENCE_GROUPS_PRACTICAL    (Practical):    + {NNB, NNG}
+```
+
+#### 측정 결과 (3-mode)
+
+| Mode | Morpheme | Eojeol |
+|------|----------|--------|
+| Strict | 65.8% | 19.2% (4,299) |
+| Lenient (conservative + SL/NNP) | 69.3% | 21.0% (4,708) |
+| Lenient (practical + NNB/NNG) | **70.3%** | **21.7% (4,868)** |
+
+**누적 lift**: morpheme +4.5pp, eojeol +2.5pp.
+
+#### 핵심 발견
+
+- 진단 추정(~85-90%) 대비 측정 70.3%로 약 14pp 부족
+- = **데이터셋 진짜 분석 오류 25%+** 차지 시사
+- NNG↔NNP real errors(242건), MAG↔NNG(95건), VV↔NNG(43건)이 다음 sprint 진짜 작업 영역
+
+#### 추가/수정된 파일 (3개)
+- rust/crates/mecab-ko-core/src/evaluate.rs:
+  - TAG_EQUIVALENCE_GROUPS 확장 + TAG_EQUIVALENCE_GROUPS_PRACTICAL 신규
+  - pos_tags_equivalent_practical, pos_tags_equivalent_in 헬퍼
+  - 4개 unit test
+- rust/crates/mecab-ko-core/tests/accuracy_eval.rs:
+  - test_klue_dp_nng_nnp_analysis 신규 (sample 추출)
+  - test_klue_dp_dual_metric_lenient 확장 (3-mode 비교)
+- docs/research/accuracy/2026-05-11_klue_dp_dictionary_policy.md
+
+#### Sprint 127 권고 (도출)
+1. **복합명사 분할 정책 분석** (Phase 1 잔여 ~20%)
+2. **진짜 분석 오류 디버그** (NNG/NNP, MAG/NNG, VV/NNG 250+건)
+3. Noisy 데이터 추가 (carryover, 사용자 우선순위 "높음")
+4. CI 통합 (HF auto-DL + KLUE DP gate)
+
+---
 
 ### ✅ Sprint 125 P1 - Tag Equivalence Map + Lenient Evaluator
 
