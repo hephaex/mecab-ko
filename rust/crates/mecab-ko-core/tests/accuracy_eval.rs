@@ -2955,3 +2955,297 @@ fn test_error_case_classification() {
         println!("  {cat}: {count}");
     }
 }
+
+/// Sprint 127 P1: Compound noun split policy analysis
+///
+/// Aligns gold and predicted tokens at eojeol boundaries by **tokenizing each
+/// eojeol independently**. This avoids both:
+/// - cumulative-surface drift (KLUE morpheme surface uses jamo decomposition,
+///   so cumulative char count diverges from original text), and
+/// - char-position alignment failure (gold morphemes don't share the original
+///   text's coordinate system after decomposition).
+///
+/// Trade-off: mecab loses cross-eojeol Viterbi context. For analysis purposes
+/// this is acceptable since boundary decisions across whitespace are usually
+/// independent in Korean morphology.
+///
+/// Algorithm:
+/// 1. `text.split_whitespace()` → eojeol surface list (must match `eojeol_counts.len()`)
+/// 2. For each eojeol: gold tokens = `tokens[gold_idx..gold_idx + count_g]`,
+///    pred tokens = `tokenizer.tokenize(eojeol)` then convert + `normalize_jamo`
+/// 3. Classify each eojeol independently — no cascade across sentences
+///
+/// Categories:
+/// - `EXACT`: surface + POS identical
+/// - `POS_DIFF`: same segmentation, POS differs only
+/// - `INNER_SPLIT_DIFF`: same morph count but inner surface boundaries differ
+/// - `GOLD_SINGLE_PRED_MULTI`: gold has 1 morph, pred splits into N (mecab over-splits)
+/// - `GOLD_MULTI_PRED_SINGLE`: gold splits into N, pred has 1 (mecab merges)
+/// - `SPLIT_DIFFERENT`: both split (N>=2) but boundary or count differs
+/// - `SURFACE_MISMATCH`: gold/pred surface concatenations differ (true orthographic
+///   convention diff like 한 → 하+ㄴ vs 한)
+///
+/// Also computes `SLICE_LENIENT` accuracy: any eojeol where surfaces concatenate
+/// to the same string counts as correct, regardless of split. Estimates the
+/// upper bound if all compound/split conventions are absorbed.
+#[test]
+#[ignore = "requires KLUE DP eval data + system dictionary"]
+fn test_klue_dp_compound_noun_analysis() {
+    use mecab_ko_core::sejong::SejongConverter;
+    use std::collections::HashMap;
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or_else(|| std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
+
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict
+            .load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let eval_path = project_root.join("data/eval/klue_dp_val.tsv");
+    if !eval_path.exists() {
+        println!("Skipping: data/eval/klue_dp_val.tsv not found");
+        return;
+    }
+
+    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
+        .expect("Failed to load KLUE DP val");
+    let converter = SejongConverter::new();
+
+    // Categories
+    let mut cat_counts: HashMap<&'static str, usize> = HashMap::new();
+    let mut total_eojeols: usize = 0;
+
+    // Sample collectors (cap each)
+    let sample_cap = 25;
+    let mut samples_g1pn: Vec<(String, String, Vec<String>)> = Vec::new(); // (sentence, eojeol, pred_tokens)
+    let mut samples_gnp1: Vec<(String, String, Vec<String>)> = Vec::new();
+    let mut samples_split_diff: Vec<(String, String, Vec<String>, Vec<String>)> = Vec::new();
+    let mut samples_surface_mismatch: Vec<(String, String, String)> = Vec::new();
+
+    // Slice-lenient: count eojeols where cumulative surface matches (regardless of split)
+    let mut slice_lenient_correct: usize = 0;
+
+    // Pattern frequency: (gold_count, pred_count) for surface-aligned eojeols
+    let mut split_pattern_counts: HashMap<(usize, usize), usize> = HashMap::new();
+
+    // Top compound nouns gold-1 / pred-multi (the headline pattern)
+    let mut top_compounds: HashMap<String, usize> = HashMap::new();
+
+    for gold_sentence in &dataset.sentences {
+        let Some(eojeol_counts) = &gold_sentence.eojeol_counts else {
+            continue;
+        };
+
+        let eojeols: Vec<&str> = gold_sentence.text.split_whitespace().collect();
+        if eojeols.len() != eojeol_counts.len() {
+            cat_counts.entry("EOJEOL_COUNT_MISMATCH").and_modify(|c| *c += 1).or_insert(1);
+            continue;
+        }
+
+        let mut gold_idx: usize = 0;
+
+        for (eo_i, &count_g) in eojeol_counts.iter().enumerate() {
+            total_eojeols += 1;
+            if gold_idx + count_g > gold_sentence.tokens.len() {
+                cat_counts.entry("BOUNDS_ERROR").and_modify(|c| *c += 1).or_insert(1);
+                gold_idx = gold_sentence.tokens.len();
+                continue;
+            }
+            let gold_slice = &gold_sentence.tokens[gold_idx..gold_idx + count_g];
+            gold_idx += count_g;
+
+            let gold_surface: String = gold_slice.iter().map(|t| t.surface.as_str()).collect();
+
+            // Per-eojeol independent tokenization
+            let pred_raw = tokenizer.tokenize(eojeols[eo_i]);
+            let pred_sejong = converter.convert_tokens(&pred_raw);
+            let pred_slice: Vec<(String, String)> = pred_sejong
+                .iter()
+                .map(|t| (SejongConverter::normalize_jamo(&t.surface), t.pos.clone()))
+                .collect();
+            let pred_surface: String = pred_slice.iter().map(|(s, _)| s.as_str()).collect();
+
+            if pred_surface != gold_surface {
+                cat_counts.entry("SURFACE_MISMATCH").and_modify(|c| *c += 1).or_insert(1);
+                if samples_surface_mismatch.len() < sample_cap {
+                    samples_surface_mismatch.push((
+                        gold_sentence.text.clone(),
+                        gold_surface.clone(),
+                        pred_surface.clone(),
+                    ));
+                }
+                continue;
+            }
+
+            // Surface aligned. Now classify by split count.
+            slice_lenient_correct += 1;
+            let count_p = pred_slice.len();
+            *split_pattern_counts.entry((count_g, count_p)).or_insert(0) += 1;
+
+            let same_split = count_g == count_p;
+            let all_match = same_split
+                && gold_slice
+                    .iter()
+                    .zip(pred_slice.iter())
+                    .all(|(g, (ps, pp))| g.surface == *ps && g.pos == *pp);
+
+            if all_match {
+                cat_counts.entry("EXACT").and_modify(|c| *c += 1).or_insert(1);
+                continue;
+            }
+
+            if same_split {
+                let surface_same = gold_slice
+                    .iter()
+                    .zip(pred_slice.iter())
+                    .all(|(g, (ps, _))| g.surface == *ps);
+                if surface_same {
+                    cat_counts.entry("POS_DIFF").and_modify(|c| *c += 1).or_insert(1);
+                } else {
+                    cat_counts.entry("INNER_SPLIT_DIFF").and_modify(|c| *c += 1).or_insert(1);
+                }
+                continue;
+            }
+
+            // Different split count
+            if count_g == 1 && count_p > 1 {
+                cat_counts.entry("GOLD_SINGLE_PRED_MULTI").and_modify(|c| *c += 1).or_insert(1);
+                *top_compounds.entry(gold_surface.clone()).or_insert(0) += 1;
+                if samples_g1pn.len() < sample_cap {
+                    let pred_tokens: Vec<String> = pred_slice
+                        .iter()
+                        .map(|(s, p)| format!("{s}/{p}"))
+                        .collect();
+                    samples_g1pn.push((
+                        gold_sentence.text.clone(),
+                        format!("{}/{}", gold_slice[0].surface, gold_slice[0].pos),
+                        pred_tokens,
+                    ));
+                }
+            } else if count_g > 1 && count_p == 1 {
+                cat_counts.entry("GOLD_MULTI_PRED_SINGLE").and_modify(|c| *c += 1).or_insert(1);
+                if samples_gnp1.len() < sample_cap {
+                    let gold_tokens: Vec<String> =
+                        gold_slice.iter().map(|t| format!("{}/{}", t.surface, t.pos)).collect();
+                    samples_gnp1.push((
+                        gold_sentence.text.clone(),
+                        format!("{}/{}", pred_slice[0].0, pred_slice[0].1),
+                        gold_tokens,
+                    ));
+                }
+            } else {
+                cat_counts.entry("SPLIT_DIFFERENT").and_modify(|c| *c += 1).or_insert(1);
+                if samples_split_diff.len() < sample_cap {
+                    let gold_tokens: Vec<String> =
+                        gold_slice.iter().map(|t| format!("{}/{}", t.surface, t.pos)).collect();
+                    let pred_tokens: Vec<String> = pred_slice
+                        .iter()
+                        .map(|(s, p)| format!("{s}/{p}"))
+                        .collect();
+                    samples_split_diff.push((
+                        gold_sentence.text.clone(),
+                        gold_surface.clone(),
+                        gold_tokens,
+                        pred_tokens,
+                    ));
+                }
+            }
+        }
+    }
+
+    println!("\n{}", "=".repeat(70));
+    println!("  COMPOUND NOUN SPLIT ANALYSIS (Sprint 127 P1)");
+    println!("  Dataset: {} sentences, {} eojeols", dataset.len(), total_eojeols);
+    println!("{}\n", "=".repeat(70));
+
+    println!("=== Eojeol Category Counts ===");
+    let mut sorted_cats: Vec<_> = cat_counts.iter().collect();
+    sorted_cats.sort_by_key(|x| std::cmp::Reverse(*x.1));
+    for (cat, count) in &sorted_cats {
+        let pct = **count as f64 / total_eojeols.max(1) as f64 * 100.0;
+        println!("  {cat:<30}  {count:>5} ({pct:.1}%)");
+    }
+
+    let exact = *cat_counts.get("EXACT").unwrap_or(&0);
+    let exact_pct = exact as f64 / total_eojeols.max(1) as f64 * 100.0;
+    let slice_pct = slice_lenient_correct as f64 / total_eojeols.max(1) as f64 * 100.0;
+    println!("\n=== Headline ===");
+    println!("  Strict eojeol (EXACT only):   {exact_pct:.1}% ({exact} / {total_eojeols})");
+    println!(
+        "  Slice-lenient ceiling:        {slice_pct:.1}% ({slice_lenient_correct} / {total_eojeols})"
+    );
+    println!("  (Slice-lenient = any eojeol with matching cumulative surface)");
+
+    println!("\n=== Split Pattern Frequency (gold_count, pred_count) — surface-aligned ===");
+    let mut sorted_patterns: Vec<_> = split_pattern_counts.iter().collect();
+    sorted_patterns.sort_by_key(|x| std::cmp::Reverse(*x.1));
+    for ((g, p), c) in sorted_patterns.iter().take(15) {
+        let marker = if g == p { "" } else { "  ←diff" };
+        println!("  gold={g}  pred={p}  →  {c}건{marker}");
+    }
+
+    println!("\n=== Top compound nouns (gold-1 / pred-N), top 30 ===");
+    let mut top: Vec<_> = top_compounds.iter().collect();
+    top.sort_by_key(|x| std::cmp::Reverse(*x.1));
+    for (surf, cnt) in top.iter().take(30) {
+        println!("  {cnt:>3}× {surf}");
+    }
+
+    println!(
+        "\n=== Samples: GOLD_SINGLE_PRED_MULTI (mecab over-splits compound) — {} ===",
+        samples_g1pn.len()
+    );
+    for (sent, gold_tok, pred_toks) in samples_g1pn.iter().take(15) {
+        println!(
+            "  gold: {gold_tok:<20}  pred: [{}]  in: {sent}",
+            pred_toks.join(", ")
+        );
+    }
+
+    println!(
+        "\n=== Samples: GOLD_MULTI_PRED_SINGLE (mecab merges) — {} ===",
+        samples_gnp1.len()
+    );
+    for (sent, pred_tok, gold_toks) in samples_gnp1.iter().take(15) {
+        println!(
+            "  gold: [{}]  pred: {pred_tok:<20}  in: {sent}",
+            gold_toks.join(", ")
+        );
+    }
+
+    println!(
+        "\n=== Samples: SPLIT_DIFFERENT (both split, different boundary) — {} ===",
+        samples_split_diff.len()
+    );
+    for (sent, surf, gold_toks, pred_toks) in samples_split_diff.iter().take(10) {
+        println!("  surface={surf}  in: {sent}");
+        println!("    gold: [{}]", gold_toks.join(", "));
+        println!("    pred: [{}]", pred_toks.join(", "));
+    }
+
+    println!(
+        "\n=== Samples: SURFACE_MISMATCH (orthographic transform / boundary drift) — {} ===",
+        samples_surface_mismatch.len()
+    );
+    for (sent, gs, ps) in samples_surface_mismatch.iter().take(10) {
+        println!("  gold_surface={gs:<20}  pred_surface={ps:<20}  in: {sent}");
+    }
+}
