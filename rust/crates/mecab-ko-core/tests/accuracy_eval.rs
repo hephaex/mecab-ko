@@ -3249,3 +3249,360 @@ fn test_klue_dp_compound_noun_analysis() {
         println!("  gold_surface={gs:<20}  pred_surface={ps:<20}  in: {sent}");
     }
 }
+
+/// Sprint 128 P2: Full 5-mode KLUE DP measurement (surface lenient added)
+///
+/// Compares strict / lenient (conservative) / lenient (practical) /
+/// `surface_canonical` / `surface_canonical_lenient` + practical POS modes.
+/// Reports morpheme + eojeol for each mode.
+#[test]
+#[ignore = "requires KLUE DP eval data + system dictionary"]
+fn test_klue_dp_surface_lenient_full() {
+    use mecab_ko_core::evaluate::{
+        evaluate_dataset_dual, evaluate_dataset_dual_lenient,
+        evaluate_dataset_dual_per_eojeol_with_match, evaluate_dataset_dual_with_match,
+        evaluate_dataset_dual_with_pos_match, pos_eq_strict, pos_tags_equivalent_practical,
+        surface_eq_canonical, surface_eq_canonical_lenient, surface_eq_strict,
+    };
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or_else(|| std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
+
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict
+            .load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let eval_path = project_root.join("data/eval/klue_dp_val.tsv");
+    if !eval_path.exists() {
+        println!("Skipping: data/eval/klue_dp_val.tsv not found");
+        return;
+    }
+
+    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
+        .expect("Failed to load KLUE DP val");
+
+    println!("\n=== KLUE DP 5-mode (Sprint 128 P2) ===");
+    println!("Dataset: {} sentences", dataset.len());
+
+    let strict = evaluate_dataset_dual(&mut tokenizer, &dataset);
+    let lenient = evaluate_dataset_dual_lenient(&mut tokenizer, &dataset);
+    let practical = evaluate_dataset_dual_with_pos_match(
+        &mut tokenizer,
+        &dataset,
+        pos_tags_equivalent_practical,
+    );
+    let surface_can = evaluate_dataset_dual_with_match(
+        &mut tokenizer,
+        &dataset,
+        pos_eq_strict,
+        surface_eq_canonical,
+    );
+    let combined_seq = evaluate_dataset_dual_with_match(
+        &mut tokenizer,
+        &dataset,
+        pos_tags_equivalent_practical,
+        surface_eq_canonical_lenient,
+    );
+
+    // Per-eojeol algorithm (Sprint 128 P1)
+    let pe_strict = evaluate_dataset_dual_per_eojeol_with_match(
+        &mut tokenizer,
+        &dataset,
+        pos_eq_strict,
+        surface_eq_strict,
+    );
+    let pe_practical = evaluate_dataset_dual_per_eojeol_with_match(
+        &mut tokenizer,
+        &dataset,
+        pos_tags_equivalent_practical,
+        surface_eq_strict,
+    );
+    let pe_surface_can = evaluate_dataset_dual_per_eojeol_with_match(
+        &mut tokenizer,
+        &dataset,
+        pos_eq_strict,
+        surface_eq_canonical,
+    );
+    let pe_combined = evaluate_dataset_dual_per_eojeol_with_match(
+        &mut tokenizer,
+        &dataset,
+        pos_tags_equivalent_practical,
+        surface_eq_canonical_lenient,
+    );
+
+    let report = |name: &str, r: &mecab_ko_core::evaluate::DualMetricResult, baseline_eo: f64| {
+        let m = r.morpheme.token_accuracy * 100.0;
+        let e = r.eojeol_accuracy * 100.0;
+        let delta = e - baseline_eo;
+        println!(
+            "  {name:<55}  morph {m:5.1}%   eo {e:5.1}% ({:>5}/{})   Δeo {delta:+.1}pp",
+            r.eojeol_correct, r.eojeol_total
+        );
+    };
+
+    let baseline = strict.eojeol_accuracy * 100.0;
+    println!("\n--- Sequence-based eojeol (legacy, cascade) ---");
+    report("strict (POS strict / surface strict)", &strict, baseline);
+    report("lenient (POS conservative / surface strict)", &lenient, baseline);
+    report("practical (POS practical / surface strict)", &practical, baseline);
+    report("surface_canonical (POS strict / surface canonical)", &surface_can, baseline);
+    report(
+        "combined (POS practical / surface canonical+lenient)",
+        &combined_seq,
+        baseline,
+    );
+
+    let pe_baseline = pe_strict.eojeol_accuracy * 100.0;
+    println!("\n--- Per-eojeol algorithm (Sprint 128 P1, no cascade) ---");
+    report(
+        "per-eojeol strict (POS strict / surface strict)",
+        &pe_strict,
+        pe_baseline,
+    );
+    report(
+        "per-eojeol practical (POS practical / surface strict)",
+        &pe_practical,
+        pe_baseline,
+    );
+    report(
+        "per-eojeol surface_canonical",
+        &pe_surface_can,
+        pe_baseline,
+    );
+    report(
+        "per-eojeol combined (POS practical / surface canon+lenient)",
+        &pe_combined,
+        pe_baseline,
+    );
+
+    // Floor: per-eojeol strict must lift far above sequence strict
+    assert!(
+        pe_strict.eojeol_accuracy >= 0.45,
+        "per-eojeol strict eojeol {:.1}% < 45% floor (cascade-free should be ~52%)",
+        pe_strict.eojeol_accuracy * 100.0
+    );
+    assert!(
+        pe_combined.eojeol_accuracy >= pe_strict.eojeol_accuracy,
+        "per-eojeol combined must be >= per-eojeol strict"
+    );
+    // Surface canonical alone gives +0pp eojeol lift in per-eojeol mode:
+    // morpheme split mismatch still fails after surface matching. This is the same
+    // semantic loss tradeoff Sprint 127 P1 rejected (slice-lenient ceiling 87.7%).
+    // SURFACE_MISMATCH 12.3% is an eojeol-concat level diff, not morpheme-level.
+    assert!(
+        pe_surface_can.eojeol_accuracy >= pe_strict.eojeol_accuracy,
+        "per-eojeol surface_canonical {:.1}% must be >= strict {:.1}% (monotonic)",
+        pe_surface_can.eojeol_accuracy * 100.0,
+        pe_strict.eojeol_accuracy * 100.0
+    );
+
+    println!(
+        "\nPASSED — per-eojeol combined eojeol {:.1}% (sequence practical was 21.7%, per-eojeol strict baseline {:.1}%)",
+        pe_combined.eojeol_accuracy * 100.0,
+        pe_baseline
+    );
+}
+
+/// Sprint 128 P2: Surface mismatch normalization analysis
+///
+/// Re-runs the per-eojeol analysis but for `SURFACE_MISMATCH` cases tries:
+/// - NFC compose (jamo → syllable, e.g. "하ㅁ께" → "함께")
+/// - NFC + 어미 표기 동치 (였 ↔ 았, 어 ↔ 여)
+///
+/// Reports how many `SURFACE_MISMATCH` eojeols would be absorbed at each level.
+#[test]
+#[ignore = "requires KLUE DP eval data + system dictionary"]
+fn test_klue_dp_surface_normalization_analysis() {
+    use mecab_ko_core::sejong::SejongConverter;
+    use mecab_ko_hangul::{compose_str, decompose_str};
+    use std::collections::HashMap;
+
+    // Inflectional ending equivalence: 하았 → 하였, 하어 → 하여 (analysis-only).
+    fn normalize_endings(s: &str) -> String {
+        let mut out = String::with_capacity(s.len());
+        let chars: Vec<char> = s.chars().collect();
+        for (i, &c) in chars.iter().enumerate() {
+            let prev = if i > 0 { chars[i - 1] } else { '\0' };
+            if c == '았' && prev == '하' {
+                out.push('였');
+            } else if c == '어' && prev == '하' {
+                out.push('여');
+            } else {
+                out.push(c);
+            }
+        }
+        out
+    }
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or_else(|| std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
+
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict
+            .load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let eval_path = project_root.join("data/eval/klue_dp_val.tsv");
+    if !eval_path.exists() {
+        println!("Skipping: data/eval/klue_dp_val.tsv not found");
+        return;
+    }
+
+    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
+        .expect("Failed to load KLUE DP val");
+    let converter = SejongConverter::new();
+
+    // (gold_concat, pred_concat) → count
+    let mut nfc_absorbed: usize = 0;
+    let mut nfc_plus_endings_absorbed: usize = 0;
+    let mut still_mismatch: usize = 0;
+    let mut still_mismatch_samples: Vec<(String, String, String, String, String)> = Vec::new();
+    let mut total_eojeols: usize = 0;
+    let mut total_surface_mismatch: usize = 0;
+    let mut diff_pattern_counts: HashMap<(String, String), usize> = HashMap::new();
+
+    for gold_sentence in &dataset.sentences {
+        let Some(eojeol_counts) = &gold_sentence.eojeol_counts else {
+            continue;
+        };
+        let eojeols: Vec<&str> = gold_sentence.text.split_whitespace().collect();
+        if eojeols.len() != eojeol_counts.len() {
+            continue;
+        }
+
+        let mut gold_idx: usize = 0;
+        for (eo_i, &count_g) in eojeol_counts.iter().enumerate() {
+            total_eojeols += 1;
+            if gold_idx + count_g > gold_sentence.tokens.len() {
+                gold_idx = gold_sentence.tokens.len();
+                continue;
+            }
+            let gold_slice = &gold_sentence.tokens[gold_idx..gold_idx + count_g];
+            gold_idx += count_g;
+
+            let gold_surface: String = gold_slice.iter().map(|t| t.surface.as_str()).collect();
+            let pred_raw = tokenizer.tokenize(eojeols[eo_i]);
+            let pred_sejong = converter.convert_tokens(&pred_raw);
+            let pred_surface: String = pred_sejong
+                .iter()
+                .map(|t| SejongConverter::normalize_jamo(&t.surface))
+                .collect();
+
+            if gold_surface == pred_surface {
+                continue;
+            }
+            total_surface_mismatch += 1;
+
+            // Canonical form: fully decompose then re-compose (handles syllable + jamo mix
+            // like "하ㄴ" → "ㅎㅏㄴ" → "한")
+            let gold_nfc = compose_str(&decompose_str(&gold_surface));
+            let pred_nfc = compose_str(&decompose_str(&pred_surface));
+            if gold_nfc == pred_nfc {
+                nfc_absorbed += 1;
+                continue;
+            }
+
+            let gold_norm = normalize_endings(&gold_nfc);
+            let pred_norm = normalize_endings(&pred_nfc);
+            if gold_norm == pred_norm {
+                nfc_plus_endings_absorbed += 1;
+                continue;
+            }
+
+            still_mismatch += 1;
+            *diff_pattern_counts
+                .entry((gold_nfc.clone(), pred_nfc.clone()))
+                .or_insert(0) += 1;
+            if still_mismatch_samples.len() < 30 {
+                still_mismatch_samples.push((
+                    gold_sentence.text.clone(),
+                    gold_surface,
+                    pred_surface,
+                    gold_nfc,
+                    pred_nfc,
+                ));
+            }
+        }
+    }
+
+    println!("\n{}", "=".repeat(70));
+    println!("  SURFACE NORMALIZATION ANALYSIS (Sprint 128 P2)");
+    println!(
+        "  Total eojeols: {total_eojeols}, raw SURFACE_MISMATCH: {total_surface_mismatch}"
+    );
+    println!("{}\n", "=".repeat(70));
+
+    let abs_pct = |c: usize| (c as f64 / total_surface_mismatch.max(1) as f64) * 100.0;
+    let total_pct = |c: usize| (c as f64 / total_eojeols.max(1) as f64) * 100.0;
+    println!("=== Absorption tier ===");
+    println!(
+        "  NFC compose only:        {nfc_absorbed:>5} ({:.1}% of mismatch / {:.1}% of total)",
+        abs_pct(nfc_absorbed),
+        total_pct(nfc_absorbed)
+    );
+    println!(
+        "  NFC + 하았→하였/하어→하여: {nfc_plus_endings_absorbed:>5} ({:.1}% of mismatch / {:.1}% of total)",
+        abs_pct(nfc_plus_endings_absorbed),
+        total_pct(nfc_plus_endings_absorbed)
+    );
+    println!(
+        "  Still mismatch:          {still_mismatch:>5} ({:.1}% of mismatch / {:.1}% of total)",
+        abs_pct(still_mismatch),
+        total_pct(still_mismatch)
+    );
+    let total_absorbed = nfc_absorbed + nfc_plus_endings_absorbed;
+    println!(
+        "\n  Total absorbed:          {total_absorbed:>5} ({:.1}% of mismatch / +{:.1}pp eojeol lift)",
+        abs_pct(total_absorbed),
+        total_pct(total_absorbed)
+    );
+
+    println!("\n=== Top remaining mismatch patterns (after both norms), top 25 ===");
+    let mut sorted_patterns: Vec<_> = diff_pattern_counts.iter().collect();
+    sorted_patterns.sort_by_key(|x| std::cmp::Reverse(*x.1));
+    for ((g, p), c) in sorted_patterns.iter().take(25) {
+        println!("  {c:>3}× gold={g:<25}  pred={p}");
+    }
+
+    println!("\n=== Sample remaining mismatches (sentence context) ===");
+    for (sent, gs, ps, gn, pn) in still_mismatch_samples.iter().take(15) {
+        println!(
+            "  raw: gold={gs} / pred={ps}\n  nfc: gold={gn} / pred={pn}\n  in: {sent}\n"
+        );
+    }
+}

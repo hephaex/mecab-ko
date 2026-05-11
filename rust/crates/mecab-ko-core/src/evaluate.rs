@@ -481,18 +481,31 @@ pub fn evaluate_tokens_aligned(
 
 /// Greedy alignment 기반 토큰 평가 (POS 비교 함수 주입, Sprint 125).
 ///
-/// 순서를 고려하되, 토큰 갯수 차이가 있어도 최선의 매칭을 시도합니다.
-/// `pos_eq`로 strict(`pos_eq_strict`) 또는 lenient(`pos_tags_equivalent`)
-/// 모드 선택.
-///
-/// # Returns
-///
-/// (`true_positives`, `false_positives`, `false_negatives`, `pos_match`)
+/// `surface_eq_strict` 위임 — surface 일치는 항상 `==`.
+/// surface 비교 함수 주입은 `evaluate_tokens_aligned_with_match` 사용.
 #[must_use]
 pub fn evaluate_tokens_aligned_with_pos_match(
     gold_tokens: &[GoldToken],
     pred_tokens: &[Token],
     pos_eq: PosMatchFn,
+) -> (usize, usize, usize, usize) {
+    evaluate_tokens_aligned_with_match(gold_tokens, pred_tokens, pos_eq, surface_eq_strict)
+}
+
+/// Greedy alignment 기반 토큰 평가 (POS + surface 비교 함수 주입, Sprint 128 P2).
+///
+/// 순서를 고려하되, 토큰 갯수 차이가 있어도 최선의 매칭을 시도합니다.
+/// `pos_eq`로 strict/lenient POS, `surface_eq`로 strict/canonical surface 모드 선택.
+///
+/// # Returns
+///
+/// (`true_positives`, `false_positives`, `false_negatives`, `pos_match`)
+#[must_use]
+pub fn evaluate_tokens_aligned_with_match(
+    gold_tokens: &[GoldToken],
+    pred_tokens: &[Token],
+    pos_eq: PosMatchFn,
+    surface_eq: SurfaceMatchFn,
 ) -> (usize, usize, usize, usize) {
     let mut true_positives = 0;
     let mut pos_match = 0;
@@ -504,7 +517,7 @@ pub fn evaluate_tokens_aligned_with_pos_match(
         let gold = &gold_tokens[gold_idx];
         let pred = &pred_tokens[pred_idx];
 
-        if gold.surface == pred.surface {
+        if surface_eq(&gold.surface, &pred.surface) {
             pos_match += 1;
             if pos_eq(&gold.pos, &pred.pos) {
                 true_positives += 1;
@@ -515,7 +528,7 @@ pub fn evaluate_tokens_aligned_with_pos_match(
             let mut found = false;
             for look_ahead in 1..=3 {
                 if pred_idx + look_ahead < pred_tokens.len()
-                    && pred_tokens[pred_idx + look_ahead].surface == gold.surface
+                    && surface_eq(&gold.surface, &pred_tokens[pred_idx + look_ahead].surface)
                 {
                     pred_idx += look_ahead;
                     found = true;
@@ -526,7 +539,7 @@ pub fn evaluate_tokens_aligned_with_pos_match(
             if !found {
                 for look_ahead in 1..=3 {
                     if gold_idx + look_ahead < gold_tokens.len()
-                        && gold_tokens[gold_idx + look_ahead].surface == pred.surface
+                        && surface_eq(&gold_tokens[gold_idx + look_ahead].surface, &pred.surface)
                     {
                         gold_idx += look_ahead;
                         found = true;
@@ -668,13 +681,25 @@ pub fn evaluate_dataset_sejong_lenient(
 
 /// 세종 호환 모드 평가 (POS 비교 함수 주입, Sprint 125).
 ///
-/// strict / lenient 둘 다 지원. 자세한 내용은 `evaluate_dataset_sejong`,
-/// `evaluate_dataset_sejong_lenient` 참고.
-#[allow(clippy::cast_precision_loss)]
+/// `surface_eq_strict` 위임. surface 비교까지 주입하려면 `_with_match` 사용.
 pub fn evaluate_dataset_sejong_with_pos_match(
     tokenizer: &mut Tokenizer,
     dataset: &TestDataset,
     pos_eq: PosMatchFn,
+) -> EvaluationResult {
+    evaluate_dataset_sejong_with_match(tokenizer, dataset, pos_eq, surface_eq_strict)
+}
+
+/// 세종 호환 모드 평가 (POS + surface 비교 함수 주입, Sprint 128 P2).
+///
+/// `pos_eq`와 `surface_eq` 양쪽 모두 주입 가능.
+/// strict / lenient (POS) × strict / canonical (surface) 조합 모두 지원.
+#[allow(clippy::cast_precision_loss)]
+pub fn evaluate_dataset_sejong_with_match(
+    tokenizer: &mut Tokenizer,
+    dataset: &TestDataset,
+    pos_eq: PosMatchFn,
+    surface_eq: SurfaceMatchFn,
 ) -> EvaluationResult {
     let converter = SejongConverter::new();
     let mut result = EvaluationResult::new();
@@ -704,10 +729,11 @@ pub fn evaluate_dataset_sejong_with_pos_match(
         result.total_gold_tokens += gold_sentence.tokens.len();
         result.total_pred_tokens += converted_pred.len();
 
-        let (tp, fp, fn_, _pos_match) = evaluate_tokens_aligned_with_pos_match(
+        let (tp, fp, fn_, _pos_match) = evaluate_tokens_aligned_with_match(
             &gold_sentence.tokens,
             &converted_pred,
             pos_eq,
+            surface_eq,
         );
 
         result.true_positives += tp;
@@ -732,7 +758,7 @@ pub fn evaluate_dataset_sejong_with_pos_match(
 
             if i < converted_pred.len() {
                 let pred_token = &converted_pred[i];
-                if gold_token.surface == pred_token.surface {
+                if surface_eq(&gold_token.surface, &pred_token.surface) {
                     pos_stat.pred_count += 1;
                     if pos_eq(&gold_token.pos, &pred_token.pos) {
                         pos_stat.correct += 1;
@@ -863,6 +889,78 @@ pub fn pos_eq_strict(a: &str, b: &str) -> bool {
     a == b
 }
 
+/// Surface 일치 판단 함수 타입 (Sprint 128 P2).
+///
+/// 평가 함수에 주입하여 strict(`==`) 또는 canonical(자모 통일) 모드를 선택.
+/// KLUE DP처럼 morpheme surface가 jamo decomposition convention으로
+/// 통일되지 않은 외부 코퍼스의 표기 차이를 흡수합니다.
+pub type SurfaceMatchFn = fn(&str, &str) -> bool;
+
+/// 엄격(strict) surface 비교 — 기본 동작.
+#[must_use]
+pub fn surface_eq_strict(a: &str, b: &str) -> bool {
+    a == b
+}
+
+/// Canonical surface 비교 (Sprint 128 P2).
+///
+/// 양쪽 문자열을 fully decompose 후 다시 compose하여 자모/음절 표기 차이를 흡수.
+/// 예: "한" (U+D55C) vs "하ㄴ" (U+D558 + U+3134) → 둘 다 "한"으로 정규화 후 비교.
+///
+/// Sprint 127 P1 분석에서 KLUE의 morpheme surface가 음절 보존(예: "한")인 반면
+/// mecab은 어미 분해로 음절+자모 혼합("하"+"ㄴ")이 자주 발생함을 확인. 본 함수는
+/// 이 표기 차이를 의미 손실 없이 흡수.
+#[must_use]
+pub fn surface_eq_canonical(a: &str, b: &str) -> bool {
+    if a == b {
+        return true;
+    }
+    canonical_form(a) == canonical_form(b)
+}
+
+/// Canonical + inflectional ending normalization (Sprint 128 P2).
+///
+/// `surface_eq_canonical` + 어미 변환 동치:
+/// - 하았 ↔ 하였 (KLUE는 "였" 보존, mecab은 "았"으로 분해)
+/// - 하어 ↔ 하여 (KLUE는 "여" 보존, mecab은 "어"로 분해)
+///
+/// Sprint 128 P2 분석에서 `SURFACE_MISMATCH`의 22.6% 추가 흡수 확인.
+#[must_use]
+pub fn surface_eq_canonical_lenient(a: &str, b: &str) -> bool {
+    if a == b {
+        return true;
+    }
+    let a_can = canonical_form(a);
+    let b_can = canonical_form(b);
+    if a_can == b_can {
+        return true;
+    }
+    normalize_endings(&a_can) == normalize_endings(&b_can)
+}
+
+/// 자모 ↔ 음절 표기를 canonical form으로 통일.
+fn canonical_form(s: &str) -> String {
+    use mecab_ko_hangul::{compose_str, decompose_str};
+    compose_str(&decompose_str(s))
+}
+
+/// 어미 변환 동치: 하았 → 하였, 하어 → 하여.
+fn normalize_endings(s: &str) -> String {
+    let chars: Vec<char> = s.chars().collect();
+    let mut out = String::with_capacity(s.len());
+    for (i, &c) in chars.iter().enumerate() {
+        let prev = if i > 0 { chars[i - 1] } else { '\0' };
+        if c == '았' && prev == '하' {
+            out.push('였');
+        } else if c == '어' && prev == '하' {
+            out.push('여');
+        } else {
+            out.push(c);
+        }
+    }
+    out
+}
+
 /// 이중 메트릭 평가 결과 (Sprint 124)
 ///
 /// 형태소 레벨과 어절 레벨 정확도를 함께 보고합니다.
@@ -930,27 +1028,146 @@ pub fn evaluate_dataset_dual_lenient(
     evaluate_dataset_dual_with_pos_match(tokenizer, dataset, pos_tags_equivalent)
 }
 
-/// 이중 메트릭 평가 (POS 비교 함수 주입).
+/// 이중 메트릭 평가 (POS 비교 함수 주입, Sprint 125).
 ///
-/// 형태소 레벨(morpheme) + 어절 레벨(eojeol) 두 메트릭을 함께 측정합니다.
-/// `pos_eq` 함수로 strict/lenient 모드를 선택. **양쪽 메트릭 모두에 동일 `pos_eq`** 적용.
-///
-/// 어절 레벨 평가:
-/// - 정답 데이터셋에 `eojeol_counts`가 있어야 측정 가능
-/// - 예측 토큰을 정답 어절 경계 기준 슬라이스로 분할 (정답과 같은 형태소 수)
-/// - 어절 내 모든 형태소가 surface + POS 일치(주입된 `pos_eq` 기준) 시 어절 정답
-///
-/// 어절 정보가 없는 데이터셋에서는 `eojeol_total = 0`으로 보고.
-#[allow(clippy::cast_precision_loss)]
+/// `surface_eq_strict` 위임. surface까지 주입은 `_with_match` 사용.
+#[must_use]
 pub fn evaluate_dataset_dual_with_pos_match(
     tokenizer: &mut Tokenizer,
     dataset: &TestDataset,
     pos_eq: PosMatchFn,
 ) -> DualMetricResult {
-    // 형태소 레벨도 동일 pos_eq로 측정 (Sprint 125: lenient 지원)
-    let morpheme = evaluate_dataset_sejong_with_pos_match(tokenizer, dataset, pos_eq);
+    evaluate_dataset_dual_with_match(tokenizer, dataset, pos_eq, surface_eq_strict)
+}
 
-    // 어절 레벨 별도 측정 (pos_eq 적용)
+/// 이중 메트릭 평가 — **per-eojeol** 알고리즘 (Sprint 128 P1+P2).
+///
+/// 어절 정확도 측정에 **어절별 독립 토크나이즈** 알고리즘을 사용. Sprint 127 P1
+/// 분석에서 sequence-based eojeol metric은 cascade로 33pp 이상 underestimate함이
+/// 입증됨 (KLUE DP eojeol 19.2% sequence vs 52.4% per-eojeol).
+///
+/// Algorithm:
+/// 1. `text.split_whitespace()` → 어절 리스트 (`eojeol_counts.len()`와 같아야 함)
+/// 2. 각 어절: gold morphs = `tokens[gold_idx..+count_g]`,
+///    pred morphs = `tokenize(eojeol).convert`
+/// 3. surface concat 일치 후 morpheme별 (`surface_eq`, `pos_eq`) 비교
+/// 4. cascade 없음 — 한 어절 mismatch가 다음 어절 카운팅에 영향 안 줌
+///
+/// Trade-off vs sequence: mecab의 cross-eojeol Viterbi context를 잃음. 한국어
+/// 형태소 분석에서 어절 경계 너머 영향은 작아 분석 비교에 적합.
+///
+/// `morpheme` 부분은 기존 sequence-based `evaluate_dataset_sejong_with_match` 사용.
+#[allow(clippy::cast_precision_loss)]
+pub fn evaluate_dataset_dual_per_eojeol_with_match(
+    tokenizer: &mut Tokenizer,
+    dataset: &TestDataset,
+    pos_eq: PosMatchFn,
+    surface_eq: SurfaceMatchFn,
+) -> DualMetricResult {
+    let morpheme = evaluate_dataset_sejong_with_match(tokenizer, dataset, pos_eq, surface_eq);
+
+    let converter = SejongConverter::new();
+    let mut eojeol_correct: usize = 0;
+    let mut eojeol_total: usize = 0;
+
+    for gold_sentence in &dataset.sentences {
+        let Some(eojeol_counts) = &gold_sentence.eojeol_counts else {
+            continue;
+        };
+        let eojeols: Vec<&str> = gold_sentence.text.split_whitespace().collect();
+        if eojeols.len() != eojeol_counts.len() {
+            continue;
+        }
+
+        let mut gold_idx: usize = 0;
+        for (eo_i, &count_g) in eojeol_counts.iter().enumerate() {
+            eojeol_total += 1;
+            if gold_idx + count_g > gold_sentence.tokens.len() {
+                gold_idx = gold_sentence.tokens.len();
+                continue;
+            }
+            let gold_slice = &gold_sentence.tokens[gold_idx..gold_idx + count_g];
+            gold_idx += count_g;
+
+            let pred_raw = tokenizer.tokenize(eojeols[eo_i]);
+            let pred_sejong = converter.convert_tokens(&pred_raw);
+            let pred_morphs: Vec<(String, String)> = pred_sejong
+                .iter()
+                .map(|t| (SejongConverter::normalize_jamo(&t.surface), t.pos.clone()))
+                .collect();
+
+            // Surface concat lenient: surface_eq with concat
+            let gold_concat: String = gold_slice.iter().map(|t| t.surface.as_str()).collect();
+            let pred_concat: String = pred_morphs.iter().map(|(s, _)| s.as_str()).collect();
+            if !surface_eq(&gold_concat, &pred_concat) {
+                continue;
+            }
+
+            // Same surface (under surface_eq). Now require same split + per-morph match.
+            if gold_slice.len() != pred_morphs.len() {
+                continue;
+            }
+            let all_match = gold_slice
+                .iter()
+                .zip(pred_morphs.iter())
+                .all(|(g, (ps, pp))| surface_eq(&g.surface, ps) && pos_eq(&g.pos, pp));
+            if all_match {
+                eojeol_correct += 1;
+            }
+        }
+    }
+
+    let eojeol_accuracy = if eojeol_total > 0 {
+        eojeol_correct as f64 / eojeol_total as f64
+    } else {
+        0.0
+    };
+
+    DualMetricResult {
+        morpheme,
+        eojeol_correct,
+        eojeol_total,
+        eojeol_accuracy,
+    }
+}
+
+/// 이중 메트릭 평가 — per-eojeol 어절 + strict POS/surface (편의 함수).
+#[must_use]
+pub fn evaluate_dataset_dual_per_eojeol(
+    tokenizer: &mut Tokenizer,
+    dataset: &TestDataset,
+) -> DualMetricResult {
+    evaluate_dataset_dual_per_eojeol_with_match(
+        tokenizer,
+        dataset,
+        pos_eq_strict,
+        surface_eq_strict,
+    )
+}
+
+/// 이중 메트릭 평가 (POS + surface 비교 함수 주입, Sprint 128 P2).
+///
+/// 형태소 레벨(morpheme) + 어절 레벨(eojeol) 두 메트릭을 함께 측정합니다.
+/// `pos_eq`와 `surface_eq` 함수로 strict/lenient/canonical 모드를 선택.
+/// **양쪽 메트릭 모두에 동일한 `pos_eq`/`surface_eq`** 적용.
+///
+/// 어절 레벨 평가:
+/// - 정답 데이터셋에 `eojeol_counts`가 있어야 측정 가능
+/// - 예측 토큰을 정답 어절 경계 기준 슬라이스로 분할 (정답과 같은 형태소 수)
+/// - 어절 내 모든 형태소가 `surface_eq` + `pos_eq` 일치 시 어절 정답
+///
+/// 어절 정보가 없는 데이터셋에서는 `eojeol_total = 0`으로 보고.
+#[allow(clippy::cast_precision_loss)]
+pub fn evaluate_dataset_dual_with_match(
+    tokenizer: &mut Tokenizer,
+    dataset: &TestDataset,
+    pos_eq: PosMatchFn,
+    surface_eq: SurfaceMatchFn,
+) -> DualMetricResult {
+    // 형태소 레벨도 동일 pos_eq + surface_eq로 측정
+    let morpheme = evaluate_dataset_sejong_with_match(tokenizer, dataset, pos_eq, surface_eq);
+
+    // 어절 레벨 별도 측정 (pos_eq + surface_eq 적용)
     let converter = SejongConverter::new();
     let mut eojeol_correct: usize = 0;
     let mut eojeol_total: usize = 0;
@@ -994,7 +1211,9 @@ pub fn evaluate_dataset_dual_with_pos_match(
             let matches = gold_slice
                 .iter()
                 .zip(pred_slice.iter())
-                .all(|(g, (p_surf, p_pos))| g.surface == *p_surf && pos_eq(&g.pos, p_pos));
+                .all(|(g, (p_surf, p_pos))| {
+                    surface_eq(&g.surface, p_surf) && pos_eq(&g.pos, p_pos)
+                });
 
             if matches {
                 eojeol_correct += 1;
@@ -1069,6 +1288,51 @@ mod tests {
         assert!(pos_tags_equivalent_practical("NNG", "NNB"));
         // Conservative는 여전히 NNB/NNG 구분
         assert!(!pos_tags_equivalent("NNB", "NNG"));
+    }
+
+    #[test]
+    fn test_surface_eq_strict_basic() {
+        assert!(surface_eq_strict("한", "한"));
+        assert!(!surface_eq_strict("한", "하ㄴ"));
+    }
+
+    #[test]
+    fn test_surface_eq_canonical_jamo_syllable_mix() {
+        // 음절 + 자모 혼합 → canonical 비교에서 동일
+        assert!(surface_eq_canonical("한", "하ㄴ"));
+        assert!(surface_eq_canonical("함께", "하ㅁ께"));
+        assert!(surface_eq_canonical("역할", "역하ㄹ"));
+    }
+
+    #[test]
+    fn test_surface_eq_canonical_pure_strict_match() {
+        // 동일 string은 canonical도 true
+        assert!(surface_eq_canonical("한", "한"));
+        assert!(surface_eq_canonical("ㄱㅏ", "ㄱㅏ"));
+    }
+
+    #[test]
+    fn test_surface_eq_canonical_distinct_words() {
+        // 진짜 다른 단어는 canonical도 false
+        assert!(!surface_eq_canonical("한", "둘"));
+        assert!(!surface_eq_canonical("것이", "게"));
+    }
+
+    #[test]
+    fn test_surface_eq_canonical_lenient_endings() {
+        // 하았 ↔ 하였
+        assert!(surface_eq_canonical_lenient("인정하였다", "인정하았다"));
+        // 하어 ↔ 하여
+        assert!(surface_eq_canonical_lenient("등장하여", "등장하어"));
+        assert!(surface_eq_canonical_lenient("통하여", "통하어"));
+        // canonical 단계도 함께 적용
+        assert!(surface_eq_canonical_lenient("함께", "하ㅁ께"));
+    }
+
+    #[test]
+    fn test_surface_eq_canonical_lenient_does_not_overcorrect() {
+        // "았"이 "하" 직후가 아니면 그대로 (false negative 방지)
+        assert!(!surface_eq_canonical_lenient("먹었다", "먹였다"));
     }
 
     #[test]
