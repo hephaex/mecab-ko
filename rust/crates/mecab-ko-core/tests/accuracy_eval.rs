@@ -3606,3 +3606,337 @@ fn test_klue_dp_surface_normalization_analysis() {
         );
     }
 }
+
+/// Sprint 129 P3: Real error analysis — extended POS confusion with surface frequency
+///
+/// Extends Sprint 126 `test_klue_dp_nng_nnp_analysis` to cover MAG↔NNG (95건) and
+/// VV↔NNG (43건) confusion in addition to NNG/NNP/NNB. Critically, also reports
+/// **per-confusion surface frequency** so we can decide:
+///
+/// - Same `surface` appearing 10+ times across NNG/NNP confusion → likely missing NNP
+///   in dictionary (fix: add to user-dict with `cost=-5000`)
+/// - Diverse surfaces, low repetition → context-dependent (fix: CRF retrain only)
+/// - High-frequency single-character or 의존 명사-like → KLUE convention diff
+///
+/// Output groups by `(gold_pos, pred_pos)` and within each group lists top 30
+/// surfaces sorted by frequency, plus 5 sample sentences for the top surface.
+#[test]
+#[ignore = "requires KLUE DP eval data + system dictionary"]
+fn test_klue_dp_real_error_analysis() {
+    use mecab_ko_core::sejong::SejongConverter;
+    use std::collections::HashMap;
+
+    // (gold_pos, pred_pos) -> HashMap<surface, (count, Vec<sentence_sample>)>
+    type SurfaceData = HashMap<String, (usize, Vec<String>)>;
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or_else(|| std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
+
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict
+            .load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let eval_path = project_root.join("data/eval/klue_dp_val.tsv");
+    if !eval_path.exists() {
+        println!("Skipping: data/eval/klue_dp_val.tsv not found");
+        return;
+    }
+
+    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
+        .expect("Failed to load KLUE DP val");
+    let converter = SejongConverter::new();
+
+    // Wider target set than Sprint 126 — includes MAG, VV, VA, MM for real error coverage
+    let target_tags = ["NNG", "NNP", "NNB", "MAG", "VV", "VA", "MM"];
+
+    let mut cases: HashMap<(String, String), SurfaceData> = HashMap::new();
+
+    for gold_sentence in &dataset.sentences {
+        let pred_raw = tokenizer.tokenize(&gold_sentence.text);
+        let sejong_tokens = converter.convert_tokens(&pred_raw);
+
+        let pred_pairs: Vec<(String, String)> = sejong_tokens
+            .iter()
+            .map(|t| (SejongConverter::normalize_jamo(&t.surface), t.pos.clone()))
+            .collect();
+
+        let min_len = gold_sentence.tokens.len().min(pred_pairs.len());
+        for (g, (p_surf, p_pos)) in gold_sentence
+            .tokens
+            .iter()
+            .zip(pred_pairs.iter())
+            .take(min_len)
+        {
+            if g.surface != *p_surf {
+                continue;
+            }
+            if g.pos == *p_pos {
+                continue;
+            }
+            if !target_tags.contains(&g.pos.as_str())
+                && !target_tags.contains(&p_pos.as_str())
+            {
+                continue;
+            }
+            let entry = cases
+                .entry((g.pos.clone(), p_pos.clone()))
+                .or_default()
+                .entry(g.surface.clone())
+                .or_insert_with(|| (0, Vec::new()));
+            entry.0 += 1;
+            if entry.1.len() < 3 {
+                entry.1.push(gold_sentence.text.clone());
+            }
+        }
+    }
+
+    println!("\n{}", "=".repeat(70));
+    println!("  REAL ERROR ANALYSIS (Sprint 129 P3)");
+    println!("  Dataset: {} sentences", dataset.len());
+    println!("{}", "=".repeat(70));
+
+    let mut by_count: Vec<((String, String), usize, SurfaceData)> = cases
+        .iter()
+        .map(|(k, v)| (k.clone(), v.values().map(|(c, _)| c).sum::<usize>(), v.clone()))
+        .collect();
+    by_count.sort_by_key(|x| std::cmp::Reverse(x.1));
+
+    println!("\n=== Confusion summary (sorted by count) ===");
+    for ((g, p), total, _) in &by_count {
+        println!("  {g:<6} → {p:<6}  {total:>5}건");
+    }
+
+    let grand_total: usize = by_count.iter().map(|x| x.1).sum();
+    println!("\nTotal target-related POS_ONLY errors: {grand_total}");
+
+    println!("\n=== Per-confusion top surfaces (with frequency) ===");
+    for ((g, p), total, surf_map) in by_count.iter().take(10) {
+        println!("\n>>> {g} → {p}  ({total}건, unique surfaces: {})", surf_map.len());
+        let mut sorted_surfaces: Vec<_> = surf_map.iter().collect();
+        sorted_surfaces.sort_by_key(|x| std::cmp::Reverse(x.1.0));
+
+        // Show top 30 surfaces with counts
+        for (i, (surf, (count, samples))) in sorted_surfaces.iter().take(30).enumerate() {
+            println!("  [{:>2}] {count:>3}× {surf}", i + 1);
+            if i < 3 {
+                for s in samples.iter().take(2) {
+                    println!("       in: {s}");
+                }
+            }
+        }
+
+        // Frequency tiers — for "add to dict" decision
+        let high_freq = sorted_surfaces.iter().filter(|x| x.1.0 >= 5).count();
+        let mid_freq = sorted_surfaces.iter().filter(|x| x.1.0 >= 2 && x.1.0 < 5).count();
+        let singleton = sorted_surfaces.iter().filter(|x| x.1.0 == 1).count();
+        println!("  --- Frequency tiers ---");
+        println!("    >= 5 occurrences: {high_freq} surfaces (likely missing dict entries)");
+        println!("    2-4 occurrences:  {mid_freq} surfaces (ambiguous / context-dep)");
+        println!("    singleton:        {singleton} surfaces (noise / convention)");
+    }
+}
+
+/// Sprint 129 P3: `GOLD_SINGLE_PRED_MULTI` surface frequency
+///
+/// Sprint 127 P1 identified 553 cases (2.5%) where KLUE treats a token as a single
+/// morpheme but mecab over-splits. This extracts the **frequency-sorted surface list**
+/// with their mecab split patterns, to decide:
+///
+/// - Same surface appears N times with same split → high-confidence missing dict entry
+/// - Diverse splits per surface → ambiguous (cost adjust risky)
+///
+/// Uses per-eojeol independent tokenization (same as Sprint 127). Surface here means
+/// the gold's single-morph surface, and we capture both mecab's split count and the
+/// surface+pos pattern of the split.
+#[test]
+#[ignore = "requires KLUE DP eval data + system dictionary"]
+fn test_klue_dp_gold_single_pred_multi_analysis() {
+    use mecab_ko_core::sejong::SejongConverter;
+    use std::collections::HashMap;
+
+    // (gold_surface, gold_pos) -> HashMap<pred_split_pattern, (count, Vec<sentence>)>
+    // pred_split_pattern: "한국/NNP + 전자/NNG + 통신/NNG"
+    type SplitData = HashMap<String, (usize, Vec<String>)>;
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or_else(|| std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
+
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict
+            .load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let eval_path = project_root.join("data/eval/klue_dp_val.tsv");
+    if !eval_path.exists() {
+        println!("Skipping: data/eval/klue_dp_val.tsv not found");
+        return;
+    }
+
+    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
+        .expect("Failed to load KLUE DP val");
+    let converter = SejongConverter::new();
+
+    let mut cases: HashMap<(String, String), SplitData> = HashMap::new();
+    let mut total_gold_single_pred_multi = 0usize;
+
+    for gold_sentence in &dataset.sentences {
+        let Some(eojeol_counts) = &gold_sentence.eojeol_counts else {
+            continue;
+        };
+        let eojeols: Vec<&str> = gold_sentence.text.split_whitespace().collect();
+        if eojeols.len() != eojeol_counts.len() {
+            continue;
+        }
+
+        let mut gold_idx = 0usize;
+        for (eo_i, &count_g) in eojeol_counts.iter().enumerate() {
+            if gold_idx + count_g > gold_sentence.tokens.len() {
+                break;
+            }
+            let gold_slice = &gold_sentence.tokens[gold_idx..gold_idx + count_g];
+            gold_idx += count_g;
+
+            // Only care about gold-single cases
+            if gold_slice.len() != 1 {
+                continue;
+            }
+            let gold_morph = &gold_slice[0];
+
+            let pred_raw = tokenizer.tokenize(eojeols[eo_i]);
+            let pred_sejong = converter.convert_tokens(&pred_raw);
+            let pred_morphs: Vec<(String, String)> = pred_sejong
+                .iter()
+                .map(|t| (SejongConverter::normalize_jamo(&t.surface), t.pos.clone()))
+                .collect();
+
+            // Only gold-single + pred-multi
+            if pred_morphs.len() < 2 {
+                continue;
+            }
+
+            // Surface concat must match (otherwise it's SURFACE_MISMATCH, not over-split)
+            let gold_concat: String = gold_slice.iter().map(|t| t.surface.as_str()).collect();
+            let pred_concat: String = pred_morphs.iter().map(|(s, _)| s.as_str()).collect();
+            if gold_concat != pred_concat {
+                continue;
+            }
+
+            total_gold_single_pred_multi += 1;
+            let pred_pattern: String = pred_morphs
+                .iter()
+                .map(|(s, p)| format!("{s}/{p}"))
+                .collect::<Vec<_>>()
+                .join(" + ");
+
+            let entry = cases
+                .entry((gold_morph.surface.clone(), gold_morph.pos.clone()))
+                .or_default()
+                .entry(pred_pattern)
+                .or_insert_with(|| (0, Vec::new()));
+            entry.0 += 1;
+            if entry.1.len() < 2 {
+                entry.1.push(gold_sentence.text.clone());
+            }
+        }
+    }
+
+    println!("\n{}", "=".repeat(70));
+    println!("  GOLD_SINGLE_PRED_MULTI ANALYSIS (Sprint 129 P3)");
+    println!("  Total cases: {total_gold_single_pred_multi}");
+    println!("{}", "=".repeat(70));
+
+    // Aggregate per (gold_surface, gold_pos) total
+    let mut by_total: Vec<((String, String), usize, SplitData)> = cases
+        .iter()
+        .map(|(k, v)| (k.clone(), v.values().map(|(c, _)| c).sum::<usize>(), v.clone()))
+        .collect();
+    by_total.sort_by_key(|x| std::cmp::Reverse(x.1));
+
+    println!("\n=== Top 60 gold-single surfaces (mecab over-splits) ===");
+    for (i, ((surf, pos), total, split_map)) in by_total.iter().take(60).enumerate() {
+        let unique_splits = split_map.len();
+        println!(
+            "  [{:>2}] {total:>3}× {surf}/{pos}  ({unique_splits} unique splits)",
+            i + 1
+        );
+        // Show all splits if total >= 3, else just the top one
+        let mut sorted_splits: Vec<_> = split_map.iter().collect();
+        sorted_splits.sort_by_key(|x| std::cmp::Reverse(x.1.0));
+        for (split, (count, samples)) in sorted_splits.iter().take(3) {
+            println!("       {count}× pred: {split}");
+            if i < 10 {
+                for s in samples.iter().take(1) {
+                    println!("          in: {s}");
+                }
+            }
+        }
+    }
+
+    // Frequency tiers
+    let high_freq = by_total.iter().filter(|x| x.1 >= 5).count();
+    let mid_freq = by_total.iter().filter(|x| x.1 >= 2 && x.1 < 5).count();
+    let singleton = by_total.iter().filter(|x| x.1 == 1).count();
+    let high_freq_total: usize = by_total.iter().filter(|x| x.1 >= 5).map(|x| x.1).sum();
+    let mid_freq_total: usize = by_total
+        .iter()
+        .filter(|x| x.1 >= 2 && x.1 < 5)
+        .map(|x| x.1)
+        .sum();
+
+    println!("\n=== Frequency tiers (gold-single surface) ===");
+    println!(
+        "  >= 5 occurrences: {high_freq:>4} surfaces, {high_freq_total} cases (dict-add candidates)"
+    );
+    println!(
+        "  2-4 occurrences:  {mid_freq:>4} surfaces, {mid_freq_total} cases (review needed)"
+    );
+    println!("  singleton:        {singleton:>4} surfaces (long tail)");
+
+    // POS distribution of gold-single morphs
+    let mut pos_dist: HashMap<String, usize> = HashMap::new();
+    for ((_, pos), total, _) in &by_total {
+        *pos_dist.entry(pos.clone()).or_insert(0) += total;
+    }
+    let mut pos_sorted: Vec<_> = pos_dist.iter().collect();
+    pos_sorted.sort_by_key(|x| std::cmp::Reverse(*x.1));
+    println!("\n=== Gold POS distribution (what KLUE treats as single) ===");
+    for (pos, count) in pos_sorted.iter().take(15) {
+        let pct = **count as f64 / total_gold_single_pred_multi.max(1) as f64 * 100.0;
+        println!("  {pos:<6} {count:>4} ({pct:.1}%)");
+    }
+}
