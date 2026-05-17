@@ -1,0 +1,37 @@
+# Sprint 130 P1 - KLUE DP high-confidence dictionary additions
+# 출처: docs/research/accuracy/2026-05-16_klue_dp_real_errors.md
+# Format: 표면형,품사,비용,읽기
+#
+# 검증된 빈도 5+ surfaces. KLUE DP 1,995문장에서 mecab over-split 케이스.
+# 대부분 mecab-ko-dic에 이미 존재하나 Viterbi 비용 경합에서 짐.
+# cost=-5000으로 override (verb-inflections.csv 패턴: -30000 대비 보수적).
+#
+# Homonym 주의: 일부 surface는 NNG/NNP/VV 다중 의미 — 회귀 시 제거
+
+# === Missing entries (truly absent from mecab-ko-dic) ===
+세월호,NNP,-5000,세월호
+에어비앤비,NNP,-5000,에어비앤비
+에어비엔비,NNP,-5000,에어비엔비
+
+# === MAG cost override (단일 부사 의미만 존재) ===
+굉장히,MAG,-5000,굉장히
+엄청,MAG,-5000,엄청
+더욱,MAG,-5000,더욱
+제대로,MAG,-5000,제대로
+상당히,MAG,-5000,상당히
+실제로,MAG,-5000,실제로
+
+# === MAG cost override (homonym risk - measured in KLUE for MAG sense) ===
+자주,MAG,-5000,자주
+모두,MAG,-5000,모두
+다시,MAG,-5000,다시
+현재,MAG,-5000,현재
+일단,MAG,-5000,일단
+
+# === NNG cost override ===
+지하철,NNG,-5000,지하철
+뮤지컬,NNG,-5000,뮤지컬
+
+# === NNP cost override (homonym risk - place name) ===
+파리,NNP,-5000,파리
+로마,NNP,-5000,로마

@@ -42,6 +42,12 @@ fn test_full_accuracy_evaluation() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
         println!("Loaded user dictionary: {user_dict_path:?}");
     }
@@ -110,6 +116,12 @@ fn test_ec_error_analysis() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -189,6 +201,12 @@ fn test_etm_error_analysis() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -269,6 +287,12 @@ fn test_ef_error_analysis() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -371,6 +395,12 @@ fn test_etn_error_analysis() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -452,6 +482,12 @@ fn test_xsv_error_analysis() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -523,6 +559,12 @@ fn test_vcp_error_analysis() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -593,6 +635,12 @@ fn test_nng_error_analysis() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -675,6 +723,12 @@ fn test_xpn_error_analysis() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -753,6 +807,12 @@ fn test_nnb_error_analysis() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -834,6 +894,12 @@ fn test_ec_sample_errors() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -912,6 +978,12 @@ fn test_jks_sample_errors() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -990,6 +1062,12 @@ fn test_mag_sample_errors() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -1068,6 +1146,12 @@ fn test_ef_sample_errors() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -1146,6 +1230,12 @@ fn test_vx_sample_errors() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -1224,6 +1314,12 @@ fn test_xsv_sample_errors() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -1301,6 +1397,12 @@ fn test_pos_accuracy_breakdown() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -1362,6 +1464,12 @@ fn test_vx_pattern_debug() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -1431,6 +1539,12 @@ fn test_ep_error_analysis() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -1519,6 +1633,12 @@ fn test_ef_error_cases_detailed() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -1598,6 +1718,12 @@ fn test_vcp_sample_errors() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -1692,6 +1818,12 @@ fn test_vv_sample_errors() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -1769,6 +1901,12 @@ fn test_xsv_debug_sentences() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
         println!("Loaded user dictionary: {user_dict_path:?}");
     }
@@ -1880,6 +2018,12 @@ fn test_h_irregular_adjective_ec() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -1952,6 +2096,12 @@ fn test_specific_sentence_debug() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -2092,6 +2242,12 @@ fn test_ep_sample_errors() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -2178,6 +2334,12 @@ fn test_d_irregular_verb() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -2248,6 +2410,12 @@ fn test_list_all_mismatches() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -2336,6 +2504,12 @@ fn test_accuracy_gate() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -2486,6 +2660,12 @@ fn test_klue_dp_dual_metric() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -2573,6 +2753,12 @@ fn test_klue_dp_dual_metric_lenient() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -2671,6 +2857,12 @@ fn test_klue_dp_nng_nnp_analysis() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -2800,6 +2992,12 @@ fn test_error_case_classification() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -3016,6 +3214,12 @@ fn test_klue_dp_compound_noun_analysis() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -3287,6 +3491,12 @@ fn test_klue_dp_surface_lenient_full() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -3474,6 +3684,12 @@ fn test_klue_dp_surface_normalization_analysis() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -3651,6 +3867,12 @@ fn test_klue_dp_real_error_analysis() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
@@ -3798,6 +4020,12 @@ fn test_klue_dp_gold_single_pred_multi_analysis() {
         user_dict
             .load_from_csv(&user_dict_path)
             .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
         tokenizer.set_user_dict(user_dict);
     }
 
