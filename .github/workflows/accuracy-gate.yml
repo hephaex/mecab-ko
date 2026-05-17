@@ -13,10 +13,12 @@ on:
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
+  MECAB_DIC_VERSION: mecab-ko-dic-2.1.1-20180720
+  MECAB_DIC_SHA256: fd62d3d6d8fa85145528065fabad4d7cb20f6b2201e71be4081a4e9701a5b330
 
 jobs:
   accuracy-check:
-    name: Token Accuracy Gate (99.9%+ required)
+    name: Accuracy Gate (sample.tsv + KLUE DP)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -26,72 +28,167 @@ jobs:
         uses: ./.github/actions/rust-setup
         with:
           toolchain: stable
+          cache-key: accuracy-gate
 
-      - name: Run accuracy evaluation
-        id: accuracy
+      # === System dictionary preparation ===
+      # mecab-ko-dic CSV source download + dict build (sys.dic.zst + matrix.bin.zst).
+      # Cached by version so subsequent runs reuse the built artifacts.
+      - name: Cache mecab-ko-dic
+        id: cache-dict
+        uses: actions/cache@v4
+        with:
+          path: data/${{ env.MECAB_DIC_VERSION }}
+          key: mecab-dic-${{ env.MECAB_DIC_VERSION }}-v1
+
+      - name: Download + build mecab-ko-dic
+        if: steps.cache-dict.outputs.cache-hit != 'true'
+        run: |
+          set -e
+          mkdir -p data
+          if [ ! -f "data/${MECAB_DIC_VERSION}.tar.gz" ]; then
+            echo "Downloading ${MECAB_DIC_VERSION}..."
+            curl --retry 3 --retry-delay 5 --connect-timeout 30 --max-time 300 \
+              -L -o "data/${MECAB_DIC_VERSION}.tar.gz" \
+              "https://bitbucket.org/eunjeon/mecab-ko-dic/downloads/${MECAB_DIC_VERSION}.tar.gz"
+
+            ACTUAL_SHA256=$(sha256sum "data/${MECAB_DIC_VERSION}.tar.gz" | awk '{print $1}')
+            if [ "$ACTUAL_SHA256" != "$MECAB_DIC_SHA256" ]; then
+              echo "::error::SHA256 mismatch: expected $MECAB_DIC_SHA256, got $ACTUAL_SHA256"
+              exit 1
+            fi
+            echo "SHA256 verified."
+          fi
+          tar xzf "data/${MECAB_DIC_VERSION}.tar.gz" -C data/
+
+          echo "Building dictionary..."
+          cargo run --manifest-path rust/Cargo.toml \
+            --release --bin mecab-ko-dict-builder -- \
+            --input "./data/${MECAB_DIC_VERSION}" \
+            --output "./data/${MECAB_DIC_VERSION}" \
+            --compression 3 \
+            --encoding auto
+
+          ls -la "data/${MECAB_DIC_VERSION}/" | grep -E "sys.dic|matrix"
+
+      # === Sample.tsv accuracy gate (Sprint 122 baseline: Token 100% / Sentence 99.9%) ===
+      # --exact 사용: test_accuracy_gate_verified (Sprint 58, 98.9%) 제외하고
+      # test_accuracy_gate (Sprint 122, 100%) 만 측정 — 메인 회귀 게이트.
+      - name: Run sample.tsv accuracy gate
+        id: sample
         run: |
           cd rust
-          # Run both accuracy gate tests
-          OUTPUT=$(cargo test -p mecab-ko-core --test accuracy_eval test_accuracy_gate -- --nocapture 2>&1) || true
+          OUTPUT=$(cargo test --release -p mecab-ko-core --test accuracy_eval \
+            -- --ignored --nocapture --exact test_accuracy_gate 2>&1) || true
           echo "$OUTPUT"
 
-          # Extract accuracy value from auto-generated dataset
-          ACCURACY=$(echo "$OUTPUT" | grep -oP 'Token Accuracy: \K[0-9.]+' | tail -1 || echo "0")
-          echo "Token Accuracy (sample): $ACCURACY%"
-          echo "accuracy=$ACCURACY" >> $GITHUB_OUTPUT
+          TOKEN=$(echo "$OUTPUT" | grep -oP 'Token Accuracy: \K[0-9.]+' | head -1 || echo "0")
+          SENTENCE=$(echo "$OUTPUT" | grep -oP 'Sentence Accuracy: \K[0-9.]+' | head -1 || echo "0")
+          PASSED=$(echo "$OUTPUT" | grep -c "test result: ok\..*passed" || true)
+          FAILED=$(echo "$OUTPUT" | grep -c "test result: FAILED" || true)
 
-          # Extract verified dataset accuracy
-          VERIFIED=$(echo "$OUTPUT" | grep "VERIFIED ACCURACY GATE" | grep -oP '[0-9.]+%' | head -1 || echo "N/A")
-          echo "Token Accuracy (verified): $VERIFIED"
-          echo "verified_accuracy=$VERIFIED" >> $GITHUB_OUTPUT
+          echo "Token: ${TOKEN}% / Sentence: ${SENTENCE}%"
+          echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+          echo "sentence=$SENTENCE" >> "$GITHUB_OUTPUT"
 
-          # Check if all tests passed
-          FAILED=$(echo "$OUTPUT" | grep -c "FAILED" || true)
-          if [ "$FAILED" = "0" ]; then
-            echo "status=passed" >> $GITHUB_OUTPUT
-          else
-            echo "status=failed" >> $GITHUB_OUTPUT
+          if [ "$FAILED" != "0" ]; then
+            echo "status=failed" >> "$GITHUB_OUTPUT"
+            echo "::error::Sample.tsv accuracy gate FAILED"
+            exit 1
           fi
+          if [ "$PASSED" = "0" ]; then
+            echo "status=skipped" >> "$GITHUB_OUTPUT"
+            echo "::error::No tests ran (likely ignored without --ignored flag)"
+            exit 1
+          fi
+          echo "status=passed" >> "$GITHUB_OUTPUT"
 
-      - name: Check accuracy threshold
+      # === KLUE DP 3-mode accuracy gate (Sprint 124 floor: morph 60% / eojeol 15%) ===
+      # Runs dual_metric (strict floor enforcement) + dual_metric_lenient (3-mode report).
+      # --test-threads 1 ensures deterministic output order for regex extraction.
+      - name: Run KLUE DP 3-mode gate
+        id: klue
         run: |
-          ACCURACY="${{ steps.accuracy.outputs.accuracy }}"
-          STATUS="${{ steps.accuracy.outputs.status }}"
+          cd rust
+          OUTPUT=$(cargo test --release -p mecab-ko-core --test accuracy_eval \
+            -- --ignored --nocapture --test-threads 1 \
+            test_klue_dp_dual_metric test_klue_dp_dual_metric_lenient 2>&1) || true
+          echo "$OUTPUT"
 
+          # dual_metric PASSED line: "PASSED — morpheme 66.5% >= 60%, eojeol 20.1% >= 15%"
+          STRICT_MORPH=$(echo "$OUTPUT" | grep -oP 'PASSED — morpheme \K[0-9.]+' | head -1 || echo "0")
+          STRICT_EO=$(echo "$OUTPUT" | grep -oP 'morpheme [0-9.]+% >= [0-9.]+%, eojeol \K[0-9.]+' | head -1 || echo "0")
+
+          # dual_metric_lenient: 3 "Morpheme:" lines (strict / lenient / practical)
+          # Last line in lenient test is practical mode
+          PRACTICAL_MORPH=$(echo "$OUTPUT" | grep -oP '^  Morpheme: \K[0-9.]+' | tail -1 || echo "0")
+          PRACTICAL_EO=$(echo "$OUTPUT" | grep -oP '^  Eojeol:\s+\K[0-9.]+' | tail -1 || echo "0")
+
+          FAILED=$(echo "$OUTPUT" | grep -c "test result: FAILED\|below.*floor" || true)
+          PASSED=$(echo "$OUTPUT" | grep -c "test result: ok\..*passed" || true)
+
+          echo "strict_morph=$STRICT_MORPH" >> "$GITHUB_OUTPUT"
+          echo "strict_eo=$STRICT_EO" >> "$GITHUB_OUTPUT"
+          echo "practical_morph=$PRACTICAL_MORPH" >> "$GITHUB_OUTPUT"
+          echo "practical_eo=$PRACTICAL_EO" >> "$GITHUB_OUTPUT"
+
+          if [ "$FAILED" != "0" ]; then
+            echo "status=failed" >> "$GITHUB_OUTPUT"
+            echo "::error::KLUE DP accuracy gate FAILED (below floor)"
+            exit 1
+          fi
+          if [ "$PASSED" = "0" ]; then
+            echo "status=skipped" >> "$GITHUB_OUTPUT"
+            echo "::error::No KLUE DP tests ran"
+            exit 1
+          fi
+          echo "status=passed" >> "$GITHUB_OUTPUT"
+
+      - name: Final gate summary
+        run: |
           echo "=================================="
           echo "  ACCURACY GATE RESULT"
           echo "=================================="
-          echo "Token Accuracy: ${ACCURACY}%"
-          echo "Required: 99.9%+"
-          echo "Status: ${STATUS}"
+          echo "Sample.tsv:  Token ${{ steps.sample.outputs.token }}% / Sentence ${{ steps.sample.outputs.sentence }}%"
+          echo "KLUE strict: morph ${{ steps.klue.outputs.strict_morph }} / eojeol ${{ steps.klue.outputs.strict_eo }}"
+          echo "KLUE pract:  morph ${{ steps.klue.outputs.practical_morph }} / eojeol ${{ steps.klue.outputs.practical_eo }}"
+          echo "Status: sample=${{ steps.sample.outputs.status }} klue=${{ steps.klue.outputs.status }}"
           echo "=================================="
-
-          if [ "$STATUS" = "failed" ]; then
-            echo "::error::Accuracy gate FAILED. Token accuracy is below 99.9% threshold."
-            exit 1
-          fi
-
-          echo "Accuracy gate PASSED!"
 
       - name: Post accuracy to PR comment
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
-            const accuracy = '${{ steps.accuracy.outputs.accuracy }}';
-            const status = '${{ steps.accuracy.outputs.status }}';
-            const emoji = status === 'passed' ? '✅' : '❌';
-            const statusText = status === 'passed' ? 'PASSED' : 'FAILED';
+            const sampleToken = '${{ steps.sample.outputs.token }}';
+            const sampleSent = '${{ steps.sample.outputs.sentence }}';
+            const sampleStatus = '${{ steps.sample.outputs.status }}';
+            const klueStrictMorph = '${{ steps.klue.outputs.strict_morph }}';
+            const klueStrictEo = '${{ steps.klue.outputs.strict_eo }}';
+            const kluePracMorph = '${{ steps.klue.outputs.practical_morph }}';
+            const kluePracEo = '${{ steps.klue.outputs.practical_eo }}';
+            const klueStatus = '${{ steps.klue.outputs.status }}';
 
-            const body = `## ${emoji} Accuracy Gate ${statusText}
+            const sampleEmoji = sampleStatus === 'passed' ? '✅' : '❌';
+            const klueEmoji = klueStatus === 'passed' ? '✅' : '❌';
+            const overall = (sampleStatus === 'passed' && klueStatus === 'passed') ? '✅ PASSED' : '❌ FAILED';
 
+            const body = `## ${overall} — Accuracy Gate
+
+            ### ${sampleEmoji} Sample.tsv (1,100 sentences)
             | Metric | Value | Threshold |
             |--------|-------|-----------|
-            | Token Accuracy | **${accuracy}%** | 99.9%+ |
+            | Token Accuracy | **${sampleToken}%** | 99.9%+ |
+            | Sentence Accuracy | **${sampleSent}%** | — |
 
-            ${status === 'passed'
-              ? '🎉 All accuracy checks passed!'
-              : '⚠️ Token accuracy is below the required threshold. Please fix before merging.'}
+            ### ${klueEmoji} KLUE DP (1,995 sentences)
+            | Mode | Morpheme | Eojeol |
+            |------|----------|--------|
+            | Strict (Sprint 124 baseline) | **${klueStrictMorph}** | **${klueStrictEo}** |
+            | Practical (POS + surface lenient) | **${kluePracMorph}** | **${kluePracEo}** |
+
+            **Floors**: morpheme ≥ 60.0%, eojeol ≥ 15.0%
+
+            ${overall === '✅ PASSED' ? '🎉 All accuracy checks passed!' : '⚠️ Accuracy gate failed. Please review measurements.'}
             `;
 
             github.rest.issues.createComment({
