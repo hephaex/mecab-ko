@@ -831,7 +831,7 @@ pub const TAG_EQUIVALENCE_GROUPS: &[&[&str]] = &[
     &["SL", "NNP"],
 ];
 
-/// POS 태그 동치 그룹 — Practical (Sprint 126 P1).
+/// POS 태그 동치 그룹 — Practical (Sprint 126 P1, Sprint 136 P3 extension).
 ///
 /// Conservative 그룹에 **counter words 관용 차이**를 추가합니다.
 /// 언어학적으로는 NNB(의존명사)와 NNG(일반명사)가 다른 범주이지만, 실제
@@ -839,8 +839,12 @@ pub const TAG_EQUIVALENCE_GROUPS: &[&[&str]] = &[
 /// (씨, 명, 회, 일, 달러 등)에 대한 convention 차이임이 Sprint 126 P1 분석으로
 /// 입증됨 (158건 / NNB→NNG 케이스).
 ///
-/// **Trade-off**: 진짜 NNB/NNG 의미적 분류 오류도 함께 흡수됨.
-/// 검색/검색 인덱싱 등 downstream 사용에는 NNB/NNG 구분이 중요하지 않은 경우가
+/// **Sprint 136 P3**: VA↔VV 동치 추가. "있다"의 VA(KLUE) vs VV(mecab)
+/// convention 차이가 KLUE DP 41건. 한국어 문법에서 "있다"의 형용사적/동사적
+/// 존재 분류는 진행 중인 논쟁이며 두 코퍼스의 convention 차이를 흡수.
+///
+/// **Trade-off**: 진짜 NNB/NNG, VA/VV 의미적 분류 오류도 함께 흡수됨.
+/// 검색/색인 등 downstream 사용에는 이 구분이 중요하지 않은 경우가
 /// 많아 practical mode가 유용. 정밀한 형태소 분석 평가에는 conservative 권장.
 pub const TAG_EQUIVALENCE_GROUPS_PRACTICAL: &[&[&str]] = &[
     &["SP", "SC"],
@@ -848,6 +852,7 @@ pub const TAG_EQUIVALENCE_GROUPS_PRACTICAL: &[&[&str]] = &[
     &["MM", "MMD", "MMN", "MMA"],
     &["SL", "NNP"],
     &["NNB", "NNG"],
+    &["VA", "VV"],
 ];
 
 /// 두 POS 태그가 conservative 동치 그룹 기준 동일한지 확인 (Sprint 125+126).
@@ -948,13 +953,16 @@ fn canonical_form(s: &str) -> String {
     compose_str(&decompose_str(s))
 }
 
-/// 어미 변환 동치 (Sprint 128 P2 + Sprint 134 P3).
+/// 어미 변환 동치 (Sprint 128 P2 + Sprint 134 P3 + Sprint 136 P3a).
 ///
 /// 변환 규칙:
 /// - 하았 → 하였 (Sprint 128)
 /// - 하어 → 하여 (Sprint 128)
 /// - 하아 → 하여 (Sprint 134: 편하아요 vs 편하어요 정규화)
 /// - 이습니다 → 입니다 (Sprint 134: mecab "이/VCP+습니다/EF" 분해 흡수)
+/// - ㄹ불규칙 활용 (Sprint 136 P3a): 따르아→따라, 모르아→몰라 등.
+///   mecab은 "따르/VV + 아/EC" → "따르아"로 분해하나 KLUE는 활용된
+///   "따라"를 보존. 단방향 정규화 (mecab → KLUE).
 fn normalize_endings(s: &str) -> String {
     // Step 1: char-pair 변환 (하았/하어/하아)
     let chars: Vec<char> = s.chars().collect();
@@ -979,8 +987,35 @@ fn normalize_endings(s: &str) -> String {
         out = out.replace("이습니다", "입니다");
     }
 
+    // Step 3: ㄹ불규칙 활용 (Sprint 136 P3a)
+    // 어간 + 아/어 결합 시 르 → ㄹ + 라/러 활용. mecab은 어간 분해, KLUE는 활용형 보존.
+    // 보수적으로 명시 목록만 처리 (자동 음절 분해 시 false positive 위험).
+    // 모음조화: ㅏ/ㅗ → 아 → 라, 그 외 → 어 → 러.
+    for (from, to) in R_IRREGULAR_PATTERNS {
+        if out.contains(from) {
+            out = out.replace(from, to);
+        }
+    }
+
     out
 }
+
+/// ㄹ불규칙 동사 활용 단방향 정규화 패턴 (Sprint 136 P3a).
+///
+/// mecab의 어간 분해 표기 → KLUE의 활용형 표기.
+/// 명시 목록만 사용하여 false positive 방지 (예: 일반 음절 sequence "X르Y"가
+/// 우연히 매칭되는 것을 피함).
+const R_IRREGULAR_PATTERNS: &[(&str, &str)] = &[
+    ("따르아", "따라"),  // 따르다 + 아
+    ("모르아", "몰라"),  // 모르다 + 아
+    ("다르아", "달라"),  // 다르다 + 아
+    ("부르어", "불러"),  // 부르다 + 어
+    ("흐르어", "흘러"),  // 흐르다 + 어
+    ("오르아", "올라"),  // 오르다 + 아
+    ("자르아", "잘라"),  // 자르다 + 아
+    ("누르어", "눌러"),  // 누르다 + 어
+    ("고르아", "골라"),  // 고르다 + 아
+];
 
 /// 이중 메트릭 평가 결과 (Sprint 124)
 ///
@@ -1432,6 +1467,15 @@ mod tests {
     }
 
     #[test]
+    fn test_pos_tags_equivalent_practical_includes_va_vv() {
+        // Sprint 136 P3: "있다" VA(KLUE) vs VV(mecab) convention 흡수
+        assert!(pos_tags_equivalent_practical("VA", "VV"));
+        assert!(pos_tags_equivalent_practical("VV", "VA"));
+        // Conservative는 여전히 VA/VV 구분 (진짜 동사/형용사 분류)
+        assert!(!pos_tags_equivalent("VA", "VV"));
+    }
+
+    #[test]
     fn test_surface_eq_strict_basic() {
         assert!(surface_eq_strict("한", "한"));
         assert!(!surface_eq_strict("한", "하ㄴ"));
@@ -1493,6 +1537,30 @@ mod tests {
         assert!(surface_eq_canonical_lenient("입니다", "이습니다"));
         // composed jamo (이ㅂ니다) → canonical → 입니다
         assert!(surface_eq_canonical_lenient("것이ㅂ니다", "것이습니다"));
+    }
+
+    #[test]
+    fn test_surface_eq_canonical_lenient_r_irregular() {
+        // Sprint 136 P3a: ㄹ불규칙 활용 (mecab 어간 분해 → KLUE 활용형)
+        assert!(surface_eq_canonical_lenient("따라", "따르아"));
+        assert!(surface_eq_canonical_lenient("따라서", "따르아서"));
+        assert!(surface_eq_canonical_lenient("몰라요", "모르아요"));
+        assert!(surface_eq_canonical_lenient("달라", "다르아"));
+        assert!(surface_eq_canonical_lenient("불러", "부르어"));
+        assert!(surface_eq_canonical_lenient("흘러", "흐르어"));
+        assert!(surface_eq_canonical_lenient("올라", "오르아"));
+        assert!(surface_eq_canonical_lenient("잘라", "자르아"));
+        assert!(surface_eq_canonical_lenient("눌러", "누르어"));
+        assert!(surface_eq_canonical_lenient("골라", "고르아"));
+    }
+
+    #[test]
+    fn test_surface_eq_canonical_lenient_r_irregular_does_not_overcorrect() {
+        // Sprint 136 P3a: 명시 목록 외 ㄹ-패턴은 false positive 방지
+        // "푸르다"는 러불규칙(이르다와 함께) — 패턴이 다르므로 제외
+        assert!(!surface_eq_canonical_lenient("푸르러", "푸르어"));
+        // 명시 목록에 없는 "기르아"는 normalize 대상 아님
+        assert!(!surface_eq_canonical_lenient("길러", "기르어"));
     }
 
     #[test]

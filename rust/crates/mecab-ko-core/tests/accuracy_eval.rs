@@ -2798,7 +2798,7 @@ fn test_klue_dp_dual_metric_lenient() {
     println!("  Eojeol:   {lenient_eo:.1}% ({} / {}) [Δ +{:.1}pp vs strict]",
         lenient.eojeol_correct, lenient.eojeol_total, lenient_eo - strict_eo);
 
-    println!("\n--- Practical: + NNB/NNG (counter words convention) ---");
+    println!("\n--- Practical: + NNB/NNG (counter words) + VA/VV (있다 convention, S136 P3) ---");
     println!("  Morpheme: {practical_morph:.1}% [Δ +{:.1}pp vs lenient]",
         practical_morph - lenient_morph);
     println!("  Eojeol:   {practical_eo:.1}% ({} / {}) [Δ +{:.1}pp vs lenient]",
