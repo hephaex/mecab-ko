@@ -143,15 +143,52 @@ jobs:
           fi
           echo "status=passed" >> "$GITHUB_OUTPUT"
 
+      # === KLUE DP Eojeol Surface-only gate (Sprint 133 P2 + Sprint 134 P3) ===
+      # Search/indexing use case metric. POS/split 무시, surface concat만 매칭.
+      # Floor: strict ≥ 50%, canonical ≥ 80% (test_klue_dp_eojeol_surface_only assertions).
+      # Sprint 134 baseline: strict 87.7% / canonical 91.6% / canonical_lenient 95.4%.
+      - name: Run Eojeol Surface-only gate
+        id: surface
+        run: |
+          cd rust
+          OUTPUT=$(cargo test --release -p mecab-ko-core --test accuracy_eval \
+            -- --ignored --nocapture --exact test_klue_dp_eojeol_surface_only 2>&1) || true
+          echo "$OUTPUT"
+
+          # PASSED line: "PASSED — strict 87.7% / canonical 91.6% / canonical_lenient 95.4%"
+          STRICT=$(echo "$OUTPUT" | grep -oP 'PASSED — strict \K[0-9.]+' | head -1 || echo "0")
+          CANONICAL=$(echo "$OUTPUT" | grep -oP 'PASSED.*canonical \K[0-9.]+' | head -1 || echo "0")
+          LENIENT=$(echo "$OUTPUT" | grep -oP 'canonical_lenient \K[0-9.]+' | head -1 || echo "0")
+
+          FAILED=$(echo "$OUTPUT" | grep -c "test result: FAILED\|< floor" || true)
+          PASSED=$(echo "$OUTPUT" | grep -c "test result: ok\..*passed" || true)
+
+          echo "strict=$STRICT" >> "$GITHUB_OUTPUT"
+          echo "canonical=$CANONICAL" >> "$GITHUB_OUTPUT"
+          echo "lenient=$LENIENT" >> "$GITHUB_OUTPUT"
+
+          if [ "$FAILED" != "0" ]; then
+            echo "status=failed" >> "$GITHUB_OUTPUT"
+            echo "::error::Surface-only gate FAILED (below floor)"
+            exit 1
+          fi
+          if [ "$PASSED" = "0" ]; then
+            echo "status=skipped" >> "$GITHUB_OUTPUT"
+            echo "::error::No surface_only test ran"
+            exit 1
+          fi
+          echo "status=passed" >> "$GITHUB_OUTPUT"
+
       - name: Final gate summary
         run: |
           echo "=================================="
           echo "  ACCURACY GATE RESULT"
           echo "=================================="
-          echo "Sample.tsv:  Token ${{ steps.sample.outputs.token }}% / Sentence ${{ steps.sample.outputs.sentence }}%"
-          echo "KLUE strict: morph ${{ steps.klue.outputs.strict_morph }} / eojeol ${{ steps.klue.outputs.strict_eo }}"
-          echo "KLUE pract:  morph ${{ steps.klue.outputs.practical_morph }} / eojeol ${{ steps.klue.outputs.practical_eo }}"
-          echo "Status: sample=${{ steps.sample.outputs.status }} klue=${{ steps.klue.outputs.status }}"
+          echo "Sample.tsv:    Token ${{ steps.sample.outputs.token }}% / Sentence ${{ steps.sample.outputs.sentence }}%"
+          echo "KLUE strict:   morph ${{ steps.klue.outputs.strict_morph }} / eojeol ${{ steps.klue.outputs.strict_eo }}"
+          echo "KLUE pract:    morph ${{ steps.klue.outputs.practical_morph }} / eojeol ${{ steps.klue.outputs.practical_eo }}"
+          echo "Surface-only:  strict ${{ steps.surface.outputs.strict }} / canonical ${{ steps.surface.outputs.canonical }} / lenient ${{ steps.surface.outputs.lenient }}"
+          echo "Status: sample=${{ steps.sample.outputs.status }} klue=${{ steps.klue.outputs.status }} surface=${{ steps.surface.outputs.status }}"
           echo "=================================="
 
       - name: Post accuracy to PR comment
@@ -167,10 +204,16 @@ jobs:
             const kluePracMorph = '${{ steps.klue.outputs.practical_morph }}';
             const kluePracEo = '${{ steps.klue.outputs.practical_eo }}';
             const klueStatus = '${{ steps.klue.outputs.status }}';
+            const surfStrict = '${{ steps.surface.outputs.strict }}';
+            const surfCanon = '${{ steps.surface.outputs.canonical }}';
+            const surfLenient = '${{ steps.surface.outputs.lenient }}';
+            const surfStatus = '${{ steps.surface.outputs.status }}';
 
             const sampleEmoji = sampleStatus === 'passed' ? '✅' : '❌';
             const klueEmoji = klueStatus === 'passed' ? '✅' : '❌';
-            const overall = (sampleStatus === 'passed' && klueStatus === 'passed') ? '✅ PASSED' : '❌ FAILED';
+            const surfEmoji = surfStatus === 'passed' ? '✅' : '❌';
+            const allPassed = sampleStatus === 'passed' && klueStatus === 'passed' && surfStatus === 'passed';
+            const overall = allPassed ? '✅ PASSED' : '❌ FAILED';
 
             const body = `## ${overall} — Accuracy Gate
 
@@ -180,7 +223,7 @@ jobs:
             | Token Accuracy | **${sampleToken}%** | 99.9%+ |
             | Sentence Accuracy | **${sampleSent}%** | — |
 
-            ### ${klueEmoji} KLUE DP (1,995 sentences)
+            ### ${klueEmoji} KLUE DP — Morphological Analysis (1,995 sentences)
             | Mode | Morpheme | Eojeol |
             |------|----------|--------|
             | Strict (Sprint 124 baseline) | **${klueStrictMorph}** | **${klueStrictEo}** |
@@ -188,7 +231,17 @@ jobs:
 
             **Floors**: morpheme ≥ 60.0%, eojeol ≥ 15.0%
 
-            ${overall === '✅ PASSED' ? '🎉 All accuracy checks passed!' : '⚠️ Accuracy gate failed. Please review measurements.'}
+            ### ${surfEmoji} KLUE DP — Eojeol Surface-only (Sprint 133 P2, 검색/인덱싱 use case)
+            | Mode | Accuracy | Note |
+            |------|----------|------|
+            | Strict | **${surfStrict}%** | POS/split 무시, surface 정확 일치 |
+            | Canonical (NFC) | **${surfCanon}%** | + 자모↔음절 정규화 |
+            | Canonical + Lenient (Sprint 134) | **${surfLenient}%** | + 어미 변환 (이습니다, 하아, 하았, 하어) |
+
+            **Floors**: strict ≥ 50%, canonical ≥ 80%
+            ⚠️ 의미 손실: 형태소 분석 품질이 아닌 검색 색인 baseline 측정.
+
+            ${allPassed ? '🎉 All accuracy checks passed!' : '⚠️ Accuracy gate failed. Please review measurements.'}
             `;
 
             github.rest.issues.createComment({
