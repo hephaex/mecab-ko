@@ -3645,19 +3645,24 @@ fn test_klue_dp_surface_normalization_analysis() {
     use mecab_ko_hangul::{compose_str, decompose_str};
     use std::collections::HashMap;
 
-    // Inflectional ending equivalence: 하았 → 하였, 하어 → 하여 (analysis-only).
+    // Inflectional ending equivalence (analysis-only, mirrors evaluate.rs).
+    // Sprint 128: 하았→하였, 하어→하여
+    // Sprint 134: 하아→하여, 이습니다→입니다
     fn normalize_endings(s: &str) -> String {
         let mut out = String::with_capacity(s.len());
         let chars: Vec<char> = s.chars().collect();
         for (i, &c) in chars.iter().enumerate() {
             let prev = if i > 0 { chars[i - 1] } else { '\0' };
-            if c == '았' && prev == '하' {
-                out.push('였');
+            if prev == '하' && (c == '았' || c == '아') {
+                out.push(if c == '았' { '였' } else { '여' });
             } else if c == '어' && prev == '하' {
                 out.push('여');
             } else {
                 out.push(c);
             }
+        }
+        if out.contains("이습니다") {
+            out = out.replace("이습니다", "입니다");
         }
         out
     }

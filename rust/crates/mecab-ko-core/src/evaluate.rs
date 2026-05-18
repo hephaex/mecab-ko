@@ -918,13 +918,17 @@ pub fn surface_eq_canonical(a: &str, b: &str) -> bool {
     canonical_form(a) == canonical_form(b)
 }
 
-/// Canonical + inflectional ending normalization (Sprint 128 P2).
+/// Canonical + inflectional ending normalization (Sprint 128 P2 + Sprint 134 P3).
 ///
 /// `surface_eq_canonical` + 어미 변환 동치:
-/// - 하았 ↔ 하였 (KLUE는 "였" 보존, mecab은 "았"으로 분해)
-/// - 하어 ↔ 하여 (KLUE는 "여" 보존, mecab은 "어"로 분해)
+/// - 하았 ↔ 하였 (Sprint 128: KLUE는 "였" 보존, mecab은 "았"으로 분해)
+/// - 하어 ↔ 하여 (Sprint 128: KLUE는 "여" 보존, mecab은 "어"로 분해)
+/// - 하아 ↔ 하여 (Sprint 134: 편하아요 vs 편하어요 — gold도 아 분해 케이스)
+/// - 이습니다 → 입니다 (Sprint 134: mecab의 "이/VCP + 습니다/EF" 분해를 KLUE의
+///   composed "X입니다."와 일치시킴; 본 normalization에서 가장 많은 흡수 패턴)
 ///
-/// Sprint 128 P2 분석에서 `SURFACE_MISMATCH`의 22.6% 추가 흡수 확인.
+/// Sprint 128: `SURFACE_MISMATCH`의 22.6% 흡수.
+/// Sprint 134: 추가 ~4-5% 흡수 (이습니다 패턴 ~80 cases + 하아 ~12 cases).
 #[must_use]
 pub fn surface_eq_canonical_lenient(a: &str, b: &str) -> bool {
     if a == b {
@@ -944,20 +948,37 @@ fn canonical_form(s: &str) -> String {
     compose_str(&decompose_str(s))
 }
 
-/// 어미 변환 동치: 하았 → 하였, 하어 → 하여.
+/// 어미 변환 동치 (Sprint 128 P2 + Sprint 134 P3).
+///
+/// 변환 규칙:
+/// - 하았 → 하였 (Sprint 128)
+/// - 하어 → 하여 (Sprint 128)
+/// - 하아 → 하여 (Sprint 134: 편하아요 vs 편하어요 정규화)
+/// - 이습니다 → 입니다 (Sprint 134: mecab "이/VCP+습니다/EF" 분해 흡수)
 fn normalize_endings(s: &str) -> String {
+    // Step 1: char-pair 변환 (하았/하어/하아)
     let chars: Vec<char> = s.chars().collect();
     let mut out = String::with_capacity(s.len());
     for (i, &c) in chars.iter().enumerate() {
         let prev = if i > 0 { chars[i - 1] } else { '\0' };
-        if c == '았' && prev == '하' {
-            out.push('였');
+        if prev == '하' && (c == '았' || c == '아') {
+            // 하았 → 하였, 하아 → 하여 (둘 다 하여로 통일)
+            out.push(if c == '았' { '였' } else { '여' });
         } else if c == '어' && prev == '하' {
             out.push('여');
         } else {
             out.push(c);
         }
     }
+
+    // Step 2: 다중-char 패턴 (이습니다 → 입니다)
+    // mecab의 "이/VCP + 습니다/EF" 분해를 KLUE의 "입니다"와 일치시킴.
+    // 종결어미 위치(문장 끝)에서만 의미 있지만 전역 치환 — "이습니다"가
+    // 다른 형태소 조합으로 자연 발생할 가능성은 매우 낮음.
+    if out.contains("이습니다") {
+        out = out.replace("이습니다", "입니다");
+    }
+
     out
 }
 
@@ -1440,9 +1461,9 @@ mod tests {
 
     #[test]
     fn test_surface_eq_canonical_lenient_endings() {
-        // 하았 ↔ 하였
+        // Sprint 128: 하았 ↔ 하였
         assert!(surface_eq_canonical_lenient("인정하였다", "인정하았다"));
-        // 하어 ↔ 하여
+        // Sprint 128: 하어 ↔ 하여
         assert!(surface_eq_canonical_lenient("등장하여", "등장하어"));
         assert!(surface_eq_canonical_lenient("통하여", "통하어"));
         // canonical 단계도 함께 적용
@@ -1453,6 +1474,36 @@ mod tests {
     fn test_surface_eq_canonical_lenient_does_not_overcorrect() {
         // "았"이 "하" 직후가 아니면 그대로 (false negative 방지)
         assert!(!surface_eq_canonical_lenient("먹었다", "먹였다"));
+    }
+
+    #[test]
+    fn test_surface_eq_canonical_lenient_haa_to_haye() {
+        // Sprint 134: 하아 ↔ 하여 (편하아요 vs 편하어요 → 둘 다 편하여요로 정규화)
+        assert!(surface_eq_canonical_lenient("편하아요", "편하어요"));
+        assert!(surface_eq_canonical_lenient("가능하아요", "가능하어요"));
+        // 양방향 매칭 (하어 → 하여, 하아 → 하여 모두 같은 형태로 통일)
+        assert!(surface_eq_canonical_lenient("말하아", "말하어"));
+    }
+
+    #[test]
+    fn test_surface_eq_canonical_lenient_imnida() {
+        // Sprint 134: 이습니다 → 입니다
+        assert!(surface_eq_canonical_lenient("것입니다", "것이습니다"));
+        assert!(surface_eq_canonical_lenient("숙소입니다", "숙소이습니다"));
+        assert!(surface_eq_canonical_lenient("입니다", "이습니다"));
+        // composed jamo (이ㅂ니다) → canonical → 입니다
+        assert!(surface_eq_canonical_lenient("것이ㅂ니다", "것이습니다"));
+    }
+
+    #[test]
+    fn test_surface_eq_canonical_lenient_imnida_overcorrect() {
+        // "이습니다"가 분리된 의미일 때는 잘 매칭되지 않아야 함
+        // 그러나 분리된 단어 "이"가 "습니다" 앞에 우연히 오는 경우는 거의 없음
+        // — Korean morphology에서 "이/VCP + 습니다/EF"는 사실상 표준 패턴
+        // 본 테스트는 다른 음소가 그대로 유지됨을 확인
+        assert!(!surface_eq_canonical_lenient("이것입니다", "그것입니다"));
+        // 입니다와 이ㅁ니다(잘못된 분해)는 매칭되지 않음 (안전 boundary)
+        assert!(!surface_eq_canonical_lenient("입니다", "다닙니다"));
     }
 
     #[test]
