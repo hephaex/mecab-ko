@@ -1,56 +1,40 @@
-# PLAN — mecab-ko Sprint 132 (next)
+# PLAN — mecab-ko Sprint 133 (next)
 
 > 마지막 업데이트: 2026-05-18
 
-## 완료: Sprint 131 P4 — Accuracy Gate CI 인프라 수정 + 확장
+## 완료: Sprint 132 P1 — KLUE Dictionary Expansion (빈도 2-4)
 
-### 변경
+- klue-domain.csv 18 → **59 entries** (+41 from Sprint 132, 3개 회귀로 제외)
+- KLUE DP per-eojeol strict: morph **66.5 → 66.8%** (+0.3pp), eo **53.4 → 53.9%** (+0.5pp)
+- 누적 (Sprint 128 → 132): morph **+1.0pp**, eojeol **+1.5pp**
+- Sample.tsv 100%/99.9% 무회귀 (CI 게이트가 3개 culprit 즉시 차단)
+- 보고서: docs/research/accuracy/2026-05-18_sprint132_dict_expansion.md
 
-1. **기존 sample.tsv 게이트 수정** (조용히 깨져있던 상태)
-   - `--ignored` 플래그 추가 (기존: ignored 테스트 스킵)
-   - mecab-ko-dic 다운로드 + 빌드 단계 추가 (dict-build.yml 패턴 재사용)
-   - `--exact test_accuracy_gate` 사용 (verified 테스트 제외, Sprint 122 baseline만)
-   - `actions/cache` v4로 dict 캐싱 (rebuild 회피)
+### 핵심 학습
 
-2. **KLUE DP 3-mode 게이트 신규 추가**
-   - `test_klue_dp_dual_metric` + `test_klue_dp_dual_metric_lenient` 실행
-   - Floor: morpheme ≥ 60%, eojeol ≥ 15% (기존 assertion 활용)
-   - `--test-threads 1`로 출력 순서 결정성 확보
+빈도 기반 dict 추가 천장 근접 — Sprint 130 (빈도 5+) +0.039pp/entry vs Sprint 132 (빈도 2-4) +0.007pp/entry. 5.4× 효율 차이. 빈도 1회 long tail은 더 낮을 것. 다음 트랙은 다른 접근 필요.
 
-3. **PR comment 통합**
-   - Sample.tsv (Token / Sentence) + KLUE DP (Strict morph/eo, Practical morph/eo)
-   - Overall passed/failed 표시
+## 다음 스프린트: Sprint 133 (미정 — 사용자 선택)
 
-### 검증 (로컬)
-- regex 추출 모두 정확: STRICT_MORPH=66.5, STRICT_EO=20.1, PRAC_MORPH=71.0, PRAC_EO=22.7
-- TOKEN=100.0, SENTENCE=99.9 (sample.tsv)
-- actionlint shellcheck warnings 0건
+### 후보 P1: Noisy data 추가
 
-## 다음 스프린트: Sprint 132 (미정 — 사용자 선택)
+Sprint 131 P4에서 deferred. 데이터셋 선정 조사 (KoBEST, KorQuAD, NIA, SNS). 라이선스 + 도메인 매칭 평가. 조사-only sprint 또는 1개 데이터셋 즉시 통합.
 
-### 후보 P1: 빈도 2-4 surfaces 확대 (Sprint 130 후속)
+### 후보 P2: eojeol_surface_only metric
 
-Sprint 129 P3에서 식별한 빈도 2-4 후보 ~54 surfaces 검토.
-- 안전 부분 (~30 surfaces): 갑자기, 그대로, 이미, 너무나, 비서실장, 초등학교, 상수도, 새누리당, 민주통합당 등
-- Homonym 모호성 검토 필요 (~24 surfaces)
+검색/인덱싱 use case 전용. Surface concat이 canonical match면 정답. `evaluate_dataset_eojeol_surface_only(tokenizer, dataset, surface_eq)`. Sprint 127 slice-lenient ceiling 87.7%와 연계.
 
-추정 lift: +0.3-0.5pp morpheme.
+### 후보 P3: 종결어미 normalization 확장
 
-### 후보 P2: Noisy data 추가
+`normalize_endings`에 이ㅂ니다↔이습니다 매핑 추가. Sprint 128 surface lenient +0pp였던 lift 재측정.
 
-Sprint 131 P4에서 deferred. KLUE 외 추가 데이터셋 (Twitter, SNS, 비표준 텍스트). 라이선스 + 데이터셋 선정 조사 우선.
+### 후보 P4: CRF retrain 인프라 조사
 
-### 후보 P3: eojeol_surface_only metric
+Sprint 129 P3에서 식별한 ~400 cases context-dep 오류. Long-term investment, research-only sprint. Sprint 132에서 도달한 dict 천장 너머 lift의 유일한 경로.
 
-검색/인덱싱 use case 전용. Surface concat이 canonical match면 정답.
+### 후보 P5: 보스턴/외무부 등 borderline NNG↔NNP 해결
 
-### 후보 P4: 종결어미 normalization 확장
-
-`normalize_endings`에 "이ㅂ니다" ↔ "이습니다" 매핑 추가.
-
-### 후보 P5: CRF retrain 인프라 조사
-
-장기 투자 (research-only). Sprint 132+ 실시.
+Sprint 132에서 보류된 5 entries (보스턴/다운타운/아크로폴리스/외무부/테라스). KLUE convention 차이로 dict override는 회귀 위험. 별도 normalization layer 또는 도메인별 alias 검토.
 
 ### 검증 기준 (모든 후보 공통)
 

@@ -1,19 +1,22 @@
-# Sprint 130 P1 - KLUE DP high-confidence dictionary additions
-# 출처: docs/research/accuracy/2026-05-16_klue_dp_real_errors.md
+# KLUE DP domain dictionary additions
+# 출처: docs/research/accuracy/2026-05-16_klue_dp_real_errors.md (Sprint 129 P3)
+#       docs/research/accuracy/2026-05-18_sprint132_dict_expansion.md (Sprint 132 P1)
 # Format: 표면형,품사,비용,읽기
 #
-# 검증된 빈도 5+ surfaces. KLUE DP 1,995문장에서 mecab over-split 케이스.
-# 대부분 mecab-ko-dic에 이미 존재하나 Viterbi 비용 경합에서 짐.
-# cost=-5000으로 override (verb-inflections.csv 패턴: -30000 대비 보수적).
-#
-# Homonym 주의: 일부 surface는 NNG/NNP/VV 다중 의미 — 회귀 시 제거
+# cost=-5000 override (verb-inflections.csv 패턴: -30000 대비 보수적).
+# KLUE DP val에서 mecab over-split이 측정된 surface만 추가.
+# Homonym 위험은 sample.tsv 회귀 게이트로 차단.
 
-# === Missing entries (truly absent from mecab-ko-dic) ===
+# ========================================================================
+# Sprint 130 P1 (빈도 5+ surfaces)
+# ========================================================================
+
+# === Missing NNP (truly absent) ===
 세월호,NNP,-5000,세월호
 에어비앤비,NNP,-5000,에어비앤비
 에어비엔비,NNP,-5000,에어비엔비
 
-# === MAG cost override (단일 부사 의미만 존재) ===
+# === MAG cost override (단일 부사 의미) ===
 굉장히,MAG,-5000,굉장히
 엄청,MAG,-5000,엄청
 더욱,MAG,-5000,더욱
@@ -21,17 +24,78 @@
 상당히,MAG,-5000,상당히
 실제로,MAG,-5000,실제로
 
-# === MAG cost override (homonym risk - measured in KLUE for MAG sense) ===
+# === MAG cost override (homonym - KLUE 도메인 안전) ===
 자주,MAG,-5000,자주
 모두,MAG,-5000,모두
 다시,MAG,-5000,다시
 현재,MAG,-5000,현재
 일단,MAG,-5000,일단
 
-# === NNG cost override ===
+# === NNG cost override (Compound 분할 방지) ===
 지하철,NNG,-5000,지하철
 뮤지컬,NNG,-5000,뮤지컬
 
-# === NNP cost override (homonym risk - place name) ===
+# === NNP cost override (place name) ===
 파리,NNP,-5000,파리
 로마,NNP,-5000,로마
+
+# ========================================================================
+# Sprint 132 P1 (빈도 2-4 surfaces)
+# ========================================================================
+
+# === Missing NNP (단체/기관/지명) ===
+새누리당,NNP,-5000,새누리당
+민주통합당,NNP,-5000,민주통합당
+공화당,NNP,-5000,공화당
+민주노총,NNP,-5000,민주노총
+개성공단,NNP,-5000,개성공단
+소녀시대,NNP,-5000,소녀시대
+테르미니역,NNP,-5000,테르미니역
+
+# === Missing NNG ===
+비서실장,NNG,-5000,비서실장
+청결도,NNG,-5000,청결도
+가성비,NNG,-5000,가성비
+
+# === NNP cost override (단일 NNP 의미) ===
+프라하,NNP,-5000,프라하
+세인트루이스,NNP,-5000,세인트루이스
+서울시,NNP,-5000,서울시
+국정원,NNP,-5000,국정원
+서울대,NNP,-5000,서울대
+
+# === NNG cost override (Compound 분할 방지) ===
+한국인,NNG,-5000,한국인
+초등학교,NNG,-5000,초등학교
+상수도,NNG,-5000,상수도
+관광지,NNG,-5000,관광지
+
+# === MAG cost override (단일 부사 의미) ===
+갑자기,MAG,-5000,갑자기
+그대로,MAG,-5000,그대로
+너무나,MAG,-5000,너무나
+거듭,MAG,-5000,거듭
+여러모로,MAG,-5000,여러모로
+곧바로,MAG,-5000,곧바로
+되게,MAG,-5000,되게
+철저히,MAG,-5000,철저히
+혹시,MAG,-5000,혹시
+즉각,MAG,-5000,즉각
+훨씬,MAG,-5000,훨씬
+
+# === MAG cost override (homonym - KLUE 도메인 안전, Sprint 130 패턴) ===
+# 제외 (sample.tsv 회귀): 이미, 보다, 진짜
+#   - 이미: "이미지" 분할 유발 (이미/MAG + 지/VX)
+#   - 보다: 비교조사(JKB) "예상보다" 케이스 변환, "보다 봤다" 동사 어간 깨뜨림
+#   - 진짜: NNG 케이스 충돌 ("진짜요" 등)
+주로,MAG,-5000,주로
+빨리,MAG,-5000,빨리
+워낙,MAG,-5000,워낙
+끝내,MAG,-5000,끝내
+매일,MAG,-5000,매일
+지금,MAG,-5000,지금
+다소,MAG,-5000,다소
+우선,MAG,-5000,우선
+달리,MAG,-5000,달리
+전부,MAG,-5000,전부
+거의,MAG,-5000,거의
