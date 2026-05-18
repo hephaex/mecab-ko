@@ -1145,6 +1145,126 @@ pub fn evaluate_dataset_dual_per_eojeol(
     )
 }
 
+/// 어절 surface-only 메트릭 결과 (Sprint 133 P2).
+///
+/// **Use case**: 검색/인덱싱 use case 전용. POS와 형태소 split을 무시하고
+/// surface 문자열 일치만으로 정답 판정. 색인 빌드 또는 부분 일치 검색
+/// 시스템의 정확도 추정에 사용.
+///
+/// **의미 손실**: 형태소 분석 품질은 측정하지 않음. 빈도/품사/동의어
+/// 처리를 다운스트림에서 사용한다면 본 메트릭은 부적합.
+#[derive(Debug, Clone)]
+pub struct EojeolSurfaceResult {
+    /// 어절 surface 일치 개수
+    pub correct: usize,
+    /// 어절 전체 개수
+    pub total: usize,
+    /// 어절 surface 정확도 (0.0 ~ 1.0)
+    pub accuracy: f64,
+}
+
+impl EojeolSurfaceResult {
+    /// 포맷된 보고서 생성
+    #[must_use]
+    pub fn format_report(&self) -> String {
+        if self.total > 0 {
+            format!(
+                "Eojeol Surface-only Accuracy: {:.1}% ({} / {})",
+                self.accuracy * 100.0,
+                self.correct,
+                self.total
+            )
+        } else {
+            "어절 정보 없음 (legacy 2-column TSV)".to_string()
+        }
+    }
+}
+
+/// 어절 surface-only 평가 (Sprint 133 P2, 검색/인덱싱 use case).
+///
+/// 어절의 모든 형태소 surface를 concat한 결과가 `surface_eq`로 비교 시 일치하면
+/// 정답. POS 태그와 inner split boundary는 무시.
+///
+/// **Trade-off**: 형태소 분석 품질 손실. 다음 용도에만 사용:
+/// - 검색 색인 빌드 (어절 surface 보존이 중요, POS 무관)
+/// - 부분 일치 검색 baseline
+/// - Sprint 127 P1의 87.7% ceiling 같은 천장 추정
+///
+/// 형태소 분석 정확도가 필요하면 `evaluate_dataset_dual_per_eojeol_with_match`
+/// 또는 `evaluate_dataset_sejong_with_match` 사용.
+///
+/// Algorithm (per-eojeol, no cascade):
+/// 1. `text.split_whitespace` → 어절 리스트 (`eojeol_counts.len()`과 일치 필요)
+/// 2. 각 어절: gold morphs surface concat + 어절별 토크나이즈 후 pred surface concat
+/// 3. `surface_eq`로 비교 (strict / canonical / `canonical_lenient` 주입 가능)
+#[allow(clippy::cast_precision_loss)]
+pub fn evaluate_dataset_eojeol_surface_only_with_match(
+    tokenizer: &mut Tokenizer,
+    dataset: &TestDataset,
+    surface_eq: SurfaceMatchFn,
+) -> EojeolSurfaceResult {
+    let converter = SejongConverter::new();
+    let mut correct: usize = 0;
+    let mut total: usize = 0;
+
+    for gold_sentence in &dataset.sentences {
+        let Some(eojeol_counts) = &gold_sentence.eojeol_counts else {
+            continue;
+        };
+        let eojeols: Vec<&str> = gold_sentence.text.split_whitespace().collect();
+        if eojeols.len() != eojeol_counts.len() {
+            continue;
+        }
+
+        let mut gold_idx: usize = 0;
+        for (eo_i, &count_g) in eojeol_counts.iter().enumerate() {
+            total += 1;
+            if gold_idx + count_g > gold_sentence.tokens.len() {
+                gold_idx = gold_sentence.tokens.len();
+                continue;
+            }
+            let gold_slice = &gold_sentence.tokens[gold_idx..gold_idx + count_g];
+            gold_idx += count_g;
+
+            let gold_concat: String = gold_slice.iter().map(|t| t.surface.as_str()).collect();
+
+            let pred_raw = tokenizer.tokenize(eojeols[eo_i]);
+            let pred_sejong = converter.convert_tokens(&pred_raw);
+            let pred_concat: String = pred_sejong
+                .iter()
+                .map(|t| SejongConverter::normalize_jamo(&t.surface))
+                .collect();
+
+            if surface_eq(&gold_concat, &pred_concat) {
+                correct += 1;
+            }
+        }
+    }
+
+    let accuracy = if total > 0 {
+        correct as f64 / total as f64
+    } else {
+        0.0
+    };
+
+    EojeolSurfaceResult {
+        correct,
+        total,
+        accuracy,
+    }
+}
+
+/// 어절 surface-only 평가 (strict, 편의 함수).
+///
+/// `surface_eq_strict` 위임. canonical / lenient는 `_with_match` 사용.
+#[must_use]
+pub fn evaluate_dataset_eojeol_surface_only(
+    tokenizer: &mut Tokenizer,
+    dataset: &TestDataset,
+) -> EojeolSurfaceResult {
+    evaluate_dataset_eojeol_surface_only_with_match(tokenizer, dataset, surface_eq_strict)
+}
+
 /// 이중 메트릭 평가 (POS + surface 비교 함수 주입, Sprint 128 P2).
 ///
 /// 형태소 레벨(morpheme) + 어절 레벨(eojeol) 두 메트릭을 함께 측정합니다.
@@ -1351,6 +1471,29 @@ mod tests {
         assert!(pos_eq_strict("NNG", "NNG"));
         assert!(!pos_eq_strict("NNG", "NNP"));
         assert!(!pos_eq_strict("SP", "SC")); // strict는 동치 그룹 무시
+    }
+
+    #[test]
+    fn test_eojeol_surface_result_format_empty() {
+        let result = EojeolSurfaceResult {
+            correct: 0,
+            total: 0,
+            accuracy: 0.0,
+        };
+        assert!(result.format_report().contains("legacy"));
+    }
+
+    #[test]
+    fn test_eojeol_surface_result_format_populated() {
+        let result = EojeolSurfaceResult {
+            correct: 875,
+            total: 1000,
+            accuracy: 0.875,
+        };
+        let report = result.format_report();
+        assert!(report.contains("87.5%"));
+        assert!(report.contains("875"));
+        assert!(report.contains("1000"));
     }
 
     #[test]

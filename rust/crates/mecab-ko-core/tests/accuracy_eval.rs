@@ -4168,3 +4168,126 @@ fn test_klue_dp_gold_single_pred_multi_analysis() {
         println!("  {pos:<6} {count:>4} ({pct:.1}%)");
     }
 }
+
+/// Sprint 133 P2: Eojeol surface-only metric on KLUE DP
+///
+/// 검색/인덱싱 use case 측정. POS 무시, split 무시, surface concat 일치만 정답.
+/// `surface_eq` 모드 3종 (strict / canonical / `canonical_lenient`) 비교.
+///
+/// 기대값: Sprint 127 P1의 slice-lenient ceiling 87.7% 근사 (canonical 모드).
+/// strict 모드는 jamo decomposition convention 차이로 더 낮을 수 있음.
+#[test]
+#[ignore = "requires KLUE DP eval data + system dictionary"]
+fn test_klue_dp_eojeol_surface_only() {
+    use mecab_ko_core::evaluate::{
+        evaluate_dataset_eojeol_surface_only_with_match,
+        surface_eq_canonical, surface_eq_canonical_lenient, surface_eq_strict,
+    };
+
+    // Floor constants (top of function — clippy items-after-statements).
+    // Sprint 127 P1 slice-lenient ceiling은 약 87.7% (canonical 근사).
+    // Strict는 jamo decomposition convention 차이로 더 낮음.
+    const STRICT_FLOOR: f64 = 0.50;
+    const CANONICAL_FLOOR: f64 = 0.80;
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or_else(|| std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
+
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict
+            .load_from_csv(&user_dict_path)
+            .expect("Failed to load user dictionary");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict
+                .load_from_csv(&klue_dict_path)
+                .expect("Failed to load KLUE domain dictionary");
+        }
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let eval_path = project_root.join("data/eval/klue_dp_val.tsv");
+    if !eval_path.exists() {
+        println!("Skipping: data/eval/klue_dp_val.tsv not found");
+        return;
+    }
+
+    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
+        .expect("Failed to load KLUE DP val");
+
+    let strict =
+        evaluate_dataset_eojeol_surface_only_with_match(&mut tokenizer, &dataset, surface_eq_strict);
+    let canonical = evaluate_dataset_eojeol_surface_only_with_match(
+        &mut tokenizer,
+        &dataset,
+        surface_eq_canonical,
+    );
+    let canonical_lenient = evaluate_dataset_eojeol_surface_only_with_match(
+        &mut tokenizer,
+        &dataset,
+        surface_eq_canonical_lenient,
+    );
+
+    println!("\n{}", "=".repeat(70));
+    println!("  EOJEOL SURFACE-ONLY METRIC (Sprint 133 P2)");
+    println!("  Use case: 검색/인덱싱. POS와 split 무시, surface concat 일치만 정답.");
+    println!("  의미 손실: 형태소 분석 품질은 측정하지 않음.");
+    println!("{}", "=".repeat(70));
+
+    println!("\n  strict           {}", strict.format_report());
+    println!("  canonical        {}", canonical.format_report());
+    println!("  canonical_lenient {}", canonical_lenient.format_report());
+
+    let delta_canon = (canonical.accuracy - strict.accuracy) * 100.0;
+    let delta_lenient = (canonical_lenient.accuracy - strict.accuracy) * 100.0;
+    println!("\n  canonical Δ vs strict:         {delta_canon:+.1}pp");
+    println!("  canonical_lenient Δ vs strict: {delta_lenient:+.1}pp");
+
+    // Sanity: canonical >= strict (canonical만 더 관대)
+    assert!(
+        canonical.accuracy >= strict.accuracy,
+        "canonical ({:.4}) should be >= strict ({:.4})",
+        canonical.accuracy,
+        strict.accuracy
+    );
+    assert!(
+        canonical_lenient.accuracy >= canonical.accuracy,
+        "canonical_lenient ({:.4}) should be >= canonical ({:.4})",
+        canonical_lenient.accuracy,
+        canonical.accuracy
+    );
+
+    // Floor enforcement (constants defined at top of function)
+    assert!(
+        strict.accuracy >= STRICT_FLOOR,
+        "strict {:.1}% < floor {:.0}%",
+        strict.accuracy * 100.0,
+        STRICT_FLOOR * 100.0
+    );
+    assert!(
+        canonical.accuracy >= CANONICAL_FLOOR,
+        "canonical {:.1}% < floor {:.0}%",
+        canonical.accuracy * 100.0,
+        CANONICAL_FLOOR * 100.0
+    );
+
+    println!("\nPASSED — strict {:.1}% / canonical {:.1}% / canonical_lenient {:.1}%",
+        strict.accuracy * 100.0,
+        canonical.accuracy * 100.0,
+        canonical_lenient.accuracy * 100.0);
+}
