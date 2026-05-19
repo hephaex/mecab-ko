@@ -1,80 +1,91 @@
-# PROGRESS — mecab-ko Sprint 139 (UD Korean-Kaist 통합)
+# PROGRESS — mecab-ko Sprint 140 (UD Kaist 분석 + CI 게이트)
 
 > 마지막 업데이트: 2026-05-19
 
-## Sprint 139 P2 — UD Korean-Kaist Silver Baseline 통합
+## Sprint 140 — A (분석) + C (CI 게이트) 병행
 
 | Task | 상태 | 비고 |
 |------|------|------|
-| S139-P2-1: UD Korean-Kaist 다운로드 + 형식 확인 | ✅ 완료 | `data/raw/ud_kaist/` test(3.3MB) + dev(3.0MB) |
-| S139-P2-2: KAIST XPOS → Sejong tag converter | ✅ 완료 | `tools/convert_ud_kaist.py` (50 tag mapping) |
-| S139-P2-3: TSV 변환 + 평가 통합 | ✅ 완료 | 3,124 sentences 변환 (71.8% 변환률), `test_ud_kaist_dual_metric` 추가 |
-| S139-P2-4: 기준 측정 + 보고서 | ✅ 완료 | `docs/research/accuracy/2026-05-19_sprint139_ud_kaist.md` |
+| S140-A: UD Kaist SPLIT_DIFFERENT 분석 | ✅ 완료 | `test_ud_kaist_split_diff_connection_pairs`. 1,755 SPLIT_DIFFERENT, 479 unique pairs |
+| S140-C: accuracy-gate CI에 UD Kaist 추가 | ✅ 완료 | 4번째 게이트, morph strict ≥ 60% floor, PR comment 섹션 추가 |
+| S140-A2: 분석 보고서 | ✅ 완료 | `docs/research/accuracy/2026-05-19_sprint140_ud_kaist_pair_analysis.md` |
+| convert_ud_kaist.py 수정 | ✅ 완료 | text reconstruct from token forms (eojeol/morpheme 정렬 보장) |
 
 ## 핵심 발견
 
-### lemma + XPOS 결합이 UPOS보다 우월
+### 도메인 독립적 패턴 (KLUE + UD Kaist 공통)
 
-UD CoNLL-U는 column 4(UPOS, 보편 태그)와 column 5(XPOS, 언어별 KAIST 태그) 둘 다 제공.
-- UPOS만 사용 시 NOUN→NNG/NNP/NNB lossy
-- **XPOS 사용 시 ncn→NNG, jca→JKB 등 morpheme 단위 직접 매핑 가능**
-- lemma column ("조약+에")에서 morpheme 분해 정보 추출
+| Pair | KLUE | UD | 의미 |
+|------|------|-----|-----|
+| (3534,0) NNG-T → BOS | 298 | 227 | 어절 중간 NNG-T로 종결 선호 |
+| (3533,0) NNG-F → BOS | 196 | 257 | 어절 중간 NNG-F로 종결 선호 |
+| (0,1780) BOS → NNG | 264 | 204 | 어절 중간 NNG 시작 선호 |
+| (3534,1780) NNG-T → NNG | 109 | 104 | NNG+NNG 복합어 분해 |
+| (3533,1780) NNG-F → NNG | 129 | 76 | NNG+NNG 복합어 분해 |
 
-### Silver 변환 결과
+→ **Sprint 138 결론 재확인**: NNG cost 조정은 도메인 무관하게 어절 경계 영향 → sample.tsv 회귀 불가피.
 
-- 입력: 4,353 sentences (test+dev)
-- 변환: 3,124 sentences (71.8%)
-- Skip: 1,229 sentences (unknown tag, lemma/xpos mismatch)
-- 보수적 skip이 정확도 측면에서 안전
+### UD Kaist 특화 패턴 (학술/역사 텍스트)
 
-### Baseline 측정 (test split, 1,638 sentences)
+| Pair | UD | KLUE | 의미 |
+|------|-----|------|-----|
+| (3777,2240) XSN(적) → VCP(인) | 92 | 27 | "X적인" — 학술 단정 |
+| (3533,2609) NNG-F → XSN(적) | 60 | 14 | "역사적", "구체적" |
+| (3534,2609) NNG-T → XSN(적) | 59 | 42 | "실질적", "전통적" |
+| (0,1783) BOS → NNG(정적사태) | 68 | 36 | "한다", "있다" — 학술 문체 |
 
-| Metric | UD Kaist | KLUE DP | 차이 |
-|--------|---------|---------|-----|
-| Morph strict | 66.3% | 66.8% | -0.5pp (거의 동일) |
-| Morph practical | 68.0% | 71.6% | -3.6pp (lift 폭 차이) |
-| Per-eojeol strict | 20.7% | 20.7% | 0 |
-| Per-eojeol practical | 21.8% | 23.5% | -1.7pp |
+→ KLUE만으로는 학술 도메인의 XSN(적) 처리 이슈 보이지 않음. **도메인 다양화 가치 입증**.
 
-**해석**:
-- morph strict 거의 동일 → mecab 기본 동작 일관
-- practical lift 차이 → UD KAIST jcc(보격)→JKC가 mecab JKS(주격)와 차이. KLUE는 SP/SC/NNB/NNG 등 흡수가 큼.
-- **도메인 다양화 효과 확인**: 두 데이터셋이 보완적 오류 발견
+### KLUE 특화 패턴 (현대 뉴스)
 
-## 측정값 (변경 없음 — 평가 데이터 추가만)
+| Pair | KLUE | UD | 의미 |
+|------|------|-----|------|
+| (5,1794) EF → SF | 166 | 16 | 종결어미 + 마침표 |
+| (3561,1780) SH → NNG | 134 | 28 | "100여명" — 수치 표현 |
+| (3584,0) XR-T → BOS | 130 | 43 | "탁월한", "비롯한" |
 
-| 메트릭 | Sprint 138 | Sprint 139 | Δ |
-|--------|-----------|-----------|---|
-| KLUE morph strict | 66.8% | 66.8% | — |
-| KLUE morph practical | 71.6% | 71.6% | — |
-| KLUE eo practical | 23.5% | 23.5% | — |
-| Surface canonical_lenient | 95.5% | 95.5% | — |
-| Sample.tsv Token | 100.0% | 100.0% | — |
-| Sample.tsv Sentence | 99.9% | 99.9% | — |
-| **UD Kaist morph strict** | (신규) | **66.3%** | (신규) |
-| **UD Kaist morph practical** | (신규) | **68.0%** | (신규) |
+## CI 게이트 (Sprint 140 C)
+
+### 추가 step
+- `.github/workflows/accuracy-gate.yml`: `Run UD Kaist silver gate`
+- Floor: morph strict ≥ 60% (silver tolerance — test 내부는 40%, CI는 더 엄격)
+- PR comment에 4번째 섹션 추가 (UD Korean-Kaist Silver)
+
+### 4-gate 효과
+- sample.tsv (1,100, baseline 100%/99.9%)
+- KLUE DP morph (1,995, floor 60%/15%)
+- KLUE DP surface-only (검색 use case, 50%/80%)
+- **UD Kaist silver (1,638, floor 60%)** [신규]
+
+Sprint 138 같은 cost 조정 회귀를 **두 도메인에서 동시 감지** 가능.
+
+## 측정값 (변경 없음 — 분석 + CI 추가만)
+
+| 메트릭 | Sprint 139 | Sprint 140 |
+|--------|-----------|-----------|
+| 모든 KLUE/UD/sample.tsv 메트릭 | 동일 | 동일 |
 
 ## 검증
 
 - `cargo test --workspace --exclude mecab-ko-ffi --lib`: all pass / 0 fail
 - `cargo clippy --workspace --all-targets -- -D warnings`: clean
-- `test_ud_kaist_dual_metric`: PASS (strict 66.3% / practical 68.0%)
+- `test_ud_kaist_split_diff_connection_pairs`: PASS
+- `test_ud_kaist_dual_metric`: PASS (CI 게이트용)
+- actionlint: shellcheck SC2129 warnings는 기존 step과 동일 패턴 (style only)
 
 ## 변경 파일
 
-- `data/raw/ud_kaist/ko_kaist-ud-test.conllu` (downloaded, 3.3MB)
-- `data/raw/ud_kaist/ko_kaist-ud-dev.conllu` (downloaded, 3.0MB)
-- `data/eval/ud_kaist_test.tsv` (신규 1,638 lines)
-- `data/eval/ud_kaist_dev.tsv` (신규 1,486 lines)
-- `tools/convert_ud_kaist.py` (신규 CoNLL-U → TSV 변환기)
-- `rust/crates/mecab-ko-core/tests/accuracy_eval.rs`: `test_ud_kaist_dual_metric` 추가 (~75줄)
-- `docs/research/accuracy/2026-05-19_sprint139_ud_kaist.md` (신규)
+- `rust/crates/mecab-ko-core/tests/accuracy_eval.rs`: `test_ud_kaist_split_diff_connection_pairs` 추가 (~135줄)
+- `tools/convert_ud_kaist.py`: text reconstruct from token forms (eojeol/morpheme alignment 보장)
+- `data/eval/ud_kaist_{test,dev}.tsv`: 재생성 (token-based text)
+- `.github/workflows/accuracy-gate.yml`: `Run UD Kaist silver gate` step + PR comment 섹션
+- `docs/research/accuracy/2026-05-19_sprint140_ud_kaist_pair_analysis.md` (신규)
 - `PLAN.md`, `PROGRESS.md` 갱신
 
-## Sprint 140 후보
+## Sprint 141 후보
 
-1. UD Kaist SPLIT_DIFFERENT 분석 (Sprint 137과 동일 방법, 다른 도메인)
-2. JKC ↔ JKS practical 동치 추가 검토 (UD-mecab convention 차이)
-3. accuracy-gate CI에 UD Kaist 추가 (3 게이트)
-4. Track C: dict-builder CSV 버그 수정 (선행)
-5. Track B: full CRF retrain (escalation)
+- A: XSN(적) practical 동치 검토 (학술 텍스트 특화 패턴)
+- B: UD Kaist NNG/XSN cost 조정 실험 (NNG보다 안전한 시작점)
+- C: dict-builder CSV 버그 수정 (Track D 진입 선행)
+- D: NIKL Modu 평가 추가 (manual download)
+- E: Full CRF retrain (장기 escalation)

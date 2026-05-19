@@ -111,31 +111,38 @@ def convert_sentence(metadata: dict, tokens: list[tuple[str, str, str]]) -> str 
 
     tokens: list of (form, lemma, xpos)
     Returns TSV line: text<TAB>morphemes<TAB>eojeol_counts, or None to skip.
-    """
-    text = metadata.get("text", "").strip()
-    if not text:
-        return None
 
+    Note: text is reconstructed from token forms (space-joined). Original
+    metadata `text` may have different whitespace boundaries due to UD's
+    convention of separating punctuation. We need token_count == eojeol_count
+    for proper per-eojeol alignment in evaluation.
+    """
     morphemes = []
     eojeol_counts = []
+    forms = []
     for (form, lemma, xpos) in tokens:
         # Split lemma + xpos by "+"
         lemma_parts = lemma.split("+")
         xpos_parts = xpos.split("+")
         if len(lemma_parts) != len(xpos_parts):
-            # Misaligned — skip this sentence (rare cases like "않" with OrigLemma)
             return None
         eojeol_morph = []
         for surface, tag in zip(lemma_parts, xpos_parts):
             sejong = map_xpos(tag)
             if sejong is None:
-                return None  # Unknown tag — skip
+                return None
             if not surface:
-                return None  # Empty morpheme — skip
+                return None
             eojeol_morph.append(f"{surface}/{sejong}")
         morphemes.extend(eojeol_morph)
         eojeol_counts.append(len(eojeol_morph))
+        forms.append(form)
 
+    if not forms:
+        return None
+
+    # Reconstruct text from forms (each token = one eojeol).
+    text = " ".join(forms)
     morph_str = " ".join(morphemes)
     counts_str = ",".join(str(c) for c in eojeol_counts)
     return f"{text}\t{morph_str}\t{counts_str}"

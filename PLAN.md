@@ -1,91 +1,79 @@
-# PLAN — mecab-ko Sprint 140 (next)
+# PLAN — mecab-ko Sprint 141 (next)
 
 > 마지막 업데이트: 2026-05-19
 
-## 완료: Sprint 139 P2 — UD Korean-Kaist Silver Baseline 통합
+## 완료: Sprint 140 — UD Kaist 분석 + CI 게이트 (A + C)
 
-### 변환 결과
-- `tools/convert_ud_kaist.py`: 50 KAIST XPOS → Sejong tag 매핑
-- 3,124 sentences 변환 (test 1,638 + dev 1,486, 71.8% 변환률)
-- 신규: `data/eval/ud_kaist_test.tsv`, `data/eval/ud_kaist_dev.tsv`
-- 신규 테스트: `test_ud_kaist_dual_metric`
+### A: UD Kaist SPLIT_DIFFERENT pair 분석
+- `test_ud_kaist_split_diff_connection_pairs` 신규
+- 1,755 SPLIT_DIFFERENT, 479 unique pairs, 3,134 occurrences
+- KLUE vs UD 비교: NNG 5쌍 도메인 독립적 (Sprint 138 회귀 결론 재확인) + UD 특화 XSN(적) 패턴 발견
 
-### Baseline 측정 (test split, 1,638 sentences)
+### C: accuracy-gate CI에 UD Kaist 추가
+- 4번째 게이트: morph strict ≥ 60% floor
+- PR comment 4번째 섹션 (UD Korean-Kaist Silver)
+- Sprint 138 회귀 같은 cost 조정 변화를 두 도메인 동시 감지
 
-| Metric | UD Kaist | KLUE DP |
-|--------|---------|---------|
-| Morph strict | 66.3% | 66.8% |
-| Morph practical | 68.0% | 71.6% |
-| Per-eojeol strict | 20.7% | 20.7% |
-| Per-eojeol practical | 21.8% | 23.5% |
-
-**핵심 발견**: morph strict 거의 동일 (mecab 일관). practical lift 차이는 KAIST jcc/JKC vs mecab JKS convention 차이.
+### convert_ud_kaist.py 수정
+- text reconstruct from token forms (eojeol/morpheme alignment 보장)
+- 이전 변환은 UD CoNLL-U metadata text 사용 → punctuation 분리 차이로 misalignment
 
 ### 보고서
-`docs/research/accuracy/2026-05-19_sprint139_ud_kaist.md`
+`docs/research/accuracy/2026-05-19_sprint140_ud_kaist_pair_analysis.md`
 
-## 다음 스프린트: Sprint 140 (미정 — 사용자 선택)
+## 다음 스프린트: Sprint 141 (미정 — 사용자 선택)
 
-### 후보 A: UD Kaist SPLIT_DIFFERENT 분석
+### 후보 A: XSN(적) practical 동치 검토
 
-**목적**: Sprint 137에서 KLUE DP에 적용한 connection pair 분석을 UD Kaist에도 적용 → 다른 도메인의 problematic pairs 발견.
-
-**작업**:
-1. `test_klue_dp_split_diff_connection_pairs` 변형으로 UD Kaist 분석
-2. 두 데이터셋의 problematic pair 교집합/차집합 → 안전한 cost 조정 후보 식별
-3. 도메인별 패턴 비교 보고서
-
-**비용**: 0.5-1 sprint
-**위험**: 낮음 (분석-only)
-
-### 후보 B: JKC ↔ JKS practical 동치 검토
-
-**목적**: UD Kaist에서 발견된 KAIST jcc(보격) ↔ mecab JKS(주격) convention 차이가 일반적인 lenient 흡수에 해당하는지 검토.
+**근거**: UD Kaist 특화 92건 (KLUE 27건). XSN-T(적) → VCP(인) 패턴.
+"X적인" 분해가 학술 문체에서 일반적. KLUE에는 적게 등장.
 
 **작업**:
-1. KLUE에서 JKC ↔ JKS 동치 추가 시 변화 측정 (KLUE 회귀 확인)
-2. UD Kaist에서 lift 측정
-3. 추가/제외 결정
-
-**비용**: 0.5 sprint
-**위험**: 중간 (KLUE에 negative effect 가능 — JKS/JKC는 의미 있는 case 차이)
-
-### 후보 C: accuracy-gate CI에 UD Kaist 추가
-
-**목적**: 현재 sample.tsv + KLUE DP 두 게이트 → UD Kaist 추가로 3 게이트. Sprint 138 같은 회귀를 더 강하게 감지.
-
-**작업**:
-1. `.github/workflows/accuracy-gate.yml`에 step 추가
-2. floor 설정: morph strict ≥ 60% / per-eojeol strict ≥ 15%
-3. PR comment 형식 확장
+1. XSN/NNG 동치 추가 시도 (`TAG_EQUIVALENCE_GROUPS_PRACTICAL`)
+2. UD lift + KLUE 회귀 측정
+3. lift > 회귀이면 commit
 
 **비용**: 0.5 sprint
 **위험**: 낮음
 
-### 후보 D [메인 목표]: Full CRF Retrain (Track B)
+### 후보 B: UD Kaist 특화 cost 조정 실험
 
-**선행 조건**: Track C (dict-builder CSV 버그 수정) — Sprint 138 미해결
+**근거**: XSN/NNG 관련 cost 조정. KLUE보다 회귀 위험 낮을 가능성.
 
-**작업**: 학습 데이터 (UD Kaist train + KLUE train + Sejong 일부) + mecab-cost-train → matrix.def + left/right-id.def 재생성.
+**작업**:
+1. matrix.def에서 (3777, 2240), (3533, 2609), (3534, 2609) 쌍 cost 조정
+2. 4-gate (sample.tsv + KLUE + surface + UD) 동시 검증
+3. 조건: 4 gate 모두 무회귀 + UD lift > 0
 
-**비용**: 3-5 sprint
-**리스크**: 높음 (학습 코퍼스 라이선스, binary 호환성, dict-builder 의존)
+**비용**: 0.5-1 sprint
+**위험**: 중간 (cost 조정은 항상 회귀 잠재)
 
-### 후보 E [선행]: dict-builder CSV 버그 수정 (Track C)
+### 후보 C: dict-builder CSV 버그 수정 (Track D 선행)
 
-Sprint 138에서 발견된 Symbol.csv/entries.csv의 쉼표 surface 처리 버그.
-**Track B 진입 전 필요**.
+Sprint 138에서 발견된 Symbol.csv/entries.csv 쉼표 surface 처리 버그.
+**Full CRF retrain (Track D) 진입 전 필요**.
 
 **비용**: 0.5-1 sprint
 **위험**: 낮음
+
+### 후보 D: Full CRF Retrain (escalation, 선행 C 필요)
+
+학습 데이터 (Sejong + KLUE + UD Kaist train) + mecab-cost-train → matrix.def 재생성.
+3-5 sprint, 학습 데이터 라이선스 + binary 호환성 리스크.
+
+### 후보 E: NIKL Modu 평가 추가 (manual download)
+
+Korean Language Institute의 morphological corpus. Academic only license.
+- 변환 스크립트 + 평가 통합 (단, redistribute 불가, 로컬-only)
+- 비용 0.5-1 sprint, 위험 낮음
 
 ## 백로그
 
-- P4 (borderline NNG↔NNP): Sprint 132 보류 5 entries + 호스트 73건
-- 추가 평가 데이터셋: UD Korean-GSD, OpenKorPOS (Sprint 123 보고서)
+- P4 (borderline NNG↔NNP): Sprint 132 보류 5 entries
+- UD Korean-GSD (CC BY-SA 4.0, 6,339 sentences): UD Kaist와 같은 변환기 재사용 가능
 
 ## 검증 기준 (모든 후보 공통)
 
 - `cargo test --workspace --exclude mecab-ko-ffi` 전체 pass
 - `cargo clippy --workspace --all-targets --exclude mecab-ko-ffi -- -D warnings` clean
-- accuracy-gate CI 통과 (sample.tsv 99.9%+ / KLUE DP morph 60%/eo 15% / surface_only strict 50%/canon 80%)
+- 4-gate CI 통과 (sample.tsv 99.9%+ / KLUE morph 60%/eo 15% / surface_only strict 50%/canon 80% / UD Kaist morph 60%+)

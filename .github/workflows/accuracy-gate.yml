@@ -179,6 +179,52 @@ jobs:
           fi
           echo "status=passed" >> "$GITHUB_OUTPUT"
 
+      # === UD Korean-Kaist silver baseline gate (Sprint 140 C) ===
+      # Independent silver dataset for cross-domain regression detection.
+      # Floor: morph strict ≥ 60%, per-eojeol ≥ 15% (KLUE 동일 기준, silver는 너그러움).
+      # Sprint 139 baseline: morph strict 66.3% / practical 68.0% / per-eo 20.7%.
+      - name: Run UD Kaist silver gate
+        id: udkaist
+        run: |
+          cd rust
+          OUTPUT=$(cargo test --release -p mecab-ko-core --test accuracy_eval \
+            -- --ignored --nocapture --exact test_ud_kaist_dual_metric 2>&1) || true
+          echo "$OUTPUT"
+
+          # PASSED line: "PASSED — strict morph 66.3% / practical morph 68.0%"
+          STRICT_MORPH=$(echo "$OUTPUT" | grep -oP 'PASSED — strict morph \K[0-9.]+' | head -1 || echo "0")
+          PRACTICAL_MORPH=$(echo "$OUTPUT" | grep -oP 'practical morph \K[0-9.]+' | head -1 || echo "0")
+          # Eojeol percentages from "Eojeol:   X.X% (a / b)" output
+          STRICT_EO=$(echo "$OUTPUT" | grep -oP '^  Eojeol:\s+\K[0-9.]+' | head -1 || echo "0")
+          PRACTICAL_EO=$(echo "$OUTPUT" | grep -oP '^  Eojeol:\s+\K[0-9.]+' | tail -1 || echo "0")
+
+          FAILED=$(echo "$OUTPUT" | grep -c "test result: FAILED\|below.*floor" || true)
+          PASSED=$(echo "$OUTPUT" | grep -c "test result: ok\..*passed" || true)
+
+          # Additional CI-level floor check (60% morph, stricter than test's 40% silver floor)
+          STRICT_MORPH_INT=$(printf "%.0f" "$STRICT_MORPH")
+          if [ "$STRICT_MORPH_INT" -lt 60 ]; then
+            echo "::error::UD Kaist morph strict $STRICT_MORPH% below 60% CI floor"
+            FAILED=1
+          fi
+
+          echo "strict_morph=$STRICT_MORPH" >> "$GITHUB_OUTPUT"
+          echo "practical_morph=$PRACTICAL_MORPH" >> "$GITHUB_OUTPUT"
+          echo "strict_eo=$STRICT_EO" >> "$GITHUB_OUTPUT"
+          echo "practical_eo=$PRACTICAL_EO" >> "$GITHUB_OUTPUT"
+
+          if [ "$FAILED" != "0" ]; then
+            echo "status=failed" >> "$GITHUB_OUTPUT"
+            echo "::error::UD Kaist gate FAILED"
+            exit 1
+          fi
+          if [ "$PASSED" = "0" ]; then
+            echo "status=skipped" >> "$GITHUB_OUTPUT"
+            echo "::error::No UD Kaist test ran"
+            exit 1
+          fi
+          echo "status=passed" >> "$GITHUB_OUTPUT"
+
       - name: Final gate summary
         run: |
           echo "=================================="
@@ -188,7 +234,8 @@ jobs:
           echo "KLUE strict:   morph ${{ steps.klue.outputs.strict_morph }} / eojeol ${{ steps.klue.outputs.strict_eo }}"
           echo "KLUE pract:    morph ${{ steps.klue.outputs.practical_morph }} / eojeol ${{ steps.klue.outputs.practical_eo }}"
           echo "Surface-only:  strict ${{ steps.surface.outputs.strict }} / canonical ${{ steps.surface.outputs.canonical }} / lenient ${{ steps.surface.outputs.lenient }}"
-          echo "Status: sample=${{ steps.sample.outputs.status }} klue=${{ steps.klue.outputs.status }} surface=${{ steps.surface.outputs.status }}"
+          echo "UD Kaist:      strict morph ${{ steps.udkaist.outputs.strict_morph }}% / practical ${{ steps.udkaist.outputs.practical_morph }}% / strict eo ${{ steps.udkaist.outputs.strict_eo }}%"
+          echo "Status: sample=${{ steps.sample.outputs.status }} klue=${{ steps.klue.outputs.status }} surface=${{ steps.surface.outputs.status }} udkaist=${{ steps.udkaist.outputs.status }}"
           echo "=================================="
 
       - name: Post accuracy to PR comment
@@ -208,11 +255,17 @@ jobs:
             const surfCanon = '${{ steps.surface.outputs.canonical }}';
             const surfLenient = '${{ steps.surface.outputs.lenient }}';
             const surfStatus = '${{ steps.surface.outputs.status }}';
+            const udStrictMorph = '${{ steps.udkaist.outputs.strict_morph }}';
+            const udPracMorph = '${{ steps.udkaist.outputs.practical_morph }}';
+            const udStrictEo = '${{ steps.udkaist.outputs.strict_eo }}';
+            const udPracEo = '${{ steps.udkaist.outputs.practical_eo }}';
+            const udStatus = '${{ steps.udkaist.outputs.status }}';
 
             const sampleEmoji = sampleStatus === 'passed' ? '✅' : '❌';
             const klueEmoji = klueStatus === 'passed' ? '✅' : '❌';
             const surfEmoji = surfStatus === 'passed' ? '✅' : '❌';
-            const allPassed = sampleStatus === 'passed' && klueStatus === 'passed' && surfStatus === 'passed';
+            const udEmoji = udStatus === 'passed' ? '✅' : '❌';
+            const allPassed = sampleStatus === 'passed' && klueStatus === 'passed' && surfStatus === 'passed' && udStatus === 'passed';
             const overall = allPassed ? '✅ PASSED' : '❌ FAILED';
 
             const body = `## ${overall} — Accuracy Gate
@@ -240,6 +293,15 @@ jobs:
 
             **Floors**: strict ≥ 50%, canonical ≥ 80%
             ⚠️ 의미 손실: 형태소 분석 품질이 아닌 검색 색인 baseline 측정.
+
+            ### ${udEmoji} UD Korean-Kaist Silver (Sprint 139 P2, 1,638 sentences)
+            | Mode | Morpheme | Eojeol |
+            |------|----------|--------|
+            | Strict | **${udStrictMorph}%** | **${udStrictEo}%** |
+            | Practical (POS lenient) | **${udPracMorph}%** | **${udPracEo}%** |
+
+            **Floors**: morph strict ≥ 60% (silver, 별도 도메인 회귀 감지)
+            ℹ️ Silver dataset: KAIST XPOS → Sejong 매핑 (lossy, 71.8% 변환률)
 
             ${allPassed ? '🎉 All accuracy checks passed!' : '⚠️ Accuracy gate failed. Please review measurements.'}
             `;
