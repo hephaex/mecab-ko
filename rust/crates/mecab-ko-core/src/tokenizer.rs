@@ -641,6 +641,16 @@ impl Tokenizer {
         self.lattice.stats()
     }
 
+    /// 마지막 분석의 Lattice 참조 (Sprint 137 — connection cost 분석용).
+    ///
+    /// `tokenize()` 호출 직후에만 의미 있는 Viterbi 결과를 포함합니다.
+    /// `tokenize_to_lattice()`는 빌드만 하고 Viterbi를 실행하지 않으므로
+    /// `best_path()`가 빈 결과를 반환합니다 — 항상 `tokenize()` 호출 후 사용.
+    #[must_use]
+    pub const fn lattice(&self) -> &Lattice {
+        &self.lattice
+    }
+
     /// 메모리 풀 통계 정보
     ///
     /// 메모리 풀의 사용 현황을 반환합니다.

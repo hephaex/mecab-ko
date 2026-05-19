@@ -4296,3 +4296,156 @@ fn test_klue_dp_eojeol_surface_only() {
         canonical.accuracy * 100.0,
         canonical_lenient.accuracy * 100.0);
 }
+
+/// Sprint 137 Track A — Connection cost pair analysis.
+///
+/// `SPLIT_DIFFERENT` 오류 (both split N>=2, different boundary) 에서 mecab의
+/// best path 인접 노드 쌍 `(prev.right_id, curr.left_id)` 빈도를 수집.
+/// matrix.def cost 조정 후보를 식별하기 위한 분석.
+///
+/// 출력: 상위 N개 (`right_id`, `left_id`) 쌍 + left-id.def / right-id.def 자질열.
+#[test]
+#[ignore = "requires KLUE DP eval data + system dictionary"]
+fn test_klue_dp_split_diff_connection_pairs() {
+    use mecab_ko_core::sejong::SejongConverter;
+    use std::collections::HashMap;
+    use std::fs;
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or_else(|| std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root
+            .join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy()
+            .to_string()
+    });
+
+    // Load left-id.def / right-id.def for feature lookup
+    let load_id_def = |path: &std::path::Path| -> HashMap<u16, String> {
+        let content = fs::read_to_string(path).unwrap_or_default();
+        content.lines()
+            .filter_map(|line| {
+                let mut parts = line.splitn(2, ' ');
+                let id = parts.next()?.parse::<u16>().ok()?;
+                let feat = parts.next()?.to_string();
+                Some((id, feat))
+            })
+            .collect()
+    };
+    let left_id_def = load_id_def(&std::path::Path::new(&dict_path).join("left-id.def"));
+    let right_id_def = load_id_def(&std::path::Path::new(&dict_path).join("right-id.def"));
+    println!("Loaded left-id.def: {} entries, right-id.def: {} entries",
+        left_id_def.len(), right_id_def.len());
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(&user_dict_path).expect("Failed to load user dict");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict.load_from_csv(&klue_dict_path).expect("Failed to load KLUE dict");
+        }
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let eval_path = project_root.join("data/eval/klue_dp_val.tsv");
+    if !eval_path.exists() {
+        println!("Skipping: data/eval/klue_dp_val.tsv not found");
+        return;
+    }
+
+    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
+        .expect("Failed to load KLUE DP val");
+    let converter = SejongConverter::new();
+
+    // Pair counts: (right_id_prev, left_id_curr) -> count
+    let mut pair_counts: HashMap<(u16, u16), usize> = HashMap::new();
+    // Also collect surface bigram for representative examples
+    let mut pair_surfaces: HashMap<(u16, u16), Vec<String>> = HashMap::new();
+    let surface_sample_cap = 3;
+
+    let mut split_diff_eojeols: usize = 0;
+    let mut total_eojeols: usize = 0;
+
+    for gold_sentence in &dataset.sentences {
+        let Some(eojeol_counts) = &gold_sentence.eojeol_counts else { continue; };
+        let eojeols: Vec<&str> = gold_sentence.text.split_whitespace().collect();
+        if eojeols.len() != eojeol_counts.len() { continue; }
+
+        let mut gold_idx: usize = 0;
+        for (eo_i, &count_g) in eojeol_counts.iter().enumerate() {
+            total_eojeols += 1;
+            if gold_idx + count_g > gold_sentence.tokens.len() {
+                gold_idx = gold_sentence.tokens.len();
+                continue;
+            }
+            let gold_slice = &gold_sentence.tokens[gold_idx..gold_idx + count_g];
+            gold_idx += count_g;
+            let gold_surface: String = gold_slice.iter().map(|t| t.surface.as_str()).collect();
+
+            // Per-eojeol independent tokenization (Token level for surface check)
+            let pred_raw = tokenizer.tokenize(eojeols[eo_i]);
+            let pred_sejong = converter.convert_tokens(&pred_raw);
+            let pred_normalized_surface: String = pred_sejong.iter()
+                .map(|t| SejongConverter::normalize_jamo(&t.surface))
+                .collect();
+            if pred_normalized_surface != gold_surface { continue; }
+
+            let count_p = pred_sejong.len();
+            // Filter: SPLIT_DIFFERENT only (both split, different count, ignore POS_DIFF/EXACT/G1PM/GMP1)
+            if count_g < 2 || count_p < 2 || count_g == count_p { continue; }
+            split_diff_eojeols += 1;
+
+            // pred_raw가 만들어진 직후의 lattice를 사용 (Viterbi 결과 포함)
+            // 같은 eojeol을 다시 tokenize 하지 않고 직전 결과 활용
+            let path = tokenizer.lattice().best_path();
+            // best_path already excludes BOS/EOS internally
+            let content: &[&_] = &path;
+            for window in content.windows(2) {
+                let prev_right = window[0].right_id;
+                let curr_left = window[1].left_id;
+                *pair_counts.entry((prev_right, curr_left)).or_insert(0) += 1;
+                let surface_pair = format!("{}|{}", window[0].surface, window[1].surface);
+                let entry = pair_surfaces.entry((prev_right, curr_left)).or_default();
+                if entry.len() < surface_sample_cap && !entry.contains(&surface_pair) {
+                    entry.push(surface_pair);
+                }
+            }
+        }
+    }
+
+    println!("\n{}", "=".repeat(70));
+    println!("  KLUE DP SPLIT_DIFFERENT Connection Pair Analysis (Sprint 137 A1)");
+    println!("  Dataset: {} sentences, total {} eojeols, SPLIT_DIFFERENT {}",
+        dataset.len(), total_eojeols, split_diff_eojeols);
+    println!("  Total unique pairs: {}, total pair occurrences: {}",
+        pair_counts.len(),
+        pair_counts.values().sum::<usize>());
+    println!("{}\n", "=".repeat(70));
+
+    // Sort pairs by frequency
+    let mut sorted: Vec<_> = pair_counts.iter().collect();
+    sorted.sort_by_key(|x| std::cmp::Reverse(*x.1));
+
+    let top_n = 30;
+    println!("=== Top {top_n} (right_id, left_id) pairs in SPLIT_DIFFERENT eojeols ===");
+    println!("{:>5}  {:>5}  {:>6}  {:<40}  {:<40}  samples",
+        "RID", "LID", "count", "right.feat (prev node)", "left.feat (curr node)");
+    for ((rid, lid), count) in sorted.iter().take(top_n) {
+        let r_feat = right_id_def.get(rid).map_or("?", std::string::String::as_str);
+        let l_feat = left_id_def.get(lid).map_or("?", std::string::String::as_str);
+        let samples = pair_surfaces.get(&(*rid, *lid))
+            .map(|v| v.join(", "))
+            .unwrap_or_default();
+        // Truncate long features for readability
+        let r_short = if r_feat.len() > 40 { &r_feat[..40] } else { r_feat };
+        let l_short = if l_feat.len() > 40 { &l_feat[..40] } else { l_feat };
+        println!("{rid:>5}  {lid:>5}  {count:>6}  {r_short:<40}  {l_short:<40}  {samples}");
+    }
+}
