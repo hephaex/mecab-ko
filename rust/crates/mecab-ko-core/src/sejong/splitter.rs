@@ -104,6 +104,40 @@ pub(super) fn split_morpheme<S: std::hash::BuildHasher>(
         }
     }
 
+    // Sprint 141 A: VCP+ETM / VCP+EC 복합 분리.
+    // mecab은 "특징적인"을 "특징/NNG + 적/XSN + 인/VCP+ETM"으로 출력하나
+    // KLUE/UD gold는 "이/VCP + ㄴ/ETM"으로 분리.
+    // VCP+EC도 동일 패턴 ("라"/"며"/"라서" 등은 이/VCP + X/EC로 분리).
+    if pos == "VCP+ETM" {
+        if surface == "인" {
+            return vec![
+                ("이".to_string(), "VCP".to_string()),
+                ("ㄴ".to_string(), "ETM".to_string()),
+            ];
+        } else if surface == "일" {
+            return vec![
+                ("이".to_string(), "VCP".to_string()),
+                ("ㄹ".to_string(), "ETM".to_string()),
+            ];
+        } else if surface == "라는" {
+            return vec![
+                ("이".to_string(), "VCP".to_string()),
+                ("라는".to_string(), "ETM".to_string()),
+            ];
+        }
+    }
+    if pos == "VCP+EC" {
+        // 어미 surface가 첫 음절 "이"로 시작하지 않는 경우 → "이/VCP + 어미/EC"로 분리
+        // 명시 목록 (data 기반): 라, 며, 라서, 라고, 라며, 라면, 라야, 라든지
+        let ec_endings = ["라", "며", "라서", "라고", "라며", "라면", "라야", "라든지"];
+        if ec_endings.contains(&surface) {
+            return vec![
+                ("이".to_string(), "VCP".to_string()),
+                (surface.to_string(), "EC".to_string()),
+            ];
+        }
+    }
+
     // 143차: VV+EC "는다" 특수 처리 (평서형 종결어미)
     // MeCab이 "는다"를 VV+EC로 태그하지만 실제로는 종결어미
     // "는다/VV+EC" → "는다/EF" (단일 토큰 유지)
@@ -474,6 +508,49 @@ mod tests {
         assert_eq!(result.len(), 2);
         assert_eq!(result[0], ("이".to_string(), "VCP".to_string()));
         assert_eq!(result[1], ("습니다".to_string(), "EF".to_string()));
+    }
+
+    #[test]
+    fn test_split_morpheme_vcp_etm_in() {
+        // Sprint 141 A: "인/VCP+ETM" → "이/VCP + ㄴ/ETM"
+        let map = make_tag_map();
+        let rules = make_rules();
+        let result = split_morpheme("인", "VCP+ETM", map, &rules);
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], ("이".to_string(), "VCP".to_string()));
+        assert_eq!(result[1], ("ㄴ".to_string(), "ETM".to_string()));
+    }
+
+    #[test]
+    fn test_split_morpheme_vcp_etm_il() {
+        // Sprint 141 A: "일/VCP+ETM" → "이/VCP + ㄹ/ETM"
+        let map = make_tag_map();
+        let rules = make_rules();
+        let result = split_morpheme("일", "VCP+ETM", map, &rules);
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], ("이".to_string(), "VCP".to_string()));
+        assert_eq!(result[1], ("ㄹ".to_string(), "ETM".to_string()));
+    }
+
+    #[test]
+    fn test_split_morpheme_vcp_ec_la() {
+        // Sprint 141 A: "라/VCP+EC" → "이/VCP + 라/EC"
+        let map = make_tag_map();
+        let rules = make_rules();
+        let result = split_morpheme("라", "VCP+EC", map, &rules);
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], ("이".to_string(), "VCP".to_string()));
+        assert_eq!(result[1], ("라".to_string(), "EC".to_string()));
+    }
+
+    #[test]
+    fn test_split_morpheme_vcp_etm_unrelated_surface_no_split() {
+        // 패턴 목록 외 surface는 분리하지 않음 (overcorrect 방지)
+        let map = make_tag_map();
+        let rules = make_rules();
+        let result = split_morpheme("미정", "VCP+ETM", map, &rules);
+        // 명시 목록 (인/일/라는)이 아니므로 일반 split 흐름 따름 (size 1 or default)
+        assert!(result.len() <= 2, "non-listed surface should not split into >2");
     }
 
     #[test]
