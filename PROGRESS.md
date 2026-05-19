@@ -1,66 +1,74 @@
-# PROGRESS — mecab-ko Sprint 137 (Track A 분석)
+# PROGRESS — mecab-ko Sprint 138 (Tier A 실험 → rollback)
 
 > 마지막 업데이트: 2026-05-19
 
-## Sprint 137 Track A — Connection Cost Pair Analysis (분석-only)
+## Sprint 138 결과 요약
+
+**P1 결과**: ❌ Tier A matrix.def 수동 cost 조정 — sample.tsv baseline 회귀 회피 불가. **완전 rollback**.
+**P2 결과**: ⏭️ ㄹ불규칙 활용형이 이미 Inflect.csv에 모두 존재 (skip).
+**P1 인프라**: ✅ matrix.bin 단독 변환 도구 신설 (dict-builder CSV 버그 우회).
+
+## 실험 상세
 
 | Task | 상태 | 비고 |
 |------|------|------|
-| S137-A1: SPLIT_DIFFERENT 오류 + left/right_id 매핑 | ✅ 완료 | `test_klue_dp_split_diff_connection_pairs` 추가. `Tokenizer::lattice()` getter 신설 (Viterbi 결과 lattice 접근). 2,237 어절 → 570 unique pairs / 4,330 occurrences. |
-| S137-A2: problematic 쌍 식별 + 보고서 | ✅ 완료 | docs/research/accuracy/2026-05-19_sprint137_connection_cost_analysis.md. 상위 30 쌍 분석, Tier A(NNG 분해, +0.5-1.0pp 추정)/B(EF·SF·EP 유지)/C(보류) 분류. Sprint 138 실험 절차 명시. |
+| S138-P2-1: Inflect.csv 분석 | ✅ 완료 | 따라/달라/몰라/불러/흘러/올라/잘라/눌러/골라 모두 entries 존재 — 추가 작업 불요 |
+| S138-P1-1: matrix.def 백업 + 5쌍 수정 | ✅ 완료 | 신규 `matrix_def_to_bin` example로 matrix.bin.zst 갱신 |
+| S138-P1-2: 4-mode 회귀 검증 | ❌ FAIL | 5쌍: sample.tsv Token -0.9pp / NNG+NNG만: Sentence -0.2pp. 둘 다 rollback |
 
-## 핵심 발견
+## P1 실험 결과 (모두 rollback)
 
-**SPLIT_DIFFERENT 2,237 어절의 50.3% (1,126건)이 NNG 분해에 집중**:
+### 실험 1 — 5쌍 모두 (cost +300~+500)
 
-| 패턴 | 빈도 | 예시 | 조치 |
-|------|------|------|------|
-| (NNG-T, BOS/EOS) | 298 | 공정성\|을, 돌\|입 | Tier A: +300 cost |
-| (BOS/EOS, NNG) | 264 | 지\|검장, 주\|의 | Tier A: +300 cost |
-| (NNG-F, BOS/EOS) | 196 | 대\|한, 위\|한 | Tier A: +300 cost |
-| (EF, SF) | 166 | 다\|., 빠집니다\|. | Tier B: 형태론적 정확 |
-| (BOS/EOS, BOS/EOS) | 162 | 한\|다면, 나\|갈 | Tier A: +300 cost |
-| (SH, NNG) | 134 | 100\|여명, 1\|천명 | Tier C: 보류 |
-| (XR-T, BOS/EOS) | 130 | 탁월\|한, 비롯\|한 | Tier C: 보류 |
-| (NNG-F, NNG) | 129 | 테니스\|단, 국가\|보훈 | Tier A: +500 cost |
-| (EP, EF) | 114 | 알려졌\|다, 옮겼\|다 | Tier B: 형태론적 정확 |
-| (NNG-T, NNG) | 109 | 팝\|스타, 보훈\|처 | Tier A: +500 cost |
+| 메트릭 | Before | After | Δ |
+|--------|--------|-------|---|
+| **sample.tsv Token** | **100.0%** | **99.1%** | **-0.9pp ❌** |
+| KLUE morph strict | 66.8% | 66.9% | +0.1pp |
+| KLUE eo strict | 20.7% | 21.0% | +0.3pp |
+| KLUE eo practical | 23.5% | 23.7% | +0.2pp |
 
-**Tier A 5쌍**: 1,126/4,330 ≈ 26% pair occurrence 흡수 잠재력. per-eojeol strict +0.5-1.0pp 추정 (sample.tsv 회귀 위험은 별도 검증 필요).
+### 실험 2 — NNG+NNG 2쌍만 (cost +500)
 
-## 측정값 (변경 없음 — 분석만)
+| 메트릭 | Before | After | Δ |
+|--------|--------|-------|---|
+| sample.tsv Token | 100.0% | 99.9% | -0.1pp ⚠️ |
+| **sample.tsv Sentence** | **99.9%** | **99.7%** | **-0.2pp ❌** |
 
-| 메트릭 | Sprint 136 | Sprint 137 | Δ |
-|--------|-----------|-----------|---|
-| Morph strict | 66.8% | 66.8% | — (분석-only) |
-| Morph practical | 71.6% | 71.6% | — |
-| Per-eojeol practical | 23.5% | 23.5% | — |
-| Surface canonical_lenient | 95.5% | 95.5% | — |
-| Sample.tsv Token | 100.0% | 100.0% | — |
-| Sample.tsv Sentence | 99.9% | 99.9% | — |
+## 핵심 학습 포인트
+
+1. **matrix.def cost 조정은 너무 거친 도구**: 한 (right_id, left_id) 쌍의 cost는 모든 발생에 적용. 어절 내부 split 회피 의도가 어절 경계 처리에도 영향 → trade-off 자동 해결 불가.
+2. **dict-builder CSV 파싱 버그 발견**: entries.csv/Symbol.csv의 쉼표 surface 행에서 fail. Sprint 139 선행 작업 필요.
+3. **CRF retrain만이 trade-off 자동 해결 경로**: 학습 데이터 분포 기반 최적화로 sample.tsv 회귀 회피.
+
+## 측정값 (변경 없음 — rollback)
+
+| 메트릭 | Sprint 137 | Sprint 138 |
+|--------|-----------|-----------|
+| morph strict | 66.8% | 66.8% |
+| morph practical | 71.6% | 71.6% |
+| per-eojeol practical | 23.5% | 23.5% |
+| surface canonical_lenient | 95.5% | 95.5% |
+| sample.tsv Token | 100.0% | 100.0% |
+| sample.tsv Sentence | 99.9% | 99.9% |
 
 ## 검증
 
-- `cargo test --workspace --exclude mecab-ko-ffi --lib` : all pass / 0 fail
-- `cargo clippy --workspace --all-targets --exclude mecab-ko-ffi -- -D warnings` : clean
-- `cargo test ... --test accuracy_eval -- --ignored` : 41/41 pass (90s)
+- `cargo test --workspace --exclude mecab-ko-ffi --lib`: all pass / 0 fail
+- `cargo clippy --workspace --all-targets -- -D warnings`: clean
+- `test_full_accuracy_evaluation`: PASS (rollback 후 baseline 복구)
 
 ## 변경 파일
 
-- `rust/crates/mecab-ko-core/src/tokenizer.rs`:
-  - `pub const fn lattice(&self) -> &Lattice` 추가 (Viterbi 결과 접근)
-- `rust/crates/mecab-ko-core/tests/accuracy_eval.rs`:
-  - `test_klue_dp_split_diff_connection_pairs` 신규 (~115줄)
-  - left-id.def/right-id.def 파서 + (right_id, left_id) 빈도 집계
-- `docs/research/accuracy/2026-05-19_sprint137_connection_cost_analysis.md` 신규
-- `PLAN.md`: Sprint 137 Track A 완료 + Sprint 138 실험 절차
+- `rust/crates/mecab-ko-dict/examples/matrix_def_to_bin.rs`: 신규 (matrix.def → matrix.bin.zst 단독 변환)
+- `docs/research/accuracy/2026-05-19_sprint138_tier_a_experiment.md`: 신규 실험 보고서
+- `PLAN.md`: Sprint 138 완료 (실패) + Sprint 139 권고
 - `PROGRESS.md`: 갱신
+- matrix.def, matrix.bin.zst: rollback (변경 없음)
 
-## Sprint 138 진입점
+## Sprint 139 진입점
 
-**Tier A matrix.def 수동 조정 실험**:
-1. matrix.def 백업 (matrix.def.s137-baseline)
-2. Tier A 5쌍 cost +300 ~ +500 수정 (스크립트)
-3. dict-builder 재실행 → binary 재생성
-4. 4-mode 회귀 검증 (sample.tsv 100% / KLUE morph 60%+ / surface_only canon 80%+ / per-eojeol practical ≥ lenient)
-5. SPLIT_DIFFERENT 건수 측정 (test_klue_dp_split_diff_connection_pairs 재실행)
+| Track | 비용 | 우선순위 |
+|-------|------|---------|
+| C: dict-builder CSV 버그 수정 | 0.5-1 sprint | 선행 (Track B 진입 전 필요) |
+| B: Full CRF retrain | 3-5 sprint | 메인 — trade-off 자동 해결 |
+| A: 세분화 cost 분석 | 1 sprint | 보류 — mecab matrix는 위치 정보 없어 본질적 한계 |
