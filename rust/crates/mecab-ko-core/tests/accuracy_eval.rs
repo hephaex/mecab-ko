@@ -4297,6 +4297,86 @@ fn test_klue_dp_eojeol_surface_only() {
         canonical_lenient.accuracy * 100.0);
 }
 
+/// Sprint 139 P2 — UD Korean-Kaist silver baseline measurement.
+///
+/// 데이터셋: `data/eval/ud_kaist_test.tsv` (1,638 sentences, ko_kaist-ud-test.conllu 변환)
+/// 라이선스: CC BY-SA 4.0 (UD), 변환 코드 + 변환 결과도 동일 라이선스 상속
+///
+/// 측정: morph strict / morph practical (lenient) / per-eojeol strict / per-eojeol practical
+/// Silver 변환이므로 KLUE DP보다 낮을 가능성 (KAIST→Sejong lossy 매핑).
+#[test]
+#[ignore = "requires UD Korean-Kaist eval data + system dictionary"]
+fn test_ud_kaist_dual_metric() {
+    use mecab_ko_core::evaluate::{
+        evaluate_dataset_dual, evaluate_dataset_dual_with_pos_match,
+        pos_tags_equivalent_practical,
+    };
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or_else(|| std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root.join("data/mecab-ko-dic-2.1.1-20180720").to_string_lossy().to_string()
+    });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(&user_dict_path).expect("Failed to load user dict");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict.load_from_csv(&klue_dict_path).expect("Failed to load KLUE dict");
+        }
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let eval_path = project_root.join("data/eval/ud_kaist_test.tsv");
+    if !eval_path.exists() {
+        println!("Skipping: data/eval/ud_kaist_test.tsv not found");
+        return;
+    }
+
+    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
+        .expect("Failed to load UD Kaist test TSV");
+
+    let strict = evaluate_dataset_dual(&mut tokenizer, &dataset);
+    let practical = evaluate_dataset_dual_with_pos_match(
+        &mut tokenizer, &dataset, pos_tags_equivalent_practical,
+    );
+
+    let strict_morph = strict.morpheme.token_accuracy * 100.0;
+    let strict_eo = strict.eojeol_accuracy * 100.0;
+    let practical_morph = practical.morpheme.token_accuracy * 100.0;
+    let practical_eo = practical.eojeol_accuracy * 100.0;
+
+    println!("\n=== UD Korean-Kaist (test split, silver) ===");
+    println!("Dataset: {} sentences", dataset.len());
+    println!("\n--- Strict ---");
+    println!("  Morpheme: {strict_morph:.1}%");
+    println!("  Eojeol:   {strict_eo:.1}% ({} / {})",
+        strict.eojeol_correct, strict.eojeol_total);
+    println!("\n--- Practical (NNB/NNG + VA/VV + SP/SC + SS/SY/SSO/SSC + MM 그룹 + SL/NNP) ---");
+    println!("  Morpheme: {practical_morph:.1}% [Δ +{:.1}pp vs strict]",
+        practical_morph - strict_morph);
+    println!("  Eojeol:   {practical_eo:.1}% ({} / {}) [Δ +{:.1}pp vs strict]",
+        practical.eojeol_correct, practical.eojeol_total, practical_eo - strict_eo);
+
+    // 회귀 catch: practical >= strict
+    assert!(practical.eojeol_accuracy >= strict.eojeol_accuracy);
+    assert!(practical.morpheme.token_accuracy >= strict.morpheme.token_accuracy);
+
+    // Silver dataset — KLUE보다 낮은 floor 설정 (lossy 변환)
+    assert!(strict.morpheme.token_accuracy >= 0.40,
+        "Morph strict {strict_morph:.1}% below 40% floor (UD silver)");
+
+    println!("\nPASSED — strict morph {strict_morph:.1}% / practical morph {practical_morph:.1}%");
+}
+
 /// Sprint 137 Track A — Connection cost pair analysis.
 ///
 /// `SPLIT_DIFFERENT` 오류 (both split N>=2, different boundary) 에서 mecab의

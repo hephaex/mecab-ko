@@ -1,74 +1,80 @@
-# PROGRESS — mecab-ko Sprint 138 (Tier A 실험 → rollback)
+# PROGRESS — mecab-ko Sprint 139 (UD Korean-Kaist 통합)
 
 > 마지막 업데이트: 2026-05-19
 
-## Sprint 138 결과 요약
-
-**P1 결과**: ❌ Tier A matrix.def 수동 cost 조정 — sample.tsv baseline 회귀 회피 불가. **완전 rollback**.
-**P2 결과**: ⏭️ ㄹ불규칙 활용형이 이미 Inflect.csv에 모두 존재 (skip).
-**P1 인프라**: ✅ matrix.bin 단독 변환 도구 신설 (dict-builder CSV 버그 우회).
-
-## 실험 상세
+## Sprint 139 P2 — UD Korean-Kaist Silver Baseline 통합
 
 | Task | 상태 | 비고 |
 |------|------|------|
-| S138-P2-1: Inflect.csv 분석 | ✅ 완료 | 따라/달라/몰라/불러/흘러/올라/잘라/눌러/골라 모두 entries 존재 — 추가 작업 불요 |
-| S138-P1-1: matrix.def 백업 + 5쌍 수정 | ✅ 완료 | 신규 `matrix_def_to_bin` example로 matrix.bin.zst 갱신 |
-| S138-P1-2: 4-mode 회귀 검증 | ❌ FAIL | 5쌍: sample.tsv Token -0.9pp / NNG+NNG만: Sentence -0.2pp. 둘 다 rollback |
+| S139-P2-1: UD Korean-Kaist 다운로드 + 형식 확인 | ✅ 완료 | `data/raw/ud_kaist/` test(3.3MB) + dev(3.0MB) |
+| S139-P2-2: KAIST XPOS → Sejong tag converter | ✅ 완료 | `tools/convert_ud_kaist.py` (50 tag mapping) |
+| S139-P2-3: TSV 변환 + 평가 통합 | ✅ 완료 | 3,124 sentences 변환 (71.8% 변환률), `test_ud_kaist_dual_metric` 추가 |
+| S139-P2-4: 기준 측정 + 보고서 | ✅ 완료 | `docs/research/accuracy/2026-05-19_sprint139_ud_kaist.md` |
 
-## P1 실험 결과 (모두 rollback)
+## 핵심 발견
 
-### 실험 1 — 5쌍 모두 (cost +300~+500)
+### lemma + XPOS 결합이 UPOS보다 우월
 
-| 메트릭 | Before | After | Δ |
-|--------|--------|-------|---|
-| **sample.tsv Token** | **100.0%** | **99.1%** | **-0.9pp ❌** |
-| KLUE morph strict | 66.8% | 66.9% | +0.1pp |
-| KLUE eo strict | 20.7% | 21.0% | +0.3pp |
-| KLUE eo practical | 23.5% | 23.7% | +0.2pp |
+UD CoNLL-U는 column 4(UPOS, 보편 태그)와 column 5(XPOS, 언어별 KAIST 태그) 둘 다 제공.
+- UPOS만 사용 시 NOUN→NNG/NNP/NNB lossy
+- **XPOS 사용 시 ncn→NNG, jca→JKB 등 morpheme 단위 직접 매핑 가능**
+- lemma column ("조약+에")에서 morpheme 분해 정보 추출
 
-### 실험 2 — NNG+NNG 2쌍만 (cost +500)
+### Silver 변환 결과
 
-| 메트릭 | Before | After | Δ |
-|--------|--------|-------|---|
-| sample.tsv Token | 100.0% | 99.9% | -0.1pp ⚠️ |
-| **sample.tsv Sentence** | **99.9%** | **99.7%** | **-0.2pp ❌** |
+- 입력: 4,353 sentences (test+dev)
+- 변환: 3,124 sentences (71.8%)
+- Skip: 1,229 sentences (unknown tag, lemma/xpos mismatch)
+- 보수적 skip이 정확도 측면에서 안전
 
-## 핵심 학습 포인트
+### Baseline 측정 (test split, 1,638 sentences)
 
-1. **matrix.def cost 조정은 너무 거친 도구**: 한 (right_id, left_id) 쌍의 cost는 모든 발생에 적용. 어절 내부 split 회피 의도가 어절 경계 처리에도 영향 → trade-off 자동 해결 불가.
-2. **dict-builder CSV 파싱 버그 발견**: entries.csv/Symbol.csv의 쉼표 surface 행에서 fail. Sprint 139 선행 작업 필요.
-3. **CRF retrain만이 trade-off 자동 해결 경로**: 학습 데이터 분포 기반 최적화로 sample.tsv 회귀 회피.
+| Metric | UD Kaist | KLUE DP | 차이 |
+|--------|---------|---------|-----|
+| Morph strict | 66.3% | 66.8% | -0.5pp (거의 동일) |
+| Morph practical | 68.0% | 71.6% | -3.6pp (lift 폭 차이) |
+| Per-eojeol strict | 20.7% | 20.7% | 0 |
+| Per-eojeol practical | 21.8% | 23.5% | -1.7pp |
 
-## 측정값 (변경 없음 — rollback)
+**해석**:
+- morph strict 거의 동일 → mecab 기본 동작 일관
+- practical lift 차이 → UD KAIST jcc(보격)→JKC가 mecab JKS(주격)와 차이. KLUE는 SP/SC/NNB/NNG 등 흡수가 큼.
+- **도메인 다양화 효과 확인**: 두 데이터셋이 보완적 오류 발견
 
-| 메트릭 | Sprint 137 | Sprint 138 |
-|--------|-----------|-----------|
-| morph strict | 66.8% | 66.8% |
-| morph practical | 71.6% | 71.6% |
-| per-eojeol practical | 23.5% | 23.5% |
-| surface canonical_lenient | 95.5% | 95.5% |
-| sample.tsv Token | 100.0% | 100.0% |
-| sample.tsv Sentence | 99.9% | 99.9% |
+## 측정값 (변경 없음 — 평가 데이터 추가만)
+
+| 메트릭 | Sprint 138 | Sprint 139 | Δ |
+|--------|-----------|-----------|---|
+| KLUE morph strict | 66.8% | 66.8% | — |
+| KLUE morph practical | 71.6% | 71.6% | — |
+| KLUE eo practical | 23.5% | 23.5% | — |
+| Surface canonical_lenient | 95.5% | 95.5% | — |
+| Sample.tsv Token | 100.0% | 100.0% | — |
+| Sample.tsv Sentence | 99.9% | 99.9% | — |
+| **UD Kaist morph strict** | (신규) | **66.3%** | (신규) |
+| **UD Kaist morph practical** | (신규) | **68.0%** | (신규) |
 
 ## 검증
 
 - `cargo test --workspace --exclude mecab-ko-ffi --lib`: all pass / 0 fail
 - `cargo clippy --workspace --all-targets -- -D warnings`: clean
-- `test_full_accuracy_evaluation`: PASS (rollback 후 baseline 복구)
+- `test_ud_kaist_dual_metric`: PASS (strict 66.3% / practical 68.0%)
 
 ## 변경 파일
 
-- `rust/crates/mecab-ko-dict/examples/matrix_def_to_bin.rs`: 신규 (matrix.def → matrix.bin.zst 단독 변환)
-- `docs/research/accuracy/2026-05-19_sprint138_tier_a_experiment.md`: 신규 실험 보고서
-- `PLAN.md`: Sprint 138 완료 (실패) + Sprint 139 권고
-- `PROGRESS.md`: 갱신
-- matrix.def, matrix.bin.zst: rollback (변경 없음)
+- `data/raw/ud_kaist/ko_kaist-ud-test.conllu` (downloaded, 3.3MB)
+- `data/raw/ud_kaist/ko_kaist-ud-dev.conllu` (downloaded, 3.0MB)
+- `data/eval/ud_kaist_test.tsv` (신규 1,638 lines)
+- `data/eval/ud_kaist_dev.tsv` (신규 1,486 lines)
+- `tools/convert_ud_kaist.py` (신규 CoNLL-U → TSV 변환기)
+- `rust/crates/mecab-ko-core/tests/accuracy_eval.rs`: `test_ud_kaist_dual_metric` 추가 (~75줄)
+- `docs/research/accuracy/2026-05-19_sprint139_ud_kaist.md` (신규)
+- `PLAN.md`, `PROGRESS.md` 갱신
 
-## Sprint 139 진입점
+## Sprint 140 후보
 
-| Track | 비용 | 우선순위 |
-|-------|------|---------|
-| C: dict-builder CSV 버그 수정 | 0.5-1 sprint | 선행 (Track B 진입 전 필요) |
-| B: Full CRF retrain | 3-5 sprint | 메인 — trade-off 자동 해결 |
-| A: 세분화 cost 분석 | 1 sprint | 보류 — mecab matrix는 위치 정보 없어 본질적 한계 |
+1. UD Kaist SPLIT_DIFFERENT 분석 (Sprint 137과 동일 방법, 다른 도메인)
+2. JKC ↔ JKS practical 동치 추가 검토 (UD-mecab convention 차이)
+3. accuracy-gate CI에 UD Kaist 추가 (3 게이트)
+4. Track C: dict-builder CSV 버그 수정 (선행)
+5. Track B: full CRF retrain (escalation)
