@@ -594,6 +594,43 @@ mod tests {
         assert_eq!(result[0], ("시".to_string(), "EP".to_string()));
         assert_eq!(result[1], ("었".to_string(), "EP".to_string()));
     }
+
+    #[test]
+    fn test_split_morpheme_vv_etm_single_syllable_rieul() {
+        // "올/VV+ETM" → "오/VV + ㄹ/ETM" (1-syllable ㄹ split)
+        let map = make_tag_map();
+        let rules = make_rules();
+        let result = split_morpheme("올", "VV+ETM", map, &rules);
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], ("오".to_string(), "VV".to_string()));
+        assert_eq!(result[1], ("ㄹ".to_string(), "ETM".to_string()));
+    }
+
+    #[test]
+    fn test_split_morpheme_vv_etm_multisyllable_no_jamo_split() {
+        // Sprint 145 D rollback guard: multi-syllable VV+ETM은 ㄹ/ㄴ 자모 분리를 하지 않아야 함.
+        // sample.tsv -1 sentence 회귀 발생으로 1-syllable만 허용 (splitter.rs L402).
+        let map = make_tag_map();
+        let rules = make_rules();
+        // "피운" (피우+ㄴ, 2 syllable) — 1-syllable 가드로 인해 자모 분리 금지
+        let result = split_morpheme("피운", "VV+ETM", map, &rules);
+        let has_jamo_split = result.iter().any(|(s, _)| s == "ㄴ" || s == "ㄹ");
+        assert!(
+            !has_jamo_split,
+            "multi-syllable VV+ETM must not produce ㄹ/ㄴ jamo split — Sprint 145 rollback guard"
+        );
+    }
+
+    #[test]
+    fn test_split_morpheme_va_etm_single_syllable_nieun() {
+        // "큰/VA+ETM" → "크/VA + ㄴ/ETM" (1-syllable ㄴ split)
+        let map = make_tag_map();
+        let rules = make_rules();
+        let result = split_morpheme("큰", "VA+ETM", map, &rules);
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], ("크".to_string(), "VA".to_string()));
+        assert_eq!(result[1], ("ㄴ".to_string(), "ETM".to_string()));
+    }
 }
 
 /// 축약형 동사 분리 시도
