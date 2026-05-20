@@ -1,17 +1,17 @@
-# PLAN — mecab-ko Sprint 152 (next)
+# PLAN — mecab-ko Sprint 153 (next, 자동 결정)
 
 > 마지막 업데이트: 2026-05-21
 
-## 완료: Sprint 151 C — setup helper 추출
+## 완료: Sprint 152 D — Node/WASM CI 강화
 
 ### 결과
 
-- accuracy_eval.rs: 2969 → 2406줄 (**-19%**)
-- 3개 helper 함수: `project_root`, `dict_path`, `make_tokenizer`
-- 24개 함수에서 30라인 boilerplate → 2라인으로 축소
-- 누적 효과 (Sprint 148~151): 4963 → 2406줄 (**-51%**)
+- `e2e-ffi-tests.yml` 7개 continue-on-error 분석
+- 2개 제거: nodejs-e2e Build (hard-gated 중복), wasm-e2e Run (잡 레벨 중복)
+- 5개 정당화 유지 + 명시 코멘트 추가
+- `agents.md` **규칙 5 추가**: 자동 트랙 선택 (전문가 리뷰 기반)
 
-## 완료된 P0 정리 작업
+## 완료된 P0 정리 작업 (총 6개)
 
 | Sprint | 항목 | 결과 |
 |--------|------|------|
@@ -21,31 +21,34 @@
 | 149 | accuracy_eval 진단 함수 24개 삭제 | 4963→2800 |
 | 149 | multi-syllable rollback guard | 3 테스트 |
 | 151 C | setup helper 추출 | 2800→2406 |
+| **152 D** | **Node/WASM CI continue-on-error 정리** | **2개 제거** |
 
-## 다음 스프린트: Sprint 152 (미정 — 사용자 선택)
+**P0 정리 완료**. 남은 모든 작업은 정확도 lift 또는 인프라.
 
-### 후보 D: Node/WASM CI 강화 (잔여 P0)
+## Sprint 153 — 자동 결정 (전문가 리뷰 기반)
 
-`.github/workflows/e2e-ffi-tests.yml`의 `continue-on-error: true` 분석/제거:
-- nodejs-e2e 빌드 단계 (L166, L175): hard-fail로 전환 검토
-- wasm-e2e job (L177): job-level continue-on-error 분석
-- 실제 빌드 동작 먼저 확인 필요
+agents.md 규칙 5에 따라 도메인 전문가 에이전트가 후보 분석 후 Top 권고를 자동 채택.
 
-**비용**: 0.2 sprint, 낮은 위험
+### 현재 후보
 
-### 후보 E: XSA+ETM 38건 분석
+#### E: XSA+ETM 38건 분석
 
-Sprint 145 빈도 분석: XSA+ETM 38건 (스러운, 스런, 로운)
+Sprint 145 빈도: XSA+ETM 38건 (스러운, 스런, 로운)
 - "한가스러운" → 한가/NNG + 스럽/XSA + 운/ETM (ㅂ 불규칙 XSA)
-- 패턴: ㅂ 불규칙 (어렵, 무겁과 동일 메커니즘)
-- 진단 → ending_rules 처리 여부 확인 후 결정
+- Sprint 150 A 패턴 연장선
+- ending_rules 처리 여부 진단 후 결정
 
 **비용**: 0.5 sprint, 중간 위험
 
-### 후보 B [메인]: Full CRF Retrain (Track B)
+#### B [대규모]: Full CRF Retrain (Track B)
 
-3-5 sprint 장기 작업. 학습 데이터 + mecab-cost-train.
-잠재 lift +1~5pp (가장 큰 single improvement).
+3-5 sprint 장기 작업 (학습 데이터 + mecab-cost-train)
+- **규칙 5 예외**: 비가역적 대규모 작업 → 사전 confirm 필요
+- 잠재 lift +1~5pp
+
+#### F: 전문가 식별 신규
+
+전문가 리뷰가 발견할 새 정확도 영역.
 
 ## 검증 기준
 

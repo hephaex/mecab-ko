@@ -160,10 +160,11 @@ jobs:
 
       - name: Build Node.js binding
         working-directory: rust/crates/mecab-ko-node
+        # napi-rs build is hard-gated in `node-bindings` job below; this step
+        # is duplicate verification on multi-OS/Node-version matrix.
         run: |
           npm install
-          npm run build || echo "Build not configured yet"
-        continue-on-error: true
+          npm run build
 
       - name: Install test dependencies
         working-directory: tests/e2e/node
@@ -171,12 +172,16 @@ jobs:
 
       - name: Run Node.js E2E tests
         working-directory: tests/e2e/node
+        # E2E tests use skip pattern when module unavailable (test_basic.mjs).
+        # Soft-fail kept: cross-OS / cross-Node environment differences may surface.
         run: npm test
         continue-on-error: true
 
   wasm-e2e:
     name: WASM E2E Tests
     runs-on: ubuntu-latest
+    # Job-level soft-fail: wasm-pack installer + WASM E2E env is fragile.
+    # WASM build is hard-gated in `wasm-bindings` job below.
     continue-on-error: true
 
     steps:
@@ -204,8 +209,8 @@ jobs:
 
       - name: Run WASM E2E tests
         working-directory: tests/e2e/wasm
+        # Step-level continue-on-error redundant: job already has it.
         run: npm test
-        continue-on-error: true
 
   e2e-coverage:
     name: E2E Coverage Report
