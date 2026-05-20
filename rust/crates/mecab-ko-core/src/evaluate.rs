@@ -991,7 +991,7 @@ fn normalize_endings(s: &str) -> String {
         out = out.replace("이습니다", "입니다");
     }
 
-    // Step 3: ㄹ불규칙 활용 (Sprint 136 P3a)
+    // Step 3: ㄹ불규칙 활용 (Sprint 136 P3a + Sprint 156)
     // 어간 + 아/어 결합 시 르 → ㄹ + 라/러 활용. mecab은 어간 분해, KLUE는 활용형 보존.
     // 보수적으로 명시 목록만 처리 (자동 음절 분해 시 false positive 위험).
     // 모음조화: ㅏ/ㅗ → 아 → 라, 그 외 → 어 → 러.
@@ -1001,10 +1001,18 @@ fn normalize_endings(s: &str) -> String {
         }
     }
 
+    // Step 4: ㄷ불규칙 활용 (Sprint 156)
+    // 듣다 → 들, 묻다 → 물, 걷다 → 걸 등. mecab은 어간 분해, KLUE는 활용형 보존.
+    for (from, to) in D_IRREGULAR_PATTERNS {
+        if out.contains(from) {
+            out = out.replace(from, to);
+        }
+    }
+
     out
 }
 
-/// ㄹ불규칙 동사 활용 단방향 정규화 패턴 (Sprint 136 P3a).
+/// ㄹ불규칙 동사 활용 단방향 정규화 패턴 (Sprint 136 P3a + Sprint 156).
 ///
 /// mecab의 어간 분해 표기 → KLUE의 활용형 표기.
 /// 명시 목록만 사용하여 false positive 방지 (예: 일반 음절 sequence "X르Y"가
@@ -1019,6 +1027,29 @@ const R_IRREGULAR_PATTERNS: &[(&str, &str)] = &[
     ("자르아", "잘라"),  // 자르다 + 아
     ("누르어", "눌러"),  // 누르다 + 어
     ("고르아", "골라"),  // 고르다 + 아
+    // Sprint 156: 추가 르 불규칙 (surface mismatch 진단)
+    ("아우르어", "아울러"),  // 아우르다 + 어 (4건 KLUE)
+];
+
+/// ㄷ불규칙 동사 활용 단방향 정규화 패턴 (Sprint 156).
+///
+/// mecab의 어간 분해 표기 → KLUE의 활용형 표기.
+/// ㄷ 불규칙: 듣다 → 들, 묻다 → 물, 걷다 → 걸 등 (ㄷ → ㄹ 활용).
+/// 명시 목록만 사용 (false positive 방지).
+const D_IRREGULAR_PATTERNS: &[(&str, &str)] = &[
+    // 듣다 (가장 빈번)
+    ("듣었", "들었"),  // 듣 + 었 → 들었 (6건 KLUE)
+    ("듣어", "들어"),  // 듣 + 어 → 들어
+    ("듣은", "들은"),  // 듣 + 은 → 들은
+    // 묻다 (질문하다)
+    ("묻었", "물었"),  // 묻 + 었 → 물었
+    ("묻어", "물어"),  // 묻 + 어 → 물어
+    // 걷다 (걷기)
+    ("걷었", "걸었"),  // 걷 + 었 → 걸었
+    ("걷어", "걸어"),  // 걷 + 어 → 걸어
+    // 깨닫다
+    ("깨닫았", "깨달았"),
+    ("깨닫아", "깨달아"),
 ];
 
 /// 이중 메트릭 평가 결과 (Sprint 124)
@@ -1577,6 +1608,37 @@ mod tests {
         assert!(!surface_eq_canonical_lenient("푸르러", "푸르어"));
         // 명시 목록에 없는 "기르아"는 normalize 대상 아님
         assert!(!surface_eq_canonical_lenient("길러", "기르어"));
+    }
+
+    #[test]
+    fn test_surface_eq_canonical_lenient_r_irregular_aureo() {
+        // Sprint 156: 아우르다 추가 (4건 KLUE)
+        assert!(surface_eq_canonical_lenient("아울러", "아우르어"));
+    }
+
+    #[test]
+    fn test_surface_eq_canonical_lenient_d_irregular() {
+        // Sprint 156: ㄷ불규칙 활용 (mecab 어간 분해 → KLUE 활용형)
+        // 듣다 → 들 (가장 빈번, 6건 KLUE)
+        assert!(surface_eq_canonical_lenient("들었습니다", "듣었습니다"));
+        assert!(surface_eq_canonical_lenient("들어", "듣어"));
+        assert!(surface_eq_canonical_lenient("들은", "듣은"));
+        // 묻다 → 물
+        assert!(surface_eq_canonical_lenient("물었", "묻었"));
+        // 걷다 → 걸
+        assert!(surface_eq_canonical_lenient("걸었", "걷었"));
+        // 깨닫다 → 깨달
+        assert!(surface_eq_canonical_lenient("깨달았", "깨닫았"));
+    }
+
+    #[test]
+    fn test_surface_eq_canonical_lenient_d_irregular_does_not_overcorrect() {
+        // Sprint 156: 명시 목록 외 ㄷ-패턴은 false positive 방지
+        // "받다"는 정규 (받았 → 받았, 변화 없음)
+        // "묻다"(매장하다)는 정규 활용 (묻었 = 묻었, 명시 패턴이 있어 변환되지만 false positive 위험 인정)
+        // 일반 명사 "단어" 등은 변환 대상 아님
+        assert!(surface_eq_canonical_lenient("단어", "단어"));
+        assert!(!surface_eq_canonical_lenient("받았", "받았다"));  // 단순 다름
     }
 
     #[test]
