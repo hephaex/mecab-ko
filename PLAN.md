@@ -1,54 +1,59 @@
-# PLAN — mecab-ko Sprint 153 (next, 자동 결정)
+# PLAN — mecab-ko Sprint 154 (next, 자동 결정)
 
 > 마지막 업데이트: 2026-05-21
 
-## 완료: Sprint 152 D — Node/WASM CI 강화
+## 완료: Sprint 153 E — XSA+ETM 비이슈 확인
 
-### 결과
+- 전문가 권고: XSA+ETM 미처리 추정
+- 실측: 38/38 처리됨 (converter decomp fallback)
+- 규칙 5 (자동 트랙 선택) 첫 실 적용
 
-- `e2e-ffi-tests.yml` 7개 continue-on-error 분석
-- 2개 제거: nodejs-e2e Build (hard-gated 중복), wasm-e2e Run (잡 레벨 중복)
-- 5개 정당화 유지 + 명시 코멘트 추가
-- `agents.md` **규칙 5 추가**: 자동 트랙 선택 (전문가 리뷰 기반)
+## 누적 진척 상황
 
-## 완료된 P0 정리 작업 (총 6개)
+### 정확도 lift sprint
+| Sprint | 효과 |
+|--------|------|
+| 147 | VV/XSV practical 동치 +0.3pp |
+| 150 A | VA+ETM multi-syllable +0.4pp KLUE strict |
 
-| Sprint | 항목 | 결과 |
-|--------|------|------|
-| 149 | MSRV 1.80 CI gate | 추가 |
-| 149 | coverage --fail-under 60 | 추가 |
-| 149 | placeholder 테스트 삭제 | 2 파일 |
-| 149 | accuracy_eval 진단 함수 24개 삭제 | 4963→2800 |
-| 149 | multi-syllable rollback guard | 3 테스트 |
-| 151 C | setup helper 추출 | 2800→2406 |
-| **152 D** | **Node/WASM CI continue-on-error 정리** | **2개 제거** |
+### 비이슈 확인 sprint (가치: 학습)
+| Sprint | 패턴 | 처리 위치 |
+|--------|------|----------|
+| 148 D | ETM+ETM "라는" 33건 | splitter L71-73 중복 태그 규칙 |
+| 153 E | XSA+ETM 38건 | converter L162-187 decomp fallback |
 
-**P0 정리 완료**. 남은 모든 작업은 정확도 lift 또는 인프라.
+### 정리 sprint
+| Sprint | 효과 |
+|--------|------|
+| 149 | accuracy_eval -2163줄 + MSRV gate + coverage floor |
+| 151 C | setup helper 추출 -563줄 |
+| 152 D | Node/WASM continue-on-error 정리 |
 
-## Sprint 153 — 자동 결정 (전문가 리뷰 기반)
+### 인프라 작업
+| Sprint | 효과 |
+|--------|------|
+| 152 D | agents.md 규칙 5 추가 (자동 트랙 선택) |
 
-agents.md 규칙 5에 따라 도메인 전문가 에이전트가 후보 분석 후 Top 권고를 자동 채택.
+## Sprint 154 — 자동 결정 (전문가 리뷰 기반)
 
-### 현재 후보
+### 진단할 후보 (Sprint 153 학습 반영)
 
-#### E: XSA+ETM 38건 분석
+전문가 리뷰 + 빈도 분석 + **반드시 splitter/converter 변환 후 측정**:
 
-Sprint 145 빈도: XSA+ETM 38건 (스러운, 스런, 로운)
-- "한가스러운" → 한가/NNG + 스럽/XSA + 운/ETM (ㅂ 불규칙 XSA)
-- Sprint 150 A 패턴 연장선
-- ending_rules 처리 여부 진단 후 결정
+- **EP+ETM 86건** (던, 는, 신): ending_rules에 단독 EP+ETM 부재 — 진단 필요
+- **XSV+ETM 72건** (던, 헌, 시킬): 미처리 가능성
+- **VX+EP 25건** (했, 못했, 왔): 보조용언 + 과거
+- **XSA+EP 35건** (했, 스러웠, 허): XSA + 과거
+- **새 영역**: 전문가가 식별
 
-**비용**: 0.5 sprint, 중간 위험
+### 진단 우선 (Sprint 148 D, 153 E 교훈)
 
-#### B [대규모]: Full CRF Retrain (Track B)
-
-3-5 sprint 장기 작업 (학습 데이터 + mecab-cost-train)
-- **규칙 5 예외**: 비가역적 대규모 작업 → 사전 confirm 필요
-- 잠재 lift +1~5pp
-
-#### F: 전문가 식별 신규
-
-전문가 리뷰가 발견할 새 정확도 영역.
+작업 순서:
+1. 전문가 리뷰 → Top 권고
+2. 진단 테스트 작성 (raw → splitter → converter 모두 확인)
+3. 실제 미처리 건수 측정
+4. 미처리 ≥ 10건이면 → 구현 + 5-gate
+5. 미처리 < 10건이면 → 비이슈 문서화 후 다음 후보
 
 ## 검증 기준
 

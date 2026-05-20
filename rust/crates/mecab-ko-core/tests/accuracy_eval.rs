@@ -2235,6 +2235,90 @@ fn test_va_etm_post_splitter_mismatch() {
     println!("\n{}", "=".repeat(70));
 }
 
+/// Sprint 153 E — XSA+ETM post-splitter mismatch 진단.
+///
+/// raw mecab XSA+ETM (스러운, 스런, 로운) 38건 중 splitter 후 미처리 측정.
+/// `ending_rules`에 XSA+ETM 항목 부재 확인 (전문가 리뷰).
+#[test]
+#[ignore = "requires KLUE/UD eval data + system dictionary"]
+fn test_xsa_etm_post_splitter_mismatch() {
+    use std::collections::HashMap;
+    use mecab_ko_core::sejong::SejongConverter;
+
+    let project_root = project_root();
+    let mut tokenizer = make_tokenizer(&project_root);
+    let converter = SejongConverter::new();
+    let eval_files = [
+        ("KLUE", "data/eval/klue_dp_val.tsv"),
+        ("UD-Kaist", "data/eval/ud_kaist_test.tsv"),
+        ("UD-GSD", "data/eval/ud_gsd_test.tsv"),
+    ];
+
+    let mut raw = 0usize;
+    let mut split_by_splitter = 0usize;
+    let mut unhandled: HashMap<String, usize> = HashMap::new();
+
+    for (_, rel_path) in &eval_files {
+        let path = project_root.join(rel_path);
+        if !path.exists() { continue; }
+        let dataset = TestDataset::from_tsv(path.to_str().unwrap()).expect("dataset");
+        for sentence in &dataset.sentences {
+            let raw_tokens = tokenizer.tokenize(&sentence.text);
+            for tok in &raw_tokens {
+                if tok.pos == "XSA+ETM" {
+                    raw += 1;
+                    let split = converter.convert_tokens(std::slice::from_ref(tok));
+                    let has_etm = split.iter().any(|t| t.pos == "ETM");
+                    if has_etm {
+                        split_by_splitter += 1;
+                    } else {
+                        *unhandled.entry(tok.surface.clone()).or_insert(0) += 1;
+                    }
+                }
+            }
+        }
+    }
+
+    println!("\n{}", "=".repeat(70));
+    println!("  XSA+ETM post-splitter analysis (Sprint 153 E)");
+    println!("{}", "=".repeat(70));
+    println!("Raw XSA+ETM: {raw}");
+    println!("Split by splitter: {split_by_splitter}");
+    println!("NOT split: {}", raw - split_by_splitter);
+    println!("\n=== Unhandled surfaces ===");
+    let mut sorted: Vec<_> = unhandled.iter().collect();
+    sorted.sort_by_key(|x| std::cmp::Reverse(x.1));
+    for (surface, count) in sorted.iter().take(20) {
+        let chars: Vec<char> = surface.chars().collect();
+        let last = chars.last().copied().unwrap_or(' ');
+        println!("  {surface}  count={count}  last_char='{last}'");
+    }
+
+    // 추가: 실제 split 결과 예시 (decomposition feature 활용 확인)
+    println!("\n=== Sample split results (first 5 unique surfaces) ===");
+    let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
+    'outer: for (_, rel_path) in &eval_files {
+        let path = project_root.join(rel_path);
+        if !path.exists() { continue; }
+        let dataset = TestDataset::from_tsv(path.to_str().unwrap()).expect("dataset");
+        for sentence in &dataset.sentences {
+            let raw_tokens = tokenizer.tokenize(&sentence.text);
+            for tok in &raw_tokens {
+                if tok.pos == "XSA+ETM" && !seen.contains(&tok.surface) {
+                    seen.insert(tok.surface.clone());
+                    let split = converter.convert_tokens(std::slice::from_ref(tok));
+                    let parts: Vec<String> = split.iter()
+                        .map(|t| format!("{}/{}", t.surface, t.pos))
+                        .collect();
+                    println!("  {} → {}", tok.surface, parts.join(" + "));
+                    if seen.len() >= 5 { break 'outer; }
+                }
+            }
+        }
+    }
+    println!("\n{}", "=".repeat(70));
+}
+
 /// Sprint 150 A — VA+ETM multi-syllable raw 빈도 분석 (참고용).
 #[test]
 #[ignore = "requires KLUE/UD eval data + system dictionary"]

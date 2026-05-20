@@ -1,110 +1,79 @@
-# PROGRESS — mecab-ko Sprint 152 (Node/WASM CI 강화)
+# PROGRESS — mecab-ko Sprint 153 (XSA+ETM 비이슈 + 규칙 5 첫 적용)
 
 > 마지막 업데이트: 2026-05-21
 
-## Sprint 152 D — Node/WASM CI continue-on-error 정리
+## Sprint 153 E — XSA+ETM 진단 (자동 트랙 선택)
 
 | Task | 상태 | 결과 |
 |------|------|------|
-| S152-D1: e2e-ffi-tests.yml 전체 분석 | ✅ 완료 | 7개 continue-on-error 식별 |
-| S152-D2: 빌드 잡 hard-gate 검증 | ✅ 완료 | node-bindings/wasm-bindings 이미 hard-gated |
-| S152-D3: 불필요한 continue-on-error 제거 | ✅ 완료 | 2개 제거, 5개 정당화 유지 |
-| S152-D4: YAML 문법 검증 | ✅ 완료 | yaml.safe_load 통과 |
-| S152-D5: agents.md 규칙 5 추가 | ✅ 완료 | 자동 트랙 선택 (전문가 리뷰 기반) |
+| S153-E1: 전문가 리뷰 (rust-pro) 의뢰 | ✅ 완료 | Top 권고: XSA+ETM 38건 |
+| S153-E2: 규칙 5 자동 채택 | ✅ 완료 | 사용자 question 없이 진행 |
+| S153-E3: 진단 테스트 작성 | ✅ 완료 | `test_xsa_etm_post_splitter_mismatch` |
+| S153-E4: 측정 | ✅ 완료 | 38/38 처리됨 — **비이슈** |
+| S153-E5: 처리 메커니즘 분석 | ✅ 완료 | converter L162-187 decomp fallback |
+| S153-E6: 연구 문서 작성 | ✅ 완료 | sprint153_xsa_etm_nonissue.md |
 
-## 변경 내용
+## 핵심 발견
 
-### 제거된 continue-on-error (2개)
+### XSA+ETM 38건 = 이미 100% 처리
 
-#### 1. nodejs-e2e 빌드 단계 (L161-166)
+**처리 메커니즘**: `SejongConverter::convert_token` (converter.rs L162-187)
 
-**Before**:
-```yaml
-- name: Build Node.js binding
-  working-directory: rust/crates/mecab-ko-node
-  run: |
-    npm install
-    npm run build || echo "Build not configured yet"
-  continue-on-error: true
+1. mecab dict의 `decomposition` features 추출
+2. POS 구조 일치 확인 (`decomp_pos == token.pos`)
+3. 일치하면 decomposition 직접 사용
+
+### 실제 split 출력 (sample)
+
+```
+스러운 → 스럽/XSA + ㄴ/ETM   (ㅂ 불규칙 stem 복원)
+스런   → 스럽/XSA + ㄴ/ETM
+로운   → 롭/XSA + ㄴ/ETM    (새롭 + ㄴ → 새로운)
+다운   → 답/XSA + ㄴ/ETM    (아름답 + ㄴ → 아름다운)
+스러울 → 스럽/XSA + ㄹ/ETM
 ```
 
-**After**:
-```yaml
-- name: Build Node.js binding
-  working-directory: rust/crates/mecab-ko-node
-  # napi-rs build is hard-gated in `node-bindings` job below; this step
-  # is duplicate verification on multi-OS/Node-version matrix.
-  run: |
-    npm install
-    npm run build
-```
+mecab-ko-dic이 ㅂ 불규칙 stem 복원까지 정확히 제공.
 
-**근거**:
-- `node-bindings` 잡 (L291)에서 `npm run build`가 이미 hard-gated
-- 잘못된 `|| echo "Build not configured yet"` 메시지 제거 (build는 실제로 설정됨)
-- continue-on-error 제거 — 멀티 OS/Node 매트릭스에서도 hard fail
+### 자동 트랙 선택 (규칙 5) 첫 적용 결과
 
-#### 2. wasm-e2e 테스트 단계 (L208)
+| 항목 | 효과 |
+|------|------|
+| 사용자 question 제거 | ✅ 빠른 진행 |
+| 전문가 권고 활용 | ✅ 가설 명확 |
+| 측정으로 검증 | ✅ 가설 반증 (전문가 추정 != 실측) |
+| 다음 트랙 즉시 전환 | ✅ Sprint 154 자동 결정 가능 |
 
-**Before**:
-```yaml
-- name: Run WASM E2E tests
-  working-directory: tests/e2e/wasm
-  run: npm test
-  continue-on-error: true
-```
+**중요**: 전문가도 틀릴 수 있다 — **항상 측정으로 검증**.
 
-**After**:
-```yaml
-- name: Run WASM E2E tests
-  working-directory: tests/e2e/wasm
-  # Step-level continue-on-error redundant: job already has it.
-  run: npm test
-```
+### Sprint 148 D 패턴 재현
 
-**근거**: 잡 레벨에 이미 `continue-on-error: true` (L180) — step 레벨은 중복.
+| 항목 | Sprint 148 D | Sprint 153 E |
+|------|------------|------------|
+| Raw 빈도 | 33 (ETM+ETM) | 38 (XSA+ETM) |
+| 추정 미처리 | 33 | 38 |
+| 실제 미처리 | 0 | 0 |
+| 처리 위치 | splitter L71-73 | converter L162-187 |
 
-### 정당화 유지 (5개 — 명시적 코멘트 추가)
-
-| Line | Job | 사유 |
-|------|-----|------|
-| L77 | cli-tests bats Windows 설치 | chocolatey 설치 불안정 (OS 특이) |
-| L178 | nodejs-e2e 테스트 단계 | E2E 환경 차이 가능 (skip 패턴 사용) |
-| L185 | wasm-e2e 잡 레벨 | wasm-pack installer 불안정 |
-| L218 | e2e-coverage 잡 레벨 | informational |
-| L246 | e2e-coverage 업로드 | informational |
-
-### Hard-gated 잡 검증
-
-`test-status` 잡 (L371-412)이 강제하는 잡:
-- ✅ `python-bindings` (continue-on-error 없음)
-- ✅ `node-bindings` (`npm run build` hard-gated)
-- ✅ `wasm-bindings` (`wasm-pack build --target bundler` hard-gated)
-- ✅ `elasticsearch-plugin`
-
-이 4개가 실패하면 `test-status`가 `exit 1` → PR 머지 차단.
-
-## agents.md 규칙 5 신규
-
-```markdown
-5. **여러 후보 중 선택 시 도메인 전문가 에이전트 리뷰로 자동 결정**
-   - 사용자에게 "어느 트랙으로 진행할까요?" 묻지 말 것
-   - 적절한 도메인 전문가 에이전트 호출
-   - 전문가 리뷰의 Top 권고를 자동 채택
-   - 결정 근거를 PROGRESS.md에 기록
-   - 예외: 비가역적 대규모 작업은 사전 confirm
-```
-
-향후 sprint planning에 적용 (Sprint 153~).
+빈도 분석 → splitter/converter 변환 후 진단 필수.
 
 ## 검증
 
-- `python3 -c "import yaml; yaml.safe_load(...)"`: **PASS** (YAML 유효)
-- 변경 파일: `.github/workflows/e2e-ffi-tests.yml` (CI workflow만 수정, 코드 변경 없음)
-- 로컬 영향: 없음 (CI workflow는 push/PR 시점에만 실행)
+- `cargo test --workspace --exclude mecab-ko-ffi --lib`: 변경 없음 (테스트만 추가)
+- 5-gate sample.tsv: 영향 없음 (코드 변경 없음)
+- `test_xsa_etm_post_splitter_mismatch`: PASS (38/38 처리됨)
 
-## Sprint 153 후보 (자동 결정 예정)
+## 변경 파일
 
-- E: XSA+ETM 38건 분석 (스러운/스런/로운, ㅂ 불규칙)
-- B: Full CRF Retrain (Track B 데이터 준비, 3-5 sprint)
-- F: 신규 — 추가 정확도 영역 (전문가 리뷰로 식별)
+- `rust/crates/mecab-ko-core/tests/accuracy_eval.rs`: 진단 테스트 추가
+- `docs/research/accuracy/2026-05-21_sprint153_xsa_etm_nonissue.md` (신규)
+- `PLAN.md`, `PROGRESS.md` 갱신
+
+## Sprint 154 후보 (자동 결정 예정)
+
+전문가 리뷰로 다음 후보 중 자동 선택:
+- EP+ETM 86건 (던, 는, 신)
+- XSV+ETM 72건 (던, 헌, 시킬)
+- VX+EP 25건 (했, 못했, 왔)
+- XSA+EP 35건 (했, 스러웠, 허)
+- 또는 전문가가 식별하는 새 영역
