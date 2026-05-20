@@ -138,6 +138,15 @@ pub(super) fn split_morpheme<S: std::hash::BuildHasher>(
         }
     }
 
+    // Sprint 146 A: VCP+EP "였" 분리.
+    // mecab은 "였"을 VCP+EP 결합 토큰으로 출력하나 KLUE/UD gold는 "이/VCP + 었/EP"로 분해.
+    if pos == "VCP+EP" && surface == "였" {
+        return vec![
+            ("이".to_string(), "VCP".to_string()),
+            ("었".to_string(), "EP".to_string()),
+        ];
+    }
+
     // 143차: VV+EC "는다" 특수 처리 (평서형 종결어미)
     // MeCab이 "는다"를 VV+EC로 태그하지만 실제로는 종결어미
     // "는다/VV+EC" → "는다/EF" (단일 토큰 유지)
@@ -553,6 +562,26 @@ mod tests {
         let result = split_morpheme("미정", "VCP+ETM", map, &rules);
         // 명시 목록 (인/일/라는)이 아니므로 일반 split 흐름 따름 (size 1 or default)
         assert!(result.len() <= 2, "non-listed surface should not split into >2");
+    }
+
+    #[test]
+    fn test_split_morpheme_vcp_ep_yeoss() {
+        // Sprint 146 A: "였/VCP+EP" → "이/VCP + 었/EP"
+        let map = make_tag_map();
+        let rules = make_rules();
+        let result = split_morpheme("였", "VCP+EP", map, &rules);
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], ("이".to_string(), "VCP".to_string()));
+        assert_eq!(result[1], ("었".to_string(), "EP".to_string()));
+    }
+
+    #[test]
+    fn test_split_morpheme_vcp_ep_other_surface_no_split() {
+        // Sprint 146 A: 명시 surface "였"만 분리, 다른 VCP+EP는 일반 처리
+        let map = make_tag_map();
+        let rules = make_rules();
+        let result = split_morpheme("미정", "VCP+EP", map, &rules);
+        assert!(result.len() <= 2);
     }
 
     #[test]

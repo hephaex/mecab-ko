@@ -1,45 +1,35 @@
-# PLAN — mecab-ko Sprint 146 (next)
+# PLAN — mecab-ko Sprint 147 (next)
 
 > 마지막 업데이트: 2026-05-20
 
-## 완료: Sprint 145 — PUD 보류 → D (결합 POS 분석, multi-syllable VV+ETM rollback)
+## 완료: Sprint 146 A — 명시 surface 안전 패턴 (VCP+EP "였")
 
-### PUD 보류
-- Penn-Treebank XPOS (NN/JJ/RB/...) — Sejong 아님
-- lemma `_` 52% (8,666/16,584) — morpheme 분해 부족
-- → 보류, D로 전환
+### NP+JX skip 결정
+- mecab CLI 확인: "그는"/"이는"/"저는" 이미 분해
+- 결합 surface ("난"/"게다가")는 KLUE에 없음
+- → 분리 시도 시 false morpheme 추가 위험
 
-### D: 결합 POS 빈도 분석
-- 신규 `test_compound_pos_frequency_analysis`
-- 153 patterns / 13,611 occurrences (13% tokens)
-- 상위: VV+ETM 5,376 / VV+EC 1,728 / XSV+EC 751 / VCP+ETM 613
-
-### multi-syllable VV+ETM 실험 → rollback
-- sample.tsv Sentence 99.9% → 99.8% (-1 문장) → rollback
-- silver eojeol +5~9 lift는 sample.tsv 회귀를 정당화 못함
-- 1-syllable 처리만 유지
+### VCP+EP "였" 분리 추가
+- splitter.rs: `if pos == "VCP+EP" && surface == "였"` → split
+- 단위 테스트 2개
+- 실측 lift 0 (mecab raw feature ≠ SejongConverter 후 결과)
+- 형태론적 정확성 + 회귀 0 → 유지
 
 ### 보고서
-`docs/research/accuracy/2026-05-20_sprint145_compound_pos_analysis.md`
+`docs/research/accuracy/2026-05-20_sprint146_explicit_surface_splits.md`
 
-## 다음 스프린트: Sprint 146 (미정 — 사용자 선택)
+## 다음 스프린트: Sprint 147 (미정 — 사용자 선택)
 
-### 후보 A: 명시 surface 목록 기반 안전 패턴 분리
+### 후보 A: 추가 안전 패턴 (XSV+EP, XSV+EC)
 
-Sprint 141 VCP+EC 방식 — 명시 surface 목록만 분리 (false positive 방지).
+XSV+EP 413건, XSV+EC 751건. 명시 surface 식별 + 분리 시도.
 
-**후보 패턴**:
-- NP+JX 211건: "그는" → "그/NP + 는/JX", "이는" → "이/NP + 는/JX"
-  * **회피**: "난" (contraction)
-- VCP+EP 101건: "였" → "이/VCP + 었/EP"
-- VV+EP 542건: 명시 동사 ("흘렸" → "흘리/VV + 었/EP", "버렸" → "버리/VV + 었/EP")
-  * **회피**: 사동/피동 동사 (이미 splitter에 처리됨)
-
-**각 패턴마다**: 단위 테스트 + 5-gate 검증.
+**가능 surface**:
+- XSV+EP 413건: "했" (하/XSV + 었/EP), "됐" (되/XSV + 었/EP)
+- XSV+EC 751건: "해" (하/XSV + 어/EC), "하고" (하/XSV + 고/EC)
 
 **비용**: 0.5-1 sprint
-**위험**: 낮음 (명시 surface)
-**예상 lift**: 누적 +0.1-0.3pp (silver 데이터셋)
+**위험**: 낮음
 
 ### 후보 B [메인]: Full CRF Retrain (Track E)
 
@@ -47,16 +37,20 @@ Sprint 141 VCP+EC 방식 — 명시 surface 목록만 분리 (false positive 방
 
 ### 후보 C: NIKL Modu 수동 다운로드
 
-Academic license, 로컬 only.
+Academic license. 구어/SNS 도메인 확장.
+
+### 후보 D: VV+EP 명시 동사 분리
+
+VV+EP 542건. 명시 동사 surface ("흘렸"/"버렸") → "VV + 었/EP".
 
 ## 백로그
 
-- P4 (borderline NNG↔NNP): Sprint 132 보류
-- accuracy-gate CI에 UD Kaist + GSD eojeol gate 추가 (현재 morph만)
+- P4 (borderline NNG↔NNP): Sprint 132 보류 5 entries
+- accuracy-gate CI에 UD Kaist/GSD eojeol gate
 
 ## 검증 기준
 
 - `cargo test --workspace --exclude mecab-ko-ffi` 전체 pass
 - `cargo clippy --workspace --all-targets --exclude mecab-ko-ffi -- -D warnings` clean
 - **5-gate CI 통과** (sample.tsv / KLUE morph / surface_only / UD Kaist / UD GSD)
-- sample.tsv baseline 100%/99.9% **회귀 금지** (Sprint 138 결론)
+- sample.tsv baseline 100%/99.9% **회귀 금지**
