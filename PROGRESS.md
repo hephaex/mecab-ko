@@ -1,77 +1,70 @@
-# PROGRESS — mecab-ko Sprint 149 (P0 Cleanup)
+# PROGRESS — mecab-ko Sprint 150 (VA+ETM multi-syllable)
 
 > 마지막 업데이트: 2026-05-21
 
-## Sprint 149 — P0 정리 스프린트
+## Sprint 150 A — VA+ETM multi-syllable ㄴ jongseong split
 
 | Task | 상태 | 결과 |
 |------|------|------|
-| S149-01: MSRV 1.80 CI gate 추가 | ✅ 완료 | ci.yml msrv job 추가 |
-| S149-02: coverage floor 설정 | ✅ 완료 | tarpaulin --fail-under 60 |
-| S149-03: placeholder 테스트 파일 삭제 | ✅ 완료 | integration_kiwi.rs, integration_performance.rs 삭제 |
-| S149-04: accuracy_eval.rs 진단 함수 24개 삭제 | ✅ 완료 | 4963→2800줄 (-43%) |
-| S149-05: multi-syllable VV+ETM rollback guard 테스트 | ✅ 완료 | 3개 신규 테스트 (스프린트 145 가드) |
+| S150-A1: VA+ETM raw 빈도 진단 | ✅ 완료 | 542건 (1-syl 160 + multi 382) |
+| S150-A2: post-splitter mismatch 진단 | ✅ 완료 | 518/542 처리됨 (95.6%), 미처리 24건 |
+| S150-A3: gold 검증 | ✅ 완료 | 빠르/VA + ㄴ/ETM 형식 확인 |
+| S150-A4: splitter 규칙 추가 (VA만, VV는 Sprint 145 제외) | ✅ 완료 | 4 단위 테스트 |
+| S150-A5: 5-gate 측정 | ✅ 완료 | KLUE strict +0.4pp, 무회귀 |
+| S150-A6: clippy 정리 | ✅ 완료 | clean |
 
-## 변경 내용
+## 핵심 발견
 
-### ci.yml: MSRV 1.80 게이트
+### Raw 빈도 vs 실제 미처리 갭
 
-```yaml
-msrv:
-  name: MSRV Check (Rust 1.80)
-  steps:
-    - uses: ./.github/actions/rust-setup
-      with: { toolchain: 1.80.0 }
-    - run: cargo check --workspace --lib
-```
+- VA+ETM raw 542건 (1-syl 160, multi 382)
+- **ending_rules가 이미 518건 (95.6%) 처리**
+- 미처리 24건: 빠른(13) + 나쁜(5) + 예쁜(4) + 느린(1) + 신선한(1)
 
-Cargo.toml에 선언된 `rust-version = "1.80"`이 CI에서 실제 검증됨.
+빈도 분석만으로 판단했다면 542건 모두를 작업 대상으로 오해할 수 있었음.
 
-### ci.yml: coverage floor
+### 미처리 24건 패턴
 
-```yaml
-cargo tarpaulin ... --fail-under 60
-```
+`multi-syllable VA+ETM with ㄴ jongseong on last char`:
+- 빠른 → 빠르 + ㄴ (르 불규칙)
+- 나쁜/예쁜 → 나쁘/예쁘 + ㄴ (ㅡ 탈락)
 
-사용자 룰의 80% 목표 향해 60% floor로 시작 (이전: floor 없음).
+이는 1-syllable case의 자연 확장이지만 Sprint 145에서 VV+ETM에 적용 시 sample.tsv -1 sentence 회귀.
+**VA만 확장** (어휘 범위 제한 → false positive 위험 낮음)으로 안전 처리.
 
-### placeholder 테스트 삭제
+### 측정 결과 (sample.tsv 무회귀)
 
-- `integration_performance.rs` — 21개 테스트, 모두 `println!("...placeholder")` + 0 assertion
-- `integration_kiwi.rs` — 12개 테스트, `assert!(true)` 1개만 존재
+| Metric | Before | After | Δ |
+|--------|--------|-------|---|
+| sample.tsv | 100.0%/99.9% | 100.0%/99.9% | — |
+| **KLUE morph strict** | 66.5% | **66.9%** | **+0.4pp** |
+| KLUE morph practical | 71.9% | 71.9% | — |
+| KLUE surface strict | 87.7% | 87.8% | +0.1pp |
+| UD Kaist morph practical | 68.3% | 68.4% | +0.1pp |
+| UD GSD morph practical | 71.7% | 71.6% | -0.1pp (noise) |
+| UD GSD eojeol practical | 2918 | 2926 | +8 |
 
-### accuracy_eval.rs 정리
-
-삭제된 sprint-specific 진단 함수 24개:
-test_ec_error_analysis, test_etm_error_analysis, test_ef_error_analysis,
-test_etn_error_analysis, test_xsv_error_analysis, test_vcp_error_analysis,
-test_nng_error_analysis, test_xpn_error_analysis, test_nnb_error_analysis,
-test_ec_sample_errors, test_jks_sample_errors, test_mag_sample_errors,
-test_ef_sample_errors, test_vx_sample_errors, test_xsv_sample_errors,
-test_vx_pattern_debug, test_ep_error_analysis, test_ef_error_cases_detailed,
-test_vcp_sample_errors, test_vv_sample_errors, test_xsv_debug_sentences,
-test_specific_sentence_debug, test_ep_sample_errors, test_list_all_mismatches
-
-유지된 5-gate 함수:
-test_accuracy_gate ★, test_klue_dp_dual_metric ★, test_klue_dp_eojeol_surface_only ★,
-test_ud_kaist_dual_metric ★, test_ud_gsd_dual_metric ★
-
-### splitter.rs 신규 테스트
-
-- `test_split_morpheme_vv_etm_single_syllable_rieul` — "올" → 오/VV + ㄹ/ETM
-- `test_split_morpheme_va_etm_single_syllable_nieun` — "큰" → 크/VA + ㄴ/ETM
-- `test_split_morpheme_vv_etm_multisyllable_no_jamo_split` — Sprint 145 rollback guard
+가장 큰 시그널: **KLUE morph strict +0.4pp**.
 
 ## 검증
 
-- `cargo test --workspace --exclude mecab-ko-ffi --lib`: **402 passed / 0 failed** (399+3)
-- `cargo clippy --workspace --all-targets -- -D warnings`: clean
-- 5-gate sample.tsv: PASSED (100.0%/99.9%)
-- placeholder 파일 삭제 후 mecab-ko 패키지 테스트: 모두 통과
+- `cargo test --workspace --exclude mecab-ko-ffi --lib`: **404 passed / 0 failed** (402+2)
+- `cargo clippy --workspace --all-targets --exclude mecab-ko-ffi -- -D warnings`: clean
+- 5-gate 모두 PASSED (sample.tsv 무회귀)
 
-## Sprint 150 후보
+## 변경 파일
 
-- A: VA+ETM 542건 처리 (형용사 활용 분리)
-- B: Full CRF Retrain (Track B)
-- C: accuracy_eval.rs setup helper 함수 추출 (추가 정리)
-- D: Node/WASM continue-on-error 제거 (빌드 단계)
+- `rust/crates/mecab-ko-core/src/sejong/splitter.rs`:
+  - multi-syllable VA+ETM ㄴ jongseong split 추가 (L398)
+  - 4 단위 테스트 신규
+- `rust/crates/mecab-ko-core/tests/accuracy_eval.rs`:
+  - `test_va_etm_post_splitter_mismatch` 진단
+  - `test_va_etm_multisyllable_diagnosis` 빈도 분석
+- `docs/research/accuracy/2026-05-21_sprint150_va_etm_multisyllable.md` (신규)
+
+## Sprint 151 후보
+
+- C: accuracy_eval.rs setup helper 추출 (잔여 P0 정리)
+- D: Node/WASM CI 강화 (continue-on-error 제거)
+- B: Full CRF Retrain (Track B, 메인 lift)
+- E: 추가 미처리 케이스 분석 (XSA+ETM 38건 등)

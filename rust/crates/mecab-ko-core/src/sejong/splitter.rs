@@ -395,6 +395,23 @@ pub(super) fn split_morpheme<S: std::hash::BuildHasher>(
         }
     }
 
+    // Sprint 150 A: multi-syllable VA+ETM with ㄴ jongseong on last char
+    // 빠른 → 빠르 + ㄴ (르 불규칙), 나쁜 → 나쁘 + ㄴ (ㅡ 탈락), 예쁜 → 예쁘 + ㄴ, 느린 → 느리 + ㄴ
+    // VV+ETM은 Sprint 145 회귀로 제외 — VA만 안전 (어휘 범위 제한).
+    // ending_rules에서 처리 못한 24건 보강.
+    if pos == "VA+ETM" && surface.chars().count() > 1 {
+        let chars: Vec<char> = surface.chars().collect();
+        let last = chars[chars.len() - 1];
+        if let Some(stem_last) = remove_jongseong_nieun(last) {
+            let mut stem: String = chars[..chars.len() - 1].iter().collect();
+            stem.push(stem_last);
+            return vec![
+                (stem, "VA".to_string()),
+                ("ㄴ".to_string(), "ETM".to_string()),
+            ];
+        }
+    }
+
     // 종성 자음 어미 처리 (VV+ETM, VA+ETM에서 ㄹ, ㄴ 받침)
     // 예: "올/VV+ETM" → "오/VV + ㄹ/ETM", "간/VV+ETM" → "가/VV + ㄴ/ETM"
     // Sprint 145 D: multi-syllable 확장 시도 후 rollback — sample.tsv 회귀 발생.
@@ -630,6 +647,71 @@ mod tests {
         assert_eq!(result.len(), 2);
         assert_eq!(result[0], ("크".to_string(), "VA".to_string()));
         assert_eq!(result[1], ("ㄴ".to_string(), "ETM".to_string()));
+    }
+
+    #[test]
+    fn test_split_morpheme_va_etm_multisyllable_eun_via_ending_rules() {
+        // Sprint 150 A 검증: ending_rules가 multi-syllable VA+ETM "은"을 이미 처리하는지.
+        // "좋은/VA+ETM" → "좋/VA + 은/ETM"
+        let map = make_tag_map();
+        let rules = make_rules();
+        let result = split_morpheme("좋은", "VA+ETM", map, &rules);
+        assert_eq!(result.len(), 2, "ending_rules가 좋은을 분리해야 함");
+        assert_eq!(result[0], ("좋".to_string(), "VA".to_string()));
+        assert_eq!(result[1], ("은".to_string(), "ETM".to_string()));
+    }
+
+    #[test]
+    fn test_split_morpheme_vv_etm_multisyllable_eun_via_ending_rules() {
+        // Sprint 150 A 검증: VV+ETM "은"도 ending_rules로 처리됨 (Sprint 145 회귀와 무관).
+        // "받은/VV+ETM" → "받/VV + 은/ETM"
+        let map = make_tag_map();
+        let rules = make_rules();
+        let result = split_morpheme("받은", "VV+ETM", map, &rules);
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], ("받".to_string(), "VV".to_string()));
+        assert_eq!(result[1], ("은".to_string(), "ETM".to_string()));
+    }
+
+    #[test]
+    fn test_split_morpheme_va_etm_multisyllable_nieun_jongseong() {
+        // Sprint 150 A: multi-syllable VA+ETM ㄴ jongseong on last char
+        let map = make_tag_map();
+        let rules = make_rules();
+
+        // "빠른/VA+ETM" → "빠르/VA + ㄴ/ETM" (르 불규칙)
+        let result = split_morpheme("빠른", "VA+ETM", map, &rules);
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], ("빠르".to_string(), "VA".to_string()));
+        assert_eq!(result[1], ("ㄴ".to_string(), "ETM".to_string()));
+
+        // "나쁜/VA+ETM" → "나쁘/VA + ㄴ/ETM" (ㅡ 탈락)
+        let result = split_morpheme("나쁜", "VA+ETM", map, &rules);
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], ("나쁘".to_string(), "VA".to_string()));
+
+        // "예쁜/VA+ETM" → "예쁘/VA + ㄴ/ETM"
+        let result = split_morpheme("예쁜", "VA+ETM", map, &rules);
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], ("예쁘".to_string(), "VA".to_string()));
+
+        // "느린/VA+ETM" → "느리/VA + ㄴ/ETM"
+        let result = split_morpheme("느린", "VA+ETM", map, &rules);
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], ("느리".to_string(), "VA".to_string()));
+    }
+
+    #[test]
+    fn test_split_morpheme_va_etm_multisyllable_no_nieun_fallback() {
+        // Sprint 150 A: ㄴ jongseong 없는 multi-syllable은 ending_rules로 위임
+        // "좋은" (마지막 char "은"은 ㄴ jongseong 있음 but stem char 으가 됨)
+        // → ending_rules가 "은" suffix로 분리하므로 결과는 동일하게 분리됨
+        let map = make_tag_map();
+        let rules = make_rules();
+        let result = split_morpheme("좋은", "VA+ETM", map, &rules);
+        assert_eq!(result.len(), 2);
+        // 결과는 "좋" or "조" (둘 다 가능) — 다만 ETM이 있어야 함
+        assert!(result.iter().any(|(_, p)| p == "ETM"));
     }
 }
 

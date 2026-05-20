@@ -2674,6 +2674,175 @@ fn test_compound_pos_frequency_analysis() {
     }
 }
 
+/// Sprint 150 A — VA+ETM post-splitter mismatch 진단.
+///
+/// raw mecab VA+ETM 542건 중 splitter 후 어떤 케이스가 gold와 mismatch인지 측정.
+/// `ending_rules`가 이미 "은" suffix를 처리하는지 검증 + 불규칙 케이스 식별.
+#[test]
+#[ignore = "requires KLUE/UD eval data + system dictionary"]
+fn test_va_etm_post_splitter_mismatch() {
+    use std::collections::HashMap;
+    use mecab_ko_core::sejong::SejongConverter;
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or_else(|| std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root.join("data/mecab-ko-dic-2.1.1-20180720").to_string_lossy().to_string()
+    });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(&user_dict_path).expect("Failed to load user dict");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict.load_from_csv(&klue_dict_path).expect("Failed to load KLUE dict");
+        }
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let converter = SejongConverter::new();
+    let eval_files = [
+        ("KLUE", "data/eval/klue_dp_val.tsv"),
+        ("UD-Kaist", "data/eval/ud_kaist_test.tsv"),
+        ("UD-GSD", "data/eval/ud_gsd_test.tsv"),
+    ];
+
+    // raw VA+ETM 토큰: splitter가 분리했는가? gold가 분리했는가?
+    let mut raw_va_etm = 0usize;
+    let mut split_by_splitter = 0usize;  // splitter가 ETM로 분리
+    let mut surface_unchanged_pred: HashMap<String, usize> = HashMap::new();
+
+    for (_, rel_path) in &eval_files {
+        let path = project_root.join(rel_path);
+        if !path.exists() { continue; }
+        let dataset = TestDataset::from_tsv(path.to_str().unwrap()).expect("dataset");
+        for sentence in &dataset.sentences {
+            let raw_tokens = tokenizer.tokenize(&sentence.text);
+            for tok in &raw_tokens {
+                if tok.pos == "VA+ETM" {
+                    raw_va_etm += 1;
+                    // splitter 적용 결과 확인
+                    let split = converter.convert_tokens(std::slice::from_ref(tok));
+                    let has_etm = split.iter().any(|t| t.pos == "ETM");
+                    if has_etm {
+                        split_by_splitter += 1;
+                    } else {
+                        // splitter가 분리 못함 — 어떤 surface인지 기록
+                        *surface_unchanged_pred.entry(tok.surface.clone()).or_insert(0) += 1;
+                    }
+                }
+            }
+        }
+    }
+
+    println!("\n{}", "=".repeat(70));
+    println!("  VA+ETM post-splitter analysis (Sprint 150 A)");
+    println!("{}", "=".repeat(70));
+    println!("Raw VA+ETM tokens: {raw_va_etm}");
+    println!("Split by splitter (has ETM token): {split_by_splitter}");
+    println!("NOT split (still VA+ETM compound): {}", raw_va_etm - split_by_splitter);
+
+    println!("\n=== Surface NOT split by splitter (top 20) ===");
+    let mut sorted: Vec<_> = surface_unchanged_pred.iter().collect();
+    sorted.sort_by_key(|x| std::cmp::Reverse(x.1));
+    for (surface, count) in sorted.iter().take(20) {
+        println!("  {surface}  count={count}");
+    }
+    println!("\n{}", "=".repeat(70));
+}
+
+/// Sprint 150 A — VA+ETM multi-syllable raw 빈도 분석 (참고용).
+#[test]
+#[ignore = "requires KLUE/UD eval data + system dictionary"]
+fn test_va_etm_multisyllable_diagnosis() {
+    use std::collections::HashMap;
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or_else(|| std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root.join("data/mecab-ko-dic-2.1.1-20180720").to_string_lossy().to_string()
+    });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(&user_dict_path).expect("Failed to load user dict");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict.load_from_csv(&klue_dict_path).expect("Failed to load KLUE dict");
+        }
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let eval_files = [
+        ("KLUE", "data/eval/klue_dp_val.tsv"),
+        ("UD-Kaist", "data/eval/ud_kaist_test.tsv"),
+        ("UD-GSD", "data/eval/ud_gsd_test.tsv"),
+    ];
+
+    let mut total_va_etm = 0usize;
+    let mut single_syllable = 0usize;
+    let mut multi_syllable = 0usize;
+    let mut surface_endings: HashMap<char, (usize, Vec<String>)> = HashMap::new();
+    let sample_cap = 6;
+
+    println!("\n{}", "=".repeat(70));
+    println!("  VA+ETM Multi-syllable Diagnosis (Sprint 150 A)");
+    println!("{}", "=".repeat(70));
+
+    for (ds_name, rel_path) in &eval_files {
+        let path = project_root.join(rel_path);
+        if !path.exists() { continue; }
+        let dataset = TestDataset::from_tsv(path.to_str().unwrap()).expect("dataset");
+        for sentence in &dataset.sentences {
+            let raw_tokens = tokenizer.tokenize(&sentence.text);
+            for tok in &raw_tokens {
+                if tok.pos == "VA+ETM" {
+                    total_va_etm += 1;
+                    let nchar = tok.surface.chars().count();
+                    if nchar == 1 {
+                        single_syllable += 1;
+                    } else {
+                        multi_syllable += 1;
+                        if let Some(last) = tok.surface.chars().last() {
+                            let entry = surface_endings.entry(last).or_default();
+                            entry.0 += 1;
+                            if entry.1.len() < sample_cap && !entry.1.contains(&tok.surface) {
+                                entry.1.push(tok.surface.clone());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        println!("Processed: {ds_name}");
+    }
+
+    println!("\nTotal VA+ETM: {total_va_etm}");
+    println!("  1-syllable (handled): {single_syllable}");
+    println!("  Multi-syllable (NOT handled): {multi_syllable}");
+    println!("\n=== Multi-syllable surface last-char endings ===");
+    let mut sorted: Vec<_> = surface_endings.iter().collect();
+    sorted.sort_by_key(|x| std::cmp::Reverse(x.1.0));
+    for (ch, (count, samples)) in sorted.iter().take(15) {
+        println!("  '{ch}'  count={count:<4}  samples: {}", samples.join(", "));
+    }
+    println!("\n{}", "=".repeat(70));
+}
+
 /// Sprint 148 D — ETM+ETM "라는" 진단.
 ///
 /// mecab이 ETM+ETM으로 출력하는 "라는"을 gold와 비교하여

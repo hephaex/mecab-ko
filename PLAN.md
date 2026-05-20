@@ -1,54 +1,63 @@
-# PLAN — mecab-ko Sprint 150 (next)
+# PLAN — mecab-ko Sprint 151 (next)
 
 > 마지막 업데이트: 2026-05-21
 
-## 완료: Sprint 149 — P0 정리 스프린트
+## 완료: Sprint 150 A — VA+ETM multi-syllable
 
 ### 결과
 
-| 항목 | 전 | 후 |
-|------|---|---|
-| accuracy_eval.rs 줄 수 | 4963 | 2800 (-43%) |
-| placeholder 테스트 파일 | 2개 (33 함수, 0 assertion) | 삭제 |
-| MSRV CI 검증 | 없음 | msrv job (1.80.0) |
-| coverage floor | 없음 | --fail-under 60 |
-| splitter 단위 테스트 | 8개 | 11개 (+rollback guard) |
-| 전체 lib 테스트 | 399 pass | 402 pass |
+| Metric | Before | After | Δ |
+|--------|--------|-------|---|
+| sample.tsv | 100.0%/99.9% | 무회귀 | — |
+| **KLUE morph strict** | 66.5% | **66.9%** | **+0.4pp** |
+| KLUE surface strict | 87.7% | 87.8% | +0.1pp |
+| UD Kaist morph practical | 68.3% | 68.4% | +0.1pp |
 
-### 커밋: `ea5cfa9`
+### 핵심
 
-## 다음 스프린트: Sprint 150 (미정 — 사용자 선택)
+- raw VA+ETM 542건 → ending_rules가 이미 95.6% 처리
+- 미처리 24건 (빠른/나쁜/예쁜/느린): multi-syllable ㄴ jongseong split 추가
+- VV+ETM은 Sprint 145 회귀로 제외, VA만 안전
 
-### 후보 A: VA+ETM 542건 처리
+### 보고서
 
-형용사 활용형 분리. VV+ETM과 동일 패턴 (1-syllable 기준):
-- "큰" → 크/VA + ㄴ/ETM (이미 구현됨)
-- "어려운" (2-syllable) → VA+ETM multisyllable은 이미 guard로 제외
+`docs/research/accuracy/2026-05-21_sprint150_va_etm_multisyllable.md`
 
-**실제 평가 영향 먼저 측정 필요.** VA+ETM 542건이 이미 1-syllable 경로로 처리되는지 확인.
+## 다음 스프린트: Sprint 151 (미정 — 사용자 선택)
 
-**비용**: 0.5 sprint (분석 + 가능하면 추가 패턴)
+### 후보 C: accuracy_eval.rs setup helper 추출 (잔여 P0)
 
-### 후보 B [메인]: Full CRF Retrain (Track B)
-
-3-5 sprint. 학습 데이터 준비 + mecab-cost-train 실행.
-- Sprint 136에서 인프라 조사 완료
-- 잠재 lift: +1~5pp (가장 큰 single improvement)
-
-### 후보 C: accuracy_eval.rs setup helper 추출
-
-setup boilerplate 추출로 추가 ~1000줄 감소. 빌드 시간 단축.
+남은 P0 정리:
+- 반복되는 tokenizer setup 코드 (~22번 반복, ~30라인씩)
 - `fn make_tokenizer(project_root: &Path) -> Tokenizer`
 - `fn make_project_root() -> PathBuf`
+- 약 ~1000줄 감소 가능
 
-**비용**: 0.3 sprint (정밀 리팩토링)
+**비용**: 0.3 sprint, 낮은 위험
 
 ### 후보 D: Node/WASM CI 강화
 
-e2e-ffi-tests.yml에서 Node/WASM 빌드 잡 `continue-on-error: false`로 전환.
-실제 빌드 여부 확인 필요.
+e2e-ffi-tests.yml의 continue-on-error 제거:
+- nodejs-e2e 빌드 단계 (L166, L175)
+- wasm-e2e job (L177, L180 — job level)
+- 실제 빌드 동작 먼저 확인 필요
 
-**비용**: 0.2 sprint
+**비용**: 0.2 sprint, 낮은 위험
+
+### 후보 E: XSA+ETM 38건 분석
+
+Sprint 145 분석에서 XSA+ETM 38건: 스러운, 스런, 로운
+- "한가스러운" → 한가/NNG + 스럽/XSA + 운/ETM (ㅂ 불규칙 XSA)
+- 패턴: ㅂ 불규칙 XSA (어렵, 무겁 등과 동일)
+
+복잡 (XSA는 NNG에 붙는 접미사). 보수적 접근 필요.
+
+**비용**: 0.5 sprint, 중간 위험
+
+### 후보 B [메인]: Full CRF Retrain (Track B)
+
+3-5 sprint 장기 작업. 학습 데이터 + mecab-cost-train.
+잠재 lift +1~5pp (가장 큰 single improvement).
 
 ## 검증 기준
 
