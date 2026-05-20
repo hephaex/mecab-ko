@@ -1,66 +1,70 @@
-# PLAN — mecab-ko Sprint 144 (next)
+# PLAN — mecab-ko Sprint 145 (next)
 
 > 마지막 업데이트: 2026-05-20
 
-## 완료: Sprint 143 C — UD Korean-GSD silver baseline 통합
+## 완료: Sprint 144 A — accuracy-gate CI 5번째 게이트 (UD GSD)
 
-### 변환 결과
-- `tools/convert_ud_gsd.py` (identity mapping — GSD XPOS는 Sejong 태그 직접 사용)
-- 1,904 silver sentences 변환 (971 test + 933 dev, 98.2% 변환률)
-- 신규: `data/eval/ud_gsd_{test,dev}.tsv`, `test_ud_gsd_dual_metric`
+### 추가
+- `Run UD GSD silver gate` step (test_ud_gsd_dual_metric 실행)
+- Floor: morph strict ≥ 60%
+- PR comment 5번째 섹션 + 5-gate summary
 
-### Baseline 측정 (3 silver 비교)
+### 5-gate 시스템 완성
 
-| Metric | KLUE DP | UD Kaist | UD GSD |
-|--------|---------|----------|--------|
-| Morph strict | 66.8% | 66.3% | **67.4%** |
-| Morph practical | 71.6% | 68.1% | 71.3% |
-| Per-eojeol strict | 20.7% | 20.7% | **23.1%** |
-| Per-eojeol practical | 23.5% | 21.8% | **25.8%** |
-
-**핵심 발견**: GSD가 KLUE에 가장 가까움 (현대 뉴스/web). Kaist 학술 텍스트로 낮음.
+| Gate | Dataset | 도메인 |
+|------|---------|--------|
+| 1 | sample.tsv | curated quality |
+| 2 | KLUE DP morph | 뉴스/리뷰 |
+| 3 | KLUE DP surface-only | 검색/색인 |
+| 4 | UD Korean-Kaist | 역사/철학/학술 |
+| 5 | UD Korean-GSD | Google news/web |
 
 ### 보고서
-`docs/research/accuracy/2026-05-20_sprint143_ud_gsd.md`
+`docs/research/accuracy/2026-05-20_sprint144_ud_gsd_ci_gate.md`
 
-## 다음 스프린트: Sprint 144 (미정 — 사용자 선택)
-
-### 후보 A: accuracy-gate CI에 UD GSD 추가 (4 → 5 gate)
-
-Sprint 140 C 패턴 재사용. step 추가 + PR comment 섹션.
-
-**Floor**: morph strict ≥ 60% (silver, KLUE 동일 기준)
-**비용**: 0.5 sprint
-**위험**: 낮음
+## 다음 스프린트: Sprint 145 (미정 — 사용자 선택)
 
 ### 후보 B [메인]: Full CRF Retrain (Track E)
 
-**선행 충족**: Sprint 142 dict-builder fix.
+**선행 충족**: Sprint 142 dict-builder fix + Sprint 143 UD GSD + Sprint 144 5-gate CI.
 
 **작업 (3-5 sprint 예상)**:
-1. 학습 코퍼스 준비 (Sejong + KLUE train + UD Kaist train + UD GSD train)
+1. 학습 코퍼스 준비:
+   - KLUE train (CC BY-SA 4.0) — 10K sentences
+   - UD Kaist train — 23K sentences
+   - UD GSD train — 5K sentences
+   - 라이선스 호환 (CC BY-SA 4.0 통합)
 2. `legacy/src/mecab-cost-train` (C++) 빌드 + 실행
 3. 새 `model.def` → `matrix.def` + `left/right-id.def` 재생성
 4. `mecab-ko-dict-builder` 재실행 → binary
-5. 5-gate 회귀 검증 + lift 측정
+5. **5-gate 회귀 검증** + lift 측정
 
-**리스크**: 학습 코퍼스 라이선스 (Sejong 비공개), binary 호환성, 학습 시간 (수 시간).
+**리스크**:
+- 학습 시간 (수 시간)
+- left/right-id.def 변경 시 기존 binary 호환성
+- 학습 데이터 비율 조정 필요할 수 있음
+
+**기대 효과**: +1pp 이상 (지금까지 시도와 차원 다른 결과)
 
 ### 후보 C: NIKL Modu 수동 다운로드 + 평가
 
-Academic license, 로컬 only. 0.5-1 sprint.
+Academic license, 로컬 only. 6번째 silver. 0.5-1 sprint.
 
 ### 후보 D: 다른 mecab 결합 토큰 패턴 (Sprint 141 연장)
 
-NNG+VCP+EC, VV+EP+EF 등. 0.5-1 sprint.
+NNG+VCP+EC, VV+EP+EF 등. 0.5-1 sprint. 위험 낮음.
+
+### 후보 E: UD Korean-PUD 추가
+
+또 다른 silver (1,000 sentences). convert_ud_gsd.py 또는 새 변환기.
+0.5 sprint.
 
 ## 백로그
 
 - P4 (borderline NNG↔NNP): Sprint 132 보류 5 entries
-- UD Korean-PUD (1,000 sentences 더 추가)
 
 ## 검증 기준 (모든 후보 공통)
 
 - `cargo test --workspace --exclude mecab-ko-ffi` 전체 pass
 - `cargo clippy --workspace --all-targets --exclude mecab-ko-ffi -- -D warnings` clean
-- 4-gate CI 통과 (sample.tsv / KLUE morph / surface_only / UD Kaist) — UD GSD 추가 시 5-gate
+- **5-gate CI 통과** (sample.tsv / KLUE morph / surface_only / UD Kaist / UD GSD)
