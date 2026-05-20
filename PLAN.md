@@ -1,70 +1,62 @@
-# PLAN — mecab-ko Sprint 145 (next)
+# PLAN — mecab-ko Sprint 146 (next)
 
 > 마지막 업데이트: 2026-05-20
 
-## 완료: Sprint 144 A — accuracy-gate CI 5번째 게이트 (UD GSD)
+## 완료: Sprint 145 — PUD 보류 → D (결합 POS 분석, multi-syllable VV+ETM rollback)
 
-### 추가
-- `Run UD GSD silver gate` step (test_ud_gsd_dual_metric 실행)
-- Floor: morph strict ≥ 60%
-- PR comment 5번째 섹션 + 5-gate summary
+### PUD 보류
+- Penn-Treebank XPOS (NN/JJ/RB/...) — Sejong 아님
+- lemma `_` 52% (8,666/16,584) — morpheme 분해 부족
+- → 보류, D로 전환
 
-### 5-gate 시스템 완성
+### D: 결합 POS 빈도 분석
+- 신규 `test_compound_pos_frequency_analysis`
+- 153 patterns / 13,611 occurrences (13% tokens)
+- 상위: VV+ETM 5,376 / VV+EC 1,728 / XSV+EC 751 / VCP+ETM 613
 
-| Gate | Dataset | 도메인 |
-|------|---------|--------|
-| 1 | sample.tsv | curated quality |
-| 2 | KLUE DP morph | 뉴스/리뷰 |
-| 3 | KLUE DP surface-only | 검색/색인 |
-| 4 | UD Korean-Kaist | 역사/철학/학술 |
-| 5 | UD Korean-GSD | Google news/web |
+### multi-syllable VV+ETM 실험 → rollback
+- sample.tsv Sentence 99.9% → 99.8% (-1 문장) → rollback
+- silver eojeol +5~9 lift는 sample.tsv 회귀를 정당화 못함
+- 1-syllable 처리만 유지
 
 ### 보고서
-`docs/research/accuracy/2026-05-20_sprint144_ud_gsd_ci_gate.md`
+`docs/research/accuracy/2026-05-20_sprint145_compound_pos_analysis.md`
 
-## 다음 스프린트: Sprint 145 (미정 — 사용자 선택)
+## 다음 스프린트: Sprint 146 (미정 — 사용자 선택)
+
+### 후보 A: 명시 surface 목록 기반 안전 패턴 분리
+
+Sprint 141 VCP+EC 방식 — 명시 surface 목록만 분리 (false positive 방지).
+
+**후보 패턴**:
+- NP+JX 211건: "그는" → "그/NP + 는/JX", "이는" → "이/NP + 는/JX"
+  * **회피**: "난" (contraction)
+- VCP+EP 101건: "였" → "이/VCP + 었/EP"
+- VV+EP 542건: 명시 동사 ("흘렸" → "흘리/VV + 었/EP", "버렸" → "버리/VV + 었/EP")
+  * **회피**: 사동/피동 동사 (이미 splitter에 처리됨)
+
+**각 패턴마다**: 단위 테스트 + 5-gate 검증.
+
+**비용**: 0.5-1 sprint
+**위험**: 낮음 (명시 surface)
+**예상 lift**: 누적 +0.1-0.3pp (silver 데이터셋)
 
 ### 후보 B [메인]: Full CRF Retrain (Track E)
 
-**선행 충족**: Sprint 142 dict-builder fix + Sprint 143 UD GSD + Sprint 144 5-gate CI.
+3-5 sprint. 학습 데이터 (KLUE + UD Kaist + UD GSD train) + mecab-cost-train.
 
-**작업 (3-5 sprint 예상)**:
-1. 학습 코퍼스 준비:
-   - KLUE train (CC BY-SA 4.0) — 10K sentences
-   - UD Kaist train — 23K sentences
-   - UD GSD train — 5K sentences
-   - 라이선스 호환 (CC BY-SA 4.0 통합)
-2. `legacy/src/mecab-cost-train` (C++) 빌드 + 실행
-3. 새 `model.def` → `matrix.def` + `left/right-id.def` 재생성
-4. `mecab-ko-dict-builder` 재실행 → binary
-5. **5-gate 회귀 검증** + lift 측정
+### 후보 C: NIKL Modu 수동 다운로드
 
-**리스크**:
-- 학습 시간 (수 시간)
-- left/right-id.def 변경 시 기존 binary 호환성
-- 학습 데이터 비율 조정 필요할 수 있음
-
-**기대 효과**: +1pp 이상 (지금까지 시도와 차원 다른 결과)
-
-### 후보 C: NIKL Modu 수동 다운로드 + 평가
-
-Academic license, 로컬 only. 6번째 silver. 0.5-1 sprint.
-
-### 후보 D: 다른 mecab 결합 토큰 패턴 (Sprint 141 연장)
-
-NNG+VCP+EC, VV+EP+EF 등. 0.5-1 sprint. 위험 낮음.
-
-### 후보 E: UD Korean-PUD 추가
-
-또 다른 silver (1,000 sentences). convert_ud_gsd.py 또는 새 변환기.
-0.5 sprint.
+Academic license, 로컬 only.
 
 ## 백로그
 
-- P4 (borderline NNG↔NNP): Sprint 132 보류 5 entries
+- P4 (borderline NNG↔NNP): Sprint 132 보류
+- accuracy-gate CI에 UD Kaist + GSD eojeol gate 추가 (현재 morph만)
 
-## 검증 기준 (모든 후보 공통)
+## 검증 기준
 
 - `cargo test --workspace --exclude mecab-ko-ffi` 전체 pass
 - `cargo clippy --workspace --all-targets --exclude mecab-ko-ffi -- -D warnings` clean
 - **5-gate CI 통과** (sample.tsv / KLUE morph / surface_only / UD Kaist / UD GSD)
+- sample.tsv baseline 100%/99.9% **회귀 금지** (Sprint 138 결론)

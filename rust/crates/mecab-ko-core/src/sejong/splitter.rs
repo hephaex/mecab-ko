@@ -388,6 +388,8 @@ pub(super) fn split_morpheme<S: std::hash::BuildHasher>(
 
     // 종성 자음 어미 처리 (VV+ETM, VA+ETM에서 ㄹ, ㄴ 받침)
     // 예: "올/VV+ETM" → "오/VV + ㄹ/ETM", "간/VV+ETM" → "가/VV + ㄴ/ETM"
+    // Sprint 145 D: multi-syllable 확장 시도 후 rollback — sample.tsv 회귀 발생.
+    // 1-syllable만 안전. multi-syllable은 false positive (예: 형태론적으로 다른 분해 케이스) 위험.
     if (pos == "VV+ETM" || pos == "VA+ETM") && surface.chars().count() == 1 {
         let ch = surface.chars().next().unwrap();
         // ㄹ 받침 처리

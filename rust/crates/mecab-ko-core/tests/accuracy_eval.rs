@@ -4746,3 +4746,93 @@ fn test_ud_kaist_split_diff_connection_pairs() {
         println!("{rid:>5}  {lid:>5}  {count:>6}  {r_short:<40}  {l_short:<40}  {samples}");
     }
 }
+
+
+/// Sprint 145 D — mecab 결합 POS feature 빈도 분석.
+///
+/// KLUE DP val + UD Kaist test + UD GSD test 세 데이터셋 통합 측정.
+/// Token의 raw `pos` (mecab feature)에 `+`가 포함된 결합 패턴 빈도 집계.
+/// `splitter.rs`에 추가 분리 규칙 후보 식별 (Sprint 141 패턴 확장).
+#[test]
+#[ignore = "requires KLUE/UD eval data + system dictionary"]
+fn test_compound_pos_frequency_analysis() {
+    use std::collections::HashMap;
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or_else(|| std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root.join("data/mecab-ko-dic-2.1.1-20180720").to_string_lossy().to_string()
+    });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(&user_dict_path).expect("Failed to load user dict");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict.load_from_csv(&klue_dict_path).expect("Failed to load KLUE dict");
+        }
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let eval_files = [
+        ("KLUE", "data/eval/klue_dp_val.tsv"),
+        ("UD-Kaist", "data/eval/ud_kaist_test.tsv"),
+        ("UD-GSD", "data/eval/ud_gsd_test.tsv"),
+    ];
+
+    let mut pattern_counts: HashMap<String, (usize, Vec<String>)> = HashMap::new();
+    let sample_cap = 3;
+    let mut total_tokens: usize = 0;
+    let mut compound_tokens: usize = 0;
+
+    for (name, rel_path) in &eval_files {
+        let path = project_root.join(rel_path);
+        if !path.exists() {
+            println!("Skipping {name}: {rel_path} not found");
+            continue;
+        }
+        let dataset = TestDataset::from_tsv(path.to_str().unwrap())
+            .expect("Failed to load dataset");
+
+        for sentence in &dataset.sentences {
+            let tokens = tokenizer.tokenize(&sentence.text);
+            for tok in tokens {
+                total_tokens += 1;
+                if tok.pos.contains('+') {
+                    compound_tokens += 1;
+                    let entry = pattern_counts.entry(tok.pos.clone()).or_default();
+                    entry.0 += 1;
+                    if entry.1.len() < sample_cap && !entry.1.contains(&tok.surface) {
+                        entry.1.push(tok.surface.clone());
+                    }
+                }
+            }
+        }
+        println!("Processed: {name}");
+    }
+
+    println!("\n{}", "=".repeat(70));
+    println!("  Compound POS Frequency Analysis (Sprint 145 D)");
+    println!("  Total tokens: {total_tokens}, compound (X+Y...): {compound_tokens} ({:.1}%)",
+        compound_tokens as f64 / total_tokens.max(1) as f64 * 100.0);
+    println!("  Unique compound patterns: {}", pattern_counts.len());
+    println!("{}\n", "=".repeat(70));
+
+    let mut sorted: Vec<_> = pattern_counts.iter().collect();
+    sorted.sort_by_key(|x| std::cmp::Reverse(x.1.0));
+
+    let top_n = 40;
+    println!("=== Top {top_n} compound POS patterns ===");
+    println!("{:>6}  {:<25}  samples", "count", "pattern");
+    for (pattern, (count, samples)) in sorted.iter().take(top_n) {
+        let samples_str = samples.join(", ");
+        println!("{count:>6}  {pattern:<25}  {samples_str}");
+    }
+}
