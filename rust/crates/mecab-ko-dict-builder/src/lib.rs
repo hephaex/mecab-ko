@@ -339,25 +339,39 @@ pub mod csv_parser {
                     continue;
                 }
 
+                // Sprint 142 B: mecab-ko-dic entries.csv는 surface가 ","인 항목을
+                // unquoted로 작성 (",,1792,3558,..."). csv 파서가 13 fields로 분할 →
+                // record[0]="" (empty), record[1]="" → parse fail.
+                // 대응: record.len() == 13 AND record[0]/record[1] 모두 empty이면
+                // surface=",", 나머지 field shift.
+                let (surface, field_offset) = if record.len() == 13
+                    && record[0].is_empty()
+                    && record[1].is_empty()
+                {
+                    (",".to_string(), 1)
+                } else {
+                    (record[0].to_string(), 0)
+                };
+
                 let mut entry = CsvEntry {
-                    surface: record[0].to_string(),
-                    left_id: record[1].parse().map_err(|_| {
+                    surface,
+                    left_id: record[1 + field_offset].parse().map_err(|_| {
                         BuildError::Format(format!("Invalid left_id at line {}", line_num + 1))
                     })?,
-                    right_id: record[2].parse().map_err(|_| {
+                    right_id: record[2 + field_offset].parse().map_err(|_| {
                         BuildError::Format(format!("Invalid right_id at line {}", line_num + 1))
                     })?,
-                    cost: record[3].parse().map_err(|_| {
+                    cost: record[3 + field_offset].parse().map_err(|_| {
                         BuildError::Format(format!("Invalid cost at line {}", line_num + 1))
                     })?,
-                    pos: record[4].to_string(),
-                    pos_detail: record[5].to_string(),
-                    jongseong: record[6].to_string(),
-                    reading: record[7].to_string(),
-                    entry_type: record[8].to_string(),
-                    first_pos: record[9].to_string(),
-                    last_pos: record[10].to_string(),
-                    expression: record[11].to_string(),
+                    pos: record[4 + field_offset].to_string(),
+                    pos_detail: record[5 + field_offset].to_string(),
+                    jongseong: record[6 + field_offset].to_string(),
+                    reading: record[7 + field_offset].to_string(),
+                    entry_type: record[8 + field_offset].to_string(),
+                    first_pos: record[9 + field_offset].to_string(),
+                    last_pos: record[10 + field_offset].to_string(),
+                    expression: record[11 + field_offset].to_string(),
                 };
 
                 entry.normalize_jongseong();
@@ -864,6 +878,38 @@ mod tests {
 
         // 주석은 무시되어야 함
         assert_eq!(entries.len(), 2);
+    }
+
+    #[test]
+    fn test_csv_parser_unquoted_comma_surface() {
+        // Sprint 142 B: mecab-ko-dic entries.csv는 surface가 ","인 행을 unquoted로 작성
+        // (",,1792,3558,788,SC,...,*"). csv 파서가 13 fields로 분할 → surface=","로 복원.
+        let csv_content = ",,1792,3558,788,SC,*,*,*,*,*,*,*\n";
+        let parser = CsvParser::new(".");
+        let entries = parser
+            .parse_csv_content(csv_content)
+            .expect("failed to parse unquoted comma surface");
+
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].surface, ",");
+        assert_eq!(entries[0].left_id, 1792);
+        assert_eq!(entries[0].right_id, 3558);
+        assert_eq!(entries[0].cost, 788);
+        assert_eq!(entries[0].pos, "SC");
+    }
+
+    #[test]
+    fn test_csv_parser_quoted_comma_surface_still_works() {
+        // Symbol.csv는 properly quoted ","를 사용. csv 라이브러리가 정상 파싱 (12 fields).
+        let csv_content = "\",\",1792,3558,788,SC,*,*,*,*,*,*,*\n";
+        let parser = CsvParser::new(".");
+        let entries = parser
+            .parse_csv_content(csv_content)
+            .expect("failed to parse quoted comma surface");
+
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].surface, ",");
+        assert_eq!(entries[0].cost, 788);
     }
 
     #[test]

@@ -1,97 +1,102 @@
-# PROGRESS — mecab-ko Sprint 141 (VCP+ETM/EC splitter fix)
+# PROGRESS — mecab-ko Sprint 142 (dict-builder CSV 버그 수정)
 
 > 마지막 업데이트: 2026-05-20
 
-## Sprint 141 A — VCP 결합 토큰 분리
+## Sprint 142 B — dict-builder CSV unquoted comma surface 수정
 
 | Task | 상태 | 비고 |
 |------|------|------|
-| S141-A1: XSN/VCP 동치 실험 — 가설 검증 | ✅ 완료 (가설 폐기) | XSN/VCP는 동치 아닌 진짜 의미 차이. 실제 문제는 mecab의 결합 토큰 |
-| S141-A2: 측정 분석 + 결정 | ✅ 완료 | splitter 패턴 추가로 UD +0.1pp lift, KLUE 무변경, sample.tsv 무회귀 |
-| S141-A3: 보고서 | ✅ 완료 | `docs/research/accuracy/2026-05-20_sprint141_vcp_split_fix.md` |
+| S142-B1: CSV 파싱 코드 분석 | ✅ 완료 | entries.csv 4행 `,,1792,...` (unquoted comma surface) |
+| S142-B2: CSV escape/quote 처리 수정 | ✅ 완료 | record.len()==13 + record[0]/[1] empty 보정 로직 |
+| S142-B3: dict-builder round-trip 검증 | ✅ 완료 | 1,632,572 entries, 77초, 4-gate 무회귀 |
+| S142-B4: 단위 테스트 + 보고서 | ✅ 완료 | 2 신규 테스트 + 보고서 |
 
 ## 핵심 발견
 
-### 초기 가설 폐기
+### Sprint 138 차단 원인 해결
 
-Sprint 140 분석의 (3777, 2240) XSN(적) → VCP(인) pair는 SPLIT_DIFFERENT로 분류됐으나, mecab과 gold 모두 같은 분해 방식 (XSN + VCP + ETM) 사용. 차이는 **mecab의 결합 토큰 표기**:
-- mecab: `인/VCP+ETM` (1 token)
-- gold: `이/VCP + ㄴ/ETM` (2 tokens)
+Sprint 138에서 dict-builder 사용 시 "Invalid left_id at line 4" 에러 → 단일 행 (entries.csv:4) 의 surface=","가 unquoted 작성.
 
-→ 동치 추가가 아니라 **splitter 패턴 추가**가 정답.
+```
+,,1792,3558,788,SC,*,*,*,*,*,*,*
+```
 
-### 구현 (splitter.rs)
+csv 라이브러리(RFC 4180)가 13 fields로 분할 → record[0]="" (empty) → parse fail.
 
-VCP+ETM 패턴:
-- `인` → `이/VCP + ㄴ/ETM`
-- `일` → `이/VCP + ㄹ/ETM`
-- `라는` → `이/VCP + 라는/ETM`
+### 수정 (record count 보정)
 
-VCP+EC 패턴 (명시 surface 8개):
-- 라, 며, 라서, 라고, 라며, 라면, 라야, 라든지 → `이/VCP + X/EC`
+```rust
+let (surface, field_offset) = if record.len() == 13
+    && record[0].is_empty()
+    && record[1].is_empty()
+{
+    (",".to_string(), 1)  // surface=",", 나머지 +1 shift
+} else {
+    (record[0].to_string(), 0)
+};
+```
 
-### 단위 테스트 4개 신규
+### Round-trip 검증
 
-- `test_split_morpheme_vcp_etm_in` / `_il` / `_la` (각 분리 검증)
-- `test_split_morpheme_vcp_etm_unrelated_surface_no_split` (overcorrect 방지)
+```
+$ cargo run --release --bin mecab-ko-dict-builder -- \
+    build -i data/mecab-ko-dic-2.1.1-20180720 -o /tmp/dict-test-rebuild
 
-## 측정값
+=== Build Summary ===
+Entries:      1632572
+Trie size:    34470912 bytes
+Matrix size:  10292646 entries
+Time elapsed: 77.83s
+Dictionary build successful!
+```
 
-| 메트릭 | Before | After | Δ |
-|--------|--------|-------|---|
-| sample.tsv Token | 100.0% | 100.0% | — |
-| sample.tsv Sentence | 99.9% | 99.9% | — |
-| KLUE morph strict | 66.8% | 66.8% | — |
-| KLUE morph practical | 71.6% | 71.6% | — |
-| KLUE eo practical | 23.5% | 23.5% | — |
-| **UD Kaist morph strict** | **66.3%** | **66.4%** | **+0.1pp** |
-| **UD Kaist morph practical** | **68.0%** | **68.1%** | **+0.1pp** |
-| UD Kaist eo strict (count) | 3989 | 3987 | -2 (-0.01pp) |
-| UD Kaist eo practical (count) | 4194 | 4193 | -1 |
+재빌드 dict로 4-gate 측정 → 모든 메트릭 동일 (회귀 0):
+- sample.tsv: 100.0%/99.9%
+- KLUE morph strict 66.8% / practical 71.6%
+- Surface-only canonical_lenient 95.5%
+- UD Kaist morph strict 66.4%
 
-### 분석
+## 단위 테스트 추가 (2개)
 
-- UD morph +0.1pp = 형태론적 정확성 향상
-- KLUE 무변경 = VCP+ETM 패턴 빈도 차이 (UD 92건 vs KLUE 27건, 학술 텍스트 특성)
-- UD eojeol -2건 = 일부 어절에서 mecab 결합 토큰이 gold와 우연히 일치했던 경우
-- VCP+EC 추가 효과 없음 (mecab이 VCP+EC를 별도 출력하는 빈도 매우 낮음)
+- `test_csv_parser_unquoted_comma_surface`: 12 → 13 fields 복원 검증
+- `test_csv_parser_quoted_comma_surface_still_works`: Symbol.csv 정상 파싱 유지
 
-→ 형태론적 정확성 향상이 미미한 회귀(-0.01pp)를 정당화 → **유지**
+## 측정값 (변경 없음 — 인프라 fix만)
+
+| 메트릭 | Sprint 141 | Sprint 142 |
+|--------|-----------|-----------|
+| 모든 KLUE/UD/sample.tsv 메트릭 | 동일 | 동일 |
 
 ## 핵심 학습 포인트
 
-### 1. 가설은 데이터로 검증해야 함
+### 1. mecab-ko-dic은 비표준 CSV 가정
 
-SPLIT_DIFFERENT pair 빈도만 보고 동치 추가를 결정하면 안 됨. 실제 mecab vs gold 분해 방식 직접 비교 필수.
+mecab-ko-dic은 일본 mecab 도구의 형식을 따름 — unquoted comma surface 허용. RFC 4180 CSV 파서는 1행만 fail하지만 dict-builder 전체 실패 야기. record count 기반 보정으로 우회.
 
-### 2. SejongConverter splitter가 형태론 정규화의 진짜 진입점
+### 2. 작은 버그가 큰 인프라 막음
 
-matrix.def cost 조정(Sprint 138 실패)은 너무 거침. splitter 패턴 추가는:
-- 형태론적 정확
-- KLUE/UD 일관 적용
-- sample.tsv 회귀 위험 거의 없음 (특정 결합 토큰만 분리)
+이 1행 버그가 Sprint 138 Tier A 실험 인프라를 방해. 이제 정상 빌드 가능 → **Track E (Full CRF Retrain) 진입 가능**.
 
-### 3. 도메인별 빈도 차이는 패턴 영향 분포의 의미
+### 3. Round-trip 검증의 가치
 
-VCP+ETM UD 92건 vs KLUE 27건 → 변경의 KLUE 영향 작음 → 도메인 특화 변경이 도메인 독립 변경보다 회귀 위험 낮음.
+단위 테스트만으로는 부족. 전체 mecab-ko-dic 재빌드 + 4-gate 회귀 검증으로 binary 형식 정합성 확인 필수.
 
 ## 검증
 
-- `cargo test --workspace --exclude mecab-ko-ffi --lib`: **396 passed / 0 failed** (392 + 4 신규)
+- `cargo test --workspace --exclude mecab-ko-ffi --lib`: all pass / 0 fail (테스트 +2개)
 - `cargo clippy --workspace --all-targets -- -D warnings`: clean
-- `test_full_accuracy_evaluation`: PASS (sample.tsv 100.0%/99.9%)
-- `test_klue_dp_dual_metric_lenient`: PASS (변화 없음)
-- `test_ud_kaist_dual_metric`: PASS (morph strict 66.3→66.4%)
+- dict-builder 전체 round-trip: 1.63M entries, 77s, 4-gate 무회귀
+- `test_csv_parser_unquoted_comma_surface` / `_quoted_comma_surface_still_works`: PASS
 
 ## 변경 파일
 
-- `rust/crates/mecab-ko-core/src/sejong/splitter.rs`: VCP+ETM/EC 패턴 + 4 단위 테스트
-- `docs/research/accuracy/2026-05-20_sprint141_vcp_split_fix.md` (신규)
+- `rust/crates/mecab-ko-dict-builder/src/lib.rs`: `parse_csv_content` (record count 보정 로직) + 2 신규 단위 테스트
+- `docs/research/accuracy/2026-05-20_sprint142_dict_builder_csv_fix.md` (신규)
 - `PLAN.md`, `PROGRESS.md` 갱신
 
-## Sprint 142 후보
+## Sprint 143 후보
 
-- A: 다른 mecab 결합 토큰 패턴 조사 (NNG+VCP+EC 등)
-- B: dict-builder CSV 버그 수정 (Track D 선행)
-- C: NIKL Modu 또는 OpenKorPOS 추가
-- D: Full CRF retrain (B 선행)
+- B [메인]: **Full CRF Retrain (Track E)** — 이제 진입 가능
+- A: 다른 mecab 결합 토큰 패턴 (Sprint 141 연장)
+- C: UD Korean-GSD 통합
+- D: NIKL Modu 추가
