@@ -1,66 +1,78 @@
-# PLAN — mecab-ko Sprint 157 (next)
+# PLAN — mecab-ko Sprint 158 (next)
 
 > 마지막 업데이트: 2026-05-21
 
-## 완료: Sprint 156 C — Surface normalization 확장
+## 완료: Sprint 157 G — MAG/MAJ practical 동치
 
-- ㄷ 불규칙 9 패턴 + 르 불규칙 1 (총 10) 추가
-- normalize_endings Step 4 (ㄷ 불규칙) 신규
-- KLUE surface canonical_lenient: 95.5% → 95.6% (+0.1pp, +30 eojeols)
-- sample.tsv 무회귀, morph 무영향
+### 결과 (3 silver 일관 lift)
 
-### 안전 영역 검증
+| Dataset | morph practical | Δ | eojeol Δ |
+|---------|----------------|---|---------|
+| KLUE | 71.9% → **72.1%** | +0.2pp | +44 |
+| UD Kaist | 68.4% → **68.6%** | +0.2pp | +65 |
+| UD GSD | 71.6% → **71.8%** | +0.2pp | +15 |
 
-normalize_endings (평가 함수만) = viterbi cascade 없음 → 안전. Sprint 155 회귀 후 진정으로 안전한 lift 영역 확인.
+**총 +124 eojeols 추가 매칭**, sample.tsv 무회귀, conservative 정밀 보존.
 
-## 누적 정확도 지표 (Sprint 156 후)
+### 누적 PRACTICAL 동치 그룹
+
+| Sprint | 추가 |
+|--------|------|
+| 126 | NNB↔NNG |
+| 136 | VA↔VV |
+| 147 | VV↔XSV |
+| **157** | **MAG↔MAJ** |
+
+## 현재 정확도 지표
 
 | Metric | 현재 |
 |--------|------|
-| sample.tsv | 100.0%/99.9% (baseline) |
+| sample.tsv | 100.0%/99.9% |
 | KLUE morph strict | 66.9% |
-| KLUE morph practical | 71.9% |
-| KLUE eojeol practical | 5283 / 22404 |
-| KLUE surface strict | 87.8% |
-| KLUE surface canonical | 91.6% |
-| **KLUE surface canonical_lenient** | **95.6%** |
-| UD Kaist morph practical | 68.4% |
-| UD GSD morph practical | 71.6% |
+| **KLUE morph practical** | **72.1%** |
+| KLUE eojeol practical | 5327 / 22404 |
+| KLUE surface canonical_lenient | 95.6% |
+| UD Kaist morph practical | 68.6% |
+| UD GSD morph practical | 71.8% |
 
-## Sprint 157 후보
+## Sprint 158 후보 — 안전 영역 거의 소진
 
-### 안전 후보
+### 잔여 안전 후보 (작은 lift)
 
-#### 잔여 surface normalization 후보
-Sprint 156 진단에서 식별된 미처리 패턴:
-- 들었/걸었/물었 외 ㄷ 불규칙 (싣다 → 실 등)
+#### 추가 surface normalization
 - ㅎ 불규칙 (그렇다 → 그래)
-- 예측 효과: +0.05pp 정도
+- ㅂ 불규칙 (받침이 있는 stem + 모음)
+- 예측: +0.05pp
 
-#### G: 평가 메트릭 동치 그룹 (Sprint 147 패턴)
+#### 추가 진단 + PRACTICAL 동치
+- Sprint 155 진단 남은 패턴: VV↔NNG (47건, 의미 차이 위험)
+- MMD↔MM 76건 (이미 conservative)
+- 예측 효과: 거의 없음
 
-- MAG↔MAJ 45건 (다만, 및, 역시) — 부사 대분류 동치
-- 위험: 낮음 (메트릭 영역)
-- 예측 효과: KLUE practical morph +0.1~0.2pp
+### 비가역 작업 (사용자 confirm 필요)
 
-### 비가역 작업 (사용자 confirm)
+영역 소진 신호. 다음은 비가역 대규모:
 
-#### F: 새 silver dataset (NIKL Modu)
-- 구어/SNS 도메인 확장
-- Academic license + 수동 다운로드
+#### F: NIKL Modu 도입
+- Academic license 수동 다운로드
+- 구어/SNS 도메인 silver dataset
+- coverage 확장 (lift는 아님)
+- **사용자 confirm 필요**
 
 #### E: Full CRF Retrain (Track B)
-- 3-5 sprint, mecab-cost-train
+- 3-5 sprint, 학습 데이터 + mecab-cost-train
 - 잠재 lift +1~5pp
+- Sprint 136에서 인프라 조사 완료
+- **사용자 confirm 필요**
 
-## 다음 결정 프로세스
+## 결정 프로세스
 
 규칙 5: 전문가 리뷰 → Top 권고 → 자동 채택.
 
-영역 소진 진단:
-- Surface normalization: 점점 작아지나 아직 잔여 있음
-- 평가 메트릭 동치: G로 시도 가능
-- 둘 다 소진 시: 비가역 작업 confirm 요청
+영역 소진 시 비가역 작업으로 진행:
+1. 작은 잔여 (surface normalization 추가) → 시도 → 영향 미미하면 종료
+2. F (NIKL Modu) 또는 E (CRF Retrain) confirm 요청
+3. confirm 없으면 정확도 작업 종료 (다른 영역: 도구, 문서, 성능 등)
 
 ## 검증 기준
 

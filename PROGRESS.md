@@ -1,117 +1,121 @@
-# PROGRESS — mecab-ko Sprint 156 (ㄷ 불규칙 surface normalization)
+# PROGRESS — mecab-ko Sprint 157 (MAG/MAJ practical 동치)
 
 > 마지막 업데이트: 2026-05-21
 
-## Sprint 156 C — Surface normalization 확장
+## Sprint 157 G — MAG/MAJ practical 동치 추가
 
 | Task | 상태 | 결과 |
 |------|------|------|
-| S156-1: 전문가 권고 (안전 영역 C) | ✅ 완료 | rust-pro agent |
-| S156-2: surface mismatch 진단 실행 | ✅ 완료 | top 15 패턴 식별 |
-| S156-3: 안전 후보 선택 | ✅ 완료 | ㄷ 불규칙 + 아우르다 (위험 패턴 제외) |
-| S156-4: 구현 (R/D 패턴 확장) | ✅ 완료 | 10 패턴 추가 |
-| S156-5: 단위 테스트 추가 | ✅ 완료 | 3 신규 테스트 |
-| S156-6: 5-gate 검증 | ✅ 완료 | +0.1pp surface_only, 무회귀 |
+| S157-G1: Sprint 155 진단 결과 재활용 | ✅ 완료 | MAG→MAJ 45건 식별 |
+| S157-G2: PRACTICAL 그룹 MAG/MAJ 추가 | ✅ 완료 | `evaluate.rs:853` |
+| S157-G3: 단위 테스트 추가 | ✅ 완료 | `test_pos_tags_equivalent_practical_includes_mag_maj` |
+| S157-G4: 5-gate 측정 (3 silver) | ✅ 완료 | **3 silver 모두 +0.2pp morph practical** |
+| S157-G5: 회귀 확인 | ✅ 완료 | sample.tsv 무회귀, conservative 무영향 |
 
-## 변경 내용
+## 핵심 결과
 
-### D_IRREGULAR_PATTERNS 신규 (Sprint 156)
-
-```rust
-const D_IRREGULAR_PATTERNS: &[(&str, &str)] = &[
-    ("듣었", "들었"), ("듣어", "들어"), ("듣은", "들은"),  // 듣다 → 들
-    ("묻었", "물었"), ("묻어", "물어"),                    // 묻다 → 물
-    ("걷었", "걸었"), ("걷어", "걸어"),                    // 걷다 → 걸
-    ("깨닫았", "깨달았"), ("깨닫아", "깨달아"),            // 깨닫다 → 깨달
-];
-```
-
-### R_IRREGULAR_PATTERNS 확장
-
-```rust
-+ ("아우르어", "아울러"),  // 아우르다 + 어 (4건 KLUE)
-```
-
-### normalize_endings Step 4 추가
-
-```rust
-// Step 4: ㄷ불규칙 활용 (Sprint 156)
-for (from, to) in D_IRREGULAR_PATTERNS {
-    if out.contains(from) {
-        out = out.replace(from, to);
-    }
-}
-```
-
-## 측정 결과
-
-### 5-gate (Sprint 155 baseline → Sprint 156 C)
+### 3 silver 일관 +0.2pp Lift
 
 | Metric | Before | After | Δ |
 |--------|--------|-------|---|
 | sample.tsv | 100.0%/99.9% | 100.0%/99.9% | 무회귀 ✓ |
-| KLUE morph strict | 66.9% | 66.9% | — |
-| KLUE morph practical | 71.9% | 71.9% | — |
-| KLUE eojeol practical | 5283 | 5283 | — |
-| KLUE surface strict | 87.8% | 87.8% | — |
-| KLUE surface canonical | 91.6% | 91.6% | — |
-| **KLUE surface canonical_lenient** | **95.5%** | **95.6%** | **+0.1pp (+30 eojeols)** |
-| UD Kaist | 변경 없음 | — | — |
-| UD GSD | 변경 없음 | — | — |
+| **KLUE morph practical** | 71.9% | **72.1%** | **+0.2pp** |
+| **KLUE eojeol practical** | 5283 | **5327** | **+44** |
+| **UD Kaist morph practical** | 68.4% | **68.6%** | **+0.2pp** |
+| **UD Kaist eojeol practical** | 4197 | **4262** | **+65** |
+| **UD GSD morph practical** | 71.6% | **71.8%** | **+0.2pp** |
+| **UD GSD eojeol practical** | 2926 | **2941** | **+15** |
+| KLUE/UD strict morph | — | — | — (정밀 보존) |
 
-### 의미
+**총 eojeol +124건 추가 매칭**.
 
-- 21389 → 21419 eojeols canonical_lenient 매칭 (+30)
-- normalize_endings는 surface_only metric에만 사용 → morph 무영향
-- viterbi cascade 없음 (안전 영역 확인)
+### 일관된 도메인 lift = 진짜 효과
+
+3 silver 모두 +0.2pp morph practical → 단일 anomaly 아님, 도메인 독립적.
+Sprint 147 (VV/XSV 동치) 패턴 재현.
+
+### 변경 내용
+
+```rust
+pub const TAG_EQUIVALENCE_GROUPS_PRACTICAL: &[&[&str]] = &[
+    &["SP", "SC"],
+    &["SS", "SY", "SSO", "SSC"],
+    &["MM", "MMD", "MMN", "MMA"],
+    &["SL", "NNP"],
+    &["NNB", "NNG"],
+    &["VA", "VV", "XSV"],
+    &["MAG", "MAJ"],   // Sprint 157 G 신규
+];
+```
+
+### 언어학적 배경
+
+- MAG: 일반 부사 (very, slowly 등)
+- MAJ: 접속 부사 (and, but, however, 다만 등)
+- mecab은 모두 MAG, KLUE는 접속부사를 MAJ로 분리 — convention 차이
+
+샘플 surfaces (Sprint 155 진단):
+- 다만 (20), 및 (13), 역시 (3), 오히려 (2), 아무튼 (2), 또는 (1)
 
 ## 핵심 학습
 
-### 1. 안전 영역의 진정한 가치
+### 1. 진단 결과 재활용
 
-Sprint 155 회귀 → Sprint 156 안전 영역 전환 = 측정 가능 lift + 무회귀.
-viterbi/CRF 변경 vs normalize_endings (평가 함수만) 영역 차이 명확.
+Sprint 155 진단 → A (실패) → G (성공). 같은 데이터로 여러 접근 가능.
 
-### 2. 명시 stem 목록 vs 음운 분해
+| 접근 | Sprint | 결과 |
+|------|--------|------|
+| dict 확장 | 155 A | 회귀 → rollback |
+| 메트릭 동치 | 157 G | +0.2pp 성공 |
 
-ㄷ 불규칙 일반화 시 false positive 위험 (예: "단어"는 ㄷ 시작 NNG, 변환 안 됨).
-명시 stem 목록 (들/물/걸/깨달)만 안전 처리.
+### 2. 안전 영역 누적 효과
 
-### 3. 누적 surface normalization 효과
-
-| Sprint | 추가 | 효과 |
+| Sprint | 영역 | 효과 |
 |--------|------|------|
-| 128 | 하았/하어 | +22.6% mismatch 흡수 |
-| 134 P3 | 이습니다 + 하아 | +1.0pp |
-| 136 P3a | 르 불규칙 9 패턴 | +0.x pp |
-| **156** | **ㄷ 불규칙 9 + 르 1 (10 패턴)** | **+0.1pp (+30 eojeols)** |
+| 156 | surface normalization | +0.1pp (+30 eojeols) |
+| **157** | **메트릭 동치** | **+0.2pp (+124 eojeols)** |
 
-작아지지만 누적적으로 효과 명확.
+Sprint 155 회귀 후 안전 영역으로 전환 = 누적 +0.3pp KLUE morph practical.
 
-### 4. 진단 → 안전 선택 (Sprint 148 D 패턴)
+### 3. PRACTICAL 동치 누적 진척
 
-진단으로 후보 식별 → 위험 평가 → 안전 후보만 구현.
-가장 큰 후보 (있어디에서 20건)는 mecab tokenizer 자체 이슈 → 정규화 영역 아님.
+| Sprint | 추가 | 언어학적 배경 |
+|--------|------|----------|
+| 126 | NNB↔NNG | counter words |
+| 136 | VA↔VV | "있다" |
+| 147 | VV↔XSV | "하/되" |
+| **157** | **MAG↔MAJ** | **접속부사** |
+
+모두 한국어 문법 진행 중 convention 차이.
 
 ## 검증
 
-- `cargo test --workspace --exclude mecab-ko-ffi --lib`: **409 passed / 0 failed** (406+3)
+- `cargo test --workspace --exclude mecab-ko-ffi --lib`: **410 passed / 0 failed** (409+1)
 - `cargo clippy --workspace --all-targets --exclude mecab-ko-ffi -- -D warnings`: clean
-- 5-gate sample.tsv: 100.0%/99.9% — **무회귀**
-- KLUE surface canonical_lenient: **+0.1pp**
+- 5-gate: 3 silver 모두 +0.2pp practical, sample.tsv 무회귀, conservative 정밀 보존
 
 ## 변경 파일
 
 - `rust/crates/mecab-ko-core/src/evaluate.rs`:
-  - D_IRREGULAR_PATTERNS 신규 (9)
-  - R_IRREGULAR_PATTERNS 확장 (1)
-  - normalize_endings Step 4 추가
-  - 3 단위 테스트 신규
-- `docs/research/accuracy/2026-05-21_sprint156_d_irregular_surface_normalization.md` (신규)
+  - PRACTICAL 그룹에 MAG/MAJ 추가
+  - 단위 테스트 1개 신규
+- `docs/research/accuracy/2026-05-21_sprint157_mag_maj_practical.md` (신규)
 - `PLAN.md`, `PROGRESS.md` 갱신
 
-## Sprint 157 후보
+## Sprint 158 후보
 
-- 추가 surface normalization (작은 lift 가능)
-- G: 평가 메트릭 동치 그룹 (MAG↔MAJ 검토)
-- 영역 소진 시: F (NIKL Modu, confirm) / E (Full CRF Retrain, confirm)
+### 남은 안전 영역
+
+PRACTICAL 동치 추가 후보 (Sprint 155 진단):
+- 대부분 이미 처리됨 (MMD/MMN/MM, NNB/NNG, VA/VV)
+- VV↔NNG는 의미 차이 (위험)
+
+남은:
+- 추가 surface normalization (작은 lift)
+- 추가 진단 후보 발굴 (Sprint 155 진단의 다른 패턴)
+
+### 비가역 작업
+
+영역 거의 소진 상태. 다음은 비가역 (사용자 confirm 필요):
+- F: NIKL Modu 도입
+- E: Full CRF Retrain

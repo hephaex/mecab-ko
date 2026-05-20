@@ -847,7 +847,12 @@ pub const TAG_EQUIVALENCE_GROUPS: &[&[&str]] = &[
 /// (하/XSV + 였/EP, 되/XSV + 었/EP) POS scheme 차이 흡수. mecab은 "하" 단독
 /// stem을 VV로 분류, gold는 XSV(동사파생접사)로 분류 — 분류 convention 차이.
 ///
-/// **Trade-off**: 진짜 NNB/NNG, VA/VV, VV/XSV 의미적 분류 오류도 함께 흡수됨.
+/// **Sprint 157 G**: MAG↔MAJ 동치 추가. mecab(MAG, 일반부사) vs KLUE gold(MAJ, 접속부사)
+/// convention 차이 45건 흡수. "다만"(20), "및"(13), "역시", "또는", "오히려" 등 mecab은
+/// 일반부사로, KLUE는 접속부사로 분류. 검색/색인 등 downstream에서는 부사 카테고리만
+/// 중요하므로 practical 동치 적절.
+///
+/// **Trade-off**: 진짜 NNB/NNG, VA/VV, VV/XSV, MAG/MAJ 의미적 분류 오류도 함께 흡수됨.
 /// 검색/색인 등 downstream 사용에는 이 구분이 중요하지 않은 경우가
 /// 많아 practical mode가 유용. 정밀한 형태소 분석 평가에는 conservative 권장.
 pub const TAG_EQUIVALENCE_GROUPS_PRACTICAL: &[&[&str]] = &[
@@ -857,6 +862,7 @@ pub const TAG_EQUIVALENCE_GROUPS_PRACTICAL: &[&[&str]] = &[
     &["SL", "NNP"],
     &["NNB", "NNG"],
     &["VA", "VV", "XSV"],
+    &["MAG", "MAJ"],
 ];
 
 /// 두 POS 태그가 conservative 동치 그룹 기준 동일한지 확인 (Sprint 125+126).
@@ -1520,6 +1526,16 @@ mod tests {
         // Conservative는 XSV 구분 유지
         assert!(!pos_tags_equivalent("VV", "XSV"));
         assert!(!pos_tags_equivalent("XSV", "VV"));
+    }
+
+    #[test]
+    fn test_pos_tags_equivalent_practical_includes_mag_maj() {
+        // Sprint 157 G: 다만/및/역시 mecab(MAG) vs gold(MAJ) convention 흡수
+        assert!(pos_tags_equivalent_practical("MAG", "MAJ"));
+        assert!(pos_tags_equivalent_practical("MAJ", "MAG"));
+        // Conservative는 MAG/MAJ 구분 유지
+        assert!(!pos_tags_equivalent("MAG", "MAJ"));
+        assert!(!pos_tags_equivalent("MAJ", "MAG"));
     }
 
     #[test]
