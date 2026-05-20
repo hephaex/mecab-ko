@@ -2319,6 +2319,113 @@ fn test_xsa_etm_post_splitter_mismatch() {
     println!("\n{}", "=".repeat(70));
 }
 
+/// Sprint 154 — 4개 후보 패턴 통합 진단.
+///
+/// Sprint 148 D, 153 E 교훈: 빈도 vs 실제 미처리 갭이 큼.
+/// 후보 4개를 한 번에 측정해 효율적으로 다음 작업 결정.
+///
+/// 후보:
+/// - EP+ETM (던, 는, 신) — Sprint 145 빈도 86
+/// - XSV+ETM (던, 헌, 시킬) — Sprint 145 빈도 72
+/// - VX+EP (했, 못했, 왔) — Sprint 145 빈도 25
+/// - XSA+EP (했, 스러웠, 허) — Sprint 145 빈도 35
+#[test]
+#[ignore = "requires KLUE/UD eval data + system dictionary"]
+fn test_sprint154_unified_diagnosis() {
+    use std::collections::HashMap;
+    use mecab_ko_core::sejong::SejongConverter;
+
+    let project_root = project_root();
+    let mut tokenizer = make_tokenizer(&project_root);
+    let converter = SejongConverter::new();
+    let eval_files = [
+        ("KLUE", "data/eval/klue_dp_val.tsv"),
+        ("UD-Kaist", "data/eval/ud_kaist_test.tsv"),
+        ("UD-GSD", "data/eval/ud_gsd_test.tsv"),
+    ];
+
+    let target_patterns = ["EP+ETM", "XSV+ETM", "VX+EP", "XSA+EP"];
+
+    // 패턴별 (raw, split_OK, unhandled_surfaces)
+    let mut stats: HashMap<&str, (usize, usize, HashMap<String, usize>)> = HashMap::new();
+    let mut samples: HashMap<&str, Vec<(String, String)>> = HashMap::new();  // pattern → (surface → split_output)
+
+    for pattern in &target_patterns {
+        stats.insert(pattern, (0, 0, HashMap::new()));
+        samples.insert(pattern, Vec::new());
+    }
+
+    for (_, rel_path) in &eval_files {
+        let path = project_root.join(rel_path);
+        if !path.exists() { continue; }
+        let dataset = TestDataset::from_tsv(path.to_str().unwrap()).expect("dataset");
+        for sentence in &dataset.sentences {
+            let raw_tokens = tokenizer.tokenize(&sentence.text);
+            for tok in &raw_tokens {
+                for pattern in &target_patterns {
+                    if tok.pos == *pattern {
+                        let entry = stats.get_mut(pattern).unwrap();
+                        entry.0 += 1;
+                        let split = converter.convert_tokens(std::slice::from_ref(tok));
+                        // "ETM" 또는 "EP"가 따로 나오면 처리됨
+                        let target_tag = if pattern.contains("EP") {
+                            // EP+ETM 또는 XSV+ETM 등은 ETM, VX+EP 또는 XSA+EP는 EP
+                            if pattern.ends_with("ETM") { "ETM" } else { "EP" }
+                        } else { "ETM" };
+                        let has_target = split.iter().any(|t| t.pos == target_tag);
+                        if has_target {
+                            entry.1 += 1;
+                        } else {
+                            *entry.2.entry(tok.surface.clone()).or_insert(0) += 1;
+                        }
+                        // 샘플 수집 (패턴당 최대 5개 unique surface)
+                        let smpls = samples.get_mut(pattern).unwrap();
+                        if smpls.len() < 5 && !smpls.iter().any(|(s, _)| s == &tok.surface) {
+                            let parts: Vec<String> = split.iter()
+                                .map(|t| format!("{}/{}", t.surface, t.pos))
+                                .collect();
+                            smpls.push((tok.surface.clone(), parts.join(" + ")));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    println!("\n{}", "=".repeat(70));
+    println!("  Sprint 154 — 4개 후보 통합 진단");
+    println!("{}", "=".repeat(70));
+
+    for pattern in &target_patterns {
+        let (raw, split_ok, unhandled) = &stats[pattern];
+        let unhandled_total: usize = unhandled.values().sum();
+        let pct = if *raw > 0 { (*split_ok as f64 / *raw as f64) * 100.0 } else { 0.0 };
+
+        println!("\n--- {} ---", pattern);
+        println!("  Raw: {raw}, Split OK: {split_ok} ({pct:.1}%), Unhandled: {unhandled_total}");
+
+        if !unhandled.is_empty() {
+            println!("  미처리 surfaces (top 10):");
+            let mut sorted: Vec<_> = unhandled.iter().collect();
+            sorted.sort_by_key(|x| std::cmp::Reverse(x.1));
+            for (s, c) in sorted.iter().take(10) {
+                println!("    {s}  count={c}");
+            }
+        }
+
+        println!("  샘플 split 결과:");
+        for (surface, output) in &samples[pattern] {
+            println!("    {surface} → {output}");
+        }
+    }
+
+    println!("\n{}", "=".repeat(70));
+    println!("  결정 기준:");
+    println!("  - 미처리 ≥ 10건 → 구현 후보");
+    println!("  - 미처리 < 10건 → 비이슈, 다음 패턴");
+    println!("{}", "=".repeat(70));
+}
+
 /// Sprint 150 A — VA+ETM multi-syllable raw 빈도 분석 (참고용).
 #[test]
 #[ignore = "requires KLUE/UD eval data + system dictionary"]

@@ -1,59 +1,79 @@
-# PLAN — mecab-ko Sprint 154 (next, 자동 결정)
+# PLAN — mecab-ko Sprint 155 (방향 전환)
 
 > 마지막 업데이트: 2026-05-21
 
-## 완료: Sprint 153 E — XSA+ETM 비이슈 확인
+## 완료: Sprint 154 — 빈도 기반 영역 소진 선언
 
-- 전문가 권고: XSA+ETM 미처리 추정
-- 실측: 38/38 처리됨 (converter decomp fallback)
-- 규칙 5 (자동 트랙 선택) 첫 실 적용
+### 통합 진단 결과
 
-## 누적 진척 상황
+| 패턴 | 빈도 | 미처리 |
+|------|------|--------|
+| EP+ETM | 86 | 0 |
+| XSV+ETM | 72 | 0 |
+| VX+EP | 25 | 0 |
+| XSA+EP | 35 | 0 |
 
-### 정확도 lift sprint
-| Sprint | 효과 |
-|--------|------|
-| 147 | VV/XSV practical 동치 +0.3pp |
-| 150 A | VA+ETM multi-syllable +0.4pp KLUE strict |
+mecab dict decomposition features가 모든 케이스 처리.
 
-### 비이슈 확인 sprint (가치: 학습)
-| Sprint | 패턴 | 처리 위치 |
-|--------|------|----------|
-| 148 D | ETM+ETM "라는" 33건 | splitter L71-73 중복 태그 규칙 |
-| 153 E | XSA+ETM 38건 | converter L162-187 decomp fallback |
+### 영역 소진 결론
 
-### 정리 sprint
-| Sprint | 효과 |
-|--------|------|
-| 149 | accuracy_eval -2163줄 + MSRV gate + coverage floor |
-| 151 C | setup helper 추출 -563줄 |
-| 152 D | Node/WASM continue-on-error 정리 |
+| Sprint | 빈도 후보 | 실효 lift |
+|--------|----------|----------|
+| 148 D | 33 | 0 (비이슈) |
+| 150 A | 542 | 24 (+0.4pp) |
+| 153 E | 38 | 0 (비이슈) |
+| 154 | 218 | 0 (비이슈) |
 
-### 인프라 작업
-| Sprint | 효과 |
-|--------|------|
-| 152 D | agents.md 규칙 5 추가 (자동 트랙 선택) |
+총 833건 중 24건만 의미 (2.9%) → **splitter rule 영역 소진**.
 
-## Sprint 154 — 자동 결정 (전문가 리뷰 기반)
+## 새로운 방향 (Sprint 155 후보)
 
-### 진단할 후보 (Sprint 153 학습 반영)
+### 안전 작업 (sprint당 0.3~0.5)
 
-전문가 리뷰 + 빈도 분석 + **반드시 splitter/converter 변환 후 측정**:
+#### A. dict 확장 — Sprint 130/132 재방문
 
-- **EP+ETM 86건** (던, 는, 신): ending_rules에 단독 EP+ETM 부재 — 진단 필요
-- **XSV+ETM 72건** (던, 헌, 시킬): 미처리 가능성
-- **VX+EP 25건** (했, 못했, 왔): 보조용언 + 과거
-- **XSA+EP 35건** (했, 스러웠, 허): XSA + 과거
-- **새 영역**: 전문가가 식별
+- 도메인 NNG/NNP 추가 (KLUE/UD에서 미처리 단어)
+- 빈도 측정 + 효과 검증
+- 위험: 낮음, lift: 가능 (Sprint 130 +0.7pp, Sprint 132 +0.3pp 전례)
 
-### 진단 우선 (Sprint 148 D, 153 E 교훈)
+#### B. test_klue_dp_real_error_analysis 활용
 
-작업 순서:
-1. 전문가 리뷰 → Top 권고
-2. 진단 테스트 작성 (raw → splitter → converter 모두 확인)
-3. 실제 미처리 건수 측정
-4. 미처리 ≥ 10건이면 → 구현 + 5-gate
-5. 미처리 < 10건이면 → 비이슈 문서화 후 다음 후보
+- 실제 오분류 패턴 분석 (빈도가 아닌 오류 기반)
+- 진단 → 작업 후보 식별
+- 위험: 낮음 (분석 only sprint 가능)
+
+#### C. surface normalization 확장 — Sprint 134 패턴
+
+- normalize_endings 추가 후보 발굴
+- canonical / canonical_lenient 평가 lift
+- 위험: 낮음, 분석 sprint 필요
+
+#### D. CRF Track A 재시도 — 좁은 범위
+
+- Sprint 137 분석 + Sprint 138 rollback 교훈 반영
+- 매우 좁은 범위 (1~3 pair) 수동 조정
+- 위험: 중간 (Sprint 138 회귀 전례)
+
+### 비가역 대규모 (사용자 confirm 필요)
+
+#### E. Full CRF Retrain (Track B)
+
+- 3-5 sprint
+- 학습 데이터 + mecab-cost-train
+- 잠재 lift +1~5pp
+
+#### F. NIKL Modu 도입
+
+- Academic license 다운로드
+- 구어/SNS 도메인 확장
+- 새 silver dataset → CI gate 추가
+
+## 다음 결정 프로세스
+
+규칙 5에 따라:
+1. 전문가 리뷰 → A/B/C/D 중 Top 권고
+2. 자동 채택 → 진단 또는 구현
+3. 비가역 작업 (E/F)은 사용자 confirm
 
 ## 검증 기준
 
