@@ -4836,3 +4836,128 @@ fn test_compound_pos_frequency_analysis() {
         println!("{count:>6}  {pattern:<25}  {samples_str}");
     }
 }
+
+/// Sprint 148 D — ETM+ETM "라는" 진단.
+///
+/// mecab이 ETM+ETM으로 출력하는 "라는"을 gold와 비교하여
+/// 실제 mismatch 여부 및 패턴을 파악한다.
+#[test]
+#[ignore = "requires KLUE DP eval data + system dictionary"]
+fn test_etm_etm_raneun_diagnosis() {
+    use mecab_ko_core::evaluate::{pos_tags_equivalent_practical, TestDataset};
+    use mecab_ko_core::sejong::SejongConverter;
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or_else(|| std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root.join("data/mecab-ko-dic-2.1.1-20180720").to_string_lossy().to_string()
+    });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(&user_dict_path).expect("Failed to load user dict");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict.load_from_csv(&klue_dict_path).expect("Failed to load KLUE dict");
+        }
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let converter = SejongConverter::new();
+    let eval_files = [
+        ("KLUE", "data/eval/klue_dp_val.tsv"),
+        ("UD-Kaist", "data/eval/ud_kaist_test.tsv"),
+        ("UD-GSD", "data/eval/ud_gsd_test.tsv"),
+    ];
+
+    let mut total_raneun = 0usize;
+    let mut mismatch_count = 0usize;
+    let show_limit = 10usize;
+
+    println!("\n{}", "=".repeat(70));
+    println!("  ETM+ETM '라는' Diagnosis (Sprint 148 D)");
+    println!("{}", "=".repeat(70));
+
+    for (ds_name, rel_path) in &eval_files {
+        let path = project_root.join(rel_path);
+        if !path.exists() {
+            println!("Skipping {ds_name}: not found");
+            continue;
+        }
+        let dataset = TestDataset::from_tsv(path.to_str().unwrap())
+            .expect("Failed to load dataset");
+        println!("\n--- {ds_name} ---");
+
+        'sentence: for sentence in &dataset.sentences {
+            let raw_tokens = tokenizer.tokenize(&sentence.text);
+            let pred_morphs: Vec<(String, String)> = converter
+                .convert_tokens(&raw_tokens)
+                .into_iter()
+                .map(|t| (t.surface, t.pos))
+                .collect();
+
+            // ETM+ETM 토큰 위치 찾기 (raw)
+            let mut raw_etm_positions: Vec<usize> = Vec::new();
+            for (i, tok) in raw_tokens.iter().enumerate() {
+                if tok.pos == "ETM+ETM" && tok.surface.contains("라는") {
+                raw_etm_positions.push(i);
+            }
+        }
+            if raw_etm_positions.is_empty() {
+                continue 'sentence;
+            }
+            total_raneun += raw_etm_positions.len();
+
+            // pred vs gold 비교
+            let gold_morphs: Vec<(String, String)> = sentence.tokens.iter()
+                .flat_map(|t| {
+                    t.pos.split('+').map(move |p| (t.surface.clone(), p.to_string()))
+                })
+                .collect();
+
+            // pred_morphs에서 "라는/ETM" 위치 찾기
+            for (pi, (ps, pp)) in pred_morphs.iter().enumerate() {
+                if ps.contains("라는") && pp == "ETM" {
+                    let found_in_gold = gold_morphs.iter().any(|(gs, gp)| {
+                        gs.contains("라는") && (gp == "ETM" || pos_tags_equivalent_practical(gp, pp))
+                    });
+
+                    if !found_in_gold {
+                        mismatch_count += 1;
+                        if mismatch_count <= show_limit {
+                            println!("\n[Mismatch #{mismatch_count}]");
+                            println!("  Text: {}", sentence.text);
+                            println!("  Pred[{pi}]: {ps}/{pp}");
+                            let start = pi.saturating_sub(2);
+                            let end = (pi + 3).min(pred_morphs.len());
+                            print!("  Pred context: ");
+                            for (s, p) in &pred_morphs[start..end] {
+                                print!("{s}/{p} ");
+                            }
+                            println!();
+                            print!("  Gold (라는 area): ");
+                            for (gs, gp) in &gold_morphs {
+                                if gs.contains("라는") || gs.contains("라") {
+                                    print!("{gs}/{gp} ");
+                                }
+                            }
+                            println!();
+                        }
+                    }
+                }
+            }
+        } // end 'sentence
+    } // end eval_files
+
+    println!("\n{}", "=".repeat(70));
+    println!("  Total ETM+ETM '라는' tokens: {total_raneun}");
+    println!("  Gold mismatch (approximate): {mismatch_count}");
+    println!("{}", "=".repeat(70));
+}
