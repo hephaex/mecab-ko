@@ -1,52 +1,61 @@
-# PLAN — mecab-ko Sprint 147 (next)
+# PLAN — mecab-ko Sprint 148 (next)
 
 > 마지막 업데이트: 2026-05-20
 
-## 완료: Sprint 146 A — 명시 surface 안전 패턴 (VCP+EP "였")
+## 완료: Sprint 147 A — VV/XSV practical 동치 추가
 
-### NP+JX skip 결정
-- mecab CLI 확인: "그는"/"이는"/"저는" 이미 분해
-- 결합 surface ("난"/"게다가")는 KLUE에 없음
-- → 분리 시도 시 false morpheme 추가 위험
+### 발견
+- mecab "했/됐" = VV+EP (1 token)
+- gold "하/XSV + 였/EP" (2 tokens)
+- POS scheme 차이 → surface 분리 불가, practical 동치만 적절
 
-### VCP+EP "였" 분리 추가
-- splitter.rs: `if pos == "VCP+EP" && surface == "였"` → split
-- 단위 테스트 2개
-- 실측 lift 0 (mecab raw feature ≠ SejongConverter 후 결과)
-- 형태론적 정확성 + 회귀 0 → 유지
+### 구현
+- `TAG_EQUIVALENCE_GROUPS_PRACTICAL`: `&["VA", "VV", "XSV"]`
+- 단위 테스트 1개 + Conservative 보존
+
+### Lift (3 silver 모두)
+- KLUE practical morph: 71.6% → 71.9% (+0.3pp)
+- UD Kaist practical morph: 68.1% → 68.3% (+0.2pp)
+- UD GSD practical morph: 71.3% → 71.7% (+0.4pp)
+- sample.tsv 무회귀
 
 ### 보고서
-`docs/research/accuracy/2026-05-20_sprint146_explicit_surface_splits.md`
+`docs/research/accuracy/2026-05-20_sprint147_xsv_practical_equivalence.md`
 
-## 다음 스프린트: Sprint 147 (미정 — 사용자 선택)
+## 다음 스프린트: Sprint 148 (미정 — 사용자 선택)
 
-### 후보 A: 추가 안전 패턴 (XSV+EP, XSV+EC)
+### 후보 A: VV+EP 명시 동사 분리
 
-XSV+EP 413건, XSV+EC 751건. 명시 surface 식별 + 분리 시도.
+VV+EP 542건. 명시 동사 surface 분리:
+- "흘렸" → 흘리/VV + 었/EP
+- "버렸" → 버리/VV + 었/EP
+- "불탔" → 불타/VV + 았/EP
 
-**가능 surface**:
-- XSV+EP 413건: "했" (하/XSV + 었/EP), "됐" (되/XSV + 었/EP)
-- XSV+EC 751건: "해" (하/XSV + 어/EC), "하고" (하/XSV + 고/EC)
+**복잡도**: stem 식별 필요 (regular/irregular conjugation). 명시 surface 목록 + 표준 활용 규칙.
 
 **비용**: 0.5-1 sprint
-**위험**: 낮음
+**위험**: 중간 (false positive 위험)
 
 ### 후보 B [메인]: Full CRF Retrain (Track E)
 
-3-5 sprint. 학습 데이터 (KLUE + UD Kaist + UD GSD train) + mecab-cost-train.
+3-5 sprint. 학습 데이터 + mecab-cost-train.
 
 ### 후보 C: NIKL Modu 수동 다운로드
 
-Academic license. 구어/SNS 도메인 확장.
+Academic license, 구어/SNS 도메인 확장.
 
-### 후보 D: VV+EP 명시 동사 분리
+### 후보 D: ETM+ETM "라는" 조사
 
-VV+EP 542건. 명시 동사 surface ("흘렸"/"버렸") → "VV + 었/EP".
+33건. mecab 비정상 출력. 분석 후 처리.
+
+### 후보 E: 추가 practical 동치 후보 조사
+
+Sprint 147 패턴 (POS scheme 차이) 분석. KLUE/UD/mecab 비교로 추가 convention 차이 발견.
 
 ## 백로그
 
-- P4 (borderline NNG↔NNP): Sprint 132 보류 5 entries
-- accuracy-gate CI에 UD Kaist/GSD eojeol gate
+- P4 (borderline NNG↔NNP)
+- accuracy-gate CI에 UD eojeol gate 추가
 
 ## 검증 기준
 

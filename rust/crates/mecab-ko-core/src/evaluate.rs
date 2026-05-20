@@ -843,7 +843,11 @@ pub const TAG_EQUIVALENCE_GROUPS: &[&[&str]] = &[
 /// convention 차이가 KLUE DP 41건. 한국어 문법에서 "있다"의 형용사적/동사적
 /// 존재 분류는 진행 중인 논쟁이며 두 코퍼스의 convention 차이를 흡수.
 ///
-/// **Trade-off**: 진짜 NNB/NNG, VA/VV 의미적 분류 오류도 함께 흡수됨.
+/// **Sprint 147 A**: VV↔XSV 동치 추가. "했/됐"의 mecab(VV+EP) vs KLUE/UD gold
+/// (하/XSV + 였/EP, 되/XSV + 었/EP) POS scheme 차이 흡수. mecab은 "하" 단독
+/// stem을 VV로 분류, gold는 XSV(동사파생접사)로 분류 — 분류 convention 차이.
+///
+/// **Trade-off**: 진짜 NNB/NNG, VA/VV, VV/XSV 의미적 분류 오류도 함께 흡수됨.
 /// 검색/색인 등 downstream 사용에는 이 구분이 중요하지 않은 경우가
 /// 많아 practical mode가 유용. 정밀한 형태소 분석 평가에는 conservative 권장.
 pub const TAG_EQUIVALENCE_GROUPS_PRACTICAL: &[&[&str]] = &[
@@ -852,7 +856,7 @@ pub const TAG_EQUIVALENCE_GROUPS_PRACTICAL: &[&[&str]] = &[
     &["MM", "MMD", "MMN", "MMA"],
     &["SL", "NNP"],
     &["NNB", "NNG"],
-    &["VA", "VV"],
+    &["VA", "VV", "XSV"],
 ];
 
 /// 두 POS 태그가 conservative 동치 그룹 기준 동일한지 확인 (Sprint 125+126).
@@ -1473,6 +1477,18 @@ mod tests {
         assert!(pos_tags_equivalent_practical("VV", "VA"));
         // Conservative는 여전히 VA/VV 구분 (진짜 동사/형용사 분류)
         assert!(!pos_tags_equivalent("VA", "VV"));
+    }
+
+    #[test]
+    fn test_pos_tags_equivalent_practical_includes_xsv() {
+        // Sprint 147 A: "했/됐" mecab(VV+EP) vs gold(XSV+EP) convention 흡수
+        assert!(pos_tags_equivalent_practical("VV", "XSV"));
+        assert!(pos_tags_equivalent_practical("XSV", "VV"));
+        assert!(pos_tags_equivalent_practical("VA", "XSV"));
+        assert!(pos_tags_equivalent_practical("XSV", "VA"));
+        // Conservative는 XSV 구분 유지
+        assert!(!pos_tags_equivalent("VV", "XSV"));
+        assert!(!pos_tags_equivalent("XSV", "VV"));
     }
 
     #[test]

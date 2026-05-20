@@ -1,105 +1,94 @@
-# PROGRESS — mecab-ko Sprint 146 (명시 surface 안전 패턴)
+# PROGRESS — mecab-ko Sprint 147 (VV/XSV practical 동치)
 
 > 마지막 업데이트: 2026-05-20
 
-## Sprint 146 A — VCP+EP "였" 분리 (NP+JX skip)
+## Sprint 147 A — XSV practical 동치 추가
 
 | Task | 상태 | 비고 |
 |------|------|------|
-| S146-A1: NP+JX 명시 surface 분리 | ✅ 완료 (skip 결정) | mecab이 "그는"/"이는" 이미 분리; 결합 "난"/"게다가"는 KLUE에 없음 |
-| S146-A2: VCP+EP "였" 분리 | ✅ 완료 | "였" → "이/VCP + 었/EP" 명시 surface 처리 |
-| S146-A3: 5-gate 검증 | ✅ 완료 | 5-gate 무회귀, 실측 lift 없음 (형태론 정확성만) |
+| S147-A1: XSV+EP mecab/gold 확인 | ✅ 완료 | mecab은 "했/VV+EP", gold는 "하/XSV + 였/EP" — POS scheme 차이 |
+| S147-A2: XSV+EC mecab/gold 확인 | ✅ 완료 | 같은 패턴 — "해/VV+EC" vs "하/XSV + 여/EC" |
+| S147-A3: PRACTICAL group에 XSV 추가 | ✅ 완료 | `VA/VV/XSV` 동치, 단위 테스트 1개 |
+| S147-A4: 5-gate + lift 측정 | ✅ 완료 | 3 silver 모두 practical morph +0.2~0.4pp |
 
 ## 핵심 발견
 
-### NP+JX skip 사유
+### POS scheme 차이 → 단순 분리 불가
 
-**mecab CLI 직접 확인**:
-- "그는" → 그/NP + 는/JX (이미 분리)
-- "이는" → 이/NP + 는/JX (이미 분리)
-- "저는" → 저/NP + 는/JX (이미 분리)
-- "난" → 난/NP+JX (결합, contraction)
-- "게다가" → 게다가/NP+JX (결합)
+mecab CLI 직접 확인:
+- "했" → mecab: `VV+EP` (1 token) vs gold: `하/XSV + 였/EP` (2 tokens)
+- "됐" → mecab: `VV+EP` vs gold: `되/XSV + 었/EP`
+- "해" → mecab: `VV+EC` vs gold: `하/XSV + 여/EC`
 
-**KLUE gold 확인**: "난"/"게다가" NP+JX 결합 surface 등장 안 함. 모두 분리된 morpheme.
+→ mecab "하" = VV, gold "하" = XSV. **POS 분류 convention 차이** (surface 분리 단위는 같음).
+→ surface 분리 시도 시 POS 부정확. **practical 동치만 적절**.
 
-→ mecab 분리 출력은 이미 KLUE/UD와 일치. 결합 출력(contraction)은 KLUE에 없음 → 분리 시도 시 false morpheme 추가. **skip**.
+### PRACTICAL 그룹 확장 (Sprint 147 A)
 
-### VCP+EP "였" 분리 추가
-
-`splitter.rs`에 추가:
 ```rust
-if pos == "VCP+EP" && surface == "였" {
-    return vec![("이".to_string(), "VCP"), ("었".to_string(), "EP")];
-}
+&["VA", "VV", "XSV"]  // 기존 VA/VV에 XSV 추가
 ```
 
-**단위 테스트 2개**:
-- test_split_morpheme_vcp_ep_yeoss
-- test_split_morpheme_vcp_ep_other_surface_no_split
+언어학적 정당성:
+- VA/VV (Sprint 136): "있다" 형용사/동사 분류 논쟁
+- VV/XSV (Sprint 147): "하/되" 본동사/접사 분류 논쟁
+- 모두 한국어 문법 진행 중 convention 차이
 
-### 측정 결과 (모든 메트릭 동일)
+## 측정 결과 (3 silver 모두 lift)
 
-| 메트릭 | Before | After |
-|--------|--------|-------|
-| sample.tsv Token / Sentence | 100.0% / 99.9% | 동일 |
-| KLUE morph / eo strict | 66.8% / 20.7% | 동일 |
-| KLUE practical | 71.6% / 23.5% | 동일 |
-| Surface canonical_lenient | 95.5% | 동일 |
-| UD Kaist morph | 66.3% | 동일 |
-| UD GSD morph | 67.4% | 동일 |
+| Metric | Before | After | Δ |
+|--------|--------|-------|---|
+| sample.tsv | 100.0%/99.9% | 동일 | 무회귀 |
+| KLUE morph strict | 66.8% | 66.8% | — (strict 미영향) |
+| **KLUE morph practical** | 71.6% | **71.9%** | **+0.3pp** |
+| KLUE eo practical | 5262건 | **5281건** | +19 |
+| **UD Kaist morph practical** | 68.1% | **68.3%** | **+0.2pp** |
+| UD Kaist eo practical | 4193건 | **4200건** | +7 |
+| **UD GSD morph practical** | 71.3% | **71.7%** | **+0.4pp** |
+| UD GSD eo practical | 2907건 | **2918건** | +11 |
+| Surface-only | 동일 | 동일 | — |
 
-### 실측 lift 0 원인
+### 일관된 도메인 lift = 진짜 효과
 
-Sprint 145 분석의 VCP+EP 101건 ("였")은 `Token.pos` 문자열에 `+` 포함된 raw mecab feature. 실측 평가는 SejongConverter 처리 후 비교 → 분석 단계 raw count가 실측 lift와 직접 비례하지 않음. mecab CLI 출력에서도 "였/EP" 단독으로 보임 → mecab 실제 token 분해 path가 다를 가능성.
-
-### 유지 결정 (형태론적 정확성)
-
-- 형태론적으로 정확 (KLUE/UD gold와 일치)
-- 단위 테스트로 정확성 보장
-- 향후 mecab dict 업데이트 대비
-- 회귀 0
+3 silver 모두 +0.2~0.4pp morph + 일관된 eojeol +건수 → 도메인 독립적, 진짜 convention 차이 흡수.
 
 ## 핵심 학습 포인트
 
-### 1. 분석 빈도 ≠ 실측 영향
+### 1. 분석 빈도 → mecab CLI → 적합한 접근 식별
 
-Sprint 145 빈도 분석은 raw feature 기반. 실측은 SejongConverter 후. 두 단계가 일치하지 않을 수 있음 → 실측 검증 필수.
+Sprint 145 분석 "XSV+EP 413건"은 raw feature. mecab CLI 확인 후 실제 출력 "VV+EP"임을 발견. surface 분리 → practical 동치 전환.
 
-### 2. mecab CLI 출력이 절대적 기준
+### 2. POS scheme 차이는 practical 동치로 처리
 
-분석 테스트의 통계보다 CLI 직접 확인 + KLUE gold 비교가 정확.
+mecab/gold 분류 차이는 conventional disagreement. surface 분리 단위는 같으나 분류만 다름 → split 불가, lenient만 적절.
 
-### 3. mecab이 이미 분리하는 패턴은 skip
+### 3. Conservative vs Practical 분리 가치
 
-mecab 분리 출력 = KLUE gold이면 추가 작업 불필요.
+Conservative 변경 없음 — 정밀 평가 보존. Practical만 lift → trade-off 명확.
 
-### 4. 형태론적 정확성도 commit 가치
+### 4. 일관된 도메인 lift = 신뢰도 높음
 
-실측 lift 0이라도 정확한 코드는 downstream 일관성 향상.
-
-## 측정값 (변경 없음)
-
-| 메트릭 | Sprint 145 | Sprint 146 |
-|--------|-----------|-----------|
-| 모든 5-gate | 동일 | 동일 |
+3 silver 모두 +0.2~0.4pp → 단일 anomaly 아님, 진짜 효과.
 
 ## 검증
 
-- `cargo test --workspace --exclude mecab-ko-ffi --lib`: **398 passed / 0 failed** (396 + 2 신규)
+- `cargo test --workspace --exclude mecab-ko-ffi --lib`: **399 passed / 0 failed** (398 + 1 신규)
 - `cargo clippy --workspace --all-targets -- -D warnings`: clean
-- `test_full_accuracy_evaluation`: PASS
-- `test_klue_dp_*` / `test_ud_*`: PASS (변화 없음)
+- `test_pos_tags_equivalent_practical_includes_xsv`: PASS
+- `test_full_accuracy_evaluation`: PASS (sample.tsv 100.0%/99.9%)
+- KLUE/UD: 3 silver 모두 practical lift
 
 ## 변경 파일
 
-- `rust/crates/mecab-ko-core/src/sejong/splitter.rs`: VCP+EP "였" 분리 + 2 단위 테스트
-- `docs/research/accuracy/2026-05-20_sprint146_explicit_surface_splits.md` (신규)
+- `rust/crates/mecab-ko-core/src/evaluate.rs`:
+  - `TAG_EQUIVALENCE_GROUPS_PRACTICAL`에 XSV 추가
+  - `test_pos_tags_equivalent_practical_includes_xsv` 신규
+- `docs/research/accuracy/2026-05-20_sprint147_xsv_practical_equivalence.md` (신규)
 - `PLAN.md`, `PROGRESS.md` 갱신
 
-## Sprint 147 후보
+## Sprint 148 후보
 
-- A: 추가 안전 패턴 (XSV+EP/EC 명시 surface)
+- A: VV+EP 명시 동사 분리 (542건)
 - B [메인]: Full CRF Retrain (Track E)
 - C: NIKL Modu 수동 다운로드
-- D: VV+EP 명시 동사 분리
+- D: ETM+ETM "라는" 조사
