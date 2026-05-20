@@ -1,64 +1,77 @@
-# PROGRESS — mecab-ko Sprint 148 (ETM+ETM "라는" 분석)
+# PROGRESS — mecab-ko Sprint 149 (P0 Cleanup)
 
-> 마지막 업데이트: 2026-05-20
+> 마지막 업데이트: 2026-05-21
 
-## Sprint 148 D — ETM+ETM "라는" 분석 스프린트
+## Sprint 149 — P0 정리 스프린트
 
-| Task | 상태 | 비고 |
+| Task | 상태 | 결과 |
 |------|------|------|
-| S148-D1: ETM+ETM "라는" 빈도 확인 | ✅ 완료 | 33건 (3 datasets), KLUE 8건 |
-| S148-D2: mecab 출력 → SejongConverter 변환 추적 | ✅ 완료 | 중복 태그 규칙으로 이미 처리됨 |
-| S148-D3: gold 비교 mismatch 측정 | ✅ 완료 | 0 mismatch — 비이슈 확인 |
-| S148-D4: 진단 테스트 추가 | ✅ 완료 | `test_etm_etm_raneun_diagnosis` |
+| S149-01: MSRV 1.80 CI gate 추가 | ✅ 완료 | ci.yml msrv job 추가 |
+| S149-02: coverage floor 설정 | ✅ 완료 | tarpaulin --fail-under 60 |
+| S149-03: placeholder 테스트 파일 삭제 | ✅ 완료 | integration_kiwi.rs, integration_performance.rs 삭제 |
+| S149-04: accuracy_eval.rs 진단 함수 24개 삭제 | ✅ 완료 | 4963→2800줄 (-43%) |
+| S149-05: multi-syllable VV+ETM rollback guard 테스트 | ✅ 완료 | 3개 신규 테스트 (스프린트 145 가드) |
 
-## 핵심 발견
+## 변경 내용
 
-### ETM+ETM "라는" = 이미 올바르게 처리됨
+### ci.yml: MSRV 1.80 게이트
 
-**분석**:
-- 빈도: 33건 (3 silver 통합)
-- mecab raw output: `라는/ETM+ETM`
-- SejongConverter (splitter.rs L71-73): 중복 태그 규칙 → `ETM+ETM → ETM`
-- 변환 후: `라는/ETM`
-- gold 기대값: `라는/ETM`
-- **mismatch: 0건**
-
-**중복 태그 규칙 (splitter.rs)**:
-```rust
-// 중복 태그 처리: "JKB+JKB" 같은 경우 첫 번째 태그만 사용
-if tags.len() >= 2 && tags[0] == tags[1] && pos != "EP+EP" {
-    return vec![(surface.to_string(), tags[0].clone())];
-}
+```yaml
+msrv:
+  name: MSRV Check (Rust 1.80)
+  steps:
+    - uses: ./.github/actions/rust-setup
+      with: { toolchain: 1.80.0 }
+    - run: cargo check --workspace --lib
 ```
 
-→ ETM+ETM이므로 `tags[0] == tags[1] == "ETM"` → `[(라는, ETM)]` 반환.
+Cargo.toml에 선언된 `rust-version = "1.80"`이 CI에서 실제 검증됨.
 
-### 언어학적 배경
+### ci.yml: coverage floor
 
-"라는"은 한국어에서 "이라고 하는"의 축약형:
-- mecab: `라/ETM + 는/ETM` → ETM+ETM (내부 형태소 분리)
-- gold (KLUE/UD): `라는/ETM` (단일 형태소로 처리)
+```yaml
+cargo tarpaulin ... --fail-under 60
+```
 
-mecab의 ETM+ETM 분석은 언어학적으로 합리적이며, SejongConverter가 이미 gold 형식으로 정규화.
+사용자 룰의 80% 목표 향해 60% floor로 시작 (이전: floor 없음).
 
-### 코드 변경 없음
+### placeholder 테스트 삭제
 
-Sprint 148 D = 분석 스프린트. 기존 코드가 이미 올바르게 동작함을 확인.
+- `integration_performance.rs` — 21개 테스트, 모두 `println!("...placeholder")` + 0 assertion
+- `integration_kiwi.rs` — 12개 테스트, `assert!(true)` 1개만 존재
+
+### accuracy_eval.rs 정리
+
+삭제된 sprint-specific 진단 함수 24개:
+test_ec_error_analysis, test_etm_error_analysis, test_ef_error_analysis,
+test_etn_error_analysis, test_xsv_error_analysis, test_vcp_error_analysis,
+test_nng_error_analysis, test_xpn_error_analysis, test_nnb_error_analysis,
+test_ec_sample_errors, test_jks_sample_errors, test_mag_sample_errors,
+test_ef_sample_errors, test_vx_sample_errors, test_xsv_sample_errors,
+test_vx_pattern_debug, test_ep_error_analysis, test_ef_error_cases_detailed,
+test_vcp_sample_errors, test_vv_sample_errors, test_xsv_debug_sentences,
+test_specific_sentence_debug, test_ep_sample_errors, test_list_all_mismatches
+
+유지된 5-gate 함수:
+test_accuracy_gate ★, test_klue_dp_dual_metric ★, test_klue_dp_eojeol_surface_only ★,
+test_ud_kaist_dual_metric ★, test_ud_gsd_dual_metric ★
+
+### splitter.rs 신규 테스트
+
+- `test_split_morpheme_vv_etm_single_syllable_rieul` — "올" → 오/VV + ㄹ/ETM
+- `test_split_morpheme_va_etm_single_syllable_nieun` — "큰" → 크/VA + ㄴ/ETM
+- `test_split_morpheme_vv_etm_multisyllable_no_jamo_split` — Sprint 145 rollback guard
 
 ## 검증
 
-- `cargo test --workspace --exclude mecab-ko-ffi --lib`: **399 passed / 0 failed** (변경 없음)
-- `cargo clippy --workspace --all-targets --exclude mecab-ko-ffi -- -D warnings`: clean
-- `test_etm_etm_raneun_diagnosis`: PASS (33건 탐지, 0 mismatch)
+- `cargo test --workspace --exclude mecab-ko-ffi --lib`: **402 passed / 0 failed** (399+3)
+- `cargo clippy --workspace --all-targets -- -D warnings`: clean
+- 5-gate sample.tsv: PASSED (100.0%/99.9%)
+- placeholder 파일 삭제 후 mecab-ko 패키지 테스트: 모두 통과
 
-## 변경 파일
+## Sprint 150 후보
 
-- `rust/crates/mecab-ko-core/tests/accuracy_eval.rs`: `test_etm_etm_raneun_diagnosis` 추가
-- `PLAN.md`, `PROGRESS.md` 갱신
-
-## Sprint 149 후보
-
-- A: VA+ETM 542건 분석 (어려울, 바른, 큰 — 형용사 활용)
-- B: Full CRF Retrain (Track E)
-- C: NIKL Modu 수동 다운로드
-- E: 추가 practical 동치 후보 조사 (ETM+ETM 外 패턴)
+- A: VA+ETM 542건 처리 (형용사 활용 분리)
+- B: Full CRF Retrain (Track B)
+- C: accuracy_eval.rs setup helper 함수 추출 (추가 정리)
+- D: Node/WASM continue-on-error 제거 (빌드 단계)
