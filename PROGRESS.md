@@ -1,70 +1,108 @@
-# PROGRESS — mecab-ko Sprint 150 (VA+ETM multi-syllable)
+# PROGRESS — mecab-ko Sprint 151 (setup helper 추출)
 
 > 마지막 업데이트: 2026-05-21
 
-## Sprint 150 A — VA+ETM multi-syllable ㄴ jongseong split
+## Sprint 151 C — accuracy_eval.rs setup helper 추출
 
 | Task | 상태 | 결과 |
 |------|------|------|
-| S150-A1: VA+ETM raw 빈도 진단 | ✅ 완료 | 542건 (1-syl 160 + multi 382) |
-| S150-A2: post-splitter mismatch 진단 | ✅ 완료 | 518/542 처리됨 (95.6%), 미처리 24건 |
-| S150-A3: gold 검증 | ✅ 완료 | 빠르/VA + ㄴ/ETM 형식 확인 |
-| S150-A4: splitter 규칙 추가 (VA만, VV는 Sprint 145 제외) | ✅ 완료 | 4 단위 테스트 |
-| S150-A5: 5-gate 측정 | ✅ 완료 | KLUE strict +0.4pp, 무회귀 |
-| S150-A6: clippy 정리 | ✅ 완료 | clean |
+| S151-C1: boilerplate 패턴 식별 (24개) | ✅ 완료 | 30라인 × 24 = ~720라인 중복 |
+| S151-C2: helper functions 3개 정의 | ✅ 완료 | `project_root`, `dict_path`, `make_tokenizer` |
+| S151-C3: 24개 함수 boilerplate 치환 | ✅ 완료 | 모두 helper 사용 |
+| S151-C4: 변형 케이스 처리 | ✅ 완료 | 4가지 패턴 모두 처리 |
+| S151-C5: 빌드/테스트/clippy 검증 | ✅ 완료 | 406 pass, clean |
+| S151-C6: 5-gate sample.tsv 회귀 확인 | ✅ 완료 | 100.0%/99.9% 유지 |
 
-## 핵심 발견
+## 변경 내용
 
-### Raw 빈도 vs 실제 미처리 갭
+### 추가된 helper 함수 (3개)
 
-- VA+ETM raw 542건 (1-syl 160, multi 382)
-- **ending_rules가 이미 518건 (95.6%) 처리**
-- 미처리 24건: 빠른(13) + 나쁜(5) + 예쁜(4) + 느린(1) + 신선한(1)
+`tests/accuracy_eval.rs:16-56` (top of file):
 
-빈도 분석만으로 판단했다면 542건 모두를 작업 대상으로 오해할 수 있었음.
+```rust
+fn project_root() -> std::path::PathBuf {
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+    std::path::Path::new(&manifest_dir)
+        .parent().and_then(|p| p.parent()).and_then(|p| p.parent())
+        .unwrap_or_else(|| std::path::Path::new("."))
+        .to_path_buf()
+}
 
-### 미처리 24건 패턴
+fn dict_path(project_root: &std::path::Path) -> String {
+    std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root.join("data/mecab-ko-dic-2.1.1-20180720")
+            .to_string_lossy().to_string()
+    })
+}
 
-`multi-syllable VA+ETM with ㄴ jongseong on last char`:
-- 빠른 → 빠르 + ㄴ (르 불규칙)
-- 나쁜/예쁜 → 나쁘/예쁘 + ㄴ (ㅡ 탈락)
+fn make_tokenizer(project_root: &std::path::Path) -> Tokenizer {
+    let mut tokenizer = Tokenizer::with_dict(&dict_path(project_root))
+        .expect("Failed to create tokenizer");
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(&user_dict_path).expect("Failed to load user dict");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict.load_from_csv(&klue_dict_path).expect("Failed to load KLUE dict");
+        }
+        tokenizer.set_user_dict(user_dict);
+    }
+    tokenizer
+}
+```
 
-이는 1-syllable case의 자연 확장이지만 Sprint 145에서 VV+ETM에 적용 시 sample.tsv -1 sentence 회귀.
-**VA만 확장** (어휘 범위 제한 → false positive 위험 낮음)으로 안전 처리.
+### 치환 패턴
 
-### 측정 결과 (sample.tsv 무회귀)
+각 테스트에서 30라인 setup이 2라인으로 축소:
 
-| Metric | Before | After | Δ |
-|--------|--------|-------|---|
-| sample.tsv | 100.0%/99.9% | 100.0%/99.9% | — |
-| **KLUE morph strict** | 66.5% | **66.9%** | **+0.4pp** |
-| KLUE morph practical | 71.9% | 71.9% | — |
-| KLUE surface strict | 87.7% | 87.8% | +0.1pp |
-| UD Kaist morph practical | 68.3% | 68.4% | +0.1pp |
-| UD GSD morph practical | 71.7% | 71.6% | -0.1pp (noise) |
-| UD GSD eojeol practical | 2918 | 2926 | +8 |
+```rust
+// BEFORE (30 lines)
+let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")...;
+let project_root = ...;
+let dict_path = ...;
+let mut tokenizer = Tokenizer::with_dict(...)...;
+let user_dict_path = project_root.join(...);
+if user_dict_path.exists() { ... }
+// ... 30 lines total
 
-가장 큰 시그널: **KLUE morph strict +0.4pp**.
+// AFTER (2 lines)
+let project_root = project_root();
+let mut tokenizer = make_tokenizer(&project_root);
+```
+
+### 결과
+
+| 항목 | Before (Sprint 150) | After (Sprint 151 C) | Δ |
+|------|--------------------|--------------------|---|
+| accuracy_eval.rs 줄 수 | 2969 | **2406** | **-563 (-19%)** |
+| Boilerplate 중복 | 24개 (~720 라인) | 0 | -100% |
+| Helper functions | 0 | 3 | +3 |
+
+### 변형 케이스 처리
+
+- 20개 함수: 표준 `make_tokenizer(&project_root)` 패턴
+- 3개 함수: project_root 사용 안함 → `make_tokenizer(&project_root())` 인라인
+- 1개 함수 (`test_accuracy_gate_verified`): 사용자 사전 안 로드 → `dict_path()` + 직접 호출
+- 2개 함수 (split_diff_connection_pairs): `dict_path()` 별도 사용
 
 ## 검증
 
-- `cargo test --workspace --exclude mecab-ko-ffi --lib`: **404 passed / 0 failed** (402+2)
+- `cargo test --workspace --exclude mecab-ko-ffi --lib`: **406 passed / 0 failed**
 - `cargo clippy --workspace --all-targets --exclude mecab-ko-ffi -- -D warnings`: clean
-- 5-gate 모두 PASSED (sample.tsv 무회귀)
+- 5-gate sample.tsv: **PASSED (100.0%/99.9%)** — 무회귀
+- 컴파일 시간: 미세하게 감소 (코드 줄어듦)
 
-## 변경 파일
+## 누적 정리 (Sprint 149 + 151)
 
-- `rust/crates/mecab-ko-core/src/sejong/splitter.rs`:
-  - multi-syllable VA+ETM ㄴ jongseong split 추가 (L398)
-  - 4 단위 테스트 신규
-- `rust/crates/mecab-ko-core/tests/accuracy_eval.rs`:
-  - `test_va_etm_post_splitter_mismatch` 진단
-  - `test_va_etm_multisyllable_diagnosis` 빈도 분석
-- `docs/research/accuracy/2026-05-21_sprint150_va_etm_multisyllable.md` (신규)
+| 항목 | Sprint 148 | Sprint 149 | Sprint 151 C | 총 Δ |
+|------|-----------|-----------|-------------|-----|
+| accuracy_eval.rs | 4963 | 2800 | **2406** | **-2557 (-51%)** |
 
-## Sprint 151 후보
+원본의 절반 이하로 축소. 가독성/유지보수성 대폭 향상.
 
-- C: accuracy_eval.rs setup helper 추출 (잔여 P0 정리)
+## Sprint 152 후보
+
 - D: Node/WASM CI 강화 (continue-on-error 제거)
-- B: Full CRF Retrain (Track B, 메인 lift)
-- E: 추가 미처리 케이스 분석 (XSA+ETM 38건 등)
+- E: XSA+ETM 38건 분석 (스러운/스런/로운, ㅂ 불규칙)
+- B: Full CRF Retrain (메인 lift)

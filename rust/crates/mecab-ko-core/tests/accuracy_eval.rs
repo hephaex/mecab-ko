@@ -13,29 +13,31 @@ use mecab_ko_core::evaluate::{evaluate_dataset_sejong, TestDataset};
 use mecab_ko_core::tokenizer::Tokenizer;
 use mecab_ko_dict::UserDictionary;
 
-/// 전체 데이터셋 정확도 측정
-#[test]
-#[ignore = "requires system dictionary data (sys.dic)"]
-fn test_full_accuracy_evaluation() {
-    // 프로젝트 루트 경로 계산
+/// 프로젝트 루트 경로 (`CARGO_MANIFEST_DIR`에서 3 단계 상위)
+fn project_root() -> std::path::PathBuf {
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let project_root = std::path::Path::new(&manifest_dir)
+    std::path::Path::new(&manifest_dir)
         .parent()
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new("."));
+        .unwrap_or_else(|| std::path::Path::new("."))
+        .to_path_buf()
+}
 
-    // 사전 경로 설정
-    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+/// `MECAB_DIC_PATH` env 또는 프로젝트 루트 기준 기본 사전 경로
+fn dict_path(project_root: &std::path::Path) -> String {
+    std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
         project_root
             .join("data/mecab-ko-dic-2.1.1-20180720")
             .to_string_lossy()
             .to_string()
-    });
+    })
+}
 
+/// 시스템 사전 + 사용자 사전(verb-inflections + klue-domain) 로드한 `Tokenizer` 생성
+fn make_tokenizer(project_root: &std::path::Path) -> Tokenizer {
+    let dict_path = dict_path(project_root);
     let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
-
-    // 사용자 사전 로드
     let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
     if user_dict_path.exists() {
         let mut user_dict = UserDictionary::new();
@@ -49,8 +51,16 @@ fn test_full_accuracy_evaluation() {
                 .expect("Failed to load KLUE domain dictionary");
         }
         tokenizer.set_user_dict(user_dict);
-        println!("Loaded user dictionary: {user_dict_path:?}");
     }
+    tokenizer
+}
+
+/// 전체 데이터셋 정확도 측정
+#[test]
+#[ignore = "requires system dictionary data (sys.dic)"]
+fn test_full_accuracy_evaluation() {
+    let project_root = project_root();
+    let mut tokenizer = make_tokenizer(&project_root);
 
     // 테스트 데이터셋 로드
     let eval_path = std::env::var("MECAB_EVAL_PATH").unwrap_or_else(|_| {
@@ -90,38 +100,8 @@ fn test_full_accuracy_evaluation() {
 #[test]
 #[ignore = "requires system dictionary data (sys.dic)"]
 fn test_pos_accuracy_breakdown() {
-    // 프로젝트 루트 경로 계산
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let project_root = std::path::Path::new(&manifest_dir)
-        .parent()
-        .and_then(|p| p.parent())
-        .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new("."));
-
-    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
-        project_root
-            .join("data/mecab-ko-dic-2.1.1-20180720")
-            .to_string_lossy()
-            .to_string()
-    });
-
-    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
-
-    // 사용자 사전 로드
-    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
-    if user_dict_path.exists() {
-        let mut user_dict = UserDictionary::new();
-        user_dict
-            .load_from_csv(&user_dict_path)
-            .expect("Failed to load user dictionary");
-        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
-        if klue_dict_path.exists() {
-            user_dict
-                .load_from_csv(&klue_dict_path)
-                .expect("Failed to load KLUE domain dictionary");
-        }
-        tokenizer.set_user_dict(user_dict);
-    }
+    let project_root = project_root();
+    let mut tokenizer = make_tokenizer(&project_root);
 
     let eval_path = std::env::var("MECAB_EVAL_PATH").unwrap_or_else(|_| {
         project_root
@@ -159,36 +139,7 @@ fn test_pos_accuracy_breakdown() {
 fn test_h_irregular_adjective_ec() {
     use mecab_ko_core::sejong::SejongConverter;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let project_root = std::path::Path::new(&manifest_dir)
-        .parent()
-        .and_then(|p| p.parent())
-        .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new("."));
-
-    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
-        project_root
-            .join("data/mecab-ko-dic-2.1.1-20180720")
-            .to_string_lossy()
-            .to_string()
-    });
-
-    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
-
-    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
-    if user_dict_path.exists() {
-        let mut user_dict = UserDictionary::new();
-        user_dict
-            .load_from_csv(&user_dict_path)
-            .expect("Failed to load user dictionary");
-        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
-        if klue_dict_path.exists() {
-            user_dict
-                .load_from_csv(&klue_dict_path)
-                .expect("Failed to load KLUE domain dictionary");
-        }
-        tokenizer.set_user_dict(user_dict);
-    }
+    let mut tokenizer = make_tokenizer(&project_root());
 
     let converter = SejongConverter::new();
 
@@ -237,36 +188,7 @@ fn test_h_irregular_adjective_ec() {
 fn test_d_irregular_verb() {
     use mecab_ko_core::sejong::SejongConverter;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let project_root = std::path::Path::new(&manifest_dir)
-        .parent()
-        .and_then(|p| p.parent())
-        .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new("."));
-
-    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
-        project_root
-            .join("data/mecab-ko-dic-2.1.1-20180720")
-            .to_string_lossy()
-            .to_string()
-    });
-
-    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
-
-    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
-    if user_dict_path.exists() {
-        let mut user_dict = UserDictionary::new();
-        user_dict
-            .load_from_csv(&user_dict_path)
-            .expect("Failed to load user dictionary");
-        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
-        if klue_dict_path.exists() {
-            user_dict
-                .load_from_csv(&klue_dict_path)
-                .expect("Failed to load KLUE domain dictionary");
-        }
-        tokenizer.set_user_dict(user_dict);
-    }
+    let mut tokenizer = make_tokenizer(&project_root());
 
     let converter = SejongConverter::new();
 
@@ -316,39 +238,8 @@ fn test_accuracy_gate() {
     // 99.9% 정확도 게이트 (Sprint 122 raised from 95%)
     const ACCURACY_THRESHOLD: f64 = 0.999;
 
-    // 프로젝트 루트 경로 계산
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let project_root = std::path::Path::new(&manifest_dir)
-        .parent()
-        .and_then(|p| p.parent())
-        .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new("."));
-
-    // 사전 경로 설정
-    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
-        project_root
-            .join("data/mecab-ko-dic-2.1.1-20180720")
-            .to_string_lossy()
-            .to_string()
-    });
-
-    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
-
-    // 사용자 사전 로드
-    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
-    if user_dict_path.exists() {
-        let mut user_dict = UserDictionary::new();
-        user_dict
-            .load_from_csv(&user_dict_path)
-            .expect("Failed to load user dictionary");
-        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
-        if klue_dict_path.exists() {
-            user_dict
-                .load_from_csv(&klue_dict_path)
-                .expect("Failed to load KLUE domain dictionary");
-        }
-        tokenizer.set_user_dict(user_dict);
-    }
+    let project_root = project_root();
+    let mut tokenizer = make_tokenizer(&project_root);
 
     // 테스트 데이터셋 로드
     let eval_path = std::env::var("MECAB_EVAL_PATH").unwrap_or_else(|_| {
@@ -396,20 +287,8 @@ fn test_accuracy_gate() {
 fn test_accuracy_gate_verified() {
     const VERIFIED_THRESHOLD: f64 = 0.90;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let project_root = std::path::Path::new(&manifest_dir)
-        .parent()
-        .and_then(|p| p.parent())
-        .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new("."));
-
-    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
-        project_root
-            .join("data/mecab-ko-dic-2.1.1-20180720")
-            .to_string_lossy()
-            .to_string()
-    });
-
+    let project_root = project_root();
+    let dict_path = dict_path(&project_root);
     let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
 
     let eval_path = project_root.join("data/eval/sprint58_verified.tsv");
@@ -475,36 +354,8 @@ fn test_klue_dp_dual_metric() {
     const MORPHEME_FLOOR: f64 = 0.60;
     const EOJEOL_FLOOR: f64 = 0.15;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let project_root = std::path::Path::new(&manifest_dir)
-        .parent()
-        .and_then(|p| p.parent())
-        .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new("."));
-
-    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
-        project_root
-            .join("data/mecab-ko-dic-2.1.1-20180720")
-            .to_string_lossy()
-            .to_string()
-    });
-
-    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
-
-    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
-    if user_dict_path.exists() {
-        let mut user_dict = UserDictionary::new();
-        user_dict
-            .load_from_csv(&user_dict_path)
-            .expect("Failed to load user dictionary");
-        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
-        if klue_dict_path.exists() {
-            user_dict
-                .load_from_csv(&klue_dict_path)
-                .expect("Failed to load KLUE domain dictionary");
-        }
-        tokenizer.set_user_dict(user_dict);
-    }
+    let project_root = project_root();
+    let mut tokenizer = make_tokenizer(&project_root);
 
     let eval_path = project_root.join("data/eval/klue_dp_val.tsv");
     if !eval_path.exists() {
@@ -568,36 +419,8 @@ fn test_klue_dp_dual_metric_lenient() {
     // Sprint 125 baseline floor (lift confirmed: strict 19.2% -> lenient 20.8%)
     const LENIENT_EOJEOL_FLOOR: f64 = 0.20;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let project_root = std::path::Path::new(&manifest_dir)
-        .parent()
-        .and_then(|p| p.parent())
-        .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new("."));
-
-    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
-        project_root
-            .join("data/mecab-ko-dic-2.1.1-20180720")
-            .to_string_lossy()
-            .to_string()
-    });
-
-    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
-
-    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
-    if user_dict_path.exists() {
-        let mut user_dict = UserDictionary::new();
-        user_dict
-            .load_from_csv(&user_dict_path)
-            .expect("Failed to load user dictionary");
-        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
-        if klue_dict_path.exists() {
-            user_dict
-                .load_from_csv(&klue_dict_path)
-                .expect("Failed to load KLUE domain dictionary");
-        }
-        tokenizer.set_user_dict(user_dict);
-    }
+    let project_root = project_root();
+    let mut tokenizer = make_tokenizer(&project_root);
 
     let eval_path = project_root.join("data/eval/klue_dp_val.tsv");
     if !eval_path.exists() {
@@ -672,36 +495,8 @@ fn test_klue_dp_dual_metric_lenient() {
 fn test_klue_dp_nng_nnp_analysis() {
     use mecab_ko_core::sejong::SejongConverter;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let project_root = std::path::Path::new(&manifest_dir)
-        .parent()
-        .and_then(|p| p.parent())
-        .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new("."));
-
-    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
-        project_root
-            .join("data/mecab-ko-dic-2.1.1-20180720")
-            .to_string_lossy()
-            .to_string()
-    });
-
-    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
-
-    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
-    if user_dict_path.exists() {
-        let mut user_dict = UserDictionary::new();
-        user_dict
-            .load_from_csv(&user_dict_path)
-            .expect("Failed to load user dictionary");
-        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
-        if klue_dict_path.exists() {
-            user_dict
-                .load_from_csv(&klue_dict_path)
-                .expect("Failed to load KLUE domain dictionary");
-        }
-        tokenizer.set_user_dict(user_dict);
-    }
+    let project_root = project_root();
+    let mut tokenizer = make_tokenizer(&project_root);
 
     let eval_path = project_root.join("data/eval/klue_dp_val.tsv");
     if !eval_path.exists() {
@@ -807,36 +602,8 @@ fn test_error_case_classification() {
         diff_details: Vec<String>,
     }
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let project_root = std::path::Path::new(&manifest_dir)
-        .parent()
-        .and_then(|p| p.parent())
-        .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new("."));
-
-    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
-        project_root
-            .join("data/mecab-ko-dic-2.1.1-20180720")
-            .to_string_lossy()
-            .to_string()
-    });
-
-    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
-
-    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
-    if user_dict_path.exists() {
-        let mut user_dict = UserDictionary::new();
-        user_dict
-            .load_from_csv(&user_dict_path)
-            .expect("Failed to load user dictionary");
-        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
-        if klue_dict_path.exists() {
-            user_dict
-                .load_from_csv(&klue_dict_path)
-                .expect("Failed to load KLUE domain dictionary");
-        }
-        tokenizer.set_user_dict(user_dict);
-    }
+    let project_root = project_root();
+    let mut tokenizer = make_tokenizer(&project_root);
 
     let eval_path = std::env::var("MECAB_EVAL_PATH").unwrap_or_else(|_| {
         project_root
@@ -1029,36 +796,8 @@ fn test_klue_dp_compound_noun_analysis() {
     use mecab_ko_core::sejong::SejongConverter;
     use std::collections::HashMap;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let project_root = std::path::Path::new(&manifest_dir)
-        .parent()
-        .and_then(|p| p.parent())
-        .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new("."));
-
-    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
-        project_root
-            .join("data/mecab-ko-dic-2.1.1-20180720")
-            .to_string_lossy()
-            .to_string()
-    });
-
-    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
-
-    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
-    if user_dict_path.exists() {
-        let mut user_dict = UserDictionary::new();
-        user_dict
-            .load_from_csv(&user_dict_path)
-            .expect("Failed to load user dictionary");
-        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
-        if klue_dict_path.exists() {
-            user_dict
-                .load_from_csv(&klue_dict_path)
-                .expect("Failed to load KLUE domain dictionary");
-        }
-        tokenizer.set_user_dict(user_dict);
-    }
+    let project_root = project_root();
+    let mut tokenizer = make_tokenizer(&project_root);
 
     let eval_path = project_root.join("data/eval/klue_dp_val.tsv");
     if !eval_path.exists() {
@@ -1306,36 +1045,8 @@ fn test_klue_dp_surface_lenient_full() {
         surface_eq_canonical, surface_eq_canonical_lenient, surface_eq_strict,
     };
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let project_root = std::path::Path::new(&manifest_dir)
-        .parent()
-        .and_then(|p| p.parent())
-        .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new("."));
-
-    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
-        project_root
-            .join("data/mecab-ko-dic-2.1.1-20180720")
-            .to_string_lossy()
-            .to_string()
-    });
-
-    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
-
-    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
-    if user_dict_path.exists() {
-        let mut user_dict = UserDictionary::new();
-        user_dict
-            .load_from_csv(&user_dict_path)
-            .expect("Failed to load user dictionary");
-        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
-        if klue_dict_path.exists() {
-            user_dict
-                .load_from_csv(&klue_dict_path)
-                .expect("Failed to load KLUE domain dictionary");
-        }
-        tokenizer.set_user_dict(user_dict);
-    }
+    let project_root = project_root();
+    let mut tokenizer = make_tokenizer(&project_root);
 
     let eval_path = project_root.join("data/eval/klue_dp_val.tsv");
     if !eval_path.exists() {
@@ -1504,36 +1215,8 @@ fn test_klue_dp_surface_normalization_analysis() {
         out
     }
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let project_root = std::path::Path::new(&manifest_dir)
-        .parent()
-        .and_then(|p| p.parent())
-        .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new("."));
-
-    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
-        project_root
-            .join("data/mecab-ko-dic-2.1.1-20180720")
-            .to_string_lossy()
-            .to_string()
-    });
-
-    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
-
-    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
-    if user_dict_path.exists() {
-        let mut user_dict = UserDictionary::new();
-        user_dict
-            .load_from_csv(&user_dict_path)
-            .expect("Failed to load user dictionary");
-        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
-        if klue_dict_path.exists() {
-            user_dict
-                .load_from_csv(&klue_dict_path)
-                .expect("Failed to load KLUE domain dictionary");
-        }
-        tokenizer.set_user_dict(user_dict);
-    }
+    let project_root = project_root();
+    let mut tokenizer = make_tokenizer(&project_root);
 
     let eval_path = project_root.join("data/eval/klue_dp_val.tsv");
     if !eval_path.exists() {
@@ -1687,36 +1370,8 @@ fn test_klue_dp_real_error_analysis() {
     // (gold_pos, pred_pos) -> HashMap<surface, (count, Vec<sentence_sample>)>
     type SurfaceData = HashMap<String, (usize, Vec<String>)>;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let project_root = std::path::Path::new(&manifest_dir)
-        .parent()
-        .and_then(|p| p.parent())
-        .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new("."));
-
-    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
-        project_root
-            .join("data/mecab-ko-dic-2.1.1-20180720")
-            .to_string_lossy()
-            .to_string()
-    });
-
-    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
-
-    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
-    if user_dict_path.exists() {
-        let mut user_dict = UserDictionary::new();
-        user_dict
-            .load_from_csv(&user_dict_path)
-            .expect("Failed to load user dictionary");
-        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
-        if klue_dict_path.exists() {
-            user_dict
-                .load_from_csv(&klue_dict_path)
-                .expect("Failed to load KLUE domain dictionary");
-        }
-        tokenizer.set_user_dict(user_dict);
-    }
+    let project_root = project_root();
+    let mut tokenizer = make_tokenizer(&project_root);
 
     let eval_path = project_root.join("data/eval/klue_dp_val.tsv");
     if !eval_path.exists() {
@@ -1840,36 +1495,8 @@ fn test_klue_dp_gold_single_pred_multi_analysis() {
     // pred_split_pattern: "한국/NNP + 전자/NNG + 통신/NNG"
     type SplitData = HashMap<String, (usize, Vec<String>)>;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let project_root = std::path::Path::new(&manifest_dir)
-        .parent()
-        .and_then(|p| p.parent())
-        .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new("."));
-
-    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
-        project_root
-            .join("data/mecab-ko-dic-2.1.1-20180720")
-            .to_string_lossy()
-            .to_string()
-    });
-
-    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
-
-    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
-    if user_dict_path.exists() {
-        let mut user_dict = UserDictionary::new();
-        user_dict
-            .load_from_csv(&user_dict_path)
-            .expect("Failed to load user dictionary");
-        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
-        if klue_dict_path.exists() {
-            user_dict
-                .load_from_csv(&klue_dict_path)
-                .expect("Failed to load KLUE domain dictionary");
-        }
-        tokenizer.set_user_dict(user_dict);
-    }
+    let project_root = project_root();
+    let mut tokenizer = make_tokenizer(&project_root);
 
     let eval_path = project_root.join("data/eval/klue_dp_val.tsv");
     if !eval_path.exists() {
@@ -2032,36 +1659,8 @@ fn test_klue_dp_eojeol_surface_only() {
     const STRICT_FLOOR: f64 = 0.50;
     const CANONICAL_FLOOR: f64 = 0.80;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let project_root = std::path::Path::new(&manifest_dir)
-        .parent()
-        .and_then(|p| p.parent())
-        .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new("."));
-
-    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
-        project_root
-            .join("data/mecab-ko-dic-2.1.1-20180720")
-            .to_string_lossy()
-            .to_string()
-    });
-
-    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
-
-    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
-    if user_dict_path.exists() {
-        let mut user_dict = UserDictionary::new();
-        user_dict
-            .load_from_csv(&user_dict_path)
-            .expect("Failed to load user dictionary");
-        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
-        if klue_dict_path.exists() {
-            user_dict
-                .load_from_csv(&klue_dict_path)
-                .expect("Failed to load KLUE domain dictionary");
-        }
-        tokenizer.set_user_dict(user_dict);
-    }
+    let project_root = project_root();
+    let mut tokenizer = make_tokenizer(&project_root);
 
     let eval_path = project_root.join("data/eval/klue_dp_val.tsv");
     if !eval_path.exists() {
@@ -2149,28 +1748,8 @@ fn test_ud_kaist_dual_metric() {
         pos_tags_equivalent_practical,
     };
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let project_root = std::path::Path::new(&manifest_dir)
-        .parent()
-        .and_then(|p| p.parent())
-        .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new("."));
-
-    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
-        project_root.join("data/mecab-ko-dic-2.1.1-20180720").to_string_lossy().to_string()
-    });
-
-    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
-    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
-    if user_dict_path.exists() {
-        let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path).expect("Failed to load user dict");
-        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
-        if klue_dict_path.exists() {
-            user_dict.load_from_csv(&klue_dict_path).expect("Failed to load KLUE dict");
-        }
-        tokenizer.set_user_dict(user_dict);
-    }
+    let project_root = project_root();
+    let mut tokenizer = make_tokenizer(&project_root);
 
     let eval_path = project_root.join("data/eval/ud_kaist_test.tsv");
     if !eval_path.exists() {
@@ -2228,19 +1807,8 @@ fn test_klue_dp_split_diff_connection_pairs() {
     use std::collections::HashMap;
     use std::fs;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let project_root = std::path::Path::new(&manifest_dir)
-        .parent()
-        .and_then(|p| p.parent())
-        .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new("."));
-
-    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
-        project_root
-            .join("data/mecab-ko-dic-2.1.1-20180720")
-            .to_string_lossy()
-            .to_string()
-    });
+    let project_root = project_root();
+    let dict_path = dict_path(&project_root);
 
     // Load left-id.def / right-id.def for feature lookup
     let load_id_def = |path: &std::path::Path| -> HashMap<u16, String> {
@@ -2259,17 +1827,7 @@ fn test_klue_dp_split_diff_connection_pairs() {
     println!("Loaded left-id.def: {} entries, right-id.def: {} entries",
         left_id_def.len(), right_id_def.len());
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
-    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
-    if user_dict_path.exists() {
-        let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path).expect("Failed to load user dict");
-        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
-        if klue_dict_path.exists() {
-            user_dict.load_from_csv(&klue_dict_path).expect("Failed to load KLUE dict");
-        }
-        tokenizer.set_user_dict(user_dict);
-    }
+    let mut tokenizer = make_tokenizer(&project_root);
 
     let eval_path = project_root.join("data/eval/klue_dp_val.tsv");
     if !eval_path.exists() {
@@ -2382,28 +1940,8 @@ fn test_ud_gsd_dual_metric() {
         pos_tags_equivalent_practical,
     };
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let project_root = std::path::Path::new(&manifest_dir)
-        .parent()
-        .and_then(|p| p.parent())
-        .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new("."));
-
-    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
-        project_root.join("data/mecab-ko-dic-2.1.1-20180720").to_string_lossy().to_string()
-    });
-
-    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
-    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
-    if user_dict_path.exists() {
-        let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path).expect("Failed to load user dict");
-        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
-        if klue_dict_path.exists() {
-            user_dict.load_from_csv(&klue_dict_path).expect("Failed to load KLUE dict");
-        }
-        tokenizer.set_user_dict(user_dict);
-    }
+    let project_root = project_root();
+    let mut tokenizer = make_tokenizer(&project_root);
 
     let eval_path = project_root.join("data/eval/ud_gsd_test.tsv");
     if !eval_path.exists() {
@@ -2458,19 +1996,8 @@ fn test_ud_kaist_split_diff_connection_pairs() {
     use std::collections::HashMap;
     use std::fs;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let project_root = std::path::Path::new(&manifest_dir)
-        .parent()
-        .and_then(|p| p.parent())
-        .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new("."));
-
-    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
-        project_root
-            .join("data/mecab-ko-dic-2.1.1-20180720")
-            .to_string_lossy()
-            .to_string()
-    });
+    let project_root = project_root();
+    let dict_path = dict_path(&project_root);
 
     let load_id_def = |path: &std::path::Path| -> HashMap<u16, String> {
         let content = fs::read_to_string(path).unwrap_or_default();
@@ -2486,17 +2013,7 @@ fn test_ud_kaist_split_diff_connection_pairs() {
     let left_id_def = load_id_def(&std::path::Path::new(&dict_path).join("left-id.def"));
     let right_id_def = load_id_def(&std::path::Path::new(&dict_path).join("right-id.def"));
 
-    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
-    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
-    if user_dict_path.exists() {
-        let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path).expect("Failed to load user dict");
-        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
-        if klue_dict_path.exists() {
-            user_dict.load_from_csv(&klue_dict_path).expect("Failed to load KLUE dict");
-        }
-        tokenizer.set_user_dict(user_dict);
-    }
+    let mut tokenizer = make_tokenizer(&project_root);
 
     let eval_path = project_root.join("data/eval/ud_kaist_test.tsv");
     if !eval_path.exists() {
@@ -2595,28 +2112,8 @@ fn test_ud_kaist_split_diff_connection_pairs() {
 fn test_compound_pos_frequency_analysis() {
     use std::collections::HashMap;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let project_root = std::path::Path::new(&manifest_dir)
-        .parent()
-        .and_then(|p| p.parent())
-        .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new("."));
-
-    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
-        project_root.join("data/mecab-ko-dic-2.1.1-20180720").to_string_lossy().to_string()
-    });
-
-    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
-    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
-    if user_dict_path.exists() {
-        let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path).expect("Failed to load user dict");
-        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
-        if klue_dict_path.exists() {
-            user_dict.load_from_csv(&klue_dict_path).expect("Failed to load KLUE dict");
-        }
-        tokenizer.set_user_dict(user_dict);
-    }
+    let project_root = project_root();
+    let mut tokenizer = make_tokenizer(&project_root);
 
     let eval_files = [
         ("KLUE", "data/eval/klue_dp_val.tsv"),
@@ -2684,28 +2181,8 @@ fn test_va_etm_post_splitter_mismatch() {
     use std::collections::HashMap;
     use mecab_ko_core::sejong::SejongConverter;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let project_root = std::path::Path::new(&manifest_dir)
-        .parent()
-        .and_then(|p| p.parent())
-        .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new("."));
-
-    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
-        project_root.join("data/mecab-ko-dic-2.1.1-20180720").to_string_lossy().to_string()
-    });
-
-    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
-    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
-    if user_dict_path.exists() {
-        let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path).expect("Failed to load user dict");
-        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
-        if klue_dict_path.exists() {
-            user_dict.load_from_csv(&klue_dict_path).expect("Failed to load KLUE dict");
-        }
-        tokenizer.set_user_dict(user_dict);
-    }
+    let project_root = project_root();
+    let mut tokenizer = make_tokenizer(&project_root);
 
     let converter = SejongConverter::new();
     let eval_files = [
@@ -2764,28 +2241,8 @@ fn test_va_etm_post_splitter_mismatch() {
 fn test_va_etm_multisyllable_diagnosis() {
     use std::collections::HashMap;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let project_root = std::path::Path::new(&manifest_dir)
-        .parent()
-        .and_then(|p| p.parent())
-        .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new("."));
-
-    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
-        project_root.join("data/mecab-ko-dic-2.1.1-20180720").to_string_lossy().to_string()
-    });
-
-    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
-    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
-    if user_dict_path.exists() {
-        let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path).expect("Failed to load user dict");
-        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
-        if klue_dict_path.exists() {
-            user_dict.load_from_csv(&klue_dict_path).expect("Failed to load KLUE dict");
-        }
-        tokenizer.set_user_dict(user_dict);
-    }
+    let project_root = project_root();
+    let mut tokenizer = make_tokenizer(&project_root);
 
     let eval_files = [
         ("KLUE", "data/eval/klue_dp_val.tsv"),
@@ -2853,28 +2310,8 @@ fn test_etm_etm_raneun_diagnosis() {
     use mecab_ko_core::evaluate::{pos_tags_equivalent_practical, TestDataset};
     use mecab_ko_core::sejong::SejongConverter;
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let project_root = std::path::Path::new(&manifest_dir)
-        .parent()
-        .and_then(|p| p.parent())
-        .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new("."));
-
-    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
-        project_root.join("data/mecab-ko-dic-2.1.1-20180720").to_string_lossy().to_string()
-    });
-
-    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
-    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
-    if user_dict_path.exists() {
-        let mut user_dict = UserDictionary::new();
-        user_dict.load_from_csv(&user_dict_path).expect("Failed to load user dict");
-        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
-        if klue_dict_path.exists() {
-            user_dict.load_from_csv(&klue_dict_path).expect("Failed to load KLUE dict");
-        }
-        tokenizer.set_user_dict(user_dict);
-    }
+    let project_root = project_root();
+    let mut tokenizer = make_tokenizer(&project_root);
 
     let converter = SejongConverter::new();
     let eval_files = [

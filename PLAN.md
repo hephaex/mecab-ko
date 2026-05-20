@@ -1,56 +1,44 @@
-# PLAN — mecab-ko Sprint 151 (next)
+# PLAN — mecab-ko Sprint 152 (next)
 
 > 마지막 업데이트: 2026-05-21
 
-## 완료: Sprint 150 A — VA+ETM multi-syllable
+## 완료: Sprint 151 C — setup helper 추출
 
 ### 결과
 
-| Metric | Before | After | Δ |
-|--------|--------|-------|---|
-| sample.tsv | 100.0%/99.9% | 무회귀 | — |
-| **KLUE morph strict** | 66.5% | **66.9%** | **+0.4pp** |
-| KLUE surface strict | 87.7% | 87.8% | +0.1pp |
-| UD Kaist morph practical | 68.3% | 68.4% | +0.1pp |
+- accuracy_eval.rs: 2969 → 2406줄 (**-19%**)
+- 3개 helper 함수: `project_root`, `dict_path`, `make_tokenizer`
+- 24개 함수에서 30라인 boilerplate → 2라인으로 축소
+- 누적 효과 (Sprint 148~151): 4963 → 2406줄 (**-51%**)
 
-### 핵심
+## 완료된 P0 정리 작업
 
-- raw VA+ETM 542건 → ending_rules가 이미 95.6% 처리
-- 미처리 24건 (빠른/나쁜/예쁜/느린): multi-syllable ㄴ jongseong split 추가
-- VV+ETM은 Sprint 145 회귀로 제외, VA만 안전
+| Sprint | 항목 | 결과 |
+|--------|------|------|
+| 149 | MSRV 1.80 CI gate | 추가 |
+| 149 | coverage --fail-under 60 | 추가 |
+| 149 | placeholder 테스트 삭제 | 2 파일 |
+| 149 | accuracy_eval 진단 함수 24개 삭제 | 4963→2800 |
+| 149 | multi-syllable rollback guard | 3 테스트 |
+| 151 C | setup helper 추출 | 2800→2406 |
 
-### 보고서
+## 다음 스프린트: Sprint 152 (미정 — 사용자 선택)
 
-`docs/research/accuracy/2026-05-21_sprint150_va_etm_multisyllable.md`
+### 후보 D: Node/WASM CI 강화 (잔여 P0)
 
-## 다음 스프린트: Sprint 151 (미정 — 사용자 선택)
-
-### 후보 C: accuracy_eval.rs setup helper 추출 (잔여 P0)
-
-남은 P0 정리:
-- 반복되는 tokenizer setup 코드 (~22번 반복, ~30라인씩)
-- `fn make_tokenizer(project_root: &Path) -> Tokenizer`
-- `fn make_project_root() -> PathBuf`
-- 약 ~1000줄 감소 가능
-
-**비용**: 0.3 sprint, 낮은 위험
-
-### 후보 D: Node/WASM CI 강화
-
-e2e-ffi-tests.yml의 continue-on-error 제거:
-- nodejs-e2e 빌드 단계 (L166, L175)
-- wasm-e2e job (L177, L180 — job level)
+`.github/workflows/e2e-ffi-tests.yml`의 `continue-on-error: true` 분석/제거:
+- nodejs-e2e 빌드 단계 (L166, L175): hard-fail로 전환 검토
+- wasm-e2e job (L177): job-level continue-on-error 분석
 - 실제 빌드 동작 먼저 확인 필요
 
 **비용**: 0.2 sprint, 낮은 위험
 
 ### 후보 E: XSA+ETM 38건 분석
 
-Sprint 145 분석에서 XSA+ETM 38건: 스러운, 스런, 로운
+Sprint 145 빈도 분석: XSA+ETM 38건 (스러운, 스런, 로운)
 - "한가스러운" → 한가/NNG + 스럽/XSA + 운/ETM (ㅂ 불규칙 XSA)
-- 패턴: ㅂ 불규칙 XSA (어렵, 무겁 등과 동일)
-
-복잡 (XSA는 NNG에 붙는 접미사). 보수적 접근 필요.
+- 패턴: ㅂ 불규칙 (어렵, 무겁과 동일 메커니즘)
+- 진단 → ending_rules 처리 여부 확인 후 결정
 
 **비용**: 0.5 sprint, 중간 위험
 
