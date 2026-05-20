@@ -4530,6 +4530,86 @@ fn test_klue_dp_split_diff_connection_pairs() {
     }
 }
 
+/// Sprint 143 C — UD Korean-GSD silver baseline measurement.
+///
+/// 데이터셋: `data/eval/ud_gsd_test.tsv` (971 sentences, ko_gsd-ud-test.conllu 변환)
+/// 라이선스: CC BY-SA 4.0 (UD), 변환 결과도 동일 라이선스
+///
+/// GSD는 KAIST와 다른 XPOS scheme — Sejong 태그를 직접 사용 (identity mapping).
+/// 도메인: Google news/web (현대 한국어, KLUE와 유사하나 다른 source).
+#[test]
+#[ignore = "requires UD Korean-GSD eval data + system dictionary"]
+fn test_ud_gsd_dual_metric() {
+    use mecab_ko_core::evaluate::{
+        evaluate_dataset_dual, evaluate_dataset_dual_with_pos_match,
+        pos_tags_equivalent_practical,
+    };
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+    let project_root = std::path::Path::new(&manifest_dir)
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .unwrap_or_else(|| std::path::Path::new("."));
+
+    let dict_path = std::env::var("MECAB_DIC_PATH").unwrap_or_else(|_| {
+        project_root.join("data/mecab-ko-dic-2.1.1-20180720").to_string_lossy().to_string()
+    });
+
+    let mut tokenizer = Tokenizer::with_dict(&dict_path).expect("Failed to create tokenizer");
+    let user_dict_path = project_root.join("data/user-dict/verb-inflections.csv");
+    if user_dict_path.exists() {
+        let mut user_dict = UserDictionary::new();
+        user_dict.load_from_csv(&user_dict_path).expect("Failed to load user dict");
+        let klue_dict_path = project_root.join("data/user-dict/klue-domain.csv");
+        if klue_dict_path.exists() {
+            user_dict.load_from_csv(&klue_dict_path).expect("Failed to load KLUE dict");
+        }
+        tokenizer.set_user_dict(user_dict);
+    }
+
+    let eval_path = project_root.join("data/eval/ud_gsd_test.tsv");
+    if !eval_path.exists() {
+        println!("Skipping: data/eval/ud_gsd_test.tsv not found");
+        return;
+    }
+
+    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
+        .expect("Failed to load UD GSD test TSV");
+
+    let strict = evaluate_dataset_dual(&mut tokenizer, &dataset);
+    let practical = evaluate_dataset_dual_with_pos_match(
+        &mut tokenizer, &dataset, pos_tags_equivalent_practical,
+    );
+
+    let strict_morph = strict.morpheme.token_accuracy * 100.0;
+    let strict_eo = strict.eojeol_accuracy * 100.0;
+    let practical_morph = practical.morpheme.token_accuracy * 100.0;
+    let practical_eo = practical.eojeol_accuracy * 100.0;
+
+    println!("\n=== UD Korean-GSD (test split, silver, Google news/web) ===");
+    println!("Dataset: {} sentences", dataset.len());
+    println!("\n--- Strict ---");
+    println!("  Morpheme: {strict_morph:.1}%");
+    println!("  Eojeol:   {strict_eo:.1}% ({} / {})",
+        strict.eojeol_correct, strict.eojeol_total);
+    println!("\n--- Practical (NNB/NNG + VA/VV + ...) ---");
+    println!("  Morpheme: {practical_morph:.1}% [Δ +{:.1}pp vs strict]",
+        practical_morph - strict_morph);
+    println!("  Eojeol:   {practical_eo:.1}% ({} / {}) [Δ +{:.1}pp vs strict]",
+        practical.eojeol_correct, practical.eojeol_total, practical_eo - strict_eo);
+
+    // 회귀 catch
+    assert!(practical.eojeol_accuracy >= strict.eojeol_accuracy);
+    assert!(practical.morpheme.token_accuracy >= strict.morpheme.token_accuracy);
+
+    // Silver dataset floor
+    assert!(strict.morpheme.token_accuracy >= 0.40,
+        "Morph strict {strict_morph:.1}% below 40% floor (UD GSD silver)");
+
+    println!("\nPASSED — strict morph {strict_morph:.1}% / practical morph {practical_morph:.1}%");
+}
+
 /// Sprint 140 A — UD Korean-Kaist `SPLIT_DIFFERENT` connection pair 분석.
 ///
 /// Sprint 137에서 KLUE DP에 적용한 분석을 UD Kaist에도 적용.
