@@ -1,83 +1,85 @@
-# PROGRESS — mecab-ko Sprint 161 (docs 추가 정리)
+# PROGRESS — mecab-ko Sprint 162 (안전 영역 소진 — 사용자 결정 필요)
 
 > 마지막 업데이트: 2026-05-21
 
-## Sprint 161 B-4 — docs/ phase6 + optimization archive
+## Sprint 162 — 마지막 잔여 정리 + 영역 소진 선언
 
 | Task | 상태 | 결과 |
 |------|------|------|
-| S161-1: NIKL Modu 다운로드 확인 | ⏸ 미다운로드 | 시나리오 B 계속 |
-| S161-2: CLI 현재 상태 진단 | ✅ 완료 | 8 commands, 7 formats, 잘 갖춰짐 |
-| S161-3: docs/ 오래된 디렉토리 식별 | ✅ 완료 | PHASE6_*.md (4) + phase6/ + optimization/ |
-| S161-4: archive 디렉토리 생성 + 이동 | ✅ 완료 | docs/archive/phase6-and-old-optimization/ |
-| S161-5: README 작성 | ✅ 완료 | |
-| S161-6: 검증 | ✅ 완료 | 코드 변경 없음 |
+| S162-1: NIKL Modu 다운로드 확인 | ⏸ 미다운로드 (3rd time) | 시나리오 B 계속 |
+| S162-2: ISSUE_BACKLOG.md 검토 | ✅ 검토 | 840줄, 검토 필요 (단순 archive 안됨) → 유지 |
+| S162-3: DIC-010-SUMMARY.md archive | ✅ 완료 | 완료된 작업 보고서 |
+| S162-4: LessonLearn/ 검토 | ✅ 검토 | 18줄, 유지 |
 
 ## 변경 내용
 
-### docs/ 정리
+- `docs/DIC-010-SUMMARY.md` → `docs/archive/` (완료 보고서)
+- docs/ 최상위: 46 → 45 파일
 
-**이동 (docs/ → docs/archive/phase6-and-old-optimization/)**:
-- `PHASE6_SUMMARY.md` (Phase 6 종합, 2026-01-27 완료)
-- `PHASE6_IMPLEMENTATION.md`
-- `PHASE6_BENCHMARKS.md`
-- `PHASE6_SIMD_SUMMARY.md`
-- `phase6/` (디렉토리)
-- `optimization/` (Sprint 58 분석)
+## 핵심 결론: 안전 영역 완전 소진
 
-**유지 (현재도 유효)**:
-- `SIMD_OPTIMIZATION.md` — 사용 가이드
-- `PERFORMANCE_BASELINES.md` — 현재 baseline
-- `benchmarks/` — 최신 벤치마크
+Sprint 156~162 (7 sprint) 누적 안전 영역 작업:
 
-### docs/ 트리 size
+| 영역 | Sprint | 효과 |
+|------|--------|------|
+| Surface normalization (ㄷ 불규칙) | 156 | +0.1pp surface |
+| PRACTICAL 동치 (MAG/MAJ) | 157 | +0.2pp 3 silver |
+| 명시 어구 정규화 | 158 | +0.05pp surface |
+| NIKL Modu 인프라 | 159 F | 인프라 (다운로드 대기) |
+| Sprint 보고서 archive | 160 | 23 파일 정리 |
+| PHASE6/optimization archive | 161 | 6 파일 정리 |
+| DIC-010 archive | **162** | 1 파일 정리 |
 
-| 항목 | Before | After |
-|------|--------|-------|
-| docs/ 최상위 파일 | 52 | 46 |
-| docs/archive/ 디렉토리 | 1 | 2 (sprint-reports + phase6-and-old-optimization) |
+**누적 정확도 lift (안전 영역만): +0.35pp KLUE morph + +0.15pp surface + 28 파일 archive**.
 
-## CLI 상태 (Sprint 161 진단)
+## 다음 단계 — 사용자 결정 필수
 
-`mecab-ko-cli` 이미 잘 갖춰져 있음 (Sprint 161 추가 작업 불필요):
+### 옵션 1: NIKL Modu 다운로드 진척 보고
+- 사용자가 kli.korean.go.kr 등록/다운로드 진행 중인가?
+- 완료 시 Sprint 163 = 측정 + 분석 (시나리오 A)
+- 보류면 옵션 2/3으로
 
-| 항목 | 상태 |
-|------|------|
-| Commands | 8개 (parse, dict, evaluate, sync, collect, collect-unknown, version, completions) |
-| Output formats | 7개 (default, wakati, dump, pos, json, simple, csv) |
-| User dict | 지원 (`-u, --user-dic`) |
-| REPL mode | 지원 (`--repl`) |
-| Batch processing | 지원 (`-i`, `-o`) |
-| Help | 94줄 (한국어, 예제 포함) |
+### 옵션 2: Full CRF Retrain (Track B) — 비가역 confirm
+- 3-5 sprint 장기 작업
+- 학습 데이터 + mecab-cost-train
+- 잠재 lift +1~5pp KLUE morph
+- Sprint 136에서 인프라 조사 완료
+- **사용자 confirm 필요**
 
-기능적으로 충분. 향후 lift 작업은 사용자 피드백 기반으로.
+### 옵션 3: 정확도 작업 종료 + 다른 영역 전환
+- 정확도 lift는 영역 소진
+- 다른 영역으로 전환:
+  - 언어 바인딩 강화 (Python/WASM/Node)
+  - 성능 최적화 (프로파일링 sprint)
+  - 사용자 피드백 기반 기능 추가
+
+### 옵션 4: 정확도 작업 종료 + 프로젝트 안정화
+- 정확도 lift sprint 종료
+- 유지보수 모드 (버그 픽스, 의존성 업데이트)
+- 다음 메이저 작업 대기
+
+## 현재 정확도 (Sprint 122 → 162 누적)
+
+| Metric | Baseline | 현재 | Δ |
+|--------|---------|------|---|
+| sample.tsv | 100%/99.9% | 100%/99.9% | — |
+| **KLUE morph practical** | ~65.8% | **72.1%** | **+6.3pp** |
+| KLUE eojeol practical | ~5000 | 5327 | +327 |
+| **KLUE surface canonical_lenient** | ~89% | **95.6%** | **+6pp** |
+| UD Kaist morph practical | — | 68.6% | (new silver) |
+| UD GSD morph practical | — | 71.8% | (new silver) |
 
 ## 검증
 
 - `cargo test --workspace --exclude mecab-ko-ffi --lib`: 변경 없음 (411 pass)
 - 5-gate sample.tsv: 영향 없음
-- CLI build 정상
+- docs/ 정리 진행
 
 ## 변경 파일
 
-- `docs/archive/phase6-and-old-optimization/` (신규)
-  - PHASE6_*.md (4) + phase6/ + optimization/ + README.md
+- `docs/DIC-010-SUMMARY.md` → archive
 - `PLAN.md`, `PROGRESS.md` 갱신
 
-## Sprint 162 후보
+## Sprint 163 — 사용자 결정 대기
 
-### 시나리오 B 계속
-
-남은 B 옵션:
-- B-1: CLI/API — 이미 충분
-- B-2: 성능 최적화 — 진단 sprint 필요
-- B-3: 언어 바인딩 강화
-
-남은 docs 정리:
-- ISSUE_BACKLOG.md (오래되었을 가능성)
-- LessonLearn/ 디렉토리
-- DIC-010-SUMMARY.md (오래된 dict 관련)
-
-### 시나리오 A (NIKL Modu) 또는 C (CRF Retrain)
-
-여전히 사용자 작업 / confirm 대기.
+자동 진행 불가능 상태. 다음 4 옵션 중 사용자 선택 필수.

@@ -1,40 +1,57 @@
-# PLAN — mecab-ko Sprint 162 (next)
+# PLAN — mecab-ko Sprint 163 (사용자 결정 대기)
 
 > 마지막 업데이트: 2026-05-21
 
-## 완료: Sprint 161 B-4 — docs/ 추가 정리
+## 완료: Sprint 162 — 마지막 잔여 정리 + 영역 소진 선언
 
-### 결과
+### Sprint 162 결과
 
-- PHASE6 보고서 4개 + phase6/ + optimization/ → archive
-- docs/ 최상위 52 → 46 파일
-- CLI 진단: 이미 충분 (8 commands, 7 formats)
+- DIC-010-SUMMARY.md (완료 보고서) → archive
+- ISSUE_BACKLOG.md, LessonLearn/ 검토 → 유지
+- docs/ 최상위: 46 → 45 파일
 
-## Sprint 162 후보 (자동 결정)
+### 안전 영역 소진 (Sprint 156~162 누적 7 sprint)
 
-### 시나리오 B 계속 (NIKL Modu 미다운로드)
+- Surface normalization: +0.15pp 누적
+- PRACTICAL 동치: +0.2pp 3 silver
+- NIKL Modu 인프라 준비
+- docs 28 파일 archive
 
-#### B-2: 성능 진단 sprint
-- mecab-ko-profiler 활용
-- 핫스팟 식별 (Viterbi/dict lookup)
-- 측정 + 분석만 (구현은 별도)
+## 누적 진척 (Sprint 122 → 162)
 
-#### B-3: 언어 바인딩 강화 (Python/WASM/Node)
-- Python wheel 빌드 검증
-- WASM bundler/web 사용성
-- Node napi-rs 통합
+| Metric | Baseline | 현재 |
+|--------|---------|------|
+| sample.tsv | 100%/99.9% | 100%/99.9% |
+| **KLUE morph practical** | ~65.8% | **72.1%** |
+| **KLUE surface canonical_lenient** | ~89% | **95.6%** |
+| UD Kaist morph practical | — | 68.6% |
+| UD GSD morph practical | — | 71.8% |
+| accuracy_eval.rs 줄 수 | 4963 | 2406 (-51%) |
 
-#### B-4 추가 docs 정리
-- ISSUE_BACKLOG.md, LessonLearn/, DIC-010-SUMMARY.md 등 검토
-- 오래된 디렉토리 추가 식별
+## Sprint 163 — 사용자 결정 필수
 
-### 시나리오 A (NIKL Modu)
-- 사용자 다운로드 완료 시 측정
+자동 진행 불가능 상태. 4 옵션 중 사용자 선택:
 
-### 시나리오 C (Full CRF Retrain)
-- 비가역, 사용자 confirm 필요
+### 옵션 1: NIKL Modu 다운로드 진척
+- 학술 등록 진행 중인지?
+- 완료 시 시나리오 A (측정 + 분석)
 
-## 검증 기준
+### 옵션 2: Full CRF Retrain (Track B)
+- 3-5 sprint 비가역 대규모
+- 잠재 lift +1~5pp
+- **사용자 confirm 필요**
+
+### 옵션 3: 정확도 작업 종료 + 다른 영역
+- 정확도 lift 영역 소진
+- 언어 바인딩 / 성능 / 사용자 기능 등
+- 새 우선순위 사용자 결정 필요
+
+### 옵션 4: 유지보수 모드
+- 정확도 lift sprint 종료
+- 버그 픽스, 의존성 업데이트만
+- 다음 메이저 작업 대기
+
+## 검증 기준 (모든 옵션 공통)
 
 - `cargo test --workspace --exclude mecab-ko-ffi` 전체 pass
 - `cargo clippy --workspace --all-targets --exclude mecab-ko-ffi -- -D warnings` clean
