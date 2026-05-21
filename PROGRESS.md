@@ -1,121 +1,118 @@
-# PROGRESS — mecab-ko Sprint 157 (MAG/MAJ practical 동치)
+# PROGRESS — mecab-ko Sprint 158 (명시 어구 정규화 + 안전 영역 소진)
 
 > 마지막 업데이트: 2026-05-21
 
-## Sprint 157 G — MAG/MAJ practical 동치 추가
+## Sprint 158 — 명시 어구 축약 정규화
 
 | Task | 상태 | 결과 |
 |------|------|------|
-| S157-G1: Sprint 155 진단 결과 재활용 | ✅ 완료 | MAG→MAJ 45건 식별 |
-| S157-G2: PRACTICAL 그룹 MAG/MAJ 추가 | ✅ 완료 | `evaluate.rs:853` |
-| S157-G3: 단위 테스트 추가 | ✅ 완료 | `test_pos_tags_equivalent_practical_includes_mag_maj` |
-| S157-G4: 5-gate 측정 (3 silver) | ✅ 완료 | **3 silver 모두 +0.2pp morph practical** |
-| S157-G5: 회귀 확인 | ✅ 완료 | sample.tsv 무회귀, conservative 무영향 |
+| S158-1: Sprint 156 진단 결과 재활용 | ✅ 완료 | 인하여/확인하여 등 식별 |
+| S158-2: EXPLICIT_PHRASE_PATTERNS 신규 (3 패턴) | ✅ 완료 | evaluate.rs |
+| S158-3: normalize_endings Step 5 추가 | ✅ 완료 | |
+| S158-4: 단위 테스트 추가 | ✅ 완료 | `test_surface_eq_canonical_lenient_explicit_phrase` |
+| S158-5: 5-gate 검증 | ✅ 완료 | KLUE surface +10 eojeols, 무회귀 |
 
-## 핵심 결과
+## 변경 내용
 
-### 3 silver 일관 +0.2pp Lift
+### EXPLICIT_PHRASE_PATTERNS 신규
+
+```rust
+const EXPLICIT_PHRASE_PATTERNS: &[(&str, &str)] = &[
+    ("인하여", "인해"),              // 4건 KLUE
+    ("확인하여", "확인해"),           // 3건 KLUE
+    ("참고하시어요", "참고하세요"),    // 3건 KLUE (시어요 → 세요)
+];
+```
+
+### normalize_endings Step 5 추가
+
+```rust
+// Step 5: 명시 어구 축약 (Sprint 158)
+for (from, to) in EXPLICIT_PHRASE_PATTERNS {
+    if out.contains(from) {
+        out = out.replace(from, to);
+    }
+}
+```
+
+## 측정 결과
 
 | Metric | Before | After | Δ |
 |--------|--------|-------|---|
 | sample.tsv | 100.0%/99.9% | 100.0%/99.9% | 무회귀 ✓ |
-| **KLUE morph practical** | 71.9% | **72.1%** | **+0.2pp** |
-| **KLUE eojeol practical** | 5283 | **5327** | **+44** |
-| **UD Kaist morph practical** | 68.4% | **68.6%** | **+0.2pp** |
-| **UD Kaist eojeol practical** | 4197 | **4262** | **+65** |
-| **UD GSD morph practical** | 71.6% | **71.8%** | **+0.2pp** |
-| **UD GSD eojeol practical** | 2926 | **2941** | **+15** |
-| KLUE/UD strict morph | — | — | — (정밀 보존) |
+| KLUE morph practical | 72.1% | 72.1% | — |
+| **KLUE surface canonical_lenient** | **95.6%** (21419) | **95.6%** (**21429**) | **+10 eojeols (~+0.05pp)** |
+| UD | 영향 없음 | — | — |
 
-**총 eojeol +124건 추가 매칭**.
+작은 lift지만 명확하게 양수. 누적 surface_only 95.6% 유지.
 
-### 일관된 도메인 lift = 진짜 효과
+## 안전 영역 소진 선언
 
-3 silver 모두 +0.2pp morph practical → 단일 anomaly 아님, 도메인 독립적.
-Sprint 147 (VV/XSV 동치) 패턴 재현.
-
-### 변경 내용
-
-```rust
-pub const TAG_EQUIVALENCE_GROUPS_PRACTICAL: &[&[&str]] = &[
-    &["SP", "SC"],
-    &["SS", "SY", "SSO", "SSC"],
-    &["MM", "MMD", "MMN", "MMA"],
-    &["SL", "NNP"],
-    &["NNB", "NNG"],
-    &["VA", "VV", "XSV"],
-    &["MAG", "MAJ"],   // Sprint 157 G 신규
-];
-```
-
-### 언어학적 배경
-
-- MAG: 일반 부사 (very, slowly 등)
-- MAJ: 접속 부사 (and, but, however, 다만 등)
-- mecab은 모두 MAG, KLUE는 접속부사를 MAJ로 분리 — convention 차이
-
-샘플 surfaces (Sprint 155 진단):
-- 다만 (20), 및 (13), 역시 (3), 오히려 (2), 아무튼 (2), 또는 (1)
-
-## 핵심 학습
-
-### 1. 진단 결과 재활용
-
-Sprint 155 진단 → A (실패) → G (성공). 같은 데이터로 여러 접근 가능.
-
-| 접근 | Sprint | 결과 |
-|------|--------|------|
-| dict 확장 | 155 A | 회귀 → rollback |
-| 메트릭 동치 | 157 G | +0.2pp 성공 |
-
-### 2. 안전 영역 누적 효과
+### Sprint 156~158 누적 안전 영역 효과
 
 | Sprint | 영역 | 효과 |
 |--------|------|------|
-| 156 | surface normalization | +0.1pp (+30 eojeols) |
-| **157** | **메트릭 동치** | **+0.2pp (+124 eojeols)** |
+| 156 | ㄷ 불규칙 + 르 추가 | +30 eojeols surface |
+| 157 | MAG/MAJ practical | +124 eojeols morph practical |
+| **158** | **명시 어구** | **+10 eojeols surface** |
 
-Sprint 155 회귀 후 안전 영역으로 전환 = 누적 +0.3pp KLUE morph practical.
+총: **+164 eojeols (morph + surface)**.
 
-### 3. PRACTICAL 동치 누적 진척
+### 잔여 안전 후보 — 거의 소진
 
-| Sprint | 추가 | 언어학적 배경 |
-|--------|------|----------|
-| 126 | NNB↔NNG | counter words |
-| 136 | VA↔VV | "있다" |
-| 147 | VV↔XSV | "하/되" |
-| **157** | **MAG↔MAJ** | **접속부사** |
+진단 결과 남은 surface mismatch:
+- 있어디에서, 모으게하고, 있안으며 — **mecab tokenizer over-split** (정규화 영역 아님)
+- 가이습니다, 남기이습니다 — VCP 분해 복잡 (Sprint 134 부분 처리)
+- 살는 → 사는, 것이 → 게 — false positive 위험
 
-모두 한국어 문법 진행 중 convention 차이.
+추가 PRACTICAL 동치:
+- VV↔NNG 47건 — 의미 분류 차이 (위험)
+- 나머지 이미 처리됨
+
+**결론**: 안전 영역 lift ≤ +0.05pp/sprint. ROI 매우 낮음.
+
+## 다음 단계: 비가역 작업 confirm 필요
+
+영역 소진 → 비가역 대규모 작업만 남음. **사용자 confirm 필요**:
+
+### F: NIKL Modu 도입
+- 구어/SNS 도메인 silver dataset
+- Academic license + 수동 다운로드
+- coverage 확장 (lift 자체는 아님)
+
+### E: Full CRF Retrain (Track B)
+- 3-5 sprint 장기
+- 학습 데이터 + mecab-cost-train
+- 잠재 lift +1~5pp
+
+### 또는 정확도 외 다른 영역
+- 문서 정리
+- CLI/API 사용성 개선
+- 성능 최적화
+- 새 언어 바인딩
 
 ## 검증
 
-- `cargo test --workspace --exclude mecab-ko-ffi --lib`: **410 passed / 0 failed** (409+1)
+- `cargo test --workspace --exclude mecab-ko-ffi --lib`: **411 passed / 0 failed** (410+1)
 - `cargo clippy --workspace --all-targets --exclude mecab-ko-ffi -- -D warnings`: clean
-- 5-gate: 3 silver 모두 +0.2pp practical, sample.tsv 무회귀, conservative 정밀 보존
+- 5-gate: sample.tsv 무회귀, KLUE surface +10 eojeols
 
 ## 변경 파일
 
 - `rust/crates/mecab-ko-core/src/evaluate.rs`:
-  - PRACTICAL 그룹에 MAG/MAJ 추가
+  - EXPLICIT_PHRASE_PATTERNS 신규 (3 패턴)
+  - normalize_endings Step 5 추가
   - 단위 테스트 1개 신규
-- `docs/research/accuracy/2026-05-21_sprint157_mag_maj_practical.md` (신규)
 - `PLAN.md`, `PROGRESS.md` 갱신
 
-## Sprint 158 후보
+## 누적 진척 (Sprint 122 baseline → Sprint 158)
 
-### 남은 안전 영역
+| Metric | Sprint 122 | Sprint 158 | 총 Δ |
+|--------|-----------|-----------|-----|
+| KLUE morph practical | ~65.8% | 72.1% | **+6.3pp** |
+| KLUE eojeol practical | ~5000 | 5327 | +327 |
+| KLUE surface canonical_lenient | 89.x% | 95.6% | **+6pp** |
+| UD GSD morph practical | ~70.x% | 71.8% | +1pp |
+| sample.tsv | 100%/99.9% | 100%/99.9% | — (baseline) |
 
-PRACTICAL 동치 추가 후보 (Sprint 155 진단):
-- 대부분 이미 처리됨 (MMD/MMN/MM, NNB/NNG, VA/VV)
-- VV↔NNG는 의미 차이 (위험)
-
-남은:
-- 추가 surface normalization (작은 lift)
-- 추가 진단 후보 발굴 (Sprint 155 진단의 다른 패턴)
-
-### 비가역 작업
-
-영역 거의 소진 상태. 다음은 비가역 (사용자 confirm 필요):
-- F: NIKL Modu 도입
-- E: Full CRF Retrain
+총 30+ sprint로 KLUE practical +6.3pp / surface +6pp 누적 lift.

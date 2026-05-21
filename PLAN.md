@@ -1,82 +1,82 @@
-# PLAN — mecab-ko Sprint 158 (next)
+# PLAN — mecab-ko Sprint 159 (사용자 confirm 필요)
 
 > 마지막 업데이트: 2026-05-21
 
-## 완료: Sprint 157 G — MAG/MAJ practical 동치
+## 완료: Sprint 158 — 명시 어구 정규화 + 안전 영역 소진 선언
 
-### 결과 (3 silver 일관 lift)
+### Sprint 158 결과
+- EXPLICIT_PHRASE_PATTERNS 3 패턴 추가 (인하여→인해, 확인하여→확인해, 참고하시어요→참고하세요)
+- KLUE surface canonical_lenient: +10 eojeols (~+0.05pp)
+- sample.tsv 무회귀
 
-| Dataset | morph practical | Δ | eojeol Δ |
-|---------|----------------|---|---------|
-| KLUE | 71.9% → **72.1%** | +0.2pp | +44 |
-| UD Kaist | 68.4% → **68.6%** | +0.2pp | +65 |
-| UD GSD | 71.6% → **71.8%** | +0.2pp | +15 |
+### Sprint 156~158 안전 영역 누적 효과
 
-**총 +124 eojeols 추가 매칭**, sample.tsv 무회귀, conservative 정밀 보존.
+| Sprint | 영역 | 효과 |
+|--------|------|------|
+| 156 | ㄷ 불규칙 + 르 추가 | +30 eojeols |
+| 157 | MAG/MAJ practical 동치 | +124 eojeols + 3 silver +0.2pp |
+| 158 | 명시 어구 축약 | +10 eojeols |
 
-### 누적 PRACTICAL 동치 그룹
+**총 +164 eojeols + 3 silver morph +0.2pp.**
 
-| Sprint | 추가 |
-|--------|------|
-| 126 | NNB↔NNG |
-| 136 | VA↔VV |
-| 147 | VV↔XSV |
-| **157** | **MAG↔MAJ** |
+## 안전 영역 소진 선언
 
-## 현재 정확도 지표
+진단 + 시도 결과:
+- splitter rule: 영역 소진 (Sprint 154)
+- dict cost 확장: 회귀 (Sprint 155)
+- CRF matrix 조정: 회귀 (Sprint 138)
+- surface normalization: 효과 ≤ +0.05pp/sprint
+- PRACTICAL 동치: 추가 후보 부족
 
-| Metric | 현재 |
-|--------|------|
-| sample.tsv | 100.0%/99.9% |
-| KLUE morph strict | 66.9% |
-| **KLUE morph practical** | **72.1%** |
-| KLUE eojeol practical | 5327 / 22404 |
-| KLUE surface canonical_lenient | 95.6% |
-| UD Kaist morph practical | 68.6% |
-| UD GSD morph practical | 71.8% |
+**다음 단계: 비가역 대규모 작업만 남음** → 사용자 confirm 필요.
 
-## Sprint 158 후보 — 안전 영역 거의 소진
+## 누적 진척 (Sprint 122 baseline → Sprint 158)
 
-### 잔여 안전 후보 (작은 lift)
+| Metric | Sprint 122 | Sprint 158 | Δ |
+|--------|-----------|-----------|---|
+| sample.tsv | 100%/99.9% | 100%/99.9% | — (baseline) |
+| KLUE morph practical | ~65.8% | **72.1%** | **+6.3pp** |
+| KLUE eojeol practical | ~5000 | 5327 | +327 |
+| KLUE surface canonical_lenient | ~89% | **95.6%** | **+6pp** |
+| UD Kaist morph practical | — | 68.6% | (new dataset) |
+| UD GSD morph practical | — | 71.8% | (new dataset) |
 
-#### 추가 surface normalization
-- ㅎ 불규칙 (그렇다 → 그래)
-- ㅂ 불규칙 (받침이 있는 stem + 모음)
-- 예측: +0.05pp
+## Sprint 159 — 사용자 confirm 필요
 
-#### 추가 진단 + PRACTICAL 동치
-- Sprint 155 진단 남은 패턴: VV↔NNG (47건, 의미 차이 위험)
-- MMD↔MM 76건 (이미 conservative)
-- 예측 효과: 거의 없음
+### F: NIKL Modu 도입 (silver dataset 확장)
 
-### 비가역 작업 (사용자 confirm 필요)
-
-영역 소진 신호. 다음은 비가역 대규모:
-
-#### F: NIKL Modu 도입
 - Academic license 수동 다운로드
-- 구어/SNS 도메인 silver dataset
-- coverage 확장 (lift는 아님)
+- 구어/SNS 도메인 (5-gate CI 추가)
+- coverage 확장 효과 (lift는 아님)
 - **사용자 confirm 필요**
 
-#### E: Full CRF Retrain (Track B)
-- 3-5 sprint, 학습 데이터 + mecab-cost-train
-- 잠재 lift +1~5pp
+### E: Full CRF Retrain (Track B)
+
+- 3-5 sprint 장기 작업
+- 학습 데이터 + mecab-cost-train
+- 잠재 lift +1~5pp KLUE morph
 - Sprint 136에서 인프라 조사 완료
 - **사용자 confirm 필요**
 
+### 또는 정확도 외 영역
+
+- 문서 정리 (docs/research 아카이브)
+- CLI/API 사용성
+- 성능 최적화
+- 추가 언어 바인딩
+- **사용자 우선순위 필요**
+
 ## 결정 프로세스
 
-규칙 5: 전문가 리뷰 → Top 권고 → 자동 채택.
-
-영역 소진 시 비가역 작업으로 진행:
-1. 작은 잔여 (surface normalization 추가) → 시도 → 영향 미미하면 종료
-2. F (NIKL Modu) 또는 E (CRF Retrain) confirm 요청
-3. confirm 없으면 정확도 작업 종료 (다른 영역: 도구, 문서, 성능 등)
+이전 sprints에서 자동 진행했지만, Sprint 159는 비가역 작업이거나 새 방향 선택 필요.
+사용자에게 confirm 요청:
+1. F (NIKL Modu): 다운로드 + 도메인 확장
+2. E (CRF Retrain): 3-5 sprint 정확도 lift
+3. 정확도 외 영역으로 전환
 
 ## 검증 기준
 
 - `cargo test --workspace --exclude mecab-ko-ffi` 전체 pass
 - `cargo clippy --workspace --all-targets --exclude mecab-ko-ffi -- -D warnings` clean
-- **5-gate CI 통과** (sample.tsv / KLUE morph / surface_only / UD Kaist / UD GSD)
+- **5-gate CI 통과**
 - sample.tsv baseline 100%/99.9% **회귀 금지**

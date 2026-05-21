@@ -1015,6 +1015,14 @@ fn normalize_endings(s: &str) -> String {
         }
     }
 
+    // Step 5: 명시 어구 축약 (Sprint 158)
+    // gold 풀버전 / pred 축약형 — 명시 패턴만 처리 (false positive 방지).
+    for (from, to) in EXPLICIT_PHRASE_PATTERNS {
+        if out.contains(from) {
+            out = out.replace(from, to);
+        }
+    }
+
     out
 }
 
@@ -1035,6 +1043,17 @@ const R_IRREGULAR_PATTERNS: &[(&str, &str)] = &[
     ("고르아", "골라"),  // 고르다 + 아
     // Sprint 156: 추가 르 불규칙 (surface mismatch 진단)
     ("아우르어", "아울러"),  // 아우르다 + 어 (4건 KLUE)
+];
+
+/// 명시 어구 축약 단방향 정규화 패턴 (Sprint 158).
+///
+/// gold는 풀버전 ("인하여"), pred는 축약형 ("인해") 형태 — 양방향 매칭 위해
+/// gold/pred 모두 축약형으로 통일. 일반화 시 false positive 위험으로
+/// 명시 어구만 처리.
+const EXPLICIT_PHRASE_PATTERNS: &[(&str, &str)] = &[
+    ("인하여", "인해"),       // 4건 KLUE
+    ("확인하여", "확인해"),    // 3건 KLUE
+    ("참고하시어요", "참고하세요"),  // 3건 KLUE (시어요 → 세요)
 ];
 
 /// ㄷ불규칙 동사 활용 단방향 정규화 패턴 (Sprint 156).
@@ -1655,6 +1674,15 @@ mod tests {
         // 일반 명사 "단어" 등은 변환 대상 아님
         assert!(surface_eq_canonical_lenient("단어", "단어"));
         assert!(!surface_eq_canonical_lenient("받았", "받았다"));  // 단순 다름
+    }
+
+    #[test]
+    fn test_surface_eq_canonical_lenient_explicit_phrase() {
+        // Sprint 158: 명시 어구 축약 (gold "인하여" / pred "인해" 등)
+        assert!(surface_eq_canonical_lenient("인하여", "인해"));
+        assert!(surface_eq_canonical_lenient("인해", "인하여"));
+        assert!(surface_eq_canonical_lenient("확인하여", "확인해"));
+        assert!(surface_eq_canonical_lenient("참고하시어요", "참고하세요"));
     }
 
     #[test]
