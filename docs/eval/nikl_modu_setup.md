@@ -41,7 +41,29 @@ mkdir -p ~/Korpora/NIKL_MP/
 mv ~/Downloads/NXMP1902008051.json ~/Korpora/NIKL_MP/
 ```
 
-## TSV 변환
+## 원샷 스크립트 (권장)
+
+다운로드 완료 후 변환 + 평가를 한 번에:
+
+```bash
+./tools/nikl_modu_setup.sh ~/Korpora/NIKL_MP/NXMP1902008051.json
+```
+
+스크립트 동작:
+1. JSON 파일 유효성 확인
+2. `convert_nikl_modu.py` 실행 → `data/eval/nikl_modu_sample.tsv`
+3. `cargo test test_nikl_modu_dual_metric` 실행 → 정확도 측정
+4. 결과 요약 출력
+
+옵션:
+```bash
+# 더 큰 sample
+MAX_SENTENCES=10000 ./tools/nikl_modu_setup.sh ~/Korpora/NIKL_MP/NXMP*.json
+```
+
+## TSV 변환 (수동)
+
+원샷 스크립트 대신 단계별 실행:
 
 ```bash
 cd /path/to/mecab-ko
@@ -117,6 +139,38 @@ Dataset: 5000 sentences
   ```bash
   echo "data/eval/nikl_modu_*.tsv" >> .gitignore
   ```
+
+## 트러블슈팅
+
+### Q: kli.korean.go.kr 회원가입이 안 됨
+
+- 학술 기관 affiliation 정보가 정확한지 확인 (이메일/소속)
+- 관리자 승인은 보통 1-3일 소요
+- 승인 안 되면 corpus.korean.go.kr (구버전) 시도
+
+### Q: 변환 시 "Unknown tags" 경고가 많이 뜸
+
+- NIKL Modu의 최신 버전은 SE/SO/SW 같은 확장 태그 사용
+- `convert_nikl_modu.py`의 `KNOWN_TAGS`를 필요 시 추가
+- 경고만 출력되고 변환은 정상 진행됨
+
+### Q: TSV 변환 후 cargo test가 dataset not found 경고
+
+- 파일 경로 확인: `data/eval/nikl_modu_sample.tsv` 정확히 일치해야 함
+- 권한: `chmod 644 data/eval/nikl_modu_sample.tsv`
+- 5-gate test는 자동 skip (없으면 PASS)
+
+### Q: Korpora 라이브러리로 다운로드 가능?
+
+- 가능하지만 동일하게 사용자 인증 필요
+- `pip install korpora` → `Korpora.fetch('modu_mp')` (인증 토큰 필요)
+- 수동 다운로드와 동일한 절차
+
+### Q: license 위반 우려
+
+- TSV 파일은 `.gitignore`로 보호 (Sprint 159 F)
+- 평가 결과 (정확도 수치)만 PROGRESS.md 등에 commit OK
+- 원본 JSON 또는 변환된 TSV commit 금지
 
 ## 참고 자료
 

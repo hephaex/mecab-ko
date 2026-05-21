@@ -1,85 +1,77 @@
-# PROGRESS — mecab-ko Sprint 162 (안전 영역 소진 — 사용자 결정 필요)
+# PROGRESS — mecab-ko Sprint 163 (NIKL Modu 인프라 보강)
 
 > 마지막 업데이트: 2026-05-21
 
-## Sprint 162 — 마지막 잔여 정리 + 영역 소진 선언
+## Sprint 163 — 다운로드 가이드 보강 + 원샷 스크립트
 
 | Task | 상태 | 결과 |
 |------|------|------|
-| S162-1: NIKL Modu 다운로드 확인 | ⏸ 미다운로드 (3rd time) | 시나리오 B 계속 |
-| S162-2: ISSUE_BACKLOG.md 검토 | ✅ 검토 | 840줄, 검토 필요 (단순 archive 안됨) → 유지 |
-| S162-3: DIC-010-SUMMARY.md archive | ✅ 완료 | 완료된 작업 보고서 |
-| S162-4: LessonLearn/ 검토 | ✅ 검토 | 18줄, 유지 |
+| S163-1: NIKL Modu 다운로드 상태 확인 | ✅ 완료 | 여전히 미다운로드 |
+| S163-2: 원샷 스크립트 작성 | ✅ 완료 | `tools/nikl_modu_setup.sh` |
+| S163-3: 트러블슈팅 섹션 추가 | ✅ 완료 | `docs/eval/nikl_modu_setup.md` |
+| S163-4: 권한 설정 | ✅ 완료 | chmod +x |
 
 ## 변경 내용
 
-- `docs/DIC-010-SUMMARY.md` → `docs/archive/` (완료 보고서)
-- docs/ 최상위: 46 → 45 파일
+### 1. 원샷 스크립트 (`tools/nikl_modu_setup.sh`)
 
-## 핵심 결론: 안전 영역 완전 소진
+다운로드 완료 후 원-커맨드로 변환 + 평가:
 
-Sprint 156~162 (7 sprint) 누적 안전 영역 작업:
+```bash
+./tools/nikl_modu_setup.sh ~/Korpora/NIKL_MP/NXMP1902008051.json
+```
 
-| 영역 | Sprint | 효과 |
-|------|--------|------|
-| Surface normalization (ㄷ 불규칙) | 156 | +0.1pp surface |
-| PRACTICAL 동치 (MAG/MAJ) | 157 | +0.2pp 3 silver |
-| 명시 어구 정규화 | 158 | +0.05pp surface |
-| NIKL Modu 인프라 | 159 F | 인프라 (다운로드 대기) |
-| Sprint 보고서 archive | 160 | 23 파일 정리 |
-| PHASE6/optimization archive | 161 | 6 파일 정리 |
-| DIC-010 archive | **162** | 1 파일 정리 |
+동작:
+1. JSON 파일 유효성 확인 (size check)
+2. `convert_nikl_modu.py` 실행 → TSV 생성
+3. `cargo test test_nikl_modu_dual_metric` 실행 → 정확도 측정
+4. 결과 요약 출력
 
-**누적 정확도 lift (안전 영역만): +0.35pp KLUE morph + +0.15pp surface + 28 파일 archive**.
+옵션:
+```bash
+MAX_SENTENCES=10000 ./tools/nikl_modu_setup.sh <json>
+```
 
-## 다음 단계 — 사용자 결정 필수
+### 2. 트러블슈팅 섹션 (`docs/eval/nikl_modu_setup.md`)
 
-### 옵션 1: NIKL Modu 다운로드 진척 보고
-- 사용자가 kli.korean.go.kr 등록/다운로드 진행 중인가?
-- 완료 시 Sprint 163 = 측정 + 분석 (시나리오 A)
-- 보류면 옵션 2/3으로
+추가 FAQ:
+- 회원가입 안 됨 → affiliation 확인, 1-3일 대기
+- Unknown tags 경고 → 정상 (확장 태그)
+- TSV 변환 후 dataset not found → 경로/권한 확인
+- Korpora 라이브러리 사용 → 동일하게 인증 필요
+- license 위반 우려 → .gitignore 보호 확인
 
-### 옵션 2: Full CRF Retrain (Track B) — 비가역 confirm
-- 3-5 sprint 장기 작업
-- 학습 데이터 + mecab-cost-train
-- 잠재 lift +1~5pp KLUE morph
-- Sprint 136에서 인프라 조사 완료
-- **사용자 confirm 필요**
+## NIKL Modu 다운로드 상태
 
-### 옵션 3: 정확도 작업 종료 + 다른 영역 전환
-- 정확도 lift는 영역 소진
-- 다른 영역으로 전환:
-  - 언어 바인딩 강화 (Python/WASM/Node)
-  - 성능 최적화 (프로파일링 sprint)
-  - 사용자 피드백 기반 기능 추가
+```
+$ ls data/eval/nikl_modu_*.tsv
+MISSING
 
-### 옵션 4: 정확도 작업 종료 + 프로젝트 안정화
-- 정확도 lift sprint 종료
-- 유지보수 모드 (버그 픽스, 의존성 업데이트)
-- 다음 메이저 작업 대기
+$ ls ~/Korpora/NIKL_MP/
+(없음)
+```
 
-## 현재 정확도 (Sprint 122 → 162 누적)
-
-| Metric | Baseline | 현재 | Δ |
-|--------|---------|------|---|
-| sample.tsv | 100%/99.9% | 100%/99.9% | — |
-| **KLUE morph practical** | ~65.8% | **72.1%** | **+6.3pp** |
-| KLUE eojeol practical | ~5000 | 5327 | +327 |
-| **KLUE surface canonical_lenient** | ~89% | **95.6%** | **+6pp** |
-| UD Kaist morph practical | — | 68.6% | (new silver) |
-| UD GSD morph practical | — | 71.8% | (new silver) |
+여전히 사용자 수동 다운로드 필요. 자동 다운로드 불가능 (학술 인증).
 
 ## 검증
 
 - `cargo test --workspace --exclude mecab-ko-ffi --lib`: 변경 없음 (411 pass)
 - 5-gate sample.tsv: 영향 없음
-- docs/ 정리 진행
+- 원샷 스크립트: chmod +x 적용
 
 ## 변경 파일
 
-- `docs/DIC-010-SUMMARY.md` → archive
+- `tools/nikl_modu_setup.sh` (신규, 실행 가능)
+- `docs/eval/nikl_modu_setup.md`: 원샷 + 트러블슈팅 섹션 추가
 - `PLAN.md`, `PROGRESS.md` 갱신
 
-## Sprint 163 — 사용자 결정 대기
+## Sprint 164 — 사용자 NIKL Modu 다운로드 대기
 
-자동 진행 불가능 상태. 다음 4 옵션 중 사용자 선택 필수.
+다운로드 완료 시:
+1. 사용자가 `./tools/nikl_modu_setup.sh <json>` 실행
+2. 자동 변환 + 평가
+3. 결과 PROGRESS.md에 기록
+4. POS mismatch 분석 → 추가 동치/normalize 후보 발굴 (Sprint 164)
+
+다운로드 보류 시:
+- 다른 영역 전환 또는 유지보수 모드 (사용자 결정 필요)
