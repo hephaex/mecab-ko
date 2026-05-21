@@ -1985,6 +1985,69 @@ fn test_ud_gsd_dual_metric() {
     println!("\nPASSED — strict morph {strict_morph:.1}% / practical morph {practical_morph:.1}%");
 }
 
+/// Sprint 159 F — NIKL Modu silver dataset 통합 (5번째 silver).
+///
+/// 도메인: 구어/SNS/문어 multi-domain. Academic license — 수동 다운로드 필요.
+/// 미존재 시 skip (다른 4 silver gate는 영향 없음).
+///
+/// 다운로드 방법:
+/// 1. https://kli.korean.go.kr 학술 등록
+/// 2. '모두의말뭉치 형태분석' 다운로드
+/// 3. `python3 tools/convert_nikl_modu.py <input.json> data/eval/nikl_modu_sample.tsv`
+#[test]
+#[ignore = "requires NIKL Modu silver dataset (manual download)"]
+fn test_nikl_modu_dual_metric() {
+    use mecab_ko_core::evaluate::{
+        evaluate_dataset_dual, evaluate_dataset_dual_with_pos_match,
+        pos_tags_equivalent_practical,
+    };
+
+    let project_root = project_root();
+    let eval_path = project_root.join("data/eval/nikl_modu_sample.tsv");
+    if !eval_path.exists() {
+        println!("Skipping: data/eval/nikl_modu_sample.tsv not found");
+        println!("  NIKL Modu 다운로드: https://kli.korean.go.kr (학술 등록 필요)");
+        println!("  변환: python3 tools/convert_nikl_modu.py <json> {}", eval_path.display());
+        return;
+    }
+
+    let mut tokenizer = make_tokenizer(&project_root);
+    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
+        .expect("Failed to load NIKL Modu TSV");
+
+    let strict = evaluate_dataset_dual(&mut tokenizer, &dataset);
+    let practical = evaluate_dataset_dual_with_pos_match(
+        &mut tokenizer, &dataset, pos_tags_equivalent_practical,
+    );
+
+    let strict_morph = strict.morpheme.token_accuracy * 100.0;
+    let strict_eo = strict.eojeol_accuracy * 100.0;
+    let practical_morph = practical.morpheme.token_accuracy * 100.0;
+    let practical_eo = practical.eojeol_accuracy * 100.0;
+
+    println!("\n=== NIKL Modu (silver, multi-domain — 구어/SNS/문어) ===");
+    println!("Dataset: {} sentences", dataset.len());
+    println!("\n--- Strict ---");
+    println!("  Morpheme: {strict_morph:.1}%");
+    println!("  Eojeol:   {strict_eo:.1}% ({} / {})",
+        strict.eojeol_correct, strict.eojeol_total);
+    println!("\n--- Practical ---");
+    println!("  Morpheme: {practical_morph:.1}% [Δ +{:.1}pp vs strict]",
+        practical_morph - strict_morph);
+    println!("  Eojeol:   {practical_eo:.1}% ({} / {}) [Δ +{:.1}pp vs strict]",
+        practical.eojeol_correct, practical.eojeol_total, practical_eo - strict_eo);
+
+    // 회귀 catch
+    assert!(practical.eojeol_accuracy >= strict.eojeol_accuracy);
+    assert!(practical.morpheme.token_accuracy >= strict.morpheme.token_accuracy);
+
+    // Silver dataset floor (보수적 — NIKL Modu는 구어 포함으로 KLUE보다 낮을 수 있음)
+    assert!(strict.morpheme.token_accuracy >= 0.30,
+        "Morph strict {strict_morph:.1}% below 30% floor (NIKL Modu silver)");
+
+    println!("\nPASSED — strict morph {strict_morph:.1}% / practical morph {practical_morph:.1}%");
+}
+
 /// Sprint 140 A — UD Korean-Kaist `SPLIT_DIFFERENT` connection pair 분석.
 ///
 /// Sprint 137에서 KLUE DP에 적용한 분석을 UD Kaist에도 적용.

@@ -38,3 +38,6 @@ mecab-ko-dic/
 search-plugins/.gradle/
 search-plugins/*/build/
 
+
+# Sprint 159 F — NIKL Modu (학술 license, 재배포 금지)
+data/eval/nikl_modu_*.tsv
