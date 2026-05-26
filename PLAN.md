@@ -1,61 +1,69 @@
-# PLAN — mecab-ko Sprint 164 (사용자 NIKL Modu 다운로드 대기)
+# PLAN — mecab-ko Sprint 165 (Track B Step 2: 학습 데이터 준비)
 
-> 마지막 업데이트: 2026-05-21
+> 마지막 업데이트: 2026-05-27
 
-## 완료: Sprint 163 — NIKL Modu 인프라 보강
+## 완료: Sprint 164 — Track B Step 1: CRF 빌드 환경
 
-### Sprint 163 결과
+### 결과
 
-- `tools/nikl_modu_setup.sh` — 원샷 변환+평가 스크립트
-- `docs/eval/nikl_modu_setup.md` — 트러블슈팅 + 원샷 사용법 추가
+- legacy/ macOS arm64 빌드 성공
+- `mecab-cost-train`, `mecab-dict-gen`, `mecab-dict-index` executable 생성
+- 학습 데이터 형식 (`.tagged`) 파악
+- Track B 4 sprint 계획 수립
 
-### NIKL Modu 인프라 현황
+## Sprint 165 — Track B Step 2
 
-| 구성요소 | 상태 |
-|----------|------|
-| 변환 스크립트 | ✅ `tools/convert_nikl_modu.py` (Sprint 159 F) |
-| Accuracy test | ✅ `test_nikl_modu_dual_metric` (skip 패턴, Sprint 159 F) |
-| 다운로드 가이드 | ✅ `docs/eval/nikl_modu_setup.md` (Sprint 159 F + 163 보강) |
-| 원샷 스크립트 | ✅ `tools/nikl_modu_setup.sh` (Sprint 163) |
-| `.gitignore` 보호 | ✅ Sprint 159 F |
-| **사용자 다운로드** | ⏸ 대기 중 |
+### 목표: 학습 데이터 준비
 
-## Sprint 164 시나리오
+#### S165-B1: TSV → .tagged 변환 스크립트
+- `tools/to_mecab_tagged.py` 작성
+- Input: data/eval/klue_dp_val.tsv 형식 (surface/POS surface/POS ...)
+- Output: `.tagged` 형식 (surface<TAB>feature\n EOS)
+- entries.csv 형식 호환 (POS, semantic, ..., reading)
 
-### A: 다운로드 완료 시 (사용자 알림)
+#### S165-B2: KLUE DP train 변환
+- data/raw/klue/ 에서 train split 활용
+- ~10K sentences 변환
+- 변환 검증 (sample 확인)
 
-```bash
-# 사용자가 실행:
-./tools/nikl_modu_setup.sh ~/Korpora/NIKL_MP/NXMP*.json
-```
+#### S165-B3: UD train 변환
+- UD Kaist train (~1.6K)
+- UD GSD train (~5K)
+- 동일 형식으로 변환
 
-→ Sprint 164 자동 진행:
-- 결과 PROGRESS.md 기록
-- POS mismatch 분석
-- 추가 동치/normalize 후보 발굴
-- 5-gate에 6번째 gate 추가 검토
+#### S165-B4: 학습 corpus 합본
+- 통합 .tagged 파일 (KLUE + UD)
+- 학습/평가 split (eval은 기존 5-gate dataset 그대로 사용)
 
-### B: 다운로드 보류 — 다른 영역 결정
+#### S165-B5: 학습 input 디렉토리 준비
+- seed/ 생성 (mecab-ko-dic 2.1.1 복사 + 학습용)
+- feature.def, matrix.def, char.def 등 배치
 
-NIKL Modu 다운로드가 어려운 상황이면:
-1. **Full CRF Retrain (Track B)** — 비가역 confirm 필요
-2. **언어 바인딩 강화** — Python/WASM/Node
-3. **성능 최적화** — 프로파일링 sprint
-4. **유지보수 모드** — 정확도 sprint 종료
+## Track B 전체 계획
 
-## 누적 진척 (Sprint 122 → 163)
+| Sprint | Step | 상태 |
+|--------|------|------|
+| 164 | Step 1: 빌드 환경 | ✅ 완료 |
+| **165** | **Step 2: 학습 데이터** | **다음** |
+| 166 | Step 3: 1차 학습 + 변환 | 대기 |
+| 167 | Step 4: Rust 통합 + 검증 | 대기 |
+| 168 (옵션) | Step 5: 파라미터 튜닝 | 대기 |
+
+## 누적 진척 (Sprint 122 → 164)
 
 | Metric | Baseline | 현재 |
 |--------|---------|------|
 | sample.tsv | 100%/99.9% | 100%/99.9% (보존) |
-| KLUE morph practical | ~65.8% | **72.1%** (+6.3pp) |
-| KLUE surface canonical_lenient | ~89% | **95.6%** (+6pp) |
+| KLUE morph practical | ~65.8% | 72.1% (+6.3pp) |
+| KLUE surface canonical_lenient | ~89% | 95.6% (+6pp) |
 | UD Kaist morph practical | — | 68.6% |
 | UD GSD morph practical | — | 71.8% |
+
+Track B 잠재 lift: **+1~5pp KLUE morph** (Sprint 167 후 측정).
 
 ## 검증 기준
 
 - `cargo test --workspace --exclude mecab-ko-ffi` 전체 pass
 - `cargo clippy --workspace --all-targets --exclude mecab-ko-ffi -- -D warnings` clean
-- **5-gate CI 통과**
-- sample.tsv baseline 100%/99.9% **회귀 금지**
+- **5-gate CI 통과** (sample.tsv hard rule)
+- 새 dict는 별도 디렉토리로 격리 (점진적 교체)
