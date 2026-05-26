@@ -41,3 +41,6 @@ search-plugins/*/build/
 
 # Sprint 159 F — NIKL Modu (학술 license, 재배포 금지)
 data/eval/nikl_modu_*.tsv
+
+# Sprint 165 — Track B 학습 데이터 (재생성 가능, 큰 파일)
+data/train/

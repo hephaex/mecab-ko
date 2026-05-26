@@ -1,92 +1,85 @@
-# PROGRESS — mecab-ko Sprint 164 (Track B Step 1: CRF 빌드 환경)
+# PROGRESS — mecab-ko Sprint 165 (Track B Step 2: 학습 데이터 준비)
 
 > 마지막 업데이트: 2026-05-27
 
-## Sprint 164 — Track B Step 1: CRF Retrain 환경 구축
+## Sprint 165 — Track B Step 2: 학습 데이터 준비
 
 | Task | 상태 | 결과 |
 |------|------|------|
-| S164-B1: NIKL Modu 다운로드 4번째 체크 | ⏸ 미다운로드 | Track B 진행 결정 |
-| S164-B2: Sprint 136 인프라 보고서 검토 | ✅ 완료 | mecab-cost-train 경로 식별 |
-| S164-B3: legacy/ 빌드 시도 (1st) | ❌ 실패 | Linux .o 파일과 macOS arm64 충돌 |
-| S164-B4: ./configure 재실행 | ✅ 완료 | arm-apple-darwin25.5.0 |
-| S164-B5: make clean + make -j4 | ✅ 완료 | libmecab.dylib + 5개 executable |
-| S164-B6: mecab-cost-train 실행 검증 | ✅ 완료 | --help 정상 출력 |
-| S164-B7: 학습 데이터 형식 파악 | ✅ 완료 | .tagged 형식 (entries.csv 호환) |
-| S164-B8: Track B 계획 수립 | ✅ 완료 | Sprint 164~167 (~+168) |
+| S165-B1: raw data 인벤토리 확인 | ✅ 완료 | train split 부재 → dev만 사용 |
+| S165-B2: tools/to_mecab_tagged.py 작성 | ✅ 완료 | CoNLL-U → .tagged 변환 |
+| S165-B3: UD Kaist dev 변환 | ✅ 완료 | 2066 sentences |
+| S165-B4: UD GSD dev 변환 | ✅ 완료 | 950 sentences |
+| S165-B5: 통합 corpus 생성 | ✅ 완료 | corpus_dev.tagged (3016 sent, ~73K morph) |
+| S165-B6: .gitignore 보호 | ✅ 완료 | data/train/ |
+| S165-B7: seed dictdir 결정 | ✅ 완료 | mecab-ko-dic 2.1.1 그대로 사용 |
 
-## 핵심 성과
+## 핵심 발견
 
-### macOS arm64 빌드 성공
+### Train data 부재 → dev split 활용
 
+| Dataset | Train | Dev | Test | 사용 |
+|---------|-------|-----|------|------|
+| KLUE | ❌ | val (1995, 평가용) | — | 평가 (leakage 방지) |
+| UD Kaist | ❌ | 2066 ✓ | 1638 (평가용) | 학습 (dev) |
+| UD GSD | ❌ | 950 ✓ | 971 (평가용) | 학습 (dev) |
+
+**학습 데이터**: UD Kaist dev + UD GSD dev = **3016 sentences (~73K morphemes)**.
+
+작지만 첫 시도로 충분. test data는 평가용 그대로 보존 (leakage 방지).
+
+### 변환 스크립트 (`tools/to_mecab_tagged.py`)
+
+CoNLL-U → `.tagged`:
 ```
-src/.libs/libmecab.dylib       ← 핵심 라이브러리
-src/.libs/mecab-cost-train     ← CRF 학습 도구 ✓
-src/.libs/mecab-dict-gen       ← dict 생성 ✓
-src/.libs/mecab-dict-index     ← 인덱싱 ✓
-src/.libs/mecab-system-eval    ← 평가
-src/.libs/mecab-test-gen       ← 테스트 생성
-```
-
-기존 Linux .o 파일 → `make clean` 후 macOS arm64로 재컴파일 필요.
-
-### mecab-cost-train 정상 동작
-
-```bash
-DYLD_LIBRARY_PATH=src/.libs src/.libs/mecab-cost-train --help
-```
-
-주요 옵션:
-- `-d, --dicdir` (dict 디렉토리)
-- `-M, --old-model` (warm start)
-- `-c, --cost` (regularization)
-- `-p, --thread` (멀티스레딩)
-
-### 학습 데이터 형식 (`.tagged`)
-
-```
-<surface>\t<feature1>,<feature2>,...,<reading>
+<surface>\t<POS>,*,*,*,*,*,*,*,*
 ...
 EOS
 ```
 
-mecab-ko-dic entries.csv와 호환. KLUE/UD train data를 이 형식으로 변환 필요.
+- UD Kaist xpos (lowercase): `KAIST_TO_SEJONG` 매핑 (Sprint 139 patterns 재사용)
+- UD GSD xpos (Sejong 직접): 대문자 변환만
+- mecab features 9 fields, POS만 정확하고 나머지 `*` (optional features 처리)
 
-## Track B 계획 (Sprint 164~167)
+### Corpus 통계
 
-| Sprint | Step | 작업 |
-|--------|------|------|
-| **164** ✅ | Step 1 | 빌드 환경 구축 |
-| 165 | Step 2 | 학습 데이터 준비 (KLUE/UD → .tagged) |
-| 166 | Step 3 | 1차 학습 + 변환 |
-| 167 | Step 4 | Rust 통합 + 검증 (5-gate) |
-| 168 (옵션) | Step 5 | 파라미터 튜닝 |
-
-## 위험 요소
-
-| 위험 | 완화 |
-|------|------|
-| 학습 시간 (수십분~시간) | -p 4, 작은 코퍼스 시작 |
-| 회귀 (sample.tsv) | hard rule, 즉시 rollback |
-| binary 호환성 | 별도 dict 디렉토리 격리 |
-| 코퍼스 라이선스 | KLUE/UD CC BY-SA 사용 가능 |
+```
+ud_kaist_dev.tagged: 52450 lines
+ud_gsd_dev.tagged:   23525 lines
+corpus_dev.tagged:   75975 lines (~73K morphemes + 3016 EOS markers)
+```
 
 ## 검증
 
+- 변환 스크립트 정상 동작 (Unknown POS 1건 minor)
+- 통합 corpus 형식 검증 (mecab .tagged 호환)
 - `cargo test --workspace --exclude mecab-ko-ffi --lib`: 변경 없음 (411 pass)
-- 5-gate sample.tsv: 영향 없음 (코드 변경 없음)
-- legacy 빌드: 성공 (macOS arm64)
+- 5-gate sample.tsv: 영향 없음 (학습 미실행)
 
 ## 변경 파일
 
-- `docs/research/accuracy/2026-05-27_sprint164_crf_build_env.md` (신규)
-- `legacy/`: macOS arm64 빌드 산출물 (gitignore 대상, 추적 안 함)
+- `tools/to_mecab_tagged.py` (신규)
+- `data/train/` (gitignore 추가)
 - `PLAN.md`, `PROGRESS.md` 갱신
 
-## Sprint 165 — Track B Step 2
+## Sprint 166 — Track B Step 3: 1차 학습
 
-학습 데이터 준비:
-1. `tools/to_mecab_tagged.py` 작성 (TSV → .tagged 변환)
-2. KLUE DP train (12K) → `.tagged`
-3. UD Kaist/GSD train → `.tagged`
-4. 학습용 합본 corpus 생성
+### 작업
+
+1. mecab-cost-train 실행:
+   ```bash
+   cd legacy
+   DYLD_LIBRARY_PATH=src/.libs src/.libs/mecab-cost-train \
+     -d ../data/mecab-ko-dic-2.1.1-20180720 \
+     -p 4 -f 1 \
+     ../data/train/corpus_dev.tagged
+   ```
+2. 학습 시간 측정 (예상: 수 분)
+3. 결과 model.def 생성 확인
+4. mecab-dict-gen으로 새 matrix.def + sys.dic 변환
+
+### 위험
+
+- 학습 코퍼스가 작음 (3016 sentences) → 정확도 lift 작을 수 있음
+- 작은 corpus로 학습한 model이 기존 mecab-ko-dic baseline 대비 회귀 가능
+- 새 dict는 별도 디렉토리로 격리 (점진적 검증)
