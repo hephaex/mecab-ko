@@ -1,51 +1,51 @@
-# PLAN — mecab-ko Sprint 172 (next)
+# PLAN — mecab-ko Sprint 173 (next)
 
 > 마지막 업데이트: 2026-05-27
 
-## 완료: Sprint 171 — B-2 성능 진단
+## 완료: Sprint 172 — B-2 계속 (cold_start + viterbi)
 
 ### 결과
 
-- mecab-profile CLI 빌드 + 동작 확인
-- Criterion tokenizer_bench 정상 (평균 10µs/sentence, 7 MiB/s)
-- 성능 인프라 평가 (9 benches + 4 profiler 모듈)
+- cold_start: 90~280 µs (reuse 30x 가속 발견)
+- viterbi_search: 758 ns ~ 9.54 µs (매우 빠름)
+- v0.3.0 → v0.7.2 회귀 없음 확인
+- PERFORMANCE_BASELINES.md v0.7.2 섹션 추가
 
-### 제약
+## 성능 측정 진척 (Sprint 171~172)
 
-- Memory tracking은 test-allocator feature 필요 (현재 0 B 표시)
-- 측정은 mini-dict (full mecab-ko-dic 미설정)
+| Bench | 상태 |
+|-------|------|
+| tokenizer_bench | ✅ (S171) |
+| cold_start_bench | ✅ (S172) |
+| viterbi_bench | ✅ (S172) |
+| batch_bench | 미측정 |
+| dict_loading_bench | 미측정 |
+| matrix_bench | 미측정 |
+| memory_bench | 미측정 |
+| normalization_bench | 미측정 |
+| trie_bench | 미측정 |
 
-## 누적 진척 (Sprint 122 → 171)
+3/9 측정 완료 (핵심 영역).
 
-| 영역 | 결과 |
-|------|------|
-| 정확도 lift (S122~167) | +6.3pp KLUE, 종료 |
-| WASM tests (S169) | 5 → 11 |
-| 바인딩 진단 (S170) | 72+ 테스트 확인 |
-| 성능 진단 (S171) | baseline 측정 |
+## Sprint 173 후보
 
-## Sprint 172 후보
-
-### B-2 계속: 전체 Criterion bench suite
-- 9개 bench (batch, cold_start, dict_loading, matrix, memory, normalization, tokenizer, trie, viterbi)
-- 시간 소요 (각 수 분)
-- 결과를 PERFORMANCE_BASELINES.md에 누적 기록
+### B-2 계속: 남은 6 benches
+- 시간 절약: dict_loading + normalization 우선
+- 또는 batch + trie
 
 ### B-2 심화: memory profiling
-- `cargo build --features test-allocator`
-- dict_profiler / tokenizer_profiler 실제 측정
-- 핫스팟 식별 보고
+- test-allocator feature 빌드
+- 실제 메모리 측정
 
 ### 유지보수 모드
-- Sprint cycle 종료 선언
-- 버그/의존성만 대응
+- Sprint cycle 공식 종료
 
 ### 외부 입수 대기
-- NIKL Modu / Sejong 입수 시 재개
+- NIKL Modu / Sejong
 
 ## 결정 프로세스
 
-규칙 5: 전문가 리뷰 자동 채택. 다음 sprint-run 시 진행.
+규칙 5 자동 채택. 시간 절약을 위해 핵심 benches 우선.
 
 ## 검증 기준
 

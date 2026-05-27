@@ -34,6 +34,58 @@ This document defines the performance baselines and regression thresholds used b
 | Lookup (multi-entry) | µs/op | ~2.5 | < 5 |
 | Feature parsing | µs/op | ~0.8 | < 1.5 |
 
+## Baseline Performance Metrics (v0.7.2 — Sprint 172, 2026-05-27)
+
+Sprint 171/172 측정 (criterion `--quick`, mini-dict 사용).
+
+### Tokenizer Baseline
+
+| Bench | Time (median) | Throughput |
+|-------|--------------|-----------|
+| tokenizer_baseline/sentence/0 | 10.66 µs | 6.70 MiB/s |
+| tokenizer_baseline/sentence/1 | 9.80 µs | 7.10 MiB/s |
+| tokenizer_baseline/sentence/2 | 8.93 µs | 7.69 MiB/s |
+| tokenizer_baseline/sentence/3 | 8.86 µs | 7.10 MiB/s |
+| tokenizer_baseline/sentence/4 | 10.95 µs | 6.88 MiB/s |
+| tokenizer_edge_cases/whitespace_only | 110 ns | — |
+| tokenizer_edge_cases/numbers_only | 15.73 µs | — |
+| tokenizer_edge_cases/english_only | 7.22 µs | — |
+
+### Cold Start Performance
+
+| Bench | Time (median) |
+|-------|--------------|
+| cold_start (initialization) | 90~100 µs |
+| cold_start_reuse/recreate_each_time | 100 µs |
+| cold_start_reuse (reuse) | 3.3 µs |
+| cold_start_complex | 275~280 µs |
+
+reuse가 30x 빠름 — Tokenizer instance 재사용 권장.
+
+### Viterbi Algorithm
+
+| Bench | Time (median) |
+|-------|--------------|
+| viterbi_search/small_zero_cost | 758 ns |
+| viterbi_search/small_with_matrix | 768 ns |
+| viterbi_search/medium | 955 ns |
+| viterbi_search/large | 9.54 µs |
+| viterbi_space_penalty/no_penalty | 133 ns |
+| viterbi_space_penalty/korean_default | 132 ns |
+| viterbi_space_penalty/custom_penalty | 132 ns |
+| viterbi_nbest/1 | 965 ns |
+
+Viterbi search 매우 빠름 (대부분 µs 미만). matrix 적용도 무시할 수준 (758→768 ns).
+
+### v0.3.0 → v0.7.2 비교 (참고)
+
+v0.3.0 baseline (medium 75 chars): 11.49 µs
+v0.7.2 측정 (평균 sentence): ~10 µs
+
+→ 유사 수준 (within ±15%). 회귀 없음 또는 미세 개선.
+
+**주의**: mini-dict 사용으로 실제 mecab-ko-dic 전체 사용 시 결과 다를 수 있음.
+
 ## Regression Thresholds
 
 ### Automated Detection Levels
