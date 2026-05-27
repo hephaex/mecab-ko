@@ -1,51 +1,53 @@
-# PLAN — mecab-ko Sprint 173 (next)
+# PLAN — mecab-ko Sprint 174 (next)
 
 > 마지막 업데이트: 2026-05-27
 
-## 완료: Sprint 172 — B-2 계속 (cold_start + viterbi)
+## 완료: Sprint 173 — B-2 계속 (dict_loading + normalization)
 
 ### 결과
 
-- cold_start: 90~280 µs (reuse 30x 가속 발견)
-- viterbi_search: 758 ns ~ 9.54 µs (매우 빠름)
-- v0.3.0 → v0.7.2 회귀 없음 확인
-- PERFORMANCE_BASELINES.md v0.7.2 섹션 추가
+- dict_loading: 182 ns (cached) ~ 334 µs (complex)
+- normalization: 1.1~27 µs (Sprint 156/158 추가 후 회귀 없음)
+- 5/9 benches 측정 완료
 
-## 성능 측정 진척 (Sprint 171~172)
+## 성능 측정 진척 (S171~S173)
 
-| Bench | 상태 |
-|-------|------|
-| tokenizer_bench | ✅ (S171) |
-| cold_start_bench | ✅ (S172) |
-| viterbi_bench | ✅ (S172) |
-| batch_bench | 미측정 |
-| dict_loading_bench | 미측정 |
-| matrix_bench | 미측정 |
-| memory_bench | 미측정 |
-| normalization_bench | 미측정 |
-| trie_bench | 미측정 |
+| 측정 완료 (5) | 미측정 (4) |
+|--------------|------------|
+| tokenizer_bench (S171) | batch_bench |
+| cold_start_bench (S172) | matrix_bench |
+| viterbi_bench (S172) | memory_bench |
+| dict_loading_bench (S173) | trie_bench |
+| normalization_bench (S173) | |
 
-3/9 측정 완료 (핵심 영역).
+**핵심 영역 모두 측정 완료**.
 
-## Sprint 173 후보
+## Sprint 174 후보
 
-### B-2 계속: 남은 6 benches
-- 시간 절약: dict_loading + normalization 우선
-- 또는 batch + trie
+### 유지보수 모드 (권고)
 
-### B-2 심화: memory profiling
-- test-allocator feature 빌드
-- 실제 메모리 측정
+남은 4 benches는 marginal value:
+- batch (derivative of tokenizer)
+- matrix (derivative of viterbi)
+- memory (test-allocator feature 필요)
+- trie (derivative of dict_loading)
 
-### 유지보수 모드
-- Sprint cycle 공식 종료
+B-2 영역 사실상 완료. 유지보수 모드 권고.
+
+### B-2 심화 (선택)
+
+memory profiling — test-allocator feature 빌드 + 실제 측정.
+시간 소요. ROI 검토 필요.
 
 ### 외부 입수 대기
-- NIKL Modu / Sejong
+
+NIKL Modu / Sejong → 정확도 재개.
+
+### 사용자 명시 신규 영역
 
 ## 결정 프로세스
 
-규칙 5 자동 채택. 시간 절약을 위해 핵심 benches 우선.
+규칙 5 자동 채택. 현재 진행 가능한 안전 작업 거의 모두 완료.
 
 ## 검증 기준
 

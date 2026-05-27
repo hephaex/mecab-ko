@@ -77,6 +77,29 @@ reuse가 30x 빠름 — Tokenizer instance 재사용 권장.
 
 Viterbi search 매우 빠름 (대부분 µs 미만). matrix 적용도 무시할 수준 (758→768 ns).
 
+### Dictionary Loading
+
+Sprint 173 측정.
+
+| 시나리오 | Time (median) |
+|---------|--------------|
+| 가장 빠른 (cached lookup) | 182 ns |
+| typical lookup | 2.1~3.4 µs |
+| medium load | 91~111 µs |
+| complex load | 268~334 µs |
+
+### Normalization
+
+Sprint 173 측정.
+
+| 시나리오 | Time (median) |
+|---------|--------------|
+| 가장 빠른 | 1.1 µs |
+| 일반 | 4.2~9.0 µs |
+| 복잡 | 15~27 µs |
+
+Sprint 156 ㄷ 불규칙 + Sprint 158 명시 어구 추가 후에도 정상 범위.
+
 ### v0.3.0 → v0.7.2 비교 (참고)
 
 v0.3.0 baseline (medium 75 chars): 11.49 µs

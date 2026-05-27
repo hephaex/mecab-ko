@@ -1,87 +1,79 @@
-# PROGRESS — mecab-ko Sprint 172 (B-2 계속: cold_start + viterbi 측정)
+# PROGRESS — mecab-ko Sprint 173 (B-2: dict_loading + normalization)
 
 > 마지막 업데이트: 2026-05-27
 
-## Sprint 172 — B-2 성능 측정 (cold_start + viterbi)
+## Sprint 173 — B-2 계속 (dict_loading + normalization)
 
 | Task | 상태 | 결과 |
 |------|------|------|
-| S172-1: PERFORMANCE_BASELINES.md 검토 | ✅ 완료 | v0.3.0 baseline 존재 |
-| S172-2: cold_start_bench 측정 | ✅ 완료 | 90~280 µs 범위 |
-| S172-3: viterbi_bench 측정 | ✅ 완료 | 758 ns ~ 9.54 µs |
-| S172-4: PERFORMANCE_BASELINES.md 갱신 | ✅ 완료 | v0.7.2 섹션 추가 |
+| S173-1: dict_loading_bench 측정 | ✅ 완료 | 182 ns ~ 334 µs |
+| S173-2: normalization_bench 측정 | ✅ 완료 | 1.1 ~ 27 µs |
+| S173-3: PERFORMANCE_BASELINES.md 갱신 | ✅ 완료 | 2 섹션 추가 |
 
 ## 측정 결과
 
-### Cold Start
+### Dictionary Loading
 
-| Bench | Time (median) |
-|-------|--------------|
-| cold_start (init) | 90~100 µs |
-| cold_start_reuse/recreate_each_time | 100 µs |
-| **cold_start_reuse (instance reuse)** | **3.3 µs** ← 30x 빠름 |
-| cold_start_complex | 275~280 µs |
+| 시나리오 | Time |
+|---------|------|
+| cached lookup (가장 빠름) | 182 ns |
+| typical lookup | 2.1~3.4 µs |
+| medium load | 91~111 µs |
+| complex load | 268~334 µs |
 
-핵심 발견: **Tokenizer instance reuse 30x 가속**. 권장 사용 패턴.
+dict lookup 매우 빠름 (cache hit 182 ns).
 
-### Viterbi Algorithm
+### Normalization
 
-| Bench | Time (median) |
-|-------|--------------|
-| viterbi_search/small_zero_cost | 758 ns |
-| viterbi_search/small_with_matrix | 768 ns |
-| viterbi_search/medium | 955 ns |
-| viterbi_search/large | 9.54 µs |
-| viterbi_space_penalty/* | 132~133 ns |
-| viterbi_nbest/1 | 965 ns |
+| 시나리오 | Time |
+|---------|------|
+| 가장 빠름 | 1.1 µs |
+| 일반 | 4.2~9.0 µs |
+| 복잡 | 15~27 µs |
 
-핵심 발견: **Viterbi 매우 빠름** (대부분 µs 미만). matrix 적용 cost 거의 없음 (758→768 ns, +1.3%).
+Sprint 156 ㄷ 불규칙 + Sprint 158 명시 어구 추가 후 정상 범위 — **회귀 없음**.
 
-### v0.3.0 → v0.7.2 비교
+## 누적 성능 측정 (Sprint 171~173)
 
-| Metric | v0.3.0 baseline | v0.7.2 측정 | 평가 |
-|--------|----------------|------------|------|
-| tokenize (medium 75chars) | 11.49 µs | ~10 µs | 유사 또는 미세 개선 |
-| Cold start | < 1 ms | 90~280 µs | OK |
+| Bench | 측정 |
+|-------|------|
+| tokenizer_bench | ✅ (S171) |
+| cold_start_bench | ✅ (S172) |
+| viterbi_bench | ✅ (S172) |
+| **dict_loading_bench** | **✅ (S173)** |
+| **normalization_bench** | **✅ (S173)** |
+| batch_bench | 미측정 |
+| matrix_bench | 미측정 |
+| memory_bench | 미측정 |
+| trie_bench | 미측정 |
 
-회귀 없음. 30+ sprint 정확도 작업으로 인한 성능 저하 없음.
+**5/9 benches 측정 완료**. 핵심 영역 모두 완료. 남은 4개 (batch/matrix/memory/trie) marginal value.
 
 ## 변경 파일
 
-- `docs/PERFORMANCE_BASELINES.md`: v0.7.2 측정 섹션 추가
+- `docs/PERFORMANCE_BASELINES.md`: dict_loading + normalization 섹션 추가
 - `PLAN.md`, `PROGRESS.md` 갱신
 
 ## 검증
 
 - `cargo test --workspace --exclude mecab-ko-ffi --lib`: 변경 없음 (411 pass)
-- 5-gate sample.tsv: 영향 없음 (코드 변경 0)
+- 5-gate sample.tsv: 영향 없음
 - Criterion benches: 정상 출력
 
-## 누적 성능 측정 (Sprint 171/172)
+## Sprint 174 후보
 
-| 영역 | 측정 |
-|------|------|
-| tokenizer_bench | ✅ Sprint 171 |
-| cold_start_bench | ✅ Sprint 172 |
-| viterbi_bench | ✅ Sprint 172 |
-| batch_bench | 미측정 |
-| dict_loading_bench | 미측정 |
-| matrix_bench | 미측정 |
-| memory_bench | 미측정 |
-| normalization_bench | 미측정 |
-| trie_bench | 미측정 |
+### B-2 종료 권고
 
-3/9 benches 측정. 핵심 (tokenizer/viterbi/cold_start) 완료.
+5/9 핵심 benches 측정 완료. 나머지 4개 (batch/matrix/memory/trie) 측정은 marginal value:
+- 핵심 알고리즘 (viterbi, tokenizer, cold_start) 이미 측정
+- 남은 영역은 derivative 또는 보조
 
-## Sprint 173 후보
+**권고**: B-2 종료 → 유지보수 모드 또는 외부 입수 대기.
 
-### B-2 계속 (남은 6 benches)
-- batch/dict_loading/matrix/memory/normalization/trie
-- 각 수 분 소요
+### 또는 B-2 심화 (memory profiling)
 
-### B-2 심화 (memory profiling)
-- test-allocator feature 활성
-- 실제 메모리 사용 측정
+test-allocator feature 활성 시 실제 메모리 측정 가능. 단, 시간 소요.
 
-### 유지보수 모드
-- Sprint cycle 종료
+### 외부 입수 대기
+
+NIKL Modu / Sejong 다운로드 시 정확도 재개.
