@@ -1,85 +1,86 @@
-# PLAN — mecab-ko Sprint 168 (Track B 결정 — 사용자 confirm 필요)
+# PLAN — mecab-ko Sprint 169+ (정확도 lift cycle 종료 후)
 
 > 마지막 업데이트: 2026-05-27
 
-## 완료: Sprint 167 — Track B Step 4 실패 → Rollback
+## 완료: Sprint 168 — Track B 공식 종료
 
-### 결과
+- 사용자 confirm: Option D 채택
+- Track B (Full CRF Retrain) 종료
+- 정확도 lift sprint cycle 마무리
 
-- 새 CRF dict 사용 시 sample.tsv Token: 100% → **62.2%** (-37.8pp)
-- 즉시 rollback (Sprint 138 정책)
-- baseline 복원 확인
+## 정확도 Sprint Cycle 종합 (Sprint 122 → 167)
 
-### 원인
+### 최종 누적 지표
 
-학습 데이터 features 부족 (POS only). mecab feature.def가 활용하는 semantic/reading features 부재 → CRF overfit → general regression.
+| Metric | Baseline (S122) | 현재 (S167) | Δ |
+|--------|----------------|------------|---|
+| sample.tsv | 100%/99.9% | 100%/99.9% | — (보존) |
+| **KLUE morph practical** | ~65.8% | **72.1%** | **+6.3pp** |
+| KLUE eojeol practical | ~5000 | 5327 | +327 |
+| **KLUE surface canonical_lenient** | ~89% | **95.6%** | **+6pp** |
+| UD Kaist morph practical | — | 68.6% | (new) |
+| UD GSD morph practical | — | 71.8% | (new) |
+| accuracy_eval.rs 줄 수 | 4963 | 2406 | -51% |
 
-### Track B 1차 시도 종합
+### 검증된 안전/위험 영역
 
-| Sprint | Step | 결과 |
-|--------|------|------|
-| 164 | 빌드 환경 | ✅ macOS arm64 |
-| 165 | 학습 데이터 (UD dev 3016 sentences) | ✅ |
-| 166 | 학습 + dict 변환 (62.6초 파이프라인) | ✅ |
-| **167** | **Rust 통합** | **❌ -37.8pp** |
+| 영역 | 결과 |
+|------|------|
+| ✅ Surface normalization | 누적 +6pp |
+| ✅ PRACTICAL 동치 | 누적 +6.3pp |
+| ✅ Silver dataset | 5-gate CI 완성 |
+| ❌ Splitter rule | 영역 소진 |
+| ❌ Dict cost 확장 | 회귀 |
+| ❌ CRF matrix 수동 조정 | 회귀 |
+| ❌ CRF Full Retrain | Track B 종료 |
 
-## Sprint 168 — 사용자 결정 옵션
+## Sprint 169+ 옵션 (사용자 결정 필요)
 
-### Option A: Self-training (학습 data features 보강)
+### 시나리오 A: NIKL Modu 다운로드 완료 후 측정
 
-**작업**: 기존 mecab-ko-dic으로 KLUE/UD train tokenize → 그 features (POS + semantic + reading)를 학습 데이터로 사용.
+사용자가 https://kli.korean.go.kr 학술 등록 + 다운로드 완료 시:
+```bash
+./tools/nikl_modu_setup.sh ~/Korpora/NIKL_MP/NXMP*.json
+```
+→ 자동 측정 + 분석. 새 도메인 (구어/SNS/문어) 정확도 확인.
 
-**장점**: 학습 features 풍부해짐
-**단점**: 기존 mecab의 오류를 학습 (self-amplification). 결과적으로 기존 이상 못 함
+### 시나리오 B: 정확도 외 영역 전환
 
-### Option B: 학습 corpus 확장 + leakage 허용
+다음 중 사용자 우선순위 결정 필요:
 
-**작업**: KLUE val (1995) + UD test (2609) 모두 학습에 사용. 별도 hold-out test set 마련.
+#### B-1: 언어 바인딩 강화
+- Python (mecab-ko-python) 통합 보강
+- WASM (mecab-ko-wasm) 사용성
+- Node (mecab-ko-node) 안정성
 
-**장점**: 학습 data 크기 ~7000 sentences로 확장
-**단점**: 평가 leakage → 결과 신뢰도 낮음. 신뢰성 있는 hold-out test set 만들기 어려움
+#### B-2: 성능 최적화
+- 프로파일링 (mecab-ko-profiler 활용)
+- 핫스팟 식별 + 최적화
+- 측정 + 보고 sprint
 
-### Option C: Sejong 코퍼스 입수 (학술 라이선스)
+#### B-3: 사용자 기능 추가
+- CLI 추가 옵션
+- API 개선
+- 신규 기능 (사용자 피드백 기반)
 
-**작업**: 국립국어원 또는 KAIST에서 Sejong tagged corpus 학술 입수. 원본 mecab-ko-dic 학습 데이터와 동급.
+#### B-4: 유지보수 모드
+- 정확도 sprint 종료
+- 버그 픽스, 의존성 업데이트만
+- 다음 메이저 작업 대기
 
-**장점**: 가장 정확한 학습 (mecab features full coverage)
-**단점**: 라이선스 절차 (시간 소요), 자동화 불가
+### 시나리오 C: Sejong 코퍼스 입수 시 Track B 재시도
 
-### Option D [권고]: Track B 종료
-
-**작업**: CRF retrain 시도 종료. 정확도 sprint 종료 또는 다른 방향 (NIKL Modu 다운로드 / 새 영역).
-
-**장점**: 명확한 결론 (Track B는 학습 데이터 quality가 절대적)
-**단점**: +1~5pp lift 기회 상실
-
-## Track B 학습 정리
-
-이번 시도로 얻은 가치:
-1. ✅ legacy/ macOS arm64 빌드 가능 (Sprint 164)
-2. ✅ 학습 파이프라인 검증 (Sprint 166, 62.6초)
-3. ✅ Rust dict-builder 통합 (Sprint 167)
-4. ✅ 격리 메커니즘 (별도 dict + 환경 변수) 검증
-
-차후 누군가 Sejong 코퍼스 입수 시:
-1. tools/to_mecab_tagged.py (Sprint 165, UD 형식)
-2. seed/ 디렉토리 준비 패턴 (Sprint 166)
-3. 4단계 파이프라인 (dict-index, cost-train, dict-gen, dict-index) 명세
-
-는 모두 재사용 가능. **인프라 자체는 가치**.
-
-## 누적 진척 (Sprint 122 → 167)
-
-| Metric | Baseline | 현재 (Track B rollback 후) |
-|--------|---------|------------------------|
-| sample.tsv | 100%/99.9% | 100%/99.9% (보존) |
-| KLUE morph practical | ~65.8% | **72.1%** (+6.3pp) |
-| KLUE surface canonical_lenient | ~89% | **95.6%** (+6pp) |
-| UD Kaist morph practical | — | 68.6% |
-| UD GSD morph practical | — | 71.8% |
-
-Track B 시도 후에도 baseline 손상 없음 (격리 효과).
+- 국립국어원 또는 KAIST 학술 입수
+- Sprint 164~167 파이프라인 즉시 재활용
+- 잠재 lift +1~5pp (정확한 학습 데이터로)
 
 ## 결정 프로세스
 
-비가역 작업 → 사용자 confirm 필수. 다음 sprint-run 시 사용자 옵션 명시 시 진행.
+규칙 5 (자동 트랙 선택)이 정확도 영역에 적용. 정확도 외 영역은 사용자 우선순위 결정 필요.
+
+## 검증 기준 (모든 시나리오 공통)
+
+- `cargo test --workspace --exclude mecab-ko-ffi` 전체 pass
+- `cargo clippy --workspace --all-targets --exclude mecab-ko-ffi -- -D warnings` clean
+- **5-gate CI 통과**
+- sample.tsv baseline 100%/99.9% **회귀 금지**
