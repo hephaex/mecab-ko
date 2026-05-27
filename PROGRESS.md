@@ -1,85 +1,110 @@
-# PROGRESS — mecab-ko Sprint 165 (Track B Step 2: 학습 데이터 준비)
+# PROGRESS — mecab-ko Sprint 166 (Track B Step 3: 학습 + Dict 변환)
 
 > 마지막 업데이트: 2026-05-27
 
-## Sprint 165 — Track B Step 2: 학습 데이터 준비
+## Sprint 166 — Track B Step 3: 1차 학습 + 새 Dict 생성
 
 | Task | 상태 | 결과 |
 |------|------|------|
-| S165-B1: raw data 인벤토리 확인 | ✅ 완료 | train split 부재 → dev만 사용 |
-| S165-B2: tools/to_mecab_tagged.py 작성 | ✅ 완료 | CoNLL-U → .tagged 변환 |
-| S165-B3: UD Kaist dev 변환 | ✅ 완료 | 2066 sentences |
-| S165-B4: UD GSD dev 변환 | ✅ 완료 | 950 sentences |
-| S165-B5: 통합 corpus 생성 | ✅ 완료 | corpus_dev.tagged (3016 sent, ~73K morph) |
-| S165-B6: .gitignore 보호 | ✅ 완료 | data/train/ |
-| S165-B7: seed dictdir 결정 | ✅ 완료 | mecab-ko-dic 2.1.1 그대로 사용 |
+| S166-B1: 학습 디렉토리 준비 | ✅ 완료 | data/training_run_1/seed (CSV 링크) |
+| S166-B2: mecab-dict-index seed 빌드 | ✅ 완료 | seed_built/ (sys.dic, matrix.bin), 2.5초 |
+| S166-B3: mecab-cost-train 학습 실행 | ✅ 완료 | **29 iter, 37.7초, F=0.99977** |
+| S166-B4: mecab-dict-gen 새 dict 생성 | ✅ 완료 | new_dict/ (CSV + matrix.def), 20.5초 |
+| S166-B5: 새 dict binary 빌드 | ✅ 완료 | new_dict_built/ (sys.dic 81MB), 1.9초 |
+| S166-B6: Sanity check (mecab CLI) | ✅ 완료 | 정상 출력 |
 
-## 핵심 발견
+## 핵심 성과
 
-### Train data 부재 → dev split 활용
+### 전체 파이프라인 시간
 
-| Dataset | Train | Dev | Test | 사용 |
-|---------|-------|-----|------|------|
-| KLUE | ❌ | val (1995, 평가용) | — | 평가 (leakage 방지) |
-| UD Kaist | ❌ | 2066 ✓ | 1638 (평가용) | 학습 (dev) |
-| UD GSD | ❌ | 950 ✓ | 971 (평가용) | 학습 (dev) |
+| 단계 | 시간 | 산출물 |
+|------|------|--------|
+| seed binary 빌드 (dict-index) | 2.5초 | sys.dic + matrix.bin |
+| CRF 학습 (cost-train) | **37.7초** | model.def (11MB, 279,762 lines) |
+| 새 dict 생성 (dict-gen) | 20.5초 | new_dict/ (CSV + matrix.def) |
+| 새 dict binary 빌드 (dict-index) | 1.9초 | sys.dic (81MB) + matrix.bin (21MB) |
+| **합계** | **62.6초** | 완전한 새 mecab dict |
 
-**학습 데이터**: UD Kaist dev + UD GSD dev = **3016 sentences (~73K morphemes)**.
+학습은 빠름. 작은 corpus (3016 sentences) 효과.
 
-작지만 첫 시도로 충분. test data는 평가용 그대로 보존 (leakage 방지).
+### 학습 결과 (29 iterations)
 
-### 변환 스크립트 (`tools/to_mecab_tagged.py`)
-
-CoNLL-U → `.tagged`:
 ```
-<surface>\t<POS>,*,*,*,*,*,*,*,*
+iter=0  err=0.32X F=0.??? target=large
 ...
+iter=15 err=0.00265 F=0.99976 target=266.34
+...
+iter=29 err=0.00232 F=0.99977 target=257.19
+```
+
+학습 데이터에 거의 완벽 적합 (F=0.99977). 실제 평가 (other datasets) 결과는 Sprint 167에서.
+
+### Sanity check 결과
+
+```bash
+$ echo "안녕하세요 반갑습니다" | mecab -d new_dict_built
+안녕하   VA,*,F,안녕하,*,*,*,*
+세요    EP+EC+VCP,*,F,세요,Inflect,EP,VCP,시/EP/*+어요/EC/*+이/VCP/*
+반갑    VA,*,T,반갑,*,*,*,*
+습니다  EC,*,F,습니다,*,*,*,*
 EOS
 ```
 
-- UD Kaist xpos (lowercase): `KAIST_TO_SEJONG` 매핑 (Sprint 139 patterns 재사용)
-- UD GSD xpos (Sejong 직접): 대문자 변환만
-- mecab features 9 fields, POS만 정확하고 나머지 `*` (optional features 처리)
+기존 mecab-ko-dic과 다른 분석 (예: "안녕"이 안녕하/VA로). 작은 corpus 학습 effect.
 
-### Corpus 통계
+### 문제 해결
 
-```
-ud_kaist_dev.tagged: 52450 lines
-ud_gsd_dev.tagged:   23525 lines
-corpus_dev.tagged:   75975 lines (~73K morphemes + 3016 EOS markers)
-```
+| 문제 | 해결 |
+|------|------|
+| "cannot open tokenizer" | seed에 binary 필요 (sys.dic) → mecab-dict-index로 빌드 |
+| entries.csv "cannot find LEFT-ID" | entries.csv는 통합 파일, 개별 *.csv만 사용 |
+| "no dictrc" | dicrc + .def 파일들을 seed_built에 복사 필요 |
+| "no dictionary found" (dict-gen) | seed_built에 source CSV들도 link 필요 |
 
-## 검증
-
-- 변환 스크립트 정상 동작 (Unknown POS 1건 minor)
-- 통합 corpus 형식 검증 (mecab .tagged 호환)
-- `cargo test --workspace --exclude mecab-ko-ffi --lib`: 변경 없음 (411 pass)
-- 5-gate sample.tsv: 영향 없음 (학습 미실행)
+mecab 학습 파이프라인은 다음을 같은 디렉토리에 요구:
+- binary: sys.dic, matrix.bin, char.bin, unk.dic
+- source: *.csv files
+- config: *.def files, dicrc
 
 ## 변경 파일
 
-- `tools/to_mecab_tagged.py` (신규)
-- `data/train/` (gitignore 추가)
+- `data/training_run_1/` (gitignore 대상, 큰 binary 산출물):
+  - seed/ (CSV + def 링크)
+  - seed_built/ (sys.dic + binary + def + CSV)
+  - model.def (11MB CRF 학습 결과)
+  - new_dict/ (CSV + matrix.def + def)
+  - new_dict_built/ (binary, 81MB sys.dic)
 - `PLAN.md`, `PROGRESS.md` 갱신
 
-## Sprint 166 — Track B Step 3: 1차 학습
+## 검증
+
+- 학습 정상 종료 (29 iterations, convergence)
+- 새 dict 모든 파일 생성 (sys.dic, matrix.bin, char.bin, unk.dic, model.bin)
+- 단위 sanity check (mecab CLI 정상 출력)
+- `cargo test --workspace --exclude mecab-ko-ffi --lib`: 변경 없음 (411 pass, 코드 변경 없음)
+
+## Sprint 167 — Track B Step 4: Rust 통합 + 5-gate 검증
 
 ### 작업
 
-1. mecab-cost-train 실행:
-   ```bash
-   cd legacy
-   DYLD_LIBRARY_PATH=src/.libs src/.libs/mecab-cost-train \
-     -d ../data/mecab-ko-dic-2.1.1-20180720 \
-     -p 4 -f 1 \
-     ../data/train/corpus_dev.tagged
-   ```
-2. 학습 시간 측정 (예상: 수 분)
-3. 결과 model.def 생성 확인
-4. mecab-dict-gen으로 새 matrix.def + sys.dic 변환
+1. 새 dict를 Rust 측 dict-builder 입력으로 사용
+2. mecab-ko-dict-builder로 Rust binary 생성 (sys.dic.zst, matrix.bin.zst, entries.bin)
+3. accuracy_eval test에서 새 dict 경로 사용
+4. 5-gate 측정 (sample.tsv hard rule 핵심)
+5. 회귀 분석 + 결정
 
-### 위험
+### 예상 결과
 
-- 학습 코퍼스가 작음 (3016 sentences) → 정확도 lift 작을 수 있음
-- 작은 corpus로 학습한 model이 기존 mecab-ko-dic baseline 대비 회귀 가능
-- 새 dict는 별도 디렉토리로 격리 (점진적 검증)
+- 학습 corpus가 작음 → KLUE/UD 평가 정확도 미미한 변동 가능
+- sample.tsv 회귀 가능성 있음 → 즉시 rollback 준비
+- 일부 패턴 (안녕하/VA) 의도하지 않은 분석 변화
+
+### Track B 전체 진척
+
+| Sprint | Step | 상태 |
+|--------|------|------|
+| 164 | Step 1: 빌드 환경 | ✅ |
+| 165 | Step 2: 학습 데이터 | ✅ |
+| **166** | **Step 3: 학습 + dict 변환** | **✅** |
+| 167 | Step 4: Rust 통합 + 검증 | 다음 |
+| 168 (옵션) | Step 5: 튜닝 | 대기 |
