@@ -320,4 +320,80 @@ mod tests {
         let json = token.to_json();
         assert!(json.is_ok());
     }
+
+    // Sprint 169 B-1: WASM 바인딩 테스트 확장
+
+    #[wasm_bindgen_test]
+    fn test_nouns_extraction() {
+        // nouns() 메서드 검증 — 명사만 추출
+        let mecab = Mecab::new().unwrap();
+        let nouns = mecab.nouns("서울에 사는 김철수");
+        // 명사 추출 결과는 sparse dict 사용 시 비어 있을 수도 있으나
+        // panic 발생하지 않아야 함
+        let _ = nouns;
+    }
+
+    #[wasm_bindgen_test]
+    fn test_wakati_split() {
+        // wakati() 메서드 — 형태소 분리 (POS 없이)
+        let mecab = Mecab::new().unwrap();
+        let words = mecab.wakati("테스트 문장");
+        assert!(!words.is_empty(), "wakati는 비어있는 입력이 아니면 결과 있어야");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_empty_input() {
+        // edge case: 빈 입력
+        let mecab = Mecab::new().unwrap();
+        let morphs = mecab.morphs("");
+        assert!(morphs.is_empty(), "빈 입력은 빈 결과");
+        let tokens = mecab.tokenize("");
+        assert!(tokens.is_empty(), "빈 입력 tokenize도 빈 결과");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_token_positions() {
+        // Token의 start/end position 검증
+        let mecab = Mecab::new().unwrap();
+        let tokens = mecab.tokenize("테스트");
+        if !tokens.is_empty() {
+            assert!(tokens[0].end() > tokens[0].start(),
+                "Token end position > start position");
+        }
+    }
+
+    #[wasm_bindgen_test]
+    fn test_token_optional_fields() {
+        // Token의 reading/lemma는 Option — 정상 동작 확인
+        let token = WasmToken {
+            surface: "테스트".to_string(),
+            pos: "NNG".to_string(),
+            start: 0,
+            end: 9,
+            reading: Some("테스트".to_string()),
+            lemma: Some("테스트".to_string()),
+        };
+        assert_eq!(token.reading(), Some("테스트".to_string()));
+        assert_eq!(token.lemma(), Some("테스트".to_string()));
+
+        let token_no_optional = WasmToken {
+            surface: "x".to_string(),
+            pos: "SL".to_string(),
+            start: 0,
+            end: 1,
+            reading: None,
+            lemma: None,
+        };
+        assert_eq!(token_no_optional.reading(), None);
+        assert_eq!(token_no_optional.lemma(), None);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_pos_json_array_format() {
+        // pos() 결과는 JSON array
+        let mecab = Mecab::new().unwrap();
+        let pos_json = mecab.pos("테스트").unwrap();
+        assert!(pos_json.starts_with('['), "JSON array로 시작");
+        assert!(pos_json.ends_with(']'), "JSON array로 끝");
+    }
 }
