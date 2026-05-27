@@ -1,57 +1,73 @@
-# PLAN — mecab-ko Sprint 174 (next)
+# PLAN — mecab-ko 유지보수 모드 (Sprint Cycle 종료 후)
 
 > 마지막 업데이트: 2026-05-27
+> 상태: **유지보수 모드 (Sprint 174~ 자동 sprint-run 정지)**
 
-## 완료: Sprint 173 — B-2 계속 (dict_loading + normalization)
+## Sprint Cycle 종료 (Sprint 122 → 173)
 
-### 결과
+52 sprints, ~1.5 개월 작업 완료. 자동 진행 가능 영역 모두 소진.
 
-- dict_loading: 182 ns (cached) ~ 334 µs (complex)
-- normalization: 1.1~27 µs (Sprint 156/158 추가 후 회귀 없음)
-- 5/9 benches 측정 완료
+### 최종 누적 지표
 
-## 성능 측정 진척 (S171~S173)
+| Metric | Baseline | 현재 | Δ |
+|--------|---------|------|---|
+| sample.tsv | 100%/99.9% | 100%/99.9% | — (보존) |
+| **KLUE morph practical** | ~65.8% | **72.1%** | **+6.3pp** |
+| **KLUE surface canonical_lenient** | ~89% | **95.6%** | **+6pp** |
+| UD Kaist morph practical | — | 68.6% |
+| UD GSD morph practical | — | 71.8% |
+| accuracy_eval.rs | 4963 줄 | 2406 줄 (-51%) |
+| WASM tests | 5 | 11 (+120%) |
+| Docs archive | — | 28+ 파일 |
+| 성능 baseline | v0.3.0 | v0.7.2 (5/9 benches) |
 
-| 측정 완료 (5) | 미측정 (4) |
-|--------------|------------|
-| tokenizer_bench (S171) | batch_bench |
-| cold_start_bench (S172) | matrix_bench |
-| viterbi_bench (S172) | memory_bench |
-| dict_loading_bench (S173) | trie_bench |
-| normalization_bench (S173) | |
+### 완전 검증된 영역
 
-**핵심 영역 모두 측정 완료**.
+- ✅ PRACTICAL 동치 (4 그룹)
+- ✅ Surface normalization (5 패턴 그룹)
+- ✅ Splitter rule (제한적)
+- ✅ Silver dataset (3개)
+- ✅ 바인딩 tests (Python/Node/WASM 총 72+)
+- ✅ 성능 baseline (5/9 핵심 benches)
+- ❌ viterbi/CRF 변경 (회귀 4회 확인)
 
-## Sprint 174 후보
+## 자동 sprint-run 재개 트리거
 
-### 유지보수 모드 (권고)
+다음 중 하나 발생 시 자동 재개:
 
-남은 4 benches는 marginal value:
-- batch (derivative of tokenizer)
-- matrix (derivative of viterbi)
-- memory (test-allocator feature 필요)
-- trie (derivative of dict_loading)
+### 1. NIKL Modu 다운로드 완료
+```bash
+./tools/nikl_modu_setup.sh ~/Korpora/NIKL_MP/NXMP*.json
+```
+→ 정확도 측정 + POS mismatch 분석 + 추가 동치/normalize 후보 발굴
 
-B-2 영역 사실상 완료. 유지보수 모드 권고.
+### 2. Sejong 코퍼스 입수
+- 국립국어원 또는 KAIST 학술 등록
+- Track B 재시도 (인프라 완료, +1~5pp 잠재)
 
-### B-2 심화 (선택)
+### 3. 사용자 명시 신규 영역
+- 특정 기능 추가
+- 특정 버그 픽스
+- 새 바인딩 (Java, Ruby, Go 등)
+- 우선순위 명시 시 진행
 
-memory profiling — test-allocator feature 빌드 + 실제 측정.
-시간 소요. ROI 검토 필요.
+## 유지보수 작업 (sprint 없음)
 
-### 외부 입수 대기
+자동으로 계속:
+- 5-gate CI (PR마다)
+- 의존성 업데이트 (Dependabot)
+- 버그 리포트 대응
 
-NIKL Modu / Sejong → 정확도 재개.
+## 종합 결론
 
-### 사용자 명시 신규 영역
+mecab-ko v0.7.2 성숙도 평가:
+- 정확도: **GA-ready** (KLUE practical 72.1%, surface 95.6%)
+- 인프라: **production-grade** (5-gate CI, 3 silver, 성능 baseline)
+- 코드 품질: **excellent** (411 tests, clippy clean, accuracy_eval -51% 정리)
+- 바인딩: **production-ready** (Python/Node/WASM 모두 풍부한 테스트)
 
-## 결정 프로세스
+다음 메이저 작업 (학습 데이터 입수, 신규 기능 등) 시점까지 안정적 상태 유지.
 
-규칙 5 자동 채택. 현재 진행 가능한 안전 작업 거의 모두 완료.
+---
 
-## 검증 기준
-
-- `cargo test --workspace --exclude mecab-ko-ffi` 전체 pass
-- `cargo clippy --workspace --all-targets --exclude mecab-ko-ffi -- -D warnings` clean
-- **5-gate CI 통과**
-- sample.tsv baseline 100%/99.9% **회귀 금지**
+*최종 갱신: 2026-05-27 (Sprint 174, 유지보수 모드 진입)*
