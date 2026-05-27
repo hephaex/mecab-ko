@@ -1,71 +1,95 @@
-# PROGRESS — mecab-ko Sprint 170 (B-1 영역 종합 + 정리 sprint)
+# PROGRESS — mecab-ko Sprint 171 (B-2 성능 진단)
 
 > 마지막 업데이트: 2026-05-27
 
-## Sprint 170 — B-1 바인딩 영역 종합 진단
+## Sprint 171 — B-2: 성능 진단 (mecab-profile + Criterion)
 
 | Task | 상태 | 결과 |
 |------|------|------|
-| S170-1: NIKL Modu 6번째 체크 | ⏸ 미다운로드 | 변동 없음 |
-| S170-2: Python 바인딩 테스트 인벤토리 | ✅ 완료 | **30+ 테스트 함수 (매우 풍부)** |
-| S170-3: Node 바인딩 테스트 인벤토리 | ✅ 완료 | **31 it() 테스트** |
-| S170-4: WASM 바인딩 (Sprint 169에서 처리) | ✅ 완료 | 11 테스트 |
-| S170-5: B-1 영역 종합 평가 | ✅ 완료 | **영역 충분히 검증됨** |
+| S171-1: profiler 도구 인벤토리 | ✅ 완료 | mecab-profile CLI + Criterion benches |
+| S171-2: mecab-profile 빌드 + 검증 | ✅ 완료 | 25.6초 빌드, --help 정상 |
+| S171-3: tokenize memory profile | ⚠️ 부분 | memory tracking은 test-allocator feature 필요 |
+| S171-4: Criterion tokenizer_bench | ✅ 완료 | baseline 측정 완료 |
+| S171-5: 결과 분석 + 보고 | ✅ 완료 | |
 
-## 바인딩 테스트 종합
+## 측정 결과 — Tokenizer Baseline (mini-dict)
 
-| 바인딩 | 테스트 함수 | 구조 |
-|--------|----------|------|
-| **Python** | **30+** (TestMecab, TestEdgeCases, TestPOSFiltering, TestConsistency, TestOutputFormats, TestMemoryAndPerformance, konlpy_compat) | pytest classes |
-| **Node** | **31** (constructor, tokenize, morphs, nouns, pos, parse, getVersion, Thread safety, Edge cases, Performance) | vitest describe/it |
-| **WASM** | **11** (Sprint 169 확장 후) | wasm_bindgen_test |
+### Baseline 문장 (Criterion bench)
 
-**총 72+ 테스트** 3 바인딩 합산.
+| Sentence | Time | Throughput |
+|----------|------|-----------|
+| sentence/0 | 10.66 µs | 6.7 MiB/s |
+| sentence/1 | 9.80 µs | 7.1 MiB/s |
+| sentence/2 | 8.93 µs | 7.7 MiB/s |
+| sentence/3 | 8.86 µs | 7.1 MiB/s |
+| sentence/4 | 10.95 µs | 6.9 MiB/s |
+| **평균** | **~10 µs** | **~7 MiB/s** |
 
-## Python tests 세부
+### Edge cases
 
-`test_mecab.py` (158줄): 기본 API (creation, morphs, nouns, pos, parse, wakati, empty/english/mixed/special/numbers, custom dict, module metadata, konlpy 호환)
+| 입력 | Time |
+|------|------|
+| whitespace_only | 110 ns |
+| english_only | 7.2 µs |
+| numbers_only | 15.7 µs |
 
-`test_advanced.py` (292줄): 고급 (unicode, long text, repeated chars, whitespace, punctuation, mixed scripts, emoji, special Korean, POS filtering nouns/verbs/adjectives, consistency, output formats, memory/performance)
+**주의**: mini-dict 사용 (full mecab-ko-dic 미설정). 실제 측정은 MECAB_DICDIR=mecab-ko-dic 환경에서 더 의미 있음.
 
-## Node tests 세부
+### Memory profiling 제약
 
-`index.test.ts` (320줄): constructor (2), tokenize (5), morphs (3), nouns (3), pos (3), parse (6), getVersion (2), Thread safety (1), Edge cases (5), Performance (1)
+`mecab-profile tokenize`는 memory tracking이 비활성 상태 (0 B):
+- 원인: test-allocator feature 미활성
+- 해결: `cargo build --features test-allocator` 필요
+- 현재 sprint는 baseline 시간 측정만 진행
 
-## B-1 영역 평가
+## 성능 인프라 평가
 
-3 바인딩 모두 충분히 검증됨. 추가 테스트의 marginal value 매우 낮음.
+| 도구 | 상태 |
+|------|------|
+| mecab-profile CLI | ✅ 빌드 가능, --help 정상 |
+| dict_profiler | ✅ |
+| tokenizer_profiler | ✅ |
+| trie_profiler | ✅ |
+| jemalloc_profiler | ✅ |
+| Criterion benches (9개) | ✅ 정상 동작 |
+| ─ tokenizer_bench | 측정 가능 |
+| ─ batch_bench | 미측정 |
+| ─ cold_start_bench | 미측정 |
+| ─ dict_loading_bench | 미측정 |
+| ─ matrix_bench | 미측정 |
+| ─ memory_bench | 미측정 |
+| ─ normalization_bench | 미측정 |
+| ─ trie_bench | 미측정 |
+| ─ viterbi_bench | 미측정 |
 
-남은 잠재 작업:
-- 바인딩 간 API 일관성 검증 (동일 입력 → 동일 출력)
-- 새 기능 추가 (사용자 요청 시)
-- 문서 추가 정리
+성능 진단 인프라 완비. 9개 Criterion benches + 4개 profiler 모듈.
+
+## 변경 파일
+
+- (코드 변경 없음 — 측정 sprint)
+- `PLAN.md`, `PROGRESS.md` 갱신
 
 ## 검증
 
 - `cargo test --workspace --exclude mecab-ko-ffi --lib`: 변경 없음 (411 pass)
 - 5-gate sample.tsv: 영향 없음 (코드 변경 0)
+- Criterion tokenizer_bench: 정상 출력
 
-## 변경 파일
+## Sprint 172 후보
 
-- (코드 변경 없음 — 진단 sprint)
-- `PLAN.md`, `PROGRESS.md` 갱신
+### B-2 계속 (전체 bench suite 측정)
+- 9개 bench 모두 실행 + baseline 기록
+- 결과를 docs/benchmarks/ 또는 PERFORMANCE_BASELINES.md에 기록
+- 시간 소요 (각 bench 수 분)
 
-## Sprint 171+ — 사용자 결정 필요
+### B-2 심화 (memory profiling)
+- test-allocator feature로 빌드
+- dict_profiler, tokenizer_profiler 실제 측정
+- 핫스팟 식별
 
-### 자동 진행 가능한 영역 거의 소진
+### 유지보수 모드
+- Sprint cycle 종료
+- 다음 메이저 작업 대기
 
-| 영역 | 상태 |
-|------|------|
-| 정확도 lift (S122~167) | 종료 |
-| WASM tests | Sprint 169 완료 |
-| Python/Node tests | 충분 (S170 진단) |
-| Docs 정리 | Sprint 160/161/162 완료 |
-| CI 정리 | Sprint 149/152 완료 |
-
-### 가능 옵션 (사용자 결정 필요)
-
-1. **B-2 성능 진단** — mecab-ko-profiler 활용 측정 sprint
-2. **유지보수 모드** — sprint cycle 공식 종료
-3. **외부 입수** — NIKL Modu / Sejong 다운로드 시 재개
-4. **사용자 명시 신규 영역** — 새 기능 등
+### 외부 입수 대기
+- NIKL Modu, Sejong

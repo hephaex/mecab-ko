@@ -1,66 +1,53 @@
-# PLAN — mecab-ko Sprint 171+ (자동 진행 가능 영역 거의 소진)
+# PLAN — mecab-ko Sprint 172 (next)
 
 > 마지막 업데이트: 2026-05-27
 
-## 완료: Sprint 170 — B-1 바인딩 영역 종합 진단
+## 완료: Sprint 171 — B-2 성능 진단
 
 ### 결과
 
-- Python tests 30+, Node tests 31, WASM tests 11 = **총 72+ 테스트**
-- 3 바인딩 모두 충분히 검증됨
-- B-1 영역 추가 작업의 marginal value 낮음
+- mecab-profile CLI 빌드 + 동작 확인
+- Criterion tokenizer_bench 정상 (평균 10µs/sentence, 7 MiB/s)
+- 성능 인프라 평가 (9 benches + 4 profiler 모듈)
 
-## 자동 진행 가능 영역 종합 매트릭스
+### 제약
 
-| 영역 | 상태 | 마지막 sprint |
-|------|------|------|
-| 정확도 lift (안전) | 영역 소진 | S158 |
-| 정확도 lift (위험 viterbi/CRF) | 4회 회귀 → 종료 | S167 |
-| WASM tests | 11개 (Sprint 169) | S169 |
-| Python tests | 30+ (이미 풍부) | (기존) |
-| Node tests | 31개 (이미 풍부) | (기존) |
-| Docs 정리 | 28+ 파일 archive | S162 |
-| CI 정리 | MSRV/coverage/continue-on-error | S152 |
-| Setup helper 추출 | -51% lines | S151 |
-| 진단 함수 정리 | -43% lines | S149 |
+- Memory tracking은 test-allocator feature 필요 (현재 0 B 표시)
+- 측정은 mini-dict (full mecab-ko-dic 미설정)
 
-**거의 모든 안전·자동 작업 완료.**
+## 누적 진척 (Sprint 122 → 171)
 
-## Sprint 171+ 옵션 (사용자 결정 필요)
+| 영역 | 결과 |
+|------|------|
+| 정확도 lift (S122~167) | +6.3pp KLUE, 종료 |
+| WASM tests (S169) | 5 → 11 |
+| 바인딩 진단 (S170) | 72+ 테스트 확인 |
+| 성능 진단 (S171) | baseline 측정 |
 
-### 옵션 1: B-2 성능 진단 sprint
-- mecab-ko-profiler 활용
-- 핫스팟 식별 (Viterbi/dict lookup)
-- 측정 + 보고만 (구현은 별도)
-- 비교적 안전, 자동 가능
+## Sprint 172 후보
 
-### 옵션 2: 유지보수 모드 (권고)
-- sprint cycle 공식 종료
-- 버그 픽스, 의존성 업데이트만
-- 다음 메이저 작업 (Sejong 입수, NIKL Modu 다운로드, 사용자 요청) 대기
+### B-2 계속: 전체 Criterion bench suite
+- 9개 bench (batch, cold_start, dict_loading, matrix, memory, normalization, tokenizer, trie, viterbi)
+- 시간 소요 (각 수 분)
+- 결과를 PERFORMANCE_BASELINES.md에 누적 기록
 
-### 옵션 3: 외부 입수 대기
-- NIKL Modu (`tools/nikl_modu_setup.sh` 준비됨)
-- Sejong 코퍼스 (Track B 재시도)
+### B-2 심화: memory profiling
+- `cargo build --features test-allocator`
+- dict_profiler / tokenizer_profiler 실제 측정
+- 핫스팟 식별 보고
 
-### 옵션 4: 사용자 명시 신규 영역
-- 특정 기능 추가
-- 특정 버그 픽스
-- 사용자 우선순위 명시 시 진행
+### 유지보수 모드
+- Sprint cycle 종료 선언
+- 버그/의존성만 대응
 
-## Sprint 122 → 170 종합 누적
+### 외부 입수 대기
+- NIKL Modu / Sejong 입수 시 재개
 
-| Metric | Baseline | 현재 |
-|--------|---------|------|
-| sample.tsv | 100%/99.9% | 100%/99.9% (보존) |
-| **KLUE morph practical** | ~65.8% | **72.1%** (+6.3pp) |
-| **KLUE surface canonical_lenient** | ~89% | **95.6%** (+6pp) |
-| UD Kaist morph practical | — | 68.6% |
-| UD GSD morph practical | — | 71.8% |
-| accuracy_eval.rs 줄 수 | 4963 | 2406 (-51%) |
-| WASM tests | 5 | 11 (+120%) |
+## 결정 프로세스
 
-## 검증 기준 (모든 옵션 공통)
+규칙 5: 전문가 리뷰 자동 채택. 다음 sprint-run 시 진행.
+
+## 검증 기준
 
 - `cargo test --workspace --exclude mecab-ko-ffi` 전체 pass
 - `cargo clippy --workspace --all-targets --exclude mecab-ko-ffi -- -D warnings` clean
