@@ -4,6 +4,44 @@ all-features = false
 features = ["hot-reload-v2"]
 
 [advisories]
+# vulnerability/yanked always fail CI by default (cargo-deny 0.16+ removed
+# the separate deny/warn toggles for these). Explicit exceptions go in
+# `ignore` below with a documented rationale.
+#
+# unmaintained/unsound: scope to workspace-direct dependencies only, so
+# transitive-only advisories (all currently profiler-optional or
+# build-tool-only in this workspace) don't fail CI. Direct-dependency
+# unmaintained/unsound crates still fail.
+unmaintained = "workspace"
+unsound = "workspace"
+
+ignore = [
+    # memmap2 0.9.10 — unchecked pointer offset (mmap dict loading).
+    # No patched release available upstream yet. Tracked: docs/REDTEAM_REVIEW.md H-2.
+    "RUSTSEC-2026-0186",
+    # rkyv 0.8.15 — InlineVec/SerVec use-after-free on panic during clear().
+    # dict-builder only (build-time tool, not shipped runtime path).
+    # Tracked: docs/REDTEAM_REVIEW.md M-4.
+    "RUSTSEC-2026-0122",
+    # anyhow 1.0.102 — Error::downcast_mut unsoundness. Transitive via
+    # wasm tooling (wit-bindgen build graph), not exercised at runtime.
+    # Tracked: docs/REDTEAM_REVIEW.md M-5.
+    "RUSTSEC-2026-0190",
+    # paste 1.0.15 — unmaintained. Transitive via tikv-jemalloc-ctl,
+    # mecab-ko-profiler only (optional, not in default build).
+    "RUSTSEC-2024-0436",
+    # proc-macro-error2 2.0.1 — unmaintained. Transitive via tabled,
+    # mecab-ko-profiler only (optional, not in default build).
+    "RUSTSEC-2026-0173",
+    # quick-xml 0.26.0 — transitive via inferno (optional flamegraph
+    # feature on mecab-ko-profiler); direct dep already bumped to 0.41.
+    "RUSTSEC-2026-0195",
+    "RUSTSEC-2026-0194",
+    # quinn-proto 0.11.14 — transitive dev-dependency chain (mockito ->
+    # rand -> quinn-proto); reqwest's quic/http3 feature is not enabled,
+    # so this is not reachable from the shipped dict-sync network path.
+    "RUSTSEC-2026-0185",
+]
 
 [licenses]
 allow = [
@@ -27,8 +65,8 @@ expression = "MIT AND ISC AND OpenSSL"
 license-files = [{ path = "LICENSE", hash = 0xbd0eed23 }]
 
 [bans]
-multiple-versions = "allow"
-wildcards = "allow"
+multiple-versions = "warn"   # 동일 크레이트 복수 버전 경고 (deny는 생태계 노이즈 과다)
+wildcards = "deny"           # 와일드카드 버전(*)은 공급망 리스크 — 항상 명시적 버전 사용
 
 [sources]
 unknown-registry = "warn"

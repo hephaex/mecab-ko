@@ -158,7 +158,14 @@ impl LazyEntriesV3 {
             .read_u64::<LittleEndian>()
             .map_err(|e| DictError::Format(format!("MKE3: cannot read index_offset: {e}")))?;
 
-        let expected_index_end = index_offset + u64::from(count) * 8;
+        let index_table_bytes = u64::from(count).checked_mul(8).ok_or_else(|| {
+            DictError::Format(format!("MKE3: index table size overflow (count={count})"))
+        })?;
+        let expected_index_end = index_offset.checked_add(index_table_bytes).ok_or_else(|| {
+            DictError::Format(format!(
+                "MKE3: index table end overflow (offset={index_offset}, count={count})"
+            ))
+        })?;
         if expected_index_end > mmap.len() as u64 {
             return Err(DictError::Format(format!(
                 "MKE3: index table extends beyond file (offset={index_offset}, count={count}, file_len={})",
@@ -278,10 +285,18 @@ impl LazyEntriesV3 {
                 self.count
             )));
         }
-        let table_pos = self.index_offset + u64::from(index) * 8;
+        let index_bytes = u64::from(index).checked_mul(8).ok_or_else(|| {
+            DictError::Format(format!("MKE3: index position size overflow (index={index})"))
+        })?;
+        let table_pos = self.index_offset.checked_add(index_bytes).ok_or_else(|| {
+            DictError::Format(format!(
+                "MKE3: index position overflow (index_offset={}, index={index})",
+                self.index_offset
+            ))
+        })?;
         let mmap_len = u64::try_from(self.mmap.len())
             .map_err(|_| DictError::Format("MKE3: mmap length overflow".into()))?;
-        if table_pos + 8 > mmap_len {
+        if table_pos.checked_add(8).map_or(true, |end| end > mmap_len) {
             return Err(DictError::Format(format!(
                 "MKE3: index table overflow at position {table_pos}"
             )));
