@@ -30,9 +30,6 @@ use std::simd::{
 /// SIMD 레인 크기 (i32x8 사용)
 const SIMD_LANES_8: usize = 8;
 
-/// SIMD 레인 크기 (i32x16 사용 - AVX512)
-const SIMD_LANES_16: usize = 16;
-
 /// SIMD 최적화된 배치 조회 인터페이스
 pub trait SimdMatrix: Matrix {
     /// 배치로 연접 비용 조회 (8개씩)
