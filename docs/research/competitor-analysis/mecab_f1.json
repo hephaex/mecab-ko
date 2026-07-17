@@ -1,0 +1,95 @@
+{
+  "measured_at": "2026-07-02 02:33 UTC",
+  "dicdir": "data/dict-output",
+  "modes": {
+    "strict": "exact (surface, POS) 일치 — 태그 스킴 차이에 취약",
+    "sejong": "Sejong 정규화(자모 정규화+복합 태그 분리) 비교 — cross-scheme 평가용"
+  },
+  "caveat": "UD-GSD/UD-Kaist/KLUE-DP는 native 태그를 Sejong으로 lossy 변환한 silver 데이터셋이라 완벽한 분석기도 1.0에 도달할 수 없다. garu가 보고한 v15k/NIKL MP와는 다른 데이터셋이므로 직접적 head-to-head가 아니라 방향성 지표로만 해석할 것.",
+  "summary": {
+    "external_gold_sejong_f1_mean": 0.703,
+    "external_gold_sejong_f1_range": [
+      0.694,
+      0.71
+    ],
+    "datasets_measured": 3
+  },
+  "datasets": {
+    "UD-GSD": {
+      "kind": "gold",
+      "note": "UD Korean-GSD test (Google news/web), Sejong로 silver 변환",
+      "tsv": "ud_gsd_test.tsv",
+      "strict": {
+        "sentences": 971,
+        "token_accuracy": 0.26,
+        "precision": 0.28,
+        "recall": 0.26,
+        "f1": 0.269
+      },
+      "sejong": {
+        "sentences": 971,
+        "token_accuracy": 0.72,
+        "precision": 0.701,
+        "recall": 0.72,
+        "f1": 0.71
+      }
+    },
+    "UD-Kaist": {
+      "kind": "gold",
+      "note": "UD Korean-Kaist test (학술/뉴스), Sejong로 silver 변환",
+      "tsv": "ud_kaist_test.tsv",
+      "strict": {
+        "sentences": 1638,
+        "token_accuracy": 0.275,
+        "precision": 0.291,
+        "recall": 0.275,
+        "f1": 0.283
+      },
+      "sejong": {
+        "sentences": 1638,
+        "token_accuracy": 0.716,
+        "precision": 0.694,
+        "recall": 0.716,
+        "f1": 0.705
+      }
+    },
+    "KLUE-DP": {
+      "kind": "gold",
+      "note": "KLUE DP val (Airbnb 후기/뉴스), Sejong로 silver 변환",
+      "tsv": "klue_dp_val.tsv",
+      "strict": {
+        "sentences": 1995,
+        "token_accuracy": 0.218,
+        "precision": 0.238,
+        "recall": 0.218,
+        "f1": 0.228
+      },
+      "sejong": {
+        "sentences": 1995,
+        "token_accuracy": 0.701,
+        "precision": 0.687,
+        "recall": 0.701,
+        "f1": 0.694
+      }
+    },
+    "sample": {
+      "kind": "self",
+      "note": "합성 baseline (자체 생성) — 상한 sanity check",
+      "tsv": "sample.tsv",
+      "strict": {
+        "sentences": 1100,
+        "token_accuracy": 0.418,
+        "precision": 0.509,
+        "recall": 0.418,
+        "f1": 0.459
+      },
+      "sejong": {
+        "sentences": 1100,
+        "token_accuracy": 0.902,
+        "precision": 0.897,
+        "recall": 0.902,
+        "f1": 0.9
+      }
+    }
+  }
+}

@@ -409,7 +409,7 @@ impl AnalyzerConfig {
             AnalysisMode::Custom => self
                 .pos_filter
                 .as_ref()
-                .map_or(true, |f| f.matches(&token.pos)),
+                .is_none_or(|f| f.matches(&token.pos)),
         }
     }
 

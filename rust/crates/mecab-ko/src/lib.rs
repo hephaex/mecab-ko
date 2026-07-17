@@ -201,8 +201,28 @@ pub mod tokenizer {
 /// 형태소 사전
 ///
 /// 사전 로딩, 검색, 연접 비용 조회
+///
+/// # 공개 API
+///
+/// 내부 구현(`EntryStore`, `LazyEntries*`, `Matrix`, `Trie*`, `StringPool`, `FileWatcher`,
+/// `HotReload*` 등)은 의도적으로 노출하지 않습니다.
 pub mod dict {
-    pub use mecab_ko_dict::*;
+    pub use mecab_ko_dict::{
+        // 에러
+        error::DictError,
+        // 사전 로딩
+        DictEntry,
+        // 공용 트레이트 및 타입
+        Dictionary,
+        DictionaryLoader,
+        Entry,
+        LoadOptions,
+        SystemDictionary,
+        // 사용자 사전
+        UserDictionary,
+        UserDictionaryBuilder,
+        UserEntry,
+    };
 }
 
 /// 사전 빌더 (builder feature 활성화 시)

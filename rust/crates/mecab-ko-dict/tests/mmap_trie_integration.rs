@@ -42,7 +42,11 @@ fn mmap_trie_loads_successfully() {
     };
 
     let dict = SystemDictionary::load_with_options(&dicdir, opts);
-    assert!(dict.is_ok(), "Failed to load with mmap trie: {:?}", dict.err());
+    assert!(
+        dict.is_ok(),
+        "Failed to load with mmap trie: {:?}",
+        dict.err()
+    );
 }
 
 #[test]

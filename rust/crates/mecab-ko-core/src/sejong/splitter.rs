@@ -578,7 +578,10 @@ mod tests {
         let rules = make_rules();
         let result = split_morpheme("미정", "VCP+ETM", map, &rules);
         // 명시 목록 (인/일/라는)이 아니므로 일반 split 흐름 따름 (size 1 or default)
-        assert!(result.len() <= 2, "non-listed surface should not split into >2");
+        assert!(
+            result.len() <= 2,
+            "non-listed surface should not split into >2"
+        );
     }
 
     #[test]

@@ -363,8 +363,8 @@ fn test_klue_dp_dual_metric() {
         return;
     }
 
-    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
-        .expect("Failed to load KLUE DP val");
+    let dataset =
+        TestDataset::from_tsv(eval_path.to_str().unwrap()).expect("Failed to load KLUE DP val");
 
     println!("\n=== KLUE DP Dual-Metric Evaluation ===");
     println!("Dataset: {} sentences", dataset.len());
@@ -412,8 +412,8 @@ fn test_klue_dp_dual_metric() {
 #[ignore = "requires KLUE DP eval data + system dictionary"]
 fn test_klue_dp_dual_metric_lenient() {
     use mecab_ko_core::evaluate::{
-        evaluate_dataset_dual, evaluate_dataset_dual_lenient,
-        evaluate_dataset_dual_with_pos_match, pos_tags_equivalent_practical,
+        evaluate_dataset_dual, evaluate_dataset_dual_lenient, evaluate_dataset_dual_with_pos_match,
+        pos_tags_equivalent_practical,
     };
 
     // Sprint 125 baseline floor (lift confirmed: strict 19.2% -> lenient 20.8%)
@@ -428,8 +428,8 @@ fn test_klue_dp_dual_metric_lenient() {
         return;
     }
 
-    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
-        .expect("Failed to load KLUE DP val");
+    let dataset =
+        TestDataset::from_tsv(eval_path.to_str().unwrap()).expect("Failed to load KLUE DP val");
 
     println!("\n=== KLUE DP Strict vs Lenient ===");
     println!("Dataset: {} sentences", dataset.len());
@@ -437,7 +437,9 @@ fn test_klue_dp_dual_metric_lenient() {
     let strict = evaluate_dataset_dual(&mut tokenizer, &dataset);
     let lenient = evaluate_dataset_dual_lenient(&mut tokenizer, &dataset);
     let practical = evaluate_dataset_dual_with_pos_match(
-        &mut tokenizer, &dataset, pos_tags_equivalent_practical,
+        &mut tokenizer,
+        &dataset,
+        pos_tags_equivalent_practical,
     );
 
     let strict_morph = strict.morpheme.token_accuracy * 100.0;
@@ -449,32 +451,54 @@ fn test_klue_dp_dual_metric_lenient() {
 
     println!("\n--- Strict ---");
     println!("  Morpheme: {strict_morph:.1}%");
-    println!("  Eojeol:   {strict_eo:.1}% ({} / {})",
-        strict.eojeol_correct, strict.eojeol_total);
+    println!(
+        "  Eojeol:   {strict_eo:.1}% ({} / {})",
+        strict.eojeol_correct, strict.eojeol_total
+    );
 
     println!("\n--- Lenient (conservative): SP/SC, SS/SY/SSO/SSC, MM/MMD/MMN/MMA, SL/NNP ---");
-    println!("  Morpheme: {lenient_morph:.1}% [Δ +{:.1}pp vs strict]",
-        lenient_morph - strict_morph);
-    println!("  Eojeol:   {lenient_eo:.1}% ({} / {}) [Δ +{:.1}pp vs strict]",
-        lenient.eojeol_correct, lenient.eojeol_total, lenient_eo - strict_eo);
+    println!(
+        "  Morpheme: {lenient_morph:.1}% [Δ +{:.1}pp vs strict]",
+        lenient_morph - strict_morph
+    );
+    println!(
+        "  Eojeol:   {lenient_eo:.1}% ({} / {}) [Δ +{:.1}pp vs strict]",
+        lenient.eojeol_correct,
+        lenient.eojeol_total,
+        lenient_eo - strict_eo
+    );
 
     println!("\n--- Practical: + NNB/NNG (counter words) + VA/VV (있다 convention, S136 P3) ---");
-    println!("  Morpheme: {practical_morph:.1}% [Δ +{:.1}pp vs lenient]",
-        practical_morph - lenient_morph);
-    println!("  Eojeol:   {practical_eo:.1}% ({} / {}) [Δ +{:.1}pp vs lenient]",
-        practical.eojeol_correct, practical.eojeol_total, practical_eo - lenient_eo);
+    println!(
+        "  Morpheme: {practical_morph:.1}% [Δ +{:.1}pp vs lenient]",
+        practical_morph - lenient_morph
+    );
+    println!(
+        "  Eojeol:   {practical_eo:.1}% ({} / {}) [Δ +{:.1}pp vs lenient]",
+        practical.eojeol_correct,
+        practical.eojeol_total,
+        practical_eo - lenient_eo
+    );
 
     // 회귀 catch
-    assert!(lenient.eojeol_accuracy >= strict.eojeol_accuracy,
-        "Lenient eojeol {lenient_eo:.1}% must be >= strict {strict_eo:.1}%");
-    assert!(practical.eojeol_accuracy >= lenient.eojeol_accuracy,
-        "Practical eojeol {practical_eo:.1}% must be >= lenient {lenient_eo:.1}%");
-    assert!(practical.morpheme.token_accuracy >= lenient.morpheme.token_accuracy,
-        "Practical morpheme {practical_morph:.1}% must be >= lenient {lenient_morph:.1}%");
+    assert!(
+        lenient.eojeol_accuracy >= strict.eojeol_accuracy,
+        "Lenient eojeol {lenient_eo:.1}% must be >= strict {strict_eo:.1}%"
+    );
+    assert!(
+        practical.eojeol_accuracy >= lenient.eojeol_accuracy,
+        "Practical eojeol {practical_eo:.1}% must be >= lenient {lenient_eo:.1}%"
+    );
+    assert!(
+        practical.morpheme.token_accuracy >= lenient.morpheme.token_accuracy,
+        "Practical morpheme {practical_morph:.1}% must be >= lenient {lenient_morph:.1}%"
+    );
 
-    assert!(lenient.eojeol_accuracy >= LENIENT_EOJEOL_FLOOR,
+    assert!(
+        lenient.eojeol_accuracy >= LENIENT_EOJEOL_FLOOR,
         "Lenient eojeol {lenient_eo:.1}% is below {:.0}% floor",
-        LENIENT_EOJEOL_FLOOR * 100.0);
+        LENIENT_EOJEOL_FLOOR * 100.0
+    );
 
     println!("\nPASSED — strict {strict_eo:.1}% / lenient {lenient_eo:.1}% / practical {practical_eo:.1}%");
 }
@@ -504,8 +528,8 @@ fn test_klue_dp_nng_nnp_analysis() {
         return;
     }
 
-    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
-        .expect("Failed to load KLUE DP val");
+    let dataset =
+        TestDataset::from_tsv(eval_path.to_str().unwrap()).expect("Failed to load KLUE DP val");
     let converter = SejongConverter::new();
 
     // (gold_pos, pred_pos) -> Vec<(sentence, surface, sentence_idx)>
@@ -520,12 +544,7 @@ fn test_klue_dp_nng_nnp_analysis() {
 
         let pred_pairs: Vec<(String, String)> = sejong_tokens
             .iter()
-            .map(|t| {
-                (
-                    SejongConverter::normalize_jamo(&t.surface),
-                    t.pos.clone(),
-                )
-            })
+            .map(|t| (SejongConverter::normalize_jamo(&t.surface), t.pos.clone()))
             .collect();
 
         let min_len = gold_sentence.tokens.len().min(pred_pairs.len());
@@ -535,7 +554,6 @@ fn test_klue_dp_nng_nnp_analysis() {
             .zip(pred_pairs.iter())
             .take(min_len)
         {
-
             if g.surface != *p_surf {
                 continue; // SEGMENTATION case, skip
             }
@@ -543,9 +561,7 @@ fn test_klue_dp_nng_nnp_analysis() {
                 continue; // Match
             }
             // POS_ONLY case
-            if !target_tags.contains(&g.pos.as_str())
-                && !target_tags.contains(&p_pos.as_str())
-            {
+            if !target_tags.contains(&g.pos.as_str()) && !target_tags.contains(&p_pos.as_str()) {
                 continue;
             }
             // At least one side is NNG/NNP/NNB
@@ -567,8 +583,10 @@ fn test_klue_dp_nng_nnp_analysis() {
         println!("  {} → {}  ({}건)", g, p, v.len());
     }
 
-    println!("\nTotal NNG/NNP/NNB-related POS_ONLY errors: {}",
-        sorted.iter().map(|x| x.1.len()).sum::<usize>());
+    println!(
+        "\nTotal NNG/NNP/NNB-related POS_ONLY errors: {}",
+        sorted.iter().map(|x| x.1.len()).sum::<usize>()
+    );
 
     // Show top N samples for the largest confusion groups
     let sample_count = 10;
@@ -616,8 +634,7 @@ fn test_error_case_classification() {
     let converter = SejongConverter::new();
 
     let mut errors: Vec<ErrorCase> = Vec::new();
-    let mut cat_counts: std::collections::HashMap<String, usize> =
-        std::collections::HashMap::new();
+    let mut cat_counts: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
     let mut pos_confusion: std::collections::HashMap<(String, String), usize> =
         std::collections::HashMap::new();
 
@@ -658,7 +675,9 @@ fn test_error_case_classification() {
         }
 
         let min_len = gold_sentence.tokens.len().min(sejong_tokens.len());
-        for (i, (gold_tok, pred_sejong)) in gold_sentence.tokens.iter()
+        for (i, (gold_tok, pred_sejong)) in gold_sentence
+            .tokens
+            .iter()
             .zip(sejong_tokens.iter())
             .enumerate()
             .take(min_len)
@@ -711,7 +730,11 @@ fn test_error_case_classification() {
 
     println!("\n{}", "=".repeat(70));
     println!("  ERROR CASE CLASSIFICATION REPORT");
-    println!("  Dataset: {} sentences, {} errors", dataset.len(), errors.len());
+    println!(
+        "  Dataset: {} sentences, {} errors",
+        dataset.len(),
+        errors.len()
+    );
     println!("{}\n", "=".repeat(70));
 
     println!("=== Category Summary ===");
@@ -805,8 +828,8 @@ fn test_klue_dp_compound_noun_analysis() {
         return;
     }
 
-    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
-        .expect("Failed to load KLUE DP val");
+    let dataset =
+        TestDataset::from_tsv(eval_path.to_str().unwrap()).expect("Failed to load KLUE DP val");
     let converter = SejongConverter::new();
 
     // Categories
@@ -836,7 +859,10 @@ fn test_klue_dp_compound_noun_analysis() {
 
         let eojeols: Vec<&str> = gold_sentence.text.split_whitespace().collect();
         if eojeols.len() != eojeol_counts.len() {
-            cat_counts.entry("EOJEOL_COUNT_MISMATCH").and_modify(|c| *c += 1).or_insert(1);
+            cat_counts
+                .entry("EOJEOL_COUNT_MISMATCH")
+                .and_modify(|c| *c += 1)
+                .or_insert(1);
             continue;
         }
 
@@ -845,7 +871,10 @@ fn test_klue_dp_compound_noun_analysis() {
         for (eo_i, &count_g) in eojeol_counts.iter().enumerate() {
             total_eojeols += 1;
             if gold_idx + count_g > gold_sentence.tokens.len() {
-                cat_counts.entry("BOUNDS_ERROR").and_modify(|c| *c += 1).or_insert(1);
+                cat_counts
+                    .entry("BOUNDS_ERROR")
+                    .and_modify(|c| *c += 1)
+                    .or_insert(1);
                 gold_idx = gold_sentence.tokens.len();
                 continue;
             }
@@ -864,7 +893,10 @@ fn test_klue_dp_compound_noun_analysis() {
             let pred_surface: String = pred_slice.iter().map(|(s, _)| s.as_str()).collect();
 
             if pred_surface != gold_surface {
-                cat_counts.entry("SURFACE_MISMATCH").and_modify(|c| *c += 1).or_insert(1);
+                cat_counts
+                    .entry("SURFACE_MISMATCH")
+                    .and_modify(|c| *c += 1)
+                    .or_insert(1);
                 if samples_surface_mismatch.len() < sample_cap {
                     samples_surface_mismatch.push((
                         gold_sentence.text.clone(),
@@ -888,7 +920,10 @@ fn test_klue_dp_compound_noun_analysis() {
                     .all(|(g, (ps, pp))| g.surface == *ps && g.pos == *pp);
 
             if all_match {
-                cat_counts.entry("EXACT").and_modify(|c| *c += 1).or_insert(1);
+                cat_counts
+                    .entry("EXACT")
+                    .and_modify(|c| *c += 1)
+                    .or_insert(1);
                 continue;
             }
 
@@ -898,22 +933,29 @@ fn test_klue_dp_compound_noun_analysis() {
                     .zip(pred_slice.iter())
                     .all(|(g, (ps, _))| g.surface == *ps);
                 if surface_same {
-                    cat_counts.entry("POS_DIFF").and_modify(|c| *c += 1).or_insert(1);
+                    cat_counts
+                        .entry("POS_DIFF")
+                        .and_modify(|c| *c += 1)
+                        .or_insert(1);
                 } else {
-                    cat_counts.entry("INNER_SPLIT_DIFF").and_modify(|c| *c += 1).or_insert(1);
+                    cat_counts
+                        .entry("INNER_SPLIT_DIFF")
+                        .and_modify(|c| *c += 1)
+                        .or_insert(1);
                 }
                 continue;
             }
 
             // Different split count
             if count_g == 1 && count_p > 1 {
-                cat_counts.entry("GOLD_SINGLE_PRED_MULTI").and_modify(|c| *c += 1).or_insert(1);
+                cat_counts
+                    .entry("GOLD_SINGLE_PRED_MULTI")
+                    .and_modify(|c| *c += 1)
+                    .or_insert(1);
                 *top_compounds.entry(gold_surface.clone()).or_insert(0) += 1;
                 if samples_g1pn.len() < sample_cap {
-                    let pred_tokens: Vec<String> = pred_slice
-                        .iter()
-                        .map(|(s, p)| format!("{s}/{p}"))
-                        .collect();
+                    let pred_tokens: Vec<String> =
+                        pred_slice.iter().map(|(s, p)| format!("{s}/{p}")).collect();
                     samples_g1pn.push((
                         gold_sentence.text.clone(),
                         format!("{}/{}", gold_slice[0].surface, gold_slice[0].pos),
@@ -921,10 +963,15 @@ fn test_klue_dp_compound_noun_analysis() {
                     ));
                 }
             } else if count_g > 1 && count_p == 1 {
-                cat_counts.entry("GOLD_MULTI_PRED_SINGLE").and_modify(|c| *c += 1).or_insert(1);
+                cat_counts
+                    .entry("GOLD_MULTI_PRED_SINGLE")
+                    .and_modify(|c| *c += 1)
+                    .or_insert(1);
                 if samples_gnp1.len() < sample_cap {
-                    let gold_tokens: Vec<String> =
-                        gold_slice.iter().map(|t| format!("{}/{}", t.surface, t.pos)).collect();
+                    let gold_tokens: Vec<String> = gold_slice
+                        .iter()
+                        .map(|t| format!("{}/{}", t.surface, t.pos))
+                        .collect();
                     samples_gnp1.push((
                         gold_sentence.text.clone(),
                         format!("{}/{}", pred_slice[0].0, pred_slice[0].1),
@@ -932,14 +979,17 @@ fn test_klue_dp_compound_noun_analysis() {
                     ));
                 }
             } else {
-                cat_counts.entry("SPLIT_DIFFERENT").and_modify(|c| *c += 1).or_insert(1);
+                cat_counts
+                    .entry("SPLIT_DIFFERENT")
+                    .and_modify(|c| *c += 1)
+                    .or_insert(1);
                 if samples_split_diff.len() < sample_cap {
-                    let gold_tokens: Vec<String> =
-                        gold_slice.iter().map(|t| format!("{}/{}", t.surface, t.pos)).collect();
-                    let pred_tokens: Vec<String> = pred_slice
+                    let gold_tokens: Vec<String> = gold_slice
                         .iter()
-                        .map(|(s, p)| format!("{s}/{p}"))
+                        .map(|t| format!("{}/{}", t.surface, t.pos))
                         .collect();
+                    let pred_tokens: Vec<String> =
+                        pred_slice.iter().map(|(s, p)| format!("{s}/{p}")).collect();
                     samples_split_diff.push((
                         gold_sentence.text.clone(),
                         gold_surface.clone(),
@@ -953,7 +1003,11 @@ fn test_klue_dp_compound_noun_analysis() {
 
     println!("\n{}", "=".repeat(70));
     println!("  COMPOUND NOUN SPLIT ANALYSIS (Sprint 127 P1)");
-    println!("  Dataset: {} sentences, {} eojeols", dataset.len(), total_eojeols);
+    println!(
+        "  Dataset: {} sentences, {} eojeols",
+        dataset.len(),
+        total_eojeols
+    );
     println!("{}\n", "=".repeat(70));
 
     println!("=== Eojeol Category Counts ===");
@@ -1054,8 +1108,8 @@ fn test_klue_dp_surface_lenient_full() {
         return;
     }
 
-    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
-        .expect("Failed to load KLUE DP val");
+    let dataset =
+        TestDataset::from_tsv(eval_path.to_str().unwrap()).expect("Failed to load KLUE DP val");
 
     println!("\n=== KLUE DP 5-mode (Sprint 128 P2) ===");
     println!("Dataset: {} sentences", dataset.len());
@@ -1119,9 +1173,21 @@ fn test_klue_dp_surface_lenient_full() {
     let baseline = strict.eojeol_accuracy * 100.0;
     println!("\n--- Sequence-based eojeol (legacy, cascade) ---");
     report("strict (POS strict / surface strict)", &strict, baseline);
-    report("lenient (POS conservative / surface strict)", &lenient, baseline);
-    report("practical (POS practical / surface strict)", &practical, baseline);
-    report("surface_canonical (POS strict / surface canonical)", &surface_can, baseline);
+    report(
+        "lenient (POS conservative / surface strict)",
+        &lenient,
+        baseline,
+    );
+    report(
+        "practical (POS practical / surface strict)",
+        &practical,
+        baseline,
+    );
+    report(
+        "surface_canonical (POS strict / surface canonical)",
+        &surface_can,
+        baseline,
+    );
     report(
         "combined (POS practical / surface canonical+lenient)",
         &combined_seq,
@@ -1140,11 +1206,7 @@ fn test_klue_dp_surface_lenient_full() {
         &pe_practical,
         pe_baseline,
     );
-    report(
-        "per-eojeol surface_canonical",
-        &pe_surface_can,
-        pe_baseline,
-    );
+    report("per-eojeol surface_canonical", &pe_surface_can, pe_baseline);
     report(
         "per-eojeol combined (POS practical / surface canon+lenient)",
         &pe_combined,
@@ -1224,8 +1286,8 @@ fn test_klue_dp_surface_normalization_analysis() {
         return;
     }
 
-    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
-        .expect("Failed to load KLUE DP val");
+    let dataset =
+        TestDataset::from_tsv(eval_path.to_str().unwrap()).expect("Failed to load KLUE DP val");
     let converter = SejongConverter::new();
 
     // (gold_concat, pred_concat) → count
@@ -1303,9 +1365,7 @@ fn test_klue_dp_surface_normalization_analysis() {
 
     println!("\n{}", "=".repeat(70));
     println!("  SURFACE NORMALIZATION ANALYSIS (Sprint 128 P2)");
-    println!(
-        "  Total eojeols: {total_eojeols}, raw SURFACE_MISMATCH: {total_surface_mismatch}"
-    );
+    println!("  Total eojeols: {total_eojeols}, raw SURFACE_MISMATCH: {total_surface_mismatch}");
     println!("{}\n", "=".repeat(70));
 
     let abs_pct = |c: usize| (c as f64 / total_surface_mismatch.max(1) as f64) * 100.0;
@@ -1342,9 +1402,7 @@ fn test_klue_dp_surface_normalization_analysis() {
 
     println!("\n=== Sample remaining mismatches (sentence context) ===");
     for (sent, gs, ps, gn, pn) in still_mismatch_samples.iter().take(15) {
-        println!(
-            "  raw: gold={gs} / pred={ps}\n  nfc: gold={gn} / pred={pn}\n  in: {sent}\n"
-        );
+        println!("  raw: gold={gs} / pred={ps}\n  nfc: gold={gn} / pred={pn}\n  in: {sent}\n");
     }
 }
 
@@ -1379,8 +1437,8 @@ fn test_klue_dp_real_error_analysis() {
         return;
     }
 
-    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
-        .expect("Failed to load KLUE DP val");
+    let dataset =
+        TestDataset::from_tsv(eval_path.to_str().unwrap()).expect("Failed to load KLUE DP val");
     let converter = SejongConverter::new();
 
     // Wider target set than Sprint 126 — includes MAG, VV, VA, MM for real error coverage
@@ -1410,9 +1468,7 @@ fn test_klue_dp_real_error_analysis() {
             if g.pos == *p_pos {
                 continue;
             }
-            if !target_tags.contains(&g.pos.as_str())
-                && !target_tags.contains(&p_pos.as_str())
-            {
+            if !target_tags.contains(&g.pos.as_str()) && !target_tags.contains(&p_pos.as_str()) {
                 continue;
             }
             let entry = cases
@@ -1434,7 +1490,13 @@ fn test_klue_dp_real_error_analysis() {
 
     let mut by_count: Vec<((String, String), usize, SurfaceData)> = cases
         .iter()
-        .map(|(k, v)| (k.clone(), v.values().map(|(c, _)| c).sum::<usize>(), v.clone()))
+        .map(|(k, v)| {
+            (
+                k.clone(),
+                v.values().map(|(c, _)| c).sum::<usize>(),
+                v.clone(),
+            )
+        })
         .collect();
     by_count.sort_by_key(|x| std::cmp::Reverse(x.1));
 
@@ -1448,9 +1510,12 @@ fn test_klue_dp_real_error_analysis() {
 
     println!("\n=== Per-confusion top surfaces (with frequency) ===");
     for ((g, p), total, surf_map) in by_count.iter().take(10) {
-        println!("\n>>> {g} → {p}  ({total}건, unique surfaces: {})", surf_map.len());
+        println!(
+            "\n>>> {g} → {p}  ({total}건, unique surfaces: {})",
+            surf_map.len()
+        );
         let mut sorted_surfaces: Vec<_> = surf_map.iter().collect();
-        sorted_surfaces.sort_by_key(|x| std::cmp::Reverse(x.1.0));
+        sorted_surfaces.sort_by_key(|x| std::cmp::Reverse(x.1 .0));
 
         // Show top 30 surfaces with counts
         for (i, (surf, (count, samples))) in sorted_surfaces.iter().take(30).enumerate() {
@@ -1463,9 +1528,12 @@ fn test_klue_dp_real_error_analysis() {
         }
 
         // Frequency tiers — for "add to dict" decision
-        let high_freq = sorted_surfaces.iter().filter(|x| x.1.0 >= 5).count();
-        let mid_freq = sorted_surfaces.iter().filter(|x| x.1.0 >= 2 && x.1.0 < 5).count();
-        let singleton = sorted_surfaces.iter().filter(|x| x.1.0 == 1).count();
+        let high_freq = sorted_surfaces.iter().filter(|x| x.1 .0 >= 5).count();
+        let mid_freq = sorted_surfaces
+            .iter()
+            .filter(|x| x.1 .0 >= 2 && x.1 .0 < 5)
+            .count();
+        let singleton = sorted_surfaces.iter().filter(|x| x.1 .0 == 1).count();
         println!("  --- Frequency tiers ---");
         println!("    >= 5 occurrences: {high_freq} surfaces (likely missing dict entries)");
         println!("    2-4 occurrences:  {mid_freq} surfaces (ambiguous / context-dep)");
@@ -1504,8 +1572,8 @@ fn test_klue_dp_gold_single_pred_multi_analysis() {
         return;
     }
 
-    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
-        .expect("Failed to load KLUE DP val");
+    let dataset =
+        TestDataset::from_tsv(eval_path.to_str().unwrap()).expect("Failed to load KLUE DP val");
     let converter = SejongConverter::new();
 
     let mut cases: HashMap<(String, String), SplitData> = HashMap::new();
@@ -1580,7 +1648,13 @@ fn test_klue_dp_gold_single_pred_multi_analysis() {
     // Aggregate per (gold_surface, gold_pos) total
     let mut by_total: Vec<((String, String), usize, SplitData)> = cases
         .iter()
-        .map(|(k, v)| (k.clone(), v.values().map(|(c, _)| c).sum::<usize>(), v.clone()))
+        .map(|(k, v)| {
+            (
+                k.clone(),
+                v.values().map(|(c, _)| c).sum::<usize>(),
+                v.clone(),
+            )
+        })
         .collect();
     by_total.sort_by_key(|x| std::cmp::Reverse(x.1));
 
@@ -1593,7 +1667,7 @@ fn test_klue_dp_gold_single_pred_multi_analysis() {
         );
         // Show all splits if total >= 3, else just the top one
         let mut sorted_splits: Vec<_> = split_map.iter().collect();
-        sorted_splits.sort_by_key(|x| std::cmp::Reverse(x.1.0));
+        sorted_splits.sort_by_key(|x| std::cmp::Reverse(x.1 .0));
         for (split, (count, samples)) in sorted_splits.iter().take(3) {
             println!("       {count}× pred: {split}");
             if i < 10 {
@@ -1619,9 +1693,7 @@ fn test_klue_dp_gold_single_pred_multi_analysis() {
     println!(
         "  >= 5 occurrences: {high_freq:>4} surfaces, {high_freq_total} cases (dict-add candidates)"
     );
-    println!(
-        "  2-4 occurrences:  {mid_freq:>4} surfaces, {mid_freq_total} cases (review needed)"
-    );
+    println!("  2-4 occurrences:  {mid_freq:>4} surfaces, {mid_freq_total} cases (review needed)");
     println!("  singleton:        {singleton:>4} surfaces (long tail)");
 
     // POS distribution of gold-single morphs
@@ -1649,8 +1721,8 @@ fn test_klue_dp_gold_single_pred_multi_analysis() {
 #[ignore = "requires KLUE DP eval data + system dictionary"]
 fn test_klue_dp_eojeol_surface_only() {
     use mecab_ko_core::evaluate::{
-        evaluate_dataset_eojeol_surface_only_with_match,
-        surface_eq_canonical, surface_eq_canonical_lenient, surface_eq_strict,
+        evaluate_dataset_eojeol_surface_only_with_match, surface_eq_canonical,
+        surface_eq_canonical_lenient, surface_eq_strict,
     };
 
     // Floor constants (top of function — clippy items-after-statements).
@@ -1668,11 +1740,14 @@ fn test_klue_dp_eojeol_surface_only() {
         return;
     }
 
-    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
-        .expect("Failed to load KLUE DP val");
+    let dataset =
+        TestDataset::from_tsv(eval_path.to_str().unwrap()).expect("Failed to load KLUE DP val");
 
-    let strict =
-        evaluate_dataset_eojeol_surface_only_with_match(&mut tokenizer, &dataset, surface_eq_strict);
+    let strict = evaluate_dataset_eojeol_surface_only_with_match(
+        &mut tokenizer,
+        &dataset,
+        surface_eq_strict,
+    );
     let canonical = evaluate_dataset_eojeol_surface_only_with_match(
         &mut tokenizer,
         &dataset,
@@ -1727,10 +1802,12 @@ fn test_klue_dp_eojeol_surface_only() {
         CANONICAL_FLOOR * 100.0
     );
 
-    println!("\nPASSED — strict {:.1}% / canonical {:.1}% / canonical_lenient {:.1}%",
+    println!(
+        "\nPASSED — strict {:.1}% / canonical {:.1}% / canonical_lenient {:.1}%",
         strict.accuracy * 100.0,
         canonical.accuracy * 100.0,
-        canonical_lenient.accuracy * 100.0);
+        canonical_lenient.accuracy * 100.0
+    );
 }
 
 /// Sprint 139 P2 — UD Korean-Kaist silver baseline measurement.
@@ -1744,8 +1821,7 @@ fn test_klue_dp_eojeol_surface_only() {
 #[ignore = "requires UD Korean-Kaist eval data + system dictionary"]
 fn test_ud_kaist_dual_metric() {
     use mecab_ko_core::evaluate::{
-        evaluate_dataset_dual, evaluate_dataset_dual_with_pos_match,
-        pos_tags_equivalent_practical,
+        evaluate_dataset_dual, evaluate_dataset_dual_with_pos_match, pos_tags_equivalent_practical,
     };
 
     let project_root = project_root();
@@ -1762,7 +1838,9 @@ fn test_ud_kaist_dual_metric() {
 
     let strict = evaluate_dataset_dual(&mut tokenizer, &dataset);
     let practical = evaluate_dataset_dual_with_pos_match(
-        &mut tokenizer, &dataset, pos_tags_equivalent_practical,
+        &mut tokenizer,
+        &dataset,
+        pos_tags_equivalent_practical,
     );
 
     let strict_morph = strict.morpheme.token_accuracy * 100.0;
@@ -1774,21 +1852,31 @@ fn test_ud_kaist_dual_metric() {
     println!("Dataset: {} sentences", dataset.len());
     println!("\n--- Strict ---");
     println!("  Morpheme: {strict_morph:.1}%");
-    println!("  Eojeol:   {strict_eo:.1}% ({} / {})",
-        strict.eojeol_correct, strict.eojeol_total);
+    println!(
+        "  Eojeol:   {strict_eo:.1}% ({} / {})",
+        strict.eojeol_correct, strict.eojeol_total
+    );
     println!("\n--- Practical (NNB/NNG + VA/VV + SP/SC + SS/SY/SSO/SSC + MM 그룹 + SL/NNP) ---");
-    println!("  Morpheme: {practical_morph:.1}% [Δ +{:.1}pp vs strict]",
-        practical_morph - strict_morph);
-    println!("  Eojeol:   {practical_eo:.1}% ({} / {}) [Δ +{:.1}pp vs strict]",
-        practical.eojeol_correct, practical.eojeol_total, practical_eo - strict_eo);
+    println!(
+        "  Morpheme: {practical_morph:.1}% [Δ +{:.1}pp vs strict]",
+        practical_morph - strict_morph
+    );
+    println!(
+        "  Eojeol:   {practical_eo:.1}% ({} / {}) [Δ +{:.1}pp vs strict]",
+        practical.eojeol_correct,
+        practical.eojeol_total,
+        practical_eo - strict_eo
+    );
 
     // 회귀 catch: practical >= strict
     assert!(practical.eojeol_accuracy >= strict.eojeol_accuracy);
     assert!(practical.morpheme.token_accuracy >= strict.morpheme.token_accuracy);
 
     // Silver dataset — KLUE보다 낮은 floor 설정 (lossy 변환)
-    assert!(strict.morpheme.token_accuracy >= 0.40,
-        "Morph strict {strict_morph:.1}% below 40% floor (UD silver)");
+    assert!(
+        strict.morpheme.token_accuracy >= 0.40,
+        "Morph strict {strict_morph:.1}% below 40% floor (UD silver)"
+    );
 
     println!("\nPASSED — strict morph {strict_morph:.1}% / practical morph {practical_morph:.1}%");
 }
@@ -1813,7 +1901,8 @@ fn test_klue_dp_split_diff_connection_pairs() {
     // Load left-id.def / right-id.def for feature lookup
     let load_id_def = |path: &std::path::Path| -> HashMap<u16, String> {
         let content = fs::read_to_string(path).unwrap_or_default();
-        content.lines()
+        content
+            .lines()
             .filter_map(|line| {
                 let mut parts = line.splitn(2, ' ');
                 let id = parts.next()?.parse::<u16>().ok()?;
@@ -1824,8 +1913,11 @@ fn test_klue_dp_split_diff_connection_pairs() {
     };
     let left_id_def = load_id_def(&std::path::Path::new(&dict_path).join("left-id.def"));
     let right_id_def = load_id_def(&std::path::Path::new(&dict_path).join("right-id.def"));
-    println!("Loaded left-id.def: {} entries, right-id.def: {} entries",
-        left_id_def.len(), right_id_def.len());
+    println!(
+        "Loaded left-id.def: {} entries, right-id.def: {} entries",
+        left_id_def.len(),
+        right_id_def.len()
+    );
 
     let mut tokenizer = make_tokenizer(&project_root);
 
@@ -1835,8 +1927,8 @@ fn test_klue_dp_split_diff_connection_pairs() {
         return;
     }
 
-    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
-        .expect("Failed to load KLUE DP val");
+    let dataset =
+        TestDataset::from_tsv(eval_path.to_str().unwrap()).expect("Failed to load KLUE DP val");
     let converter = SejongConverter::new();
 
     // Pair counts: (right_id_prev, left_id_curr) -> count
@@ -1849,9 +1941,13 @@ fn test_klue_dp_split_diff_connection_pairs() {
     let mut total_eojeols: usize = 0;
 
     for gold_sentence in &dataset.sentences {
-        let Some(eojeol_counts) = &gold_sentence.eojeol_counts else { continue; };
+        let Some(eojeol_counts) = &gold_sentence.eojeol_counts else {
+            continue;
+        };
         let eojeols: Vec<&str> = gold_sentence.text.split_whitespace().collect();
-        if eojeols.len() != eojeol_counts.len() { continue; }
+        if eojeols.len() != eojeol_counts.len() {
+            continue;
+        }
 
         let mut gold_idx: usize = 0;
         for (eo_i, &count_g) in eojeol_counts.iter().enumerate() {
@@ -1867,14 +1963,19 @@ fn test_klue_dp_split_diff_connection_pairs() {
             // Per-eojeol independent tokenization (Token level for surface check)
             let pred_raw = tokenizer.tokenize(eojeols[eo_i]);
             let pred_sejong = converter.convert_tokens(&pred_raw);
-            let pred_normalized_surface: String = pred_sejong.iter()
+            let pred_normalized_surface: String = pred_sejong
+                .iter()
                 .map(|t| SejongConverter::normalize_jamo(&t.surface))
                 .collect();
-            if pred_normalized_surface != gold_surface { continue; }
+            if pred_normalized_surface != gold_surface {
+                continue;
+            }
 
             let count_p = pred_sejong.len();
             // Filter: SPLIT_DIFFERENT only (both split, different count, ignore POS_DIFF/EXACT/G1PM/GMP1)
-            if count_g < 2 || count_p < 2 || count_g == count_p { continue; }
+            if count_g < 2 || count_p < 2 || count_g == count_p {
+                continue;
+            }
             split_diff_eojeols += 1;
 
             // pred_raw가 만들어진 직후의 lattice를 사용 (Viterbi 결과 포함)
@@ -1897,11 +1998,17 @@ fn test_klue_dp_split_diff_connection_pairs() {
 
     println!("\n{}", "=".repeat(70));
     println!("  KLUE DP SPLIT_DIFFERENT Connection Pair Analysis (Sprint 137 A1)");
-    println!("  Dataset: {} sentences, total {} eojeols, SPLIT_DIFFERENT {}",
-        dataset.len(), total_eojeols, split_diff_eojeols);
-    println!("  Total unique pairs: {}, total pair occurrences: {}",
+    println!(
+        "  Dataset: {} sentences, total {} eojeols, SPLIT_DIFFERENT {}",
+        dataset.len(),
+        total_eojeols,
+        split_diff_eojeols
+    );
+    println!(
+        "  Total unique pairs: {}, total pair occurrences: {}",
         pair_counts.len(),
-        pair_counts.values().sum::<usize>());
+        pair_counts.values().sum::<usize>()
+    );
     println!("{}\n", "=".repeat(70));
 
     // Sort pairs by frequency
@@ -1910,17 +2017,32 @@ fn test_klue_dp_split_diff_connection_pairs() {
 
     let top_n = 30;
     println!("=== Top {top_n} (right_id, left_id) pairs in SPLIT_DIFFERENT eojeols ===");
-    println!("{:>5}  {:>5}  {:>6}  {:<40}  {:<40}  samples",
-        "RID", "LID", "count", "right.feat (prev node)", "left.feat (curr node)");
+    println!(
+        "{:>5}  {:>5}  {:>6}  {:<40}  {:<40}  samples",
+        "RID", "LID", "count", "right.feat (prev node)", "left.feat (curr node)"
+    );
     for ((rid, lid), count) in sorted.iter().take(top_n) {
-        let r_feat = right_id_def.get(rid).map_or("?", std::string::String::as_str);
-        let l_feat = left_id_def.get(lid).map_or("?", std::string::String::as_str);
-        let samples = pair_surfaces.get(&(*rid, *lid))
+        let r_feat = right_id_def
+            .get(rid)
+            .map_or("?", std::string::String::as_str);
+        let l_feat = left_id_def
+            .get(lid)
+            .map_or("?", std::string::String::as_str);
+        let samples = pair_surfaces
+            .get(&(*rid, *lid))
             .map(|v| v.join(", "))
             .unwrap_or_default();
         // Truncate long features for readability
-        let r_short = if r_feat.len() > 40 { &r_feat[..40] } else { r_feat };
-        let l_short = if l_feat.len() > 40 { &l_feat[..40] } else { l_feat };
+        let r_short = if r_feat.len() > 40 {
+            &r_feat[..40]
+        } else {
+            r_feat
+        };
+        let l_short = if l_feat.len() > 40 {
+            &l_feat[..40]
+        } else {
+            l_feat
+        };
         println!("{rid:>5}  {lid:>5}  {count:>6}  {r_short:<40}  {l_short:<40}  {samples}");
     }
 }
@@ -1936,8 +2058,7 @@ fn test_klue_dp_split_diff_connection_pairs() {
 #[ignore = "requires UD Korean-GSD eval data + system dictionary"]
 fn test_ud_gsd_dual_metric() {
     use mecab_ko_core::evaluate::{
-        evaluate_dataset_dual, evaluate_dataset_dual_with_pos_match,
-        pos_tags_equivalent_practical,
+        evaluate_dataset_dual, evaluate_dataset_dual_with_pos_match, pos_tags_equivalent_practical,
     };
 
     let project_root = project_root();
@@ -1949,12 +2070,14 @@ fn test_ud_gsd_dual_metric() {
         return;
     }
 
-    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
-        .expect("Failed to load UD GSD test TSV");
+    let dataset =
+        TestDataset::from_tsv(eval_path.to_str().unwrap()).expect("Failed to load UD GSD test TSV");
 
     let strict = evaluate_dataset_dual(&mut tokenizer, &dataset);
     let practical = evaluate_dataset_dual_with_pos_match(
-        &mut tokenizer, &dataset, pos_tags_equivalent_practical,
+        &mut tokenizer,
+        &dataset,
+        pos_tags_equivalent_practical,
     );
 
     let strict_morph = strict.morpheme.token_accuracy * 100.0;
@@ -1966,21 +2089,31 @@ fn test_ud_gsd_dual_metric() {
     println!("Dataset: {} sentences", dataset.len());
     println!("\n--- Strict ---");
     println!("  Morpheme: {strict_morph:.1}%");
-    println!("  Eojeol:   {strict_eo:.1}% ({} / {})",
-        strict.eojeol_correct, strict.eojeol_total);
+    println!(
+        "  Eojeol:   {strict_eo:.1}% ({} / {})",
+        strict.eojeol_correct, strict.eojeol_total
+    );
     println!("\n--- Practical (NNB/NNG + VA/VV + ...) ---");
-    println!("  Morpheme: {practical_morph:.1}% [Δ +{:.1}pp vs strict]",
-        practical_morph - strict_morph);
-    println!("  Eojeol:   {practical_eo:.1}% ({} / {}) [Δ +{:.1}pp vs strict]",
-        practical.eojeol_correct, practical.eojeol_total, practical_eo - strict_eo);
+    println!(
+        "  Morpheme: {practical_morph:.1}% [Δ +{:.1}pp vs strict]",
+        practical_morph - strict_morph
+    );
+    println!(
+        "  Eojeol:   {practical_eo:.1}% ({} / {}) [Δ +{:.1}pp vs strict]",
+        practical.eojeol_correct,
+        practical.eojeol_total,
+        practical_eo - strict_eo
+    );
 
     // 회귀 catch
     assert!(practical.eojeol_accuracy >= strict.eojeol_accuracy);
     assert!(practical.morpheme.token_accuracy >= strict.morpheme.token_accuracy);
 
     // Silver dataset floor
-    assert!(strict.morpheme.token_accuracy >= 0.40,
-        "Morph strict {strict_morph:.1}% below 40% floor (UD GSD silver)");
+    assert!(
+        strict.morpheme.token_accuracy >= 0.40,
+        "Morph strict {strict_morph:.1}% below 40% floor (UD GSD silver)"
+    );
 
     println!("\nPASSED — strict morph {strict_morph:.1}% / practical morph {practical_morph:.1}%");
 }
@@ -1998,8 +2131,7 @@ fn test_ud_gsd_dual_metric() {
 #[ignore = "requires NIKL Modu silver dataset (manual download)"]
 fn test_nikl_modu_dual_metric() {
     use mecab_ko_core::evaluate::{
-        evaluate_dataset_dual, evaluate_dataset_dual_with_pos_match,
-        pos_tags_equivalent_practical,
+        evaluate_dataset_dual, evaluate_dataset_dual_with_pos_match, pos_tags_equivalent_practical,
     };
 
     let project_root = project_root();
@@ -2007,17 +2139,22 @@ fn test_nikl_modu_dual_metric() {
     if !eval_path.exists() {
         println!("Skipping: data/eval/nikl_modu_sample.tsv not found");
         println!("  NIKL Modu 다운로드: https://kli.korean.go.kr (학술 등록 필요)");
-        println!("  변환: python3 tools/convert_nikl_modu.py <json> {}", eval_path.display());
+        println!(
+            "  변환: python3 tools/convert_nikl_modu.py <json> {}",
+            eval_path.display()
+        );
         return;
     }
 
     let mut tokenizer = make_tokenizer(&project_root);
-    let dataset = TestDataset::from_tsv(eval_path.to_str().unwrap())
-        .expect("Failed to load NIKL Modu TSV");
+    let dataset =
+        TestDataset::from_tsv(eval_path.to_str().unwrap()).expect("Failed to load NIKL Modu TSV");
 
     let strict = evaluate_dataset_dual(&mut tokenizer, &dataset);
     let practical = evaluate_dataset_dual_with_pos_match(
-        &mut tokenizer, &dataset, pos_tags_equivalent_practical,
+        &mut tokenizer,
+        &dataset,
+        pos_tags_equivalent_practical,
     );
 
     let strict_morph = strict.morpheme.token_accuracy * 100.0;
@@ -2029,21 +2166,31 @@ fn test_nikl_modu_dual_metric() {
     println!("Dataset: {} sentences", dataset.len());
     println!("\n--- Strict ---");
     println!("  Morpheme: {strict_morph:.1}%");
-    println!("  Eojeol:   {strict_eo:.1}% ({} / {})",
-        strict.eojeol_correct, strict.eojeol_total);
+    println!(
+        "  Eojeol:   {strict_eo:.1}% ({} / {})",
+        strict.eojeol_correct, strict.eojeol_total
+    );
     println!("\n--- Practical ---");
-    println!("  Morpheme: {practical_morph:.1}% [Δ +{:.1}pp vs strict]",
-        practical_morph - strict_morph);
-    println!("  Eojeol:   {practical_eo:.1}% ({} / {}) [Δ +{:.1}pp vs strict]",
-        practical.eojeol_correct, practical.eojeol_total, practical_eo - strict_eo);
+    println!(
+        "  Morpheme: {practical_morph:.1}% [Δ +{:.1}pp vs strict]",
+        practical_morph - strict_morph
+    );
+    println!(
+        "  Eojeol:   {practical_eo:.1}% ({} / {}) [Δ +{:.1}pp vs strict]",
+        practical.eojeol_correct,
+        practical.eojeol_total,
+        practical_eo - strict_eo
+    );
 
     // 회귀 catch
     assert!(practical.eojeol_accuracy >= strict.eojeol_accuracy);
     assert!(practical.morpheme.token_accuracy >= strict.morpheme.token_accuracy);
 
     // Silver dataset floor (보수적 — NIKL Modu는 구어 포함으로 KLUE보다 낮을 수 있음)
-    assert!(strict.morpheme.token_accuracy >= 0.30,
-        "Morph strict {strict_morph:.1}% below 30% floor (NIKL Modu silver)");
+    assert!(
+        strict.morpheme.token_accuracy >= 0.30,
+        "Morph strict {strict_morph:.1}% below 30% floor (NIKL Modu silver)"
+    );
 
     println!("\nPASSED — strict morph {strict_morph:.1}% / practical morph {practical_morph:.1}%");
 }
@@ -2064,7 +2211,8 @@ fn test_ud_kaist_split_diff_connection_pairs() {
 
     let load_id_def = |path: &std::path::Path| -> HashMap<u16, String> {
         let content = fs::read_to_string(path).unwrap_or_default();
-        content.lines()
+        content
+            .lines()
             .filter_map(|line| {
                 let mut parts = line.splitn(2, ' ');
                 let id = parts.next()?.parse::<u16>().ok()?;
@@ -2095,9 +2243,13 @@ fn test_ud_kaist_split_diff_connection_pairs() {
     let mut total_eojeols: usize = 0;
 
     for gold_sentence in &dataset.sentences {
-        let Some(eojeol_counts) = &gold_sentence.eojeol_counts else { continue; };
+        let Some(eojeol_counts) = &gold_sentence.eojeol_counts else {
+            continue;
+        };
         let eojeols: Vec<&str> = gold_sentence.text.split_whitespace().collect();
-        if eojeols.len() != eojeol_counts.len() { continue; }
+        if eojeols.len() != eojeol_counts.len() {
+            continue;
+        }
 
         let mut gold_idx: usize = 0;
         for (eo_i, &count_g) in eojeol_counts.iter().enumerate() {
@@ -2112,13 +2264,18 @@ fn test_ud_kaist_split_diff_connection_pairs() {
 
             let pred_raw = tokenizer.tokenize(eojeols[eo_i]);
             let pred_sejong = converter.convert_tokens(&pred_raw);
-            let pred_normalized_surface: String = pred_sejong.iter()
+            let pred_normalized_surface: String = pred_sejong
+                .iter()
                 .map(|t| SejongConverter::normalize_jamo(&t.surface))
                 .collect();
-            if pred_normalized_surface != gold_surface { continue; }
+            if pred_normalized_surface != gold_surface {
+                continue;
+            }
 
             let count_p = pred_sejong.len();
-            if count_g < 2 || count_p < 2 || count_g == count_p { continue; }
+            if count_g < 2 || count_p < 2 || count_g == count_p {
+                continue;
+            }
             split_diff_eojeols += 1;
 
             let path = tokenizer.lattice().best_path();
@@ -2138,11 +2295,17 @@ fn test_ud_kaist_split_diff_connection_pairs() {
 
     println!("\n{}", "=".repeat(70));
     println!("  UD Kaist SPLIT_DIFFERENT Connection Pair Analysis (Sprint 140 A)");
-    println!("  Dataset: {} sentences, total {} eojeols, SPLIT_DIFFERENT {}",
-        dataset.len(), total_eojeols, split_diff_eojeols);
-    println!("  Total unique pairs: {}, total pair occurrences: {}",
+    println!(
+        "  Dataset: {} sentences, total {} eojeols, SPLIT_DIFFERENT {}",
+        dataset.len(),
+        total_eojeols,
+        split_diff_eojeols
+    );
+    println!(
+        "  Total unique pairs: {}, total pair occurrences: {}",
         pair_counts.len(),
-        pair_counts.values().sum::<usize>());
+        pair_counts.values().sum::<usize>()
+    );
     println!("{}\n", "=".repeat(70));
 
     let mut sorted: Vec<_> = pair_counts.iter().collect();
@@ -2150,20 +2313,34 @@ fn test_ud_kaist_split_diff_connection_pairs() {
 
     let top_n = 30;
     println!("=== Top {top_n} (right_id, left_id) pairs in SPLIT_DIFFERENT eojeols ===");
-    println!("{:>5}  {:>5}  {:>6}  {:<40}  {:<40}  samples",
-        "RID", "LID", "count", "right.feat (prev node)", "left.feat (curr node)");
+    println!(
+        "{:>5}  {:>5}  {:>6}  {:<40}  {:<40}  samples",
+        "RID", "LID", "count", "right.feat (prev node)", "left.feat (curr node)"
+    );
     for ((rid, lid), count) in sorted.iter().take(top_n) {
-        let r_feat = right_id_def.get(rid).map_or("?", std::string::String::as_str);
-        let l_feat = left_id_def.get(lid).map_or("?", std::string::String::as_str);
-        let samples = pair_surfaces.get(&(*rid, *lid))
+        let r_feat = right_id_def
+            .get(rid)
+            .map_or("?", std::string::String::as_str);
+        let l_feat = left_id_def
+            .get(lid)
+            .map_or("?", std::string::String::as_str);
+        let samples = pair_surfaces
+            .get(&(*rid, *lid))
             .map(|v| v.join(", "))
             .unwrap_or_default();
-        let r_short = if r_feat.len() > 40 { &r_feat[..40] } else { r_feat };
-        let l_short = if l_feat.len() > 40 { &l_feat[..40] } else { l_feat };
+        let r_short = if r_feat.len() > 40 {
+            &r_feat[..40]
+        } else {
+            r_feat
+        };
+        let l_short = if l_feat.len() > 40 {
+            &l_feat[..40]
+        } else {
+            l_feat
+        };
         println!("{rid:>5}  {lid:>5}  {count:>6}  {r_short:<40}  {l_short:<40}  {samples}");
     }
 }
-
 
 /// Sprint 145 D — mecab 결합 POS feature 빈도 분석.
 ///
@@ -2195,8 +2372,8 @@ fn test_compound_pos_frequency_analysis() {
             println!("Skipping {name}: {rel_path} not found");
             continue;
         }
-        let dataset = TestDataset::from_tsv(path.to_str().unwrap())
-            .expect("Failed to load dataset");
+        let dataset =
+            TestDataset::from_tsv(path.to_str().unwrap()).expect("Failed to load dataset");
 
         for sentence in &dataset.sentences {
             let tokens = tokenizer.tokenize(&sentence.text);
@@ -2217,13 +2394,15 @@ fn test_compound_pos_frequency_analysis() {
 
     println!("\n{}", "=".repeat(70));
     println!("  Compound POS Frequency Analysis (Sprint 145 D)");
-    println!("  Total tokens: {total_tokens}, compound (X+Y...): {compound_tokens} ({:.1}%)",
-        compound_tokens as f64 / total_tokens.max(1) as f64 * 100.0);
+    println!(
+        "  Total tokens: {total_tokens}, compound (X+Y...): {compound_tokens} ({:.1}%)",
+        compound_tokens as f64 / total_tokens.max(1) as f64 * 100.0
+    );
     println!("  Unique compound patterns: {}", pattern_counts.len());
     println!("{}\n", "=".repeat(70));
 
     let mut sorted: Vec<_> = pattern_counts.iter().collect();
-    sorted.sort_by_key(|x| std::cmp::Reverse(x.1.0));
+    sorted.sort_by_key(|x| std::cmp::Reverse(x.1 .0));
 
     let top_n = 40;
     println!("=== Top {top_n} compound POS patterns ===");
@@ -2241,8 +2420,8 @@ fn test_compound_pos_frequency_analysis() {
 #[test]
 #[ignore = "requires KLUE/UD eval data + system dictionary"]
 fn test_va_etm_post_splitter_mismatch() {
-    use std::collections::HashMap;
     use mecab_ko_core::sejong::SejongConverter;
+    use std::collections::HashMap;
 
     let project_root = project_root();
     let mut tokenizer = make_tokenizer(&project_root);
@@ -2256,12 +2435,14 @@ fn test_va_etm_post_splitter_mismatch() {
 
     // raw VA+ETM 토큰: splitter가 분리했는가? gold가 분리했는가?
     let mut raw_va_etm = 0usize;
-    let mut split_by_splitter = 0usize;  // splitter가 ETM로 분리
+    let mut split_by_splitter = 0usize; // splitter가 ETM로 분리
     let mut surface_unchanged_pred: HashMap<String, usize> = HashMap::new();
 
     for (_, rel_path) in &eval_files {
         let path = project_root.join(rel_path);
-        if !path.exists() { continue; }
+        if !path.exists() {
+            continue;
+        }
         let dataset = TestDataset::from_tsv(path.to_str().unwrap()).expect("dataset");
         for sentence in &dataset.sentences {
             let raw_tokens = tokenizer.tokenize(&sentence.text);
@@ -2275,7 +2456,9 @@ fn test_va_etm_post_splitter_mismatch() {
                         split_by_splitter += 1;
                     } else {
                         // splitter가 분리 못함 — 어떤 surface인지 기록
-                        *surface_unchanged_pred.entry(tok.surface.clone()).or_insert(0) += 1;
+                        *surface_unchanged_pred
+                            .entry(tok.surface.clone())
+                            .or_insert(0) += 1;
                     }
                 }
             }
@@ -2287,7 +2470,10 @@ fn test_va_etm_post_splitter_mismatch() {
     println!("{}", "=".repeat(70));
     println!("Raw VA+ETM tokens: {raw_va_etm}");
     println!("Split by splitter (has ETM token): {split_by_splitter}");
-    println!("NOT split (still VA+ETM compound): {}", raw_va_etm - split_by_splitter);
+    println!(
+        "NOT split (still VA+ETM compound): {}",
+        raw_va_etm - split_by_splitter
+    );
 
     println!("\n=== Surface NOT split by splitter (top 20) ===");
     let mut sorted: Vec<_> = surface_unchanged_pred.iter().collect();
@@ -2305,8 +2491,8 @@ fn test_va_etm_post_splitter_mismatch() {
 #[test]
 #[ignore = "requires KLUE/UD eval data + system dictionary"]
 fn test_xsa_etm_post_splitter_mismatch() {
-    use std::collections::HashMap;
     use mecab_ko_core::sejong::SejongConverter;
+    use std::collections::HashMap;
 
     let project_root = project_root();
     let mut tokenizer = make_tokenizer(&project_root);
@@ -2323,7 +2509,9 @@ fn test_xsa_etm_post_splitter_mismatch() {
 
     for (_, rel_path) in &eval_files {
         let path = project_root.join(rel_path);
-        if !path.exists() { continue; }
+        if !path.exists() {
+            continue;
+        }
         let dataset = TestDataset::from_tsv(path.to_str().unwrap()).expect("dataset");
         for sentence in &dataset.sentences {
             let raw_tokens = tokenizer.tokenize(&sentence.text);
@@ -2362,7 +2550,9 @@ fn test_xsa_etm_post_splitter_mismatch() {
     let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
     'outer: for (_, rel_path) in &eval_files {
         let path = project_root.join(rel_path);
-        if !path.exists() { continue; }
+        if !path.exists() {
+            continue;
+        }
         let dataset = TestDataset::from_tsv(path.to_str().unwrap()).expect("dataset");
         for sentence in &dataset.sentences {
             let raw_tokens = tokenizer.tokenize(&sentence.text);
@@ -2370,11 +2560,14 @@ fn test_xsa_etm_post_splitter_mismatch() {
                 if tok.pos == "XSA+ETM" && !seen.contains(&tok.surface) {
                     seen.insert(tok.surface.clone());
                     let split = converter.convert_tokens(std::slice::from_ref(tok));
-                    let parts: Vec<String> = split.iter()
+                    let parts: Vec<String> = split
+                        .iter()
                         .map(|t| format!("{}/{}", t.surface, t.pos))
                         .collect();
                     println!("  {} → {}", tok.surface, parts.join(" + "));
-                    if seen.len() >= 5 { break 'outer; }
+                    if seen.len() >= 5 {
+                        break 'outer;
+                    }
                 }
             }
         }
@@ -2395,8 +2588,8 @@ fn test_xsa_etm_post_splitter_mismatch() {
 #[test]
 #[ignore = "requires KLUE/UD eval data + system dictionary"]
 fn test_sprint154_unified_diagnosis() {
-    use std::collections::HashMap;
     use mecab_ko_core::sejong::SejongConverter;
+    use std::collections::HashMap;
 
     let project_root = project_root();
     let mut tokenizer = make_tokenizer(&project_root);
@@ -2411,7 +2604,7 @@ fn test_sprint154_unified_diagnosis() {
 
     // 패턴별 (raw, split_OK, unhandled_surfaces)
     let mut stats: HashMap<&str, (usize, usize, HashMap<String, usize>)> = HashMap::new();
-    let mut samples: HashMap<&str, Vec<(String, String)>> = HashMap::new();  // pattern → (surface → split_output)
+    let mut samples: HashMap<&str, Vec<(String, String)>> = HashMap::new(); // pattern → (surface → split_output)
 
     for pattern in &target_patterns {
         stats.insert(pattern, (0, 0, HashMap::new()));
@@ -2420,7 +2613,9 @@ fn test_sprint154_unified_diagnosis() {
 
     for (_, rel_path) in &eval_files {
         let path = project_root.join(rel_path);
-        if !path.exists() { continue; }
+        if !path.exists() {
+            continue;
+        }
         let dataset = TestDataset::from_tsv(path.to_str().unwrap()).expect("dataset");
         for sentence in &dataset.sentences {
             let raw_tokens = tokenizer.tokenize(&sentence.text);
@@ -2433,8 +2628,14 @@ fn test_sprint154_unified_diagnosis() {
                         // "ETM" 또는 "EP"가 따로 나오면 처리됨
                         let target_tag = if pattern.contains("EP") {
                             // EP+ETM 또는 XSV+ETM 등은 ETM, VX+EP 또는 XSA+EP는 EP
-                            if pattern.ends_with("ETM") { "ETM" } else { "EP" }
-                        } else { "ETM" };
+                            if pattern.ends_with("ETM") {
+                                "ETM"
+                            } else {
+                                "EP"
+                            }
+                        } else {
+                            "ETM"
+                        };
                         let has_target = split.iter().any(|t| t.pos == target_tag);
                         if has_target {
                             entry.1 += 1;
@@ -2444,7 +2645,8 @@ fn test_sprint154_unified_diagnosis() {
                         // 샘플 수집 (패턴당 최대 5개 unique surface)
                         let smpls = samples.get_mut(pattern).unwrap();
                         if smpls.len() < 5 && !smpls.iter().any(|(s, _)| s == &tok.surface) {
-                            let parts: Vec<String> = split.iter()
+                            let parts: Vec<String> = split
+                                .iter()
                                 .map(|t| format!("{}/{}", t.surface, t.pos))
                                 .collect();
                             smpls.push((tok.surface.clone(), parts.join(" + ")));
@@ -2462,7 +2664,11 @@ fn test_sprint154_unified_diagnosis() {
     for pattern in &target_patterns {
         let (raw, split_ok, unhandled) = &stats[pattern];
         let unhandled_total: usize = unhandled.values().sum();
-        let pct = if *raw > 0 { (*split_ok as f64 / *raw as f64) * 100.0 } else { 0.0 };
+        let pct = if *raw > 0 {
+            (*split_ok as f64 / *raw as f64) * 100.0
+        } else {
+            0.0
+        };
 
         println!("\n--- {} ---", pattern);
         println!("  Raw: {raw}, Split OK: {split_ok} ({pct:.1}%), Unhandled: {unhandled_total}");
@@ -2516,7 +2722,9 @@ fn test_va_etm_multisyllable_diagnosis() {
 
     for (ds_name, rel_path) in &eval_files {
         let path = project_root.join(rel_path);
-        if !path.exists() { continue; }
+        if !path.exists() {
+            continue;
+        }
         let dataset = TestDataset::from_tsv(path.to_str().unwrap()).expect("dataset");
         for sentence in &dataset.sentences {
             let raw_tokens = tokenizer.tokenize(&sentence.text);
@@ -2547,9 +2755,12 @@ fn test_va_etm_multisyllable_diagnosis() {
     println!("  Multi-syllable (NOT handled): {multi_syllable}");
     println!("\n=== Multi-syllable surface last-char endings ===");
     let mut sorted: Vec<_> = surface_endings.iter().collect();
-    sorted.sort_by_key(|x| std::cmp::Reverse(x.1.0));
+    sorted.sort_by_key(|x| std::cmp::Reverse(x.1 .0));
     for (ch, (count, samples)) in sorted.iter().take(15) {
-        println!("  '{ch}'  count={count:<4}  samples: {}", samples.join(", "));
+        println!(
+            "  '{ch}'  count={count:<4}  samples: {}",
+            samples.join(", ")
+        );
     }
     println!("\n{}", "=".repeat(70));
 }
@@ -2588,8 +2799,8 @@ fn test_etm_etm_raneun_diagnosis() {
             println!("Skipping {ds_name}: not found");
             continue;
         }
-        let dataset = TestDataset::from_tsv(path.to_str().unwrap())
-            .expect("Failed to load dataset");
+        let dataset =
+            TestDataset::from_tsv(path.to_str().unwrap()).expect("Failed to load dataset");
         println!("\n--- {ds_name} ---");
 
         'sentence: for sentence in &dataset.sentences {
@@ -2604,18 +2815,22 @@ fn test_etm_etm_raneun_diagnosis() {
             let mut raw_etm_positions: Vec<usize> = Vec::new();
             for (i, tok) in raw_tokens.iter().enumerate() {
                 if tok.pos == "ETM+ETM" && tok.surface.contains("라는") {
-                raw_etm_positions.push(i);
+                    raw_etm_positions.push(i);
+                }
             }
-        }
             if raw_etm_positions.is_empty() {
                 continue 'sentence;
             }
             total_raneun += raw_etm_positions.len();
 
             // pred vs gold 비교
-            let gold_morphs: Vec<(String, String)> = sentence.tokens.iter()
+            let gold_morphs: Vec<(String, String)> = sentence
+                .tokens
+                .iter()
                 .flat_map(|t| {
-                    t.pos.split('+').map(move |p| (t.surface.clone(), p.to_string()))
+                    t.pos
+                        .split('+')
+                        .map(move |p| (t.surface.clone(), p.to_string()))
                 })
                 .collect();
 
@@ -2623,7 +2838,8 @@ fn test_etm_etm_raneun_diagnosis() {
             for (pi, (ps, pp)) in pred_morphs.iter().enumerate() {
                 if ps.contains("라는") && pp == "ETM" {
                     let found_in_gold = gold_morphs.iter().any(|(gs, gp)| {
-                        gs.contains("라는") && (gp == "ETM" || pos_tags_equivalent_practical(gp, pp))
+                        gs.contains("라는")
+                            && (gp == "ETM" || pos_tags_equivalent_practical(gp, pp))
                     });
 
                     if !found_in_gold {

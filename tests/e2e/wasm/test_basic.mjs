@@ -43,21 +43,33 @@ test('wasm module can be imported', async () => {
   assert.ok(mod !== null, 'wasm module should be importable');
 });
 
-test('exported functions exist: tokenize, morphs, nouns, pos, parse', async () => {
+test('Mecab class is exported with tokenize/morphs/nouns/pos/wakati methods', async () => {
   const mod = await tryImportWasm();
   if (mod === null) {
     console.log('  SKIP: wasm module not available');
     return;
   }
-  const expectedExports = ['tokenize', 'morphs', 'nouns', 'pos', 'parse'];
-  for (const name of expectedExports) {
+  // 실제 공개 API는 flat function이 아니라 Mecab 클래스다 (wasm/src/lib.rs).
+  assert.strictEqual(typeof mod.Mecab, 'function', "export 'Mecab' should be a class");
+  const expectedMethods = ['tokenize', 'morphs', 'nouns', 'pos', 'wakati'];
+  for (const name of expectedMethods) {
     assert.strictEqual(
-      typeof mod[name],
+      typeof mod.Mecab.prototype[name],
       'function',
-      `export '${name}' should be a function`,
+      `Mecab.prototype.${name} should be a function`,
     );
   }
 });
+
+// Helper: instantiate Mecab, or null when dict is not embedded in this build.
+function tryNewMecab(mod) {
+  try {
+    return new mod.Mecab();
+  } catch (err) {
+    console.log('  SKIP: new Mecab() failed (dict may not be embedded):', err.message);
+    return null;
+  }
+}
 
 test('basic tokenization with simple Korean string', async () => {
   const mod = await tryImportWasm();
@@ -65,14 +77,11 @@ test('basic tokenization with simple Korean string', async () => {
     console.log('  SKIP: wasm module not available');
     return;
   }
-  try {
-    const result = mod.tokenize('안녕하세요');
-    assert.ok(Array.isArray(result), 'tokenize() should return an array');
-    assert.ok(result.length > 0, 'tokenize() should return at least one token');
-  } catch (err) {
-    // Dictionary may not be embedded in CI; treat as a graceful skip
-    console.log('  SKIP: tokenize() failed (dict may not be embedded):', err.message);
-  }
+  const mecab = tryNewMecab(mod);
+  if (mecab === null) return;
+  const result = mecab.tokenize('안녕하세요');
+  assert.ok(Array.isArray(result), 'tokenize() should return an array');
+  assert.ok(result.length > 0, 'tokenize() should return at least one token');
 });
 
 test('empty input handling', async () => {
@@ -81,11 +90,8 @@ test('empty input handling', async () => {
     console.log('  SKIP: wasm module not available');
     return;
   }
-  try {
-    const result = mod.tokenize('');
-    assert.ok(Array.isArray(result), 'empty input should return an array');
-  } catch (err) {
-    // Some implementations may throw on empty input — acceptable for a scaffold
-    console.log('  NOTE: tokenize("") threw:', err.message);
-  }
+  const mecab = tryNewMecab(mod);
+  if (mecab === null) return;
+  const result = mecab.tokenize('');
+  assert.ok(Array.isArray(result), 'empty input should return an array');
 });

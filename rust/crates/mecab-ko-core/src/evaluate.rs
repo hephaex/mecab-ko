@@ -1032,17 +1032,17 @@ fn normalize_endings(s: &str) -> String {
 /// 명시 목록만 사용하여 false positive 방지 (예: 일반 음절 sequence "X르Y"가
 /// 우연히 매칭되는 것을 피함).
 const R_IRREGULAR_PATTERNS: &[(&str, &str)] = &[
-    ("따르아", "따라"),  // 따르다 + 아
-    ("모르아", "몰라"),  // 모르다 + 아
-    ("다르아", "달라"),  // 다르다 + 아
-    ("부르어", "불러"),  // 부르다 + 어
-    ("흐르어", "흘러"),  // 흐르다 + 어
-    ("오르아", "올라"),  // 오르다 + 아
-    ("자르아", "잘라"),  // 자르다 + 아
-    ("누르어", "눌러"),  // 누르다 + 어
-    ("고르아", "골라"),  // 고르다 + 아
+    ("따르아", "따라"), // 따르다 + 아
+    ("모르아", "몰라"), // 모르다 + 아
+    ("다르아", "달라"), // 다르다 + 아
+    ("부르어", "불러"), // 부르다 + 어
+    ("흐르어", "흘러"), // 흐르다 + 어
+    ("오르아", "올라"), // 오르다 + 아
+    ("자르아", "잘라"), // 자르다 + 아
+    ("누르어", "눌러"), // 누르다 + 어
+    ("고르아", "골라"), // 고르다 + 아
     // Sprint 156: 추가 르 불규칙 (surface mismatch 진단)
-    ("아우르어", "아울러"),  // 아우르다 + 어 (4건 KLUE)
+    ("아우르어", "아울러"), // 아우르다 + 어 (4건 KLUE)
 ];
 
 /// 명시 어구 축약 단방향 정규화 패턴 (Sprint 158).
@@ -1051,9 +1051,9 @@ const R_IRREGULAR_PATTERNS: &[(&str, &str)] = &[
 /// gold/pred 모두 축약형으로 통일. 일반화 시 false positive 위험으로
 /// 명시 어구만 처리.
 const EXPLICIT_PHRASE_PATTERNS: &[(&str, &str)] = &[
-    ("인하여", "인해"),       // 4건 KLUE
-    ("확인하여", "확인해"),    // 3건 KLUE
-    ("참고하시어요", "참고하세요"),  // 3건 KLUE (시어요 → 세요)
+    ("인하여", "인해"),             // 4건 KLUE
+    ("확인하여", "확인해"),         // 3건 KLUE
+    ("참고하시어요", "참고하세요"), // 3건 KLUE (시어요 → 세요)
 ];
 
 /// ㄷ불규칙 동사 활용 단방향 정규화 패턴 (Sprint 156).
@@ -1063,15 +1063,15 @@ const EXPLICIT_PHRASE_PATTERNS: &[(&str, &str)] = &[
 /// 명시 목록만 사용 (false positive 방지).
 const D_IRREGULAR_PATTERNS: &[(&str, &str)] = &[
     // 듣다 (가장 빈번)
-    ("듣었", "들었"),  // 듣 + 었 → 들었 (6건 KLUE)
-    ("듣어", "들어"),  // 듣 + 어 → 들어
-    ("듣은", "들은"),  // 듣 + 은 → 들은
+    ("듣었", "들었"), // 듣 + 었 → 들었 (6건 KLUE)
+    ("듣어", "들어"), // 듣 + 어 → 들어
+    ("듣은", "들은"), // 듣 + 은 → 들은
     // 묻다 (질문하다)
-    ("묻었", "물었"),  // 묻 + 었 → 물었
-    ("묻어", "물어"),  // 묻 + 어 → 물어
+    ("묻었", "물었"), // 묻 + 었 → 물었
+    ("묻어", "물어"), // 묻 + 어 → 물어
     // 걷다 (걷기)
-    ("걷었", "걸었"),  // 걷 + 었 → 걸었
-    ("걷어", "걸어"),  // 걷 + 어 → 걸어
+    ("걷었", "걸었"), // 걷 + 었 → 걸었
+    ("걷어", "걸어"), // 걷 + 어 → 걸어
     // 깨닫다
     ("깨닫았", "깨달았"),
     ("깨닫아", "깨달아"),
@@ -1124,10 +1124,7 @@ impl DualMetricResult {
 ///
 /// `evaluate_dataset_dual_with_pos_match`를 `pos_eq_strict`으로 호출.
 #[must_use]
-pub fn evaluate_dataset_dual(
-    tokenizer: &mut Tokenizer,
-    dataset: &TestDataset,
-) -> DualMetricResult {
+pub fn evaluate_dataset_dual(tokenizer: &mut Tokenizer, dataset: &TestDataset) -> DualMetricResult {
     evaluate_dataset_dual_with_pos_match(tokenizer, dataset, pos_eq_strict)
 }
 
@@ -1418,12 +1415,7 @@ pub fn evaluate_dataset_dual_with_match(
 
         let pred_morphs: Vec<(String, String)> = pred_sejong
             .iter()
-            .map(|t| {
-                (
-                    SejongConverter::normalize_jamo(&t.surface),
-                    t.pos.clone(),
-                )
-            })
+            .map(|t| (SejongConverter::normalize_jamo(&t.surface), t.pos.clone()))
             .collect();
 
         let mut gold_idx = 0;
@@ -1673,7 +1665,7 @@ mod tests {
         // "묻다"(매장하다)는 정규 활용 (묻었 = 묻었, 명시 패턴이 있어 변환되지만 false positive 위험 인정)
         // 일반 명사 "단어" 등은 변환 대상 아님
         assert!(surface_eq_canonical_lenient("단어", "단어"));
-        assert!(!surface_eq_canonical_lenient("받았", "받았다"));  // 단순 다름
+        assert!(!surface_eq_canonical_lenient("받았", "받았다")); // 단순 다름
     }
 
     #[test]

@@ -293,10 +293,7 @@ fn test_golden_complex() {
                     eprintln!(
                         "complex.json [known_limitation] POS mismatch for input '{}': {}",
                         test_case.input,
-                        comparison
-                            .diff
-                            .as_deref()
-                            .unwrap_or("(no diff available)")
+                        comparison.diff.as_deref().unwrap_or("(no diff available)")
                     );
                     known_limitation_skipped += 1;
                 }
@@ -576,16 +573,17 @@ fn test_golden_pos_coverage() {
     let golden_files = ["basic.json", "nouns.json", "complex.json"];
 
     let all_pos_tags = [
-        "NNG", "NNP", "NNB", "NR", "NP", "VV", "VA", "VX", "VCP", "VCN", "MM", "MAG", "MAJ",
-        "IC", "JKS", "JKC", "JKG", "JKO", "JKB", "JKV", "JKQ", "JX", "JC", "EP", "EF", "EC",
-        "ETN", "ETM", "XPN", "XSN", "XSV", "XSA", "XR", "SF", "SE", "SS", "SP", "SO", "SW",
-        "SL", "SH", "SK", "SN", "NF", "NV",
+        "NNG", "NNP", "NNB", "NR", "NP", "VV", "VA", "VX", "VCP", "VCN", "MM", "MAG", "MAJ", "IC",
+        "JKS", "JKC", "JKG", "JKO", "JKB", "JKV", "JKQ", "JX", "JC", "EP", "EF", "EC", "ETN",
+        "ETM", "XPN", "XSN", "XSV", "XSA", "XR", "SF", "SE", "SS", "SP", "SO", "SW", "SL", "SH",
+        "SK", "SN", "NF", "NV",
     ];
 
     let mut covered: std::collections::HashSet<String> = std::collections::HashSet::new();
 
     for file in &golden_files {
-        let test_cases = load_golden_tests(file).unwrap_or_else(|e| panic!("Failed to load {file}: {e}"));
+        let test_cases =
+            load_golden_tests(file).unwrap_or_else(|e| panic!("Failed to load {file}: {e}"));
         for tc in &test_cases {
             for (_, pos) in &tc.expected_pos {
                 for part in pos.split('+') {
@@ -596,7 +594,10 @@ fn test_golden_pos_coverage() {
     }
 
     let total_standard = all_pos_tags.len();
-    let covered_count = all_pos_tags.iter().filter(|t| covered.contains(**t)).count();
+    let covered_count = all_pos_tags
+        .iter()
+        .filter(|t| covered.contains(**t))
+        .count();
 
     println!("\nPOS Tag Coverage Report:");
     println!("  Covered: {covered_count}/{total_standard}");
@@ -606,7 +607,10 @@ fn test_golden_pos_coverage() {
         println!("    [{mark}] {tag}");
     }
 
-    let uncovered: Vec<&&str> = all_pos_tags.iter().filter(|t| !covered.contains(**t)).collect();
+    let uncovered: Vec<&&str> = all_pos_tags
+        .iter()
+        .filter(|t| !covered.contains(**t))
+        .collect();
     if !uncovered.is_empty() {
         println!("  Uncovered tags: {uncovered:?}");
     }
@@ -624,13 +628,15 @@ fn test_golden_pos_coverage() {
 #[test]
 fn test_golden_category_statistics() {
     let golden_files = ["basic.json", "nouns.json", "complex.json"];
-    let mut category_counts: std::collections::BTreeMap<String, usize> = std::collections::BTreeMap::new();
+    let mut category_counts: std::collections::BTreeMap<String, usize> =
+        std::collections::BTreeMap::new();
     let mut total_with_category = 0usize;
     let mut total_without_category = 0usize;
     let mut total_cases = 0usize;
 
     for file in &golden_files {
-        let test_cases = load_golden_tests(file).unwrap_or_else(|e| panic!("Failed to load {file}: {e}"));
+        let test_cases =
+            load_golden_tests(file).unwrap_or_else(|e| panic!("Failed to load {file}: {e}"));
         let mut file_with = 0usize;
         let mut file_without = 0usize;
 

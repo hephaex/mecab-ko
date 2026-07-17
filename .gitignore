@@ -44,3 +44,33 @@ data/eval/nikl_modu_*.tsv
 
 # Sprint 165 — Track B 학습 데이터 (재생성 가능, 큰 파일)
 data/train/
+
+# legacy/ (vendored mecab C++) build outputs — regenerate with: cd legacy && ./configure && make
+legacy/**/.libs/
+legacy/**/*.la
+legacy/**/*.lai
+legacy/libtool
+legacy/config.log
+legacy/config.status
+legacy/config.h
+legacy/autom4te.cache/
+legacy/Makefile
+legacy/doc/Makefile
+legacy/man/Makefile
+legacy/src/Makefile
+legacy/tests/Makefile
+legacy/mecab-config
+legacy/mecabrc
+legacy/src/mecab
+legacy/src/mecab-cost-train
+legacy/src/mecab-dict-gen
+legacy/src/mecab-dict-index
+legacy/src/mecab-system-eval
+legacy/src/mecab-test-gen
+*~
+
+# Track B training run artifacts (843MB, 재생성 가능 — references/crf-retrain-pipeline.md 참조)
+data/training_run_1/
+
+# GJC 세션 런타임 상태
+.gjc/

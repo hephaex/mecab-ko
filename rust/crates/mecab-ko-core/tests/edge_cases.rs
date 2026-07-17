@@ -469,7 +469,10 @@ fn test_alternating_empty_and_text() {
 fn test_unknown_single_word_produces_tokens() {
     let mut tokenizer = create_tokenizer();
     let tokens = tokenizer.tokenize("다양한");
-    assert!(!tokens.is_empty(), "single unknown word must produce tokens");
+    assert!(
+        !tokens.is_empty(),
+        "single unknown word must produce tokens"
+    );
 }
 
 #[test]
@@ -567,7 +570,11 @@ fn test_unknown_pos_is_valid() {
     let tokens = tokenizer.tokenize("다양한");
     for token in &tokens {
         assert!(
-            !token.pos.is_empty() && token.pos.chars().all(|c| c.is_ascii_alphanumeric() || c == '+'),
+            !token.pos.is_empty()
+                && token
+                    .pos
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || c == '+'),
             "UNKNOWN token '{}' has invalid POS '{}'",
             token.surface,
             token.pos
