@@ -50,8 +50,8 @@ use jni::sys::{jboolean, jlong, jstring};
 use jni::JNIEnv;
 use parking_lot::RwLock;
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicI64, Ordering};
 use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::sync::atomic::{AtomicI64, Ordering};
 use std::sync::{Arc, Mutex};
 
 /// 핸들 ID 생성기 (monotonically increasing, raw pointer 노출 없음)
@@ -86,11 +86,13 @@ pub extern "system" fn Java_com_mecab_ko_search_jni_NativeAnalyzer_createAnalyze
     _class: JClass,
     config_json: JString,
 ) -> jlong {
-    catch_unwind(AssertUnwindSafe(|| match create_analyzer_impl(&mut env, &config_json) {
-        Ok(handle) => handle,
-        Err(e) => {
-            let _ = env.throw_new("java/lang/RuntimeException", format!("{e}"));
-            0
+    catch_unwind(AssertUnwindSafe(|| {
+        match create_analyzer_impl(&mut env, &config_json) {
+            Ok(handle) => handle,
+            Err(e) => {
+                let _ = env.throw_new("java/lang/RuntimeException", format!("{e}"));
+                0
+            }
         }
     }))
     .unwrap_or_else(|_| {
@@ -135,11 +137,13 @@ pub extern "system" fn Java_com_mecab_ko_search_jni_NativeAnalyzer_analyzeText(
     handle: jlong,
     text: JString,
 ) -> jstring {
-    catch_unwind(AssertUnwindSafe(|| match analyze_text_impl(&mut env, handle, &text) {
-        Ok(result) => result,
-        Err(e) => {
-            let _ = env.throw_new("java/lang/RuntimeException", format!("{e}"));
-            JObject::null().into_raw() as jstring
+    catch_unwind(AssertUnwindSafe(|| {
+        match analyze_text_impl(&mut env, handle, &text) {
+            Ok(result) => result,
+            Err(e) => {
+                let _ = env.throw_new("java/lang/RuntimeException", format!("{e}"));
+                JObject::null().into_raw() as jstring
+            }
         }
     }))
     .unwrap_or_else(|_| {

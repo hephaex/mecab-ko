@@ -369,7 +369,7 @@ impl<T> CachingTokenizer<T> {
     }
 
     /// 내부 토크나이저 가변 참조
-    pub fn inner_mut(&mut self) -> &mut T {
+    pub const fn inner_mut(&mut self) -> &mut T {
         &mut self.inner
     }
 

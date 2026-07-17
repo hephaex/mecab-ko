@@ -344,14 +344,12 @@ pub mod csv_parser {
                 // record[0]="" (empty), record[1]="" → parse fail.
                 // 대응: record.len() == 13 AND record[0]/record[1] 모두 empty이면
                 // surface=",", 나머지 field shift.
-                let (surface, field_offset) = if record.len() == 13
-                    && record[0].is_empty()
-                    && record[1].is_empty()
-                {
-                    (",".to_string(), 1)
-                } else {
-                    (record[0].to_string(), 0)
-                };
+                let (surface, field_offset) =
+                    if record.len() == 13 && record[0].is_empty() && record[1].is_empty() {
+                        (",".to_string(), 1)
+                    } else {
+                        (record[0].to_string(), 0)
+                    };
 
                 let mut entry = CsvEntry {
                     surface,

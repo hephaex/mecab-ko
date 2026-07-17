@@ -286,12 +286,9 @@ fn save_entries_format(
     Ok(())
 }
 
-fn verify_entries_format(
-    output_path: &std::path::Path,
-    output_format: OutputFormat,
-) -> Result<()> {
-    use mecab_ko_dict::LazyEntries;
+fn verify_entries_format(output_path: &std::path::Path, output_format: OutputFormat) -> Result<()> {
     use mecab_ko_dict::lazy_entries_v3::LazyEntriesV3;
+    use mecab_ko_dict::LazyEntries;
 
     let fmt_label = match output_format {
         OutputFormat::V3 => "v3",

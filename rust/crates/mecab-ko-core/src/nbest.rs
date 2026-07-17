@@ -712,14 +712,28 @@ mod tests {
         impl ConnectionCost for OobConnectionCost {
             fn cost(&self, right_id: u16, _left_id: u16) -> i32 {
                 // right_id == 0 (BOS)은 0, 나머지 ID는 OOB 시뮬레이션
-                if right_id == 0 { 0 } else { i32::MAX }
+                if right_id == 0 {
+                    0
+                } else {
+                    i32::MAX
+                }
             }
         }
 
         let make_lattice = || {
             let mut l = Lattice::new("AB");
-            l.add_node(NodeBuilder::new("A", 0, 1).left_id(1).right_id(1).word_cost(100));
-            l.add_node(NodeBuilder::new("B", 1, 2).left_id(2).right_id(2).word_cost(200));
+            l.add_node(
+                NodeBuilder::new("A", 0, 1)
+                    .left_id(1)
+                    .right_id(1)
+                    .word_cost(100),
+            );
+            l.add_node(
+                NodeBuilder::new("B", 1, 2)
+                    .left_id(2)
+                    .right_id(2)
+                    .word_cost(200),
+            );
             l
         };
 
@@ -731,8 +745,12 @@ mod tests {
 
         // N-best — top-1 path cost
         let mut lattice_n = make_lattice();
-        let nbest_results = ImprovedNbestSearcher::new(3).search(&mut lattice_n, &OobConnectionCost);
-        let cost_nbest0 = nbest_results.best().map(NbestPath::cost).unwrap_or(i32::MAX);
+        let nbest_results =
+            ImprovedNbestSearcher::new(3).search(&mut lattice_n, &OobConnectionCost);
+        let cost_nbest0 = nbest_results
+            .best()
+            .map(NbestPath::cost)
+            .unwrap_or(i32::MAX);
 
         assert_eq!(
             cost_1best, cost_nbest0,

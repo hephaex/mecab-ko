@@ -186,7 +186,8 @@ impl_lazy_store!(
 );
 
 impl_lazy_store!(
-    struct_doc = "Lazy 로드 저장소 (v3 포맷).\n\nMKE3 v3 포맷의 엔트리를 필요할 때만 디스크에서 읽어옵니다.",
+    struct_doc =
+        "Lazy 로드 저장소 (v3 포맷).\n\nMKE3 v3 포맷의 엔트리를 필요할 때만 디스크에서 읽어옵니다.",
     new_doc = "새 v3 Lazy 저장소 생성.",
     LazyStoreV3,
     LazyEntriesV3

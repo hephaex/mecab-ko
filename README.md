@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/hephaex/mecab-ko/actions/workflows/ci.yml/badge.svg)](https://github.com/hephaex/mecab-ko/actions/workflows/ci.yml)
 [![Security](https://github.com/hephaex/mecab-ko/actions/workflows/security.yml/badge.svg)](https://github.com/hephaex/mecab-ko/actions/workflows/security.yml)
-[![Rust](https://img.shields.io/badge/rust-1.75+-orange.svg)](https://www.rust-lang.org/)
+[![Rust](https://img.shields.io/badge/rust-1.83+-orange.svg)](https://www.rust-lang.org/)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
 [![crates.io](https://img.shields.io/crates/v/mecab-ko.svg)](https://crates.io/crates/mecab-ko)
 [![npm](https://img.shields.io/npm/v/mecab-ko-wasm.svg)](https://www.npmjs.com/package/mecab-ko-wasm)

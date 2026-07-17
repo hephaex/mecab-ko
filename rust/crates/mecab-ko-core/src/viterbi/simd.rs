@@ -21,7 +21,7 @@
 #![allow(unsafe_code)]
 
 use crate::lattice::{Lattice, NodeId};
-use crate::viterbi::{ConnectionCost, SpacePenalty, clamp_oob_cost};
+use crate::viterbi::{clamp_oob_cost, ConnectionCost, SpacePenalty};
 use std::simd::{cmp::SimdPartialOrd, i32x8, num::SimdInt, Select};
 
 /// SIMD 레인 크기

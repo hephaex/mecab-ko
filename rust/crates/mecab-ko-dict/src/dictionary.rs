@@ -258,44 +258,40 @@ impl SystemDictionary {
             return Ok(Arc::new(EagerStore::new(entries)));
         }
         match detect_entries_format(&entries_path) {
-            Ok(EntriesFormat::V3) => {
-                match LazyEntriesV3::from_file(&entries_path) {
-                    Ok(lazy) => {
-                        if let Some(cache_size) = options.lazy_cache_size {
-                            lazy.set_cache_size(cache_size);
-                        }
-                        Ok(Arc::new(LazyStoreV3::new(lazy)))
+            Ok(EntriesFormat::V3) => match LazyEntriesV3::from_file(&entries_path) {
+                Ok(lazy) => {
+                    if let Some(cache_size) = options.lazy_cache_size {
+                        lazy.set_cache_size(cache_size);
                     }
-                    Err(e) => {
-                        tracing::warn!(
-                            error = %e,
-                            path = %entries_path.display(),
-                            "LazyEntriesV3 load failed, falling back to eager loading (memory target may be exceeded)"
-                        );
-                        let entries = Self::load_entries(dicdir)?;
-                        Ok(Arc::new(EagerStore::new(entries)))
-                    }
+                    Ok(Arc::new(LazyStoreV3::new(lazy)))
                 }
-            }
-            Ok(EntriesFormat::V2) => {
-                match LazyEntries::from_file(&entries_path) {
-                    Ok(lazy) => {
-                        if let Some(cache_size) = options.lazy_cache_size {
-                            lazy.set_cache_size(cache_size);
-                        }
-                        Ok(Arc::new(LazyStore::new(lazy)))
-                    }
-                    Err(e) => {
-                        tracing::warn!(
-                            error = %e,
-                            path = %entries_path.display(),
-                            "LazyEntries V2 load failed, falling back to eager loading"
-                        );
-                        let entries = Self::load_entries(dicdir)?;
-                        Ok(Arc::new(EagerStore::new(entries)))
-                    }
+                Err(e) => {
+                    tracing::warn!(
+                        error = %e,
+                        path = %entries_path.display(),
+                        "LazyEntriesV3 load failed, falling back to eager loading (memory target may be exceeded)"
+                    );
+                    let entries = Self::load_entries(dicdir)?;
+                    Ok(Arc::new(EagerStore::new(entries)))
                 }
-            }
+            },
+            Ok(EntriesFormat::V2) => match LazyEntries::from_file(&entries_path) {
+                Ok(lazy) => {
+                    if let Some(cache_size) = options.lazy_cache_size {
+                        lazy.set_cache_size(cache_size);
+                    }
+                    Ok(Arc::new(LazyStore::new(lazy)))
+                }
+                Err(e) => {
+                    tracing::warn!(
+                        error = %e,
+                        path = %entries_path.display(),
+                        "LazyEntries V2 load failed, falling back to eager loading"
+                    );
+                    let entries = Self::load_entries(dicdir)?;
+                    Ok(Arc::new(EagerStore::new(entries)))
+                }
+            },
             Ok(EntriesFormat::V1) | Err(_) => {
                 let entries = Self::load_entries(dicdir)?;
                 Ok(Arc::new(EagerStore::new(entries)))

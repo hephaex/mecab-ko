@@ -86,9 +86,7 @@ pub fn detect_entries_format<P: AsRef<Path>>(path: P) -> Result<EntriesFormat> {
         b"MKE3" => Ok(EntriesFormat::V3),
         b"MKE2" => Ok(EntriesFormat::V2),
         b"MKED" => Ok(EntriesFormat::V1),
-        _ => Err(DictError::Format(format!(
-            "unknown magic bytes: {magic:?}"
-        ))),
+        _ => Err(DictError::Format(format!("unknown magic bytes: {magic:?}"))),
     }
 }
 
@@ -286,7 +284,9 @@ impl LazyEntriesV3 {
             )));
         }
         let index_bytes = u64::from(index).checked_mul(8).ok_or_else(|| {
-            DictError::Format(format!("MKE3: index position size overflow (index={index})"))
+            DictError::Format(format!(
+                "MKE3: index position size overflow (index={index})"
+            ))
         })?;
         let table_pos = self.index_offset.checked_add(index_bytes).ok_or_else(|| {
             DictError::Format(format!(
@@ -296,7 +296,7 @@ impl LazyEntriesV3 {
         })?;
         let mmap_len = u64::try_from(self.mmap.len())
             .map_err(|_| DictError::Format("MKE3: mmap length overflow".into()))?;
-        if table_pos.checked_add(8).map_or(true, |end| end > mmap_len) {
+        if table_pos.checked_add(8).is_none_or(|end| end > mmap_len) {
             return Err(DictError::Format(format!(
                 "MKE3: index table overflow at position {table_pos}"
             )));
@@ -448,10 +448,7 @@ pub fn save_entries_v3<P: AsRef<Path>>(entries: &[DictEntry], path: P) -> Result
 ///
 /// Returns an error if the source cannot be read or the destination
 /// cannot be written.
-pub fn migrate_v2_to_v3<P: AsRef<Path>, Q: AsRef<Path>>(
-    v2_path: P,
-    v3_path: Q,
-) -> Result<usize> {
+pub fn migrate_v2_to_v3<P: AsRef<Path>, Q: AsRef<Path>>(v2_path: P, v3_path: Q) -> Result<usize> {
     use crate::lazy_entries::LazyEntries;
 
     let v2 = LazyEntries::from_file(v2_path)?;

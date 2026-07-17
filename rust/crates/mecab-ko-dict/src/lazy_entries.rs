@@ -71,7 +71,6 @@ pub struct LazyEntries {
     cache: RwLock<lru::LruCache<u32, Arc<DictEntry>>>,
 }
 
-
 impl LazyEntries {
     /// entries.bin v2 파일에서 로드
     ///
@@ -192,7 +191,7 @@ impl LazyEntries {
         })?;
         let mmap_len = u64::try_from(self.mmap.len())
             .map_err(|_| DictError::Format("mmap length overflow".into()))?;
-        if index_pos.checked_add(8).map_or(true, |end| end > mmap_len) {
+        if index_pos.checked_add(8).is_none_or(|end| end > mmap_len) {
             return Err(DictError::Format(format!(
                 "index table overflow at position {index_pos}"
             )));
@@ -617,8 +616,7 @@ mod tests {
 
     #[test]
     fn test_lru_cache_eviction() {
-        let mut cache =
-            lru::LruCache::<u32, Arc<DictEntry>>::new(NonZeroUsize::new(2).unwrap());
+        let mut cache = lru::LruCache::<u32, Arc<DictEntry>>::new(NonZeroUsize::new(2).unwrap());
 
         cache.put(0, Arc::new(DictEntry::new("가", 1, 1, 100, "")));
         cache.put(1, Arc::new(DictEntry::new("나", 2, 2, 200, "")));

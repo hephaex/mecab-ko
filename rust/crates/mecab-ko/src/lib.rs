@@ -208,20 +208,20 @@ pub mod tokenizer {
 /// `HotReload*` 등)은 의도적으로 노출하지 않습니다.
 pub mod dict {
     pub use mecab_ko_dict::{
+        // 에러
+        error::DictError,
         // 사전 로딩
         DictEntry,
+        // 공용 트레이트 및 타입
+        Dictionary,
         DictionaryLoader,
+        Entry,
         LoadOptions,
         SystemDictionary,
         // 사용자 사전
         UserDictionary,
         UserDictionaryBuilder,
         UserEntry,
-        // 공용 트레이트 및 타입
-        Dictionary,
-        Entry,
-        // 에러
-        error::DictError,
     };
 }
 

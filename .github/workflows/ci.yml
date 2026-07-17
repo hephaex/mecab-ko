@@ -68,17 +68,17 @@ jobs:
 
   # MSRV check — library crates must compile on declared minimum Rust version
   msrv:
-    name: MSRV Check (Rust 1.80)
+    name: MSRV Check (Rust 1.83)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Set up Rust 1.80
+      - name: Set up Rust 1.83
         uses: ./.github/actions/rust-setup
         with:
-          toolchain: 1.80.0
-          cache-key: msrv-1.80
+          toolchain: 1.83.0
+          cache-key: msrv-1.83
 
       - name: Check library crates on MSRV
         run: |
