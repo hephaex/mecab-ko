@@ -17,10 +17,15 @@ MeCab-Ko는 [은전한닢 프로젝트](https://bitbucket.org/eunjeon/mecab-ko)�
 
 | 지표 | v0.5.0 | v0.6.0 | v0.7.2 |
 |------|--------|--------|--------|
-| Token Accuracy | 100.0% | 100.0% | **100.0%** |
+| Token Accuracy (자체셋) | 100.0% | 100.0% | **100.0%** |
+| 외부 골드셋 F1 (세종 정규화) | — | — | **0.703** (UD-GSD 0.710 / UD-Kaist 0.705 / KLUE-DP 0.694) |
 | 테스트 | 500문장 | 1,100문장 | **1,149 pass / 18 ignored** |
 | 처리 속도 | ~238K tok/sec | ~680K tok/sec | **~680K tok/sec** |
 | 메모리 사용량 | ~150MB | ~150MB | **~34MB (-77%)** |
+
+> 자체셋 100%는 자체 사전 기반 자체 테스트셋의 토큰 일치율입니다. 외부 골드셋 F1은
+> `scripts/review/measure_f1.py`로 실측한 값이며(silver 변환 특성상 상한이 1.0 미만),
+> 상세는 [`docs/research/competitor-analysis/`](docs/research/competitor-analysis/) 참조.
 
 ### 설치 방법
 
@@ -285,7 +290,8 @@ mecab evaluate --input test.tsv --dicdir ./dict-output --sejong
 
 | 지표 | 목표 | 현재 |
 |------|------|------|
-| Token Accuracy | 95%+ | **100.0%** (1,100문장) |
+| Token Accuracy (자체셋) | 95%+ | **100.0%** (1,100문장) |
+| 외부 골드셋 F1 (실측) | — | **0.703** (세종 정규화, `measure_f1.py`) |
 | 토큰화 속도 | ~150K 단어/초 | **~680K 단어/초** |
 | 콜드 스타트 | < 200ms | **0.13ms** |
 | 메모리 사용량 | < 100MB | **~34MB** (LazyEntries) |
