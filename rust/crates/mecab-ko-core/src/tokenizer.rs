@@ -790,8 +790,7 @@ mod tests {
             ("신다", 5),
         ];
         let trie_bytes = TrieBuilder::build_unsorted(&mut trie_entries).expect("should build trie");
-        let trie =
-            mecab_ko_dict::TrieBackend::Owned(mecab_ko_dict::Trie::from_vec(trie_bytes));
+        let trie = mecab_ko_dict::TrieBackend::Owned(mecab_ko_dict::Trie::from_vec(trie_bytes));
 
         // 테스트용 Matrix 생성
         let matrix = DenseMatrix::new(10, 10, 100);

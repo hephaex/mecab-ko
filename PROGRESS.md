@@ -97,7 +97,7 @@ Sejong 코퍼스 입수 시 즉시 재활용:
 
 ## 검증
 
-- `cargo test --workspace --exclude mecab-ko-ffi --lib`: 411 pass (변경 없음)
+- `cargo test --workspace --exclude mecab-ko-ffi --lib`: 717 pass (2026-06-25 기준, +6 from 711)
 - 5-gate sample.tsv: 100.0%/99.9% (baseline 유지)
 - 성능 회귀 없음 (v0.3.0 → v0.7.2)
 
@@ -109,3 +109,33 @@ Sejong 코퍼스 입수 시 즉시 재활용:
 ## Sprint 175+ (트리거 조건 발생 시 재개)
 
 자동 sprint-run 정지 상태. 다음 명시 작업 발생 시 즉시 재개 가능.
+
+## Sprint 175 — REDTEAM_REVIEW.md 후속 조치 (2026-07-02)
+
+`docs/REDTEAM_REVIEW.md` (2026-06-30 정적 분석 + cargo audit/clippy) 우선순위 로드맵 중
+자동 진행 가능한 항목 처리. `docs/REVIEW_HIGHLIGHTS.md`의 clamp_oob_cost / silent
+eager fallback / JNI catch_unwind 항목은 재검토 결과 이미 코드에 반영되어 있음을 확인
+(리뷰 문서가 stale — 코드가 리뷰보다 최신).
+
+| Task | 상태 | 결과 |
+|------|------|------|
+| H-3: 사전 헤더 정수 오버플로우 | ✅ 완료 | `lazy_entries_v3.rs`(2곳)·`lazy_entries.rs`(1곳) `checked_add`/`checked_mul`로 교체, `index_pos+8`/`table_pos+8` 오버플로우도 방어 |
+| M-1: `deny.toml` `[advisories]` 미설정 | ✅ 완료 | vulnerability/yanked 기본 deny 유지, `unmaintained`/`unsound` scope="workspace", 이미 추적 중인 RUSTSEC ID 6건에 근거 주석 포함 `ignore` 등록 |
+| 신규 발견: quick-xml 0.36.2 취약점 (RUSTSEC-2026-0195/0194) | ✅ 완료 | `mecab-ko-dict-sync`의 직접 의존성을 0.41로 상향 (REDTEAM 검토일 이후 신규 advisory) |
+| H-1 quinn-proto / H-2 memmap2 / M-4 rkyv / M-5 anyhow | ⏸ 보류 | 패치 버전 upstream 미출시 또는 실제 도달 불가 경로(quinn-proto는 mockito 개발 의존성, http3 미사용) — `deny.toml`에 근거와 함께 ignore 등록 |
+| M-3 JNI 경로 검증 / M-2 캐시 키 충돌 | 미착수 | 다음 세션 후보 |
+
+### 검증
+- `cargo build --workspace`: 성공
+- `cargo test --workspace --exclude mecab-ko-ffi --lib`: 717 pass (회귀 없음)
+- `cargo clippy --workspace`: 경고 0
+- `cargo deny check`: advisories/bans/licenses/sources ok
+
+### 변경 파일
+- `rust/crates/mecab-ko-dict/src/lazy_entries_v3.rs`
+- `rust/crates/mecab-ko-dict/src/lazy_entries.rs`
+- `rust/crates/mecab-ko-dict-sync/Cargo.toml`
+- `rust/deny.toml`
+
+이 작업은 PLAN.md 유지보수 모드의 "사용자 명시 신규 영역" 트리거(레드팀 리뷰 후속 조치)로
+진행됨. NIKL Modu/Sejong 코퍼스 트리거는 여전히 미충족 — 정확도 sprint는 계속 정지 상태.

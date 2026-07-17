@@ -1,0 +1,376 @@
+#!/usr/bin/env python3
+"""Competitor comparison review generator.
+
+Automates the "garu vs mecab-ko" style comparative review so it can be
+regenerated on demand (or on a schedule) with fresh, self-collected metrics.
+
+What is automated
+-----------------
+* Live competitor repo stats via the GitHub API (stars / forks / issues / last push).
+* Competitor headline metrics parsed from its README (model size, WASM size, F1).
+* Local mecab-ko metrics measured from this working tree (compiled dict size,
+  WASM binary size, crate count, README-reported speed / memory / test counts).
+* A dated Markdown document rendered from the template below.
+
+What is NOT automated
+---------------------
+The qualitative verdicts (architecture trade-offs, recommendations) are authored
+judgement kept in ANALYSIS_* constants. The generator refreshes the *data* and the
+*timestamp* around that judgement so the document never silently goes stale while
+pretending numbers were re-measured when they were not.
+
+Usage
+-----
+    python3 scripts/review/competitor_review.py            # write the doc
+    python3 scripts/review/competitor_review.py --check     # fail if stale/out of date
+    python3 scripts/review/competitor_review.py --stdout    # print, do not write
+
+Exit codes: 0 ok, 1 network/parse error (data left as "N/A"), 2 --check mismatch.
+"""
+from __future__ import annotations
+
+import argparse
+import datetime as _dt
+import json
+import re
+import subprocess
+import sys
+import urllib.request
+from dataclasses import dataclass, field
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+OUTPUT = REPO_ROOT / "docs" / "research" / "competitor-analysis" / "garu-vs-mecab-ko.md"
+F1_JSON = REPO_ROOT / "docs" / "research" / "competitor-analysis" / "mecab_f1.json"
+GITHUB_REPO = "ongjin/garu"
+GARU_README_RAW = "https://raw.githubusercontent.com/ongjin/garu/main/README.md"
+UA = {"User-Agent": "mecab-ko-competitor-review"}
+NA = "N/A"
+
+
+# --------------------------------------------------------------------------- #
+# data collection                                                             #
+# --------------------------------------------------------------------------- #
+@dataclass
+class Metrics:
+    generated_at: str = ""
+    errors: list[str] = field(default_factory=list)
+    # competitor (garu)
+    garu_stars: str = NA
+    garu_forks: str = NA
+    garu_issues: str = NA
+    garu_pushed: str = NA
+    garu_model_size: str = NA
+    garu_wasm_size: str = NA
+    garu_f1_v15k: str = NA
+    garu_f1_nikl: str = NA
+    # local (mecab-ko)
+    mecab_dict_size: str = NA
+    mecab_wasm_size: str = NA
+    mecab_crate_count: str = NA
+    mecab_speed: str = NA
+    mecab_memory: str = NA
+    mecab_tests: str = NA
+    # external gold-set F1 (measured by scripts/review/measure_f1.py)
+    mecab_f1_mean: str = NA
+    mecab_f1_range: str = NA
+    mecab_f1_gsd: str = NA
+    mecab_f1_kaist: str = NA
+    mecab_f1_klue: str = NA
+    mecab_f1_measured_at: str = NA
+
+
+def _fetch(url: str, timeout: int = 20) -> str:
+    req = urllib.request.Request(url, headers=UA)
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return resp.read().decode("utf-8", "replace")
+
+
+def _search(pattern: str, text: str, group: int = 1) -> str:
+    m = re.search(pattern, text)
+    return m.group(group).strip() if m else NA
+
+
+def collect_github(m: Metrics) -> None:
+    try:
+        d = json.loads(_fetch(f"https://api.github.com/repos/{GITHUB_REPO}"))
+        m.garu_stars = str(d.get("stargazers_count", NA))
+        m.garu_forks = str(d.get("forks_count", NA))
+        m.garu_issues = str(d.get("open_issues_count", NA))
+        m.garu_pushed = str(d.get("pushed_at", NA))[:10]
+    except Exception as exc:  # noqa: BLE001
+        m.errors.append(f"github api: {exc}")
+
+
+def collect_garu_readme(m: Metrics) -> None:
+    try:
+        txt = _fetch(GARU_README_RAW)
+    except Exception as exc:  # noqa: BLE001
+        m.errors.append(f"garu readme: {exc}")
+        return
+    # "1MB 코드북 모델, 337KB WASM"
+    m.garu_model_size = _search(r"([0-9.]+\s*MB)\s*코드북", txt)
+    m.garu_wasm_size = _search(r"([0-9]+\s*KB)\s*WASM", txt)
+    # "F1 95.3% (9,000문장 v15k ..." and "NIKL MP F1 93.9%"
+    m.garu_f1_v15k = _search(r"F1\s*([0-9.]+%)\s*\(9,000", txt)
+    m.garu_f1_nikl = _search(r"NIKL MP F1\s*([0-9.]+%)", txt)
+
+
+def _du(path: Path) -> str:
+    if not path.exists():
+        return NA
+    try:
+        out = subprocess.check_output(["du", "-sh", str(path)], text=True)
+        return out.split("\t", 1)[0].strip()
+    except Exception:  # noqa: BLE001
+        return NA
+
+
+
+def collect_local(m: Metrics) -> None:
+    m.mecab_dict_size = _du(REPO_ROOT / "data" / "dict-output")
+    wasm = REPO_ROOT / "rust" / "crates" / "mecab-ko-wasm" / "pkg" / "mecab_ko_wasm_bg.wasm"
+    if wasm.exists():
+        m.mecab_wasm_size = f"{round(wasm.stat().st_size/1024)}KB"
+    # crate count
+    crates_dir = REPO_ROOT / "rust" / "crates"
+    if crates_dir.exists():
+        m.mecab_crate_count = str(sum(1 for p in crates_dir.iterdir() if (p / "Cargo.toml").exists()))
+    # parse root README for reported figures
+    readme = REPO_ROOT / "README.md"
+    if readme.exists():
+        txt = readme.read_text("utf-8", "replace")
+        # speed: pick the largest "NNNK tok/sec | 단어/초" figure (headline, not the oldest column)
+        speeds = re.findall(r"([0-9]+)K\s*(?:tokens?/sec|tok/sec|단어/초)", txt)
+        if speeds:
+            m.mecab_speed = f"{max(int(s) for s in speeds)}K"
+        # memory: tolerate markdown bold/whitespace around "(LazyEntries)"
+        m.mecab_memory = _search(r"([0-9]+MB)\**\s*\(LazyEntries\)", txt)
+        m.mecab_tests = _search(r"([0-9,]+)\s*pass", txt)
+
+
+def collect_f1(m: Metrics) -> None:
+    """Load externally-measured gold-set F1 from mecab_f1.json (see measure_f1.py)."""
+    if not F1_JSON.exists():
+        m.errors.append("mecab_f1.json missing (run scripts/review/measure_f1.py)")
+        return
+    try:
+        d = json.loads(F1_JSON.read_text("utf-8"))
+    except Exception as exc:  # noqa: BLE001
+        m.errors.append(f"mecab_f1.json parse: {exc}")
+        return
+    s = d.get("summary", {})
+    mean = s.get("external_gold_sejong_f1_mean")
+    rng = s.get("external_gold_sejong_f1_range")
+    m.mecab_f1_mean = f"{mean:.3f}" if isinstance(mean, (int, float)) else NA
+    m.mecab_f1_range = f"{rng[0]:.3f}–{rng[1]:.3f}" if isinstance(rng, list) and len(rng) == 2 else NA
+    m.mecab_f1_measured_at = str(d.get("measured_at", NA))
+    ds = d.get("datasets", {})
+
+    def _f1(label: str) -> str:
+        v = ds.get(label, {}).get("sejong", {}).get("f1")
+        return f"{v:.3f}" if isinstance(v, (int, float)) else NA
+
+    m.mecab_f1_gsd = _f1("UD-GSD")
+    m.mecab_f1_kaist = _f1("UD-Kaist")
+    m.mecab_f1_klue = _f1("KLUE-DP")
+
+
+def collect() -> Metrics:
+    m = Metrics(generated_at=_dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"))
+    collect_github(m)
+    collect_garu_readme(m)
+    collect_local(m)
+    collect_f1(m)
+    return m
+
+
+# --------------------------------------------------------------------------- #
+# qualitative analysis (authored judgement, refreshed data around it)         #
+# --------------------------------------------------------------------------- #
+ANALYSIS_SUMMARY = """\
+**두 프로젝트는 같은 문제(한국어 형태소 분석)를 정반대 설계 철학으로 푼다.** garu는 *브라우저에서
+도는 초경량 근사기*, mecab-ko는 *서버/네이티브용 정통 MeCab 재구현체*다. 경쟁 관계가 아니라
+**배포 타깃이 다른 상호 보완재**에 가깝다."""
+
+ANALYSIS_ARCH = """\
+| 항목 | garu (ongjin) | mecab-ko (현재) |
+|---|---|---|
+| 알고리즘 | 코드북 + 어절 캐시 + 문장 N-best Trigram Viterbi + 결정적 POS 보정 | 정통 MeCab: 사전(Trie) + 연접비용 행렬 + Lattice Viterbi |
+| 데이터 출처 | NIKL 골드 + Kiwi 출력 하이브리드(빈도·패턴만) | mecab-ko-dic 2.1.1 원본 사전 |
+| 성격 | 통계 근사 + 규칙 후처리 | 사전 기반 결정적 최단경로 |
+| 신경망 | 없음 (결정적) | 없음 (결정적) |
+| 태그셋 | 세종 42태그 | 세종 코퍼스 호환 |
+
+핵심: garu는 "정확도를 조금 양보하는 대신 소형 모델에 우겨넣는" 압축 게임을, mecab-ko는 "사전을
+그대로 들고 가는 대신 정확·완전한" 정통 노선을 택했다."""
+
+ANALYSIS_ACCURACY = """\
+- **garu**: F1(정밀도/재현율) 기준, 자체 v15k 골드({garu_f1_v15k}) 및 NIKL MP({garu_f1_nikl})에서 보고.
+- **mecab-ko (자체셋)**: Token Accuracy 100.0% — 자체 사전 기반 자체 테스트셋의 토큰 일치율.
+- **mecab-ko (외부 골드셋, 실측)**: Sejong 정규화 F1 **{mecab_f1_mean}** (범위 {mecab_f1_range})
+  — UD-GSD {mecab_f1_gsd} / UD-Kaist {mecab_f1_kaist} / KLUE-DP {mecab_f1_klue}.
+  측정 시각 {mecab_f1_measured_at}, `scripts/review/measure_f1.py` 실행 결과.
+  상세 수치는 [`mecab_f1.json`](./mecab_f1.json).
+
+> ⚠️ **비교 주의**:
+> 1. mecab-ko의 "100%"는 자체 생성/자체 정답 테스트셋 기준이라 garu의 외부 골드셋 F1과 같은 선상에서
+>    비교하면 안 된다. **외부 골드셋 실측 F1 {mecab_f1_mean}** 이 정직한 비교 지표다.
+> 2. 다만 mecab-ko가 측정한 UD-GSD/UD-Kaist/KLUE-DP는 native 태그를 Sejong으로 lossy 변환한
+>    **silver** 데이터셋이라 완벽한 분석기도 1.0에 못 미친다. garu가 보고한 v15k/NIKL MP와도 다른
+>    데이터셋이므로 이 수치들은 **직접 head-to-head가 아니라 방향성 지표**로만 해석해야 한다.
+> 3. 완전한 등가 비교를 하려면 두 분석기를 동일 골드셋(예: NIKL MP)에서 같은 스크립트로 측정해야 한다."""
+
+ANALYSIS_LEARN_FROM_GARU = """\
+1. **경량 브라우저 프로파일 추가** — 현재 컴파일 사전 규모 때문에 웹 오프라인 배포가 막혀 있다.
+   garu식 코드북/압축 사전 서브셋(mini-dict) WASM 번들을 완성하면 "네이티브는 mecab-ko, 웹은
+   경량모드" 원스톱이 된다. (`docs/archive/MINI_DICT_COMPLETION.md` 참조 — 방향은 이미 잡혀 있음.)
+2. **정확도 재보고 (착수 완료)** — 외부 골드셋 F1 실측 파이프라인(`measure_f1.py`)을 붙여 자체셋
+   100% 대신 Sejong 정규화 F1을 병기하기 시작했다. 다음 단계는 **동일 골드셋(NIKL MP 등)에서
+   garu와 같은 스크립트로 측정**해 완전 등가 비교를 만드는 것.
+3. **검색 토크나이저 생태계 확장** — garu는 Orama/MiniSearch 어댑터를 냈다. mecab-ko도 ES/OpenSearch
+   외에 JS 검색 라이브러리 어댑터를 npm에 내면 프론트 진영을 흡수할 수 있다.
+4. **리포 다이어트** — 루트/크레이트의 `*-SUMMARY.md`/`*-STATUS.md`/`DELIVERABLES.md`류를
+   `docs/archive`로 정리해 진입장벽을 낮춘다."""
+
+ANALYSIS_MECAB_STRENGTHS = """\
+1. **정통성·완전성** — 사전 기반이라 커버리지가 넓고 신조어는 사용자 사전으로 확장 가능. garu는
+   코드북 밖 단어에 취약할 수 있다.
+2. **생태계 폭** — Python/KoNLPy 호환, ES/OpenSearch 프로덕션 플러그인은 garu에 없는 자산.
+3. **성능 투명성** — 처리 속도·메모리 프로파일링이 구체적."""
+
+ANALYSIS_VERDICT = """\
+- **웹/오프라인/모바일/번들 크기가 관건이면 → garu.** 소형 모델 브라우저 실행은 독보적이다.
+- **서버 백엔드/검색 인프라/파이썬 파이프라인/최대 커버리지가 관건이면 → mecab-ko.**
+
+**mecab-ko에 대한 냉정한 조언**: README의 "Token Accuracy 100%"는 자체셋 기준이라 그 자체로는
+garu의 F1 옆에서 신뢰를 깎는다. 이제 외부 골드셋 F1({mecab_f1_mean})을 실측해 병기하므로, 다음은
+그 수치를 **README 정확도 섹션에도 반영**하고, garu가 선점한 "경량 웹 배포" 틈새를 mini-dict로
+메꾸는 것이 가장 임팩트 큰 다음 수다."""
+
+
+# --------------------------------------------------------------------------- #
+# rendering                                                                    #
+# --------------------------------------------------------------------------- #
+GENERATED_MARKER = "<!-- AUTO-GENERATED by scripts/review/competitor_review.py — do not edit metrics tables by hand -->"
+
+
+def render(m: Metrics) -> str:
+    err = ""
+    if m.errors:
+        err = "\n> ⚠️ 일부 지표 수집 실패(값은 `N/A`): " + "; ".join(m.errors) + "\n"
+    acc = ANALYSIS_ACCURACY.format(**vars(m))
+    verdict = ANALYSIS_VERDICT.format(**vars(m))
+    learn = ANALYSIS_LEARN_FROM_GARU
+    return f"""# garu vs mecab-ko — 비교 분석
+
+{GENERATED_MARKER}
+
+> **생성 시각**: {m.generated_at}
+> **생성 방식**: `python3 scripts/review/competitor_review.py` (지표 자동 수집, 정성 평가는 편집자 판단)
+> **대상**: [`ongjin/garu`](https://github.com/{GITHUB_REPO}) vs 본 리포(`mecab-ko`)
+{err}
+## 한 줄 요약
+
+{ANALYSIS_SUMMARY}
+
+## 자동 수집 지표 (매 실행 시 갱신)
+
+### 저장소 활동 (garu, GitHub API)
+
+| 지표 | 값 |
+|---|---|
+| Stars | {m.garu_stars} |
+| Forks | {m.garu_forks} |
+| Open Issues | {m.garu_issues} |
+| 최근 push | {m.garu_pushed} |
+
+### 크기·정확도 지표
+
+| 지표 | garu | mecab-ko |
+|---|---|---|
+| 모델/사전 크기 | {m.garu_model_size} (코드북) | {m.mecab_dict_size} (컴파일 사전) |
+| WASM 바이너리 | {m.garu_wasm_size} | {m.mecab_wasm_size} |
+| 보고 정확도 (자체셋) | F1 {m.garu_f1_v15k} (v15k), F1 {m.garu_f1_nikl} (NIKL MP) | Token Acc. 100% (자체셋, {m.mecab_tests} pass) |
+| 외부 골드셋 F1 (실측) | (v15k/NIKL — garu 자체 보고) | Sejong F1 {m.mecab_f1_mean} (UD/KLUE silver, 범위 {m.mecab_f1_range}) |
+| 처리 속도 | (README 미표기) | ~{m.mecab_speed} tok/s |
+| 메모리 | (브라우저) | ~{m.mecab_memory} |
+| 배포 크레이트/패키지 | npm 단일(`garu-ko`) 중심 | Rust 크레이트 {m.mecab_crate_count}개 + Py/Node/WASM/JNI |
+
+> 크기 지표 해석: garu는 소형 코드북을 npm에 번들해 브라우저 오프라인 실행이 가능하다. mecab-ko는
+> WASM 바이너리 자체는 작지만 **컴파일 사전을 함께 로드해야 해서** 브라우저 오프라인 배포는 사실상
+> 어렵다. 이것이 두 프로젝트의 근본적 배포 격차다.
+
+## 근본 아키텍처 차이
+
+{ANALYSIS_ARCH}
+
+## 정확도 지표 — 직접 비교 불가에 주의
+
+{acc}
+
+## garu에서 배울 것 (mecab-ko 개선 제안)
+
+{learn}
+
+## mecab-ko가 앞서는 것 (garu가 배울 것)
+
+{ANALYSIS_MECAB_STRENGTHS}
+
+## 최종 판정
+
+{verdict}
+
+---
+
+*이 문서는 자동 생성됩니다. 지표 표는 손으로 고치지 말고 생성기를 다시 실행하세요.
+정성 평가를 바꾸려면 `scripts/review/competitor_review.py`의 `ANALYSIS_*` 상수를 수정하세요.*
+"""
+
+
+def _strip_timestamp(text: str) -> str:
+    """Remove volatile lines so --check ignores timestamp/stat churn."""
+    out = []
+    for line in text.splitlines():
+        if line.startswith("> **생성 시각**:"):
+            continue
+        out.append(line)
+    return "\n".join(out)
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--stdout", action="store_true", help="print instead of writing")
+    ap.add_argument("--check", action="store_true", help="exit 2 if content (minus timestamp) changed")
+    args = ap.parse_args()
+
+    m = collect()
+    content = render(m)
+
+    if args.stdout:
+        print(content)
+        return 1 if m.errors else 0
+
+    if args.check:
+        if not OUTPUT.exists():
+            print(f"[check] missing {OUTPUT}", file=sys.stderr)
+            return 2
+        old = _strip_timestamp(OUTPUT.read_text("utf-8"))
+        new = _strip_timestamp(content)
+        if old != new:
+            print("[check] competitor review is out of date; run without --check", file=sys.stderr)
+            return 2
+        print("[check] up to date")
+        return 0
+
+    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+    OUTPUT.write_text(content, "utf-8")
+    print(f"wrote {OUTPUT.relative_to(REPO_ROOT)}")
+    if m.errors:
+        print("warnings: " + "; ".join(m.errors), file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

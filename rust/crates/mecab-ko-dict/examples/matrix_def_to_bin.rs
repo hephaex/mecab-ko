@@ -29,7 +29,11 @@ fn main() -> ExitCode {
             return ExitCode::from(2);
         }
     };
-    println!("Loaded: lsize={} rsize={}", matrix.left_size(), matrix.right_size());
+    println!(
+        "Loaded: lsize={} rsize={}",
+        matrix.left_size(),
+        matrix.right_size()
+    );
 
     println!("Writing compressed binary to {output}");
     if let Err(e) = matrix.to_compressed_file(output, 3) {

@@ -124,11 +124,7 @@ impl<'a> Trie<'a> {
 
     /// 텍스트의 특정 위치에서 공통 접두사 검색
     #[must_use]
-    pub fn common_prefix_search_at(
-        &self,
-        text: &str,
-        start_byte: usize,
-    ) -> PrefixSearchResult {
+    pub fn common_prefix_search_at(&self, text: &str, start_byte: usize) -> PrefixSearchResult {
         if start_byte >= text.len() {
             return PrefixSearchResult::new();
         }

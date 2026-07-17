@@ -95,3 +95,44 @@ jobs:
           name: status-report
           path: status.md
           retention-days: 30
+
+  competitor-review:
+    name: Regenerate Competitor Review
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '0 2 * * 0' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Refresh external gold-set F1 (only if compiled dict is present)
+        run: |
+          if [ -d data/dict-output ] && [ -f rust/target/release/mecab ]; then
+            echo "Compiled dict + CLI present — measuring F1"
+            python3 scripts/review/measure_f1.py
+          else
+            echo "No compiled dict/CLI in CI — keeping committed mecab_f1.json"
+          fi
+        continue-on-error: true
+
+      - name: Regenerate garu vs mecab-ko review
+        run: python3 scripts/review/competitor_review.py
+        continue-on-error: true
+
+      - name: Commit if changed
+        run: |
+          if [ -n "$(git status --porcelain docs/research/competitor-analysis)" ]; then
+            git config user.name  "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add docs/research/competitor-analysis
+            git commit -m "docs: refresh competitor review (garu vs mecab-ko) [skip ci]"
+            git push
+          else
+            echo "No changes in competitor review."
+          fi

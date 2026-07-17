@@ -71,7 +71,6 @@ pub struct LazyEntries {
     cache: RwLock<lru::LruCache<u32, Arc<DictEntry>>>,
 }
 
-
 impl LazyEntries {
     /// entries.bin v2 파일에서 로드
     ///
@@ -181,10 +180,18 @@ impl LazyEntries {
         }
 
         // 인덱스 테이블에서 오프셋 읽기
-        let index_pos = self.index_offset + (u64::from(index) * 8);
+        let index_bytes = u64::from(index).checked_mul(8).ok_or_else(|| {
+            DictError::Format(format!("index position size overflow (index={index})"))
+        })?;
+        let index_pos = self.index_offset.checked_add(index_bytes).ok_or_else(|| {
+            DictError::Format(format!(
+                "index position overflow (index_offset={}, index={index})",
+                self.index_offset
+            ))
+        })?;
         let mmap_len = u64::try_from(self.mmap.len())
             .map_err(|_| DictError::Format("mmap length overflow".into()))?;
-        if index_pos + 8 > mmap_len {
+        if index_pos.checked_add(8).is_none_or(|end| end > mmap_len) {
             return Err(DictError::Format(format!(
                 "index table overflow at position {index_pos}"
             )));
@@ -609,8 +616,7 @@ mod tests {
 
     #[test]
     fn test_lru_cache_eviction() {
-        let mut cache =
-            lru::LruCache::<u32, Arc<DictEntry>>::new(NonZeroUsize::new(2).unwrap());
+        let mut cache = lru::LruCache::<u32, Arc<DictEntry>>::new(NonZeroUsize::new(2).unwrap());
 
         cache.put(0, Arc::new(DictEntry::new("가", 1, 1, 100, "")));
         cache.put(1, Arc::new(DictEntry::new("나", 2, 2, 200, "")));

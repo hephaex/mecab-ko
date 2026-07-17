@@ -115,10 +115,7 @@ impl DictValidator {
                 continue; // Skip empty lines and comments
             }
 
-            match Self::parse_entry(&line, line_num) {
-                Ok(entry) => entries.push(entry),
-                Err(e) => return Err(e),
-            }
+            entries.push(Self::parse_entry(&line, line_num)?);
         }
 
         Ok(entries)

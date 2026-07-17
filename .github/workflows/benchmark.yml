@@ -147,7 +147,10 @@ jobs:
 
       - name: Checkout base branch
         run: |
-          git fetch origin ${{ github.base_ref }}
+          # 명시적 refspec 필수: 이 리포에는 'main'이라는 이름의 태그가 있어
+          # 'git fetch origin main'이 브랜치 대신 태그를 FETCH_HEAD로 가져가
+          # origin/<base> 추적 ref가 생성되지 않는다 (checkout 실패 원인).
+          git fetch origin "+refs/heads/${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}"
 
       - name: Set up Rust
         uses: ./.github/actions/rust-setup

@@ -39,7 +39,17 @@ jobs:
         run: cargo install cargo-audit
 
       - name: Run cargo audit
-        run: cd rust && cargo audit
+        # --ignore 목록은 rust/deny.toml [advisories].ignore와 동기화 유지.
+        # 근거(상세는 deny.toml 주석):
+        #   RUSTSEC-2026-0195/0194: quick-xml 0.26 — inferno 경유 (profiler optional
+        #     feature 전용, 기본 빌드 미포함); 직접 의존성은 0.41로 상향 완료
+        #   RUSTSEC-2026-0185: quinn-proto — mockito dev-dependency 경유
+        #     (reqwest http3/quic 미사용, 출하 경로에서 도달 불가)
+        run: |
+          cd rust && cargo audit \
+            --ignore RUSTSEC-2026-0195 \
+            --ignore RUSTSEC-2026-0194 \
+            --ignore RUSTSEC-2026-0185
 
   # Dependency checking with cargo-deny
   cargo-deny:

@@ -28,6 +28,9 @@ parking_lot = "0.12"
 napi-build = "2.3"
 
 [lints.rust]
+# napi-derive 매크로가 FFI extern fn을 unsafe로 생성하므로 allow 필요.
+# workspace의 deny(unsafe_code)는 workspace에서 exclude된 이 크레이트에는 적용되지 않음.
+# 참고: https://napi.rs/docs/introduction/getting-started
 unsafe_code = "allow"
 missing_docs = "warn"
 

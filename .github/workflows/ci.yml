@@ -68,17 +68,17 @@ jobs:
 
   # MSRV check — library crates must compile on declared minimum Rust version
   msrv:
-    name: MSRV Check (Rust 1.80)
+    name: MSRV Check (Rust 1.83)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Set up Rust 1.80
+      - name: Set up Rust 1.83
         uses: ./.github/actions/rust-setup
         with:
-          toolchain: 1.80.0
-          cache-key: msrv-1.80
+          toolchain: 1.83.0
+          cache-key: msrv-1.83
 
       - name: Check library crates on MSRV
         run: |
@@ -277,6 +277,43 @@ jobs:
             echo "✓ $FILE in sync"
           done
           echo "All mini-dict files in sync"
+
+  # SIMD feature build check — nightly, gates on compile success
+  # Tracks bit-rot in the experimental portable_simd path.
+  simd-nightly:
+    name: SIMD Nightly Build
+    runs-on: ubuntu-latest
+    # Informational — failures here do NOT block the main CI gate.
+    # When this job consistently fails, the SIMD feature needs repair or removal.
+    continue-on-error: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Rust nightly
+        uses: ./.github/actions/rust-setup
+        with:
+          toolchain: nightly
+          cache-key: nightly-simd
+
+      - name: Build with SIMD feature (nightly)
+        run: |
+          cargo build \
+            --manifest-path rust/Cargo.toml \
+            -p mecab-ko-core \
+            -p mecab-ko-dict \
+            --features simd \
+            --lib
+
+      - name: Run tests with SIMD feature (nightly)
+        run: |
+          cargo test \
+            --manifest-path rust/Cargo.toml \
+            -p mecab-ko-core \
+            -p mecab-ko-dict \
+            --features simd \
+            --lib \
+            -- --test-threads=1
 
   # Summary of all checks
   ci-status:

@@ -2,6 +2,11 @@
 //!
 //! 이 모듈은 portable_simd를 사용하여 연접 비용 행렬 조회를 벡터화합니다.
 //!
+//! # ⚠️ 실험적 기능 (Nightly only)
+//!
+//! 이 모듈은 [`feature(portable_simd)`] nightly 기능에 의존합니다.
+//! `--features simd` 없이 안정 릴리즈 빌드에서는 비활성화됩니다.
+//!
 //! # 최적화 전략
 //!
 //! 1. **배치 조회 (Batch Lookup)**: 여러 연접 비용을 한 번에 조회
@@ -24,9 +29,6 @@ use std::simd::{
 
 /// SIMD 레인 크기 (i32x8 사용)
 const SIMD_LANES_8: usize = 8;
-
-/// SIMD 레인 크기 (i32x16 사용 - AVX512)
-const SIMD_LANES_16: usize = 16;
 
 /// SIMD 최적화된 배치 조회 인터페이스
 pub trait SimdMatrix: Matrix {

@@ -27,6 +27,7 @@ zstd = { workspace = true, optional = true }
 compact_str = { workspace = true, optional = true }
 notify = "6.1"
 crossbeam-channel = "0.5"
+tracing.workspace = true
 arc-swap = { version = "1", optional = true }
 
 [features]
