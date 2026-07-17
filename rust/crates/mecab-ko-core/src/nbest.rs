@@ -32,7 +32,7 @@
 //! ```
 
 use crate::lattice::{Lattice, Node, NodeId, NodeType, INVALID_NODE_ID};
-use crate::viterbi::{ConnectionCost, SpacePenalty};
+use crate::viterbi::{clamp_oob_cost, ConnectionCost, SpacePenalty};
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
@@ -357,7 +357,7 @@ impl ImprovedNbestSearcher {
                         continue;
                     }
 
-                    let connection = conn_cost.cost(prev_right_id, left_id);
+                    let connection = clamp_oob_cost(conn_cost.cost(prev_right_id, left_id));
 
                     for (idx, prev_cand) in prev_candidates.iter().enumerate() {
                         if prev_cand.cost == i32::MAX {
@@ -700,5 +700,43 @@ mod tests {
         for i in 1..costs.len() {
             assert!(costs[i] >= costs[i - 1]);
         }
+    }
+
+    #[test]
+    #[allow(clippy::unwrap_used)]
+    fn test_nbest_top1_matches_1best_with_oov_oob_cost() {
+        // OOV 노드가 있을 때 N-best[0].cost() == Viterbi 1-best 동치 검증.
+        // clamp_oob_cost 계약이 N-best에서 누락되면 OOB 경로가 pruning돼 발산한다.
+
+        struct OobConnectionCost;
+        impl ConnectionCost for OobConnectionCost {
+            fn cost(&self, right_id: u16, _left_id: u16) -> i32 {
+                // right_id == 0 (BOS)은 0, 나머지 ID는 OOB 시뮬레이션
+                if right_id == 0 { 0 } else { i32::MAX }
+            }
+        }
+
+        let make_lattice = || {
+            let mut l = Lattice::new("AB");
+            l.add_node(NodeBuilder::new("A", 0, 1).left_id(1).right_id(1).word_cost(100));
+            l.add_node(NodeBuilder::new("B", 1, 2).left_id(2).right_id(2).word_cost(200));
+            l
+        };
+
+        // 1-best via ViterbiSearcher
+        let mut lattice_v = make_lattice();
+        let viterbi = crate::viterbi::ViterbiSearcher::new();
+        viterbi.search(&mut lattice_v, &OobConnectionCost);
+        let cost_1best = viterbi.get_best_cost(&lattice_v);
+
+        // N-best — top-1 path cost
+        let mut lattice_n = make_lattice();
+        let nbest_results = ImprovedNbestSearcher::new(3).search(&mut lattice_n, &OobConnectionCost);
+        let cost_nbest0 = nbest_results.best().map(NbestPath::cost).unwrap_or(i32::MAX);
+
+        assert_eq!(
+            cost_1best, cost_nbest0,
+            "nbest[0] cost {cost_nbest0} != 1-best cost {cost_1best}: clamp_oob_cost contract broken"
+        );
     }
 }

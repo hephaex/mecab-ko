@@ -40,7 +40,7 @@ docker pull ghcr.io/hephaex/mecab-ko:latest
 
 ## 주요 특징
 
-- **순수 Rust 구현** - `#![deny(unsafe_code)]`로 메모리 안전성 보장
+- **순수 Rust 구현** - `#![deny(unsafe_code)]`로 메모리 안전성 보장 (FFI 바인딩 크레이트 제외)
 - **고성능** - SIMD 가속 Viterbi 알고리즘, ~680K tokens/sec
 - **크로스 플랫폼** - Linux, macOS, Windows, WebAssembly 지원
 - **다양한 바인딩** - Python (PyO3), Node.js (N-API), WebAssembly
@@ -397,7 +397,7 @@ cargo fmt            # 포맷팅
 
 ### 코딩 규칙
 
-- `unsafe` 코드 사용 금지 (`#![deny(unsafe_code)]`)
+- `unsafe` 코드 사용 금지 (`#![deny(unsafe_code)]`) — FFI 크레이트(python/wasm/node/elasticsearch)는 플랫폼 제약으로 예외
 - 라이브러리 코드에서 `unwrap()`, `expect()` 사용 금지
 - 모든 public API에 rustdoc 문서 필수
 

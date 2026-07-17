@@ -278,6 +278,43 @@ jobs:
           done
           echo "All mini-dict files in sync"
 
+  # SIMD feature build check — nightly, gates on compile success
+  # Tracks bit-rot in the experimental portable_simd path.
+  simd-nightly:
+    name: SIMD Nightly Build
+    runs-on: ubuntu-latest
+    # Informational — failures here do NOT block the main CI gate.
+    # When this job consistently fails, the SIMD feature needs repair or removal.
+    continue-on-error: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Rust nightly
+        uses: ./.github/actions/rust-setup
+        with:
+          toolchain: nightly
+          cache-key: nightly-simd
+
+      - name: Build with SIMD feature (nightly)
+        run: |
+          cargo build \
+            --manifest-path rust/Cargo.toml \
+            -p mecab-ko-core \
+            -p mecab-ko-dict \
+            --features simd \
+            --lib
+
+      - name: Run tests with SIMD feature (nightly)
+        run: |
+          cargo test \
+            --manifest-path rust/Cargo.toml \
+            -p mecab-ko-core \
+            -p mecab-ko-dict \
+            --features simd \
+            --lib \
+            -- --test-threads=1
+
   # Summary of all checks
   ci-status:
     name: CI Status

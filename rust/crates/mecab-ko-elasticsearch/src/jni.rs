@@ -51,6 +51,7 @@ use jni::JNIEnv;
 use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicI64, Ordering};
+use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::{Arc, Mutex};
 
 /// 핸들 ID 생성기 (monotonically increasing, raw pointer 노출 없음)
@@ -85,13 +86,17 @@ pub extern "system" fn Java_com_mecab_ko_search_jni_NativeAnalyzer_createAnalyze
     _class: JClass,
     config_json: JString,
 ) -> jlong {
-    match create_analyzer_impl(&mut env, &config_json) {
+    catch_unwind(AssertUnwindSafe(|| match create_analyzer_impl(&mut env, &config_json) {
         Ok(handle) => handle,
         Err(e) => {
             let _ = env.throw_new("java/lang/RuntimeException", format!("{e}"));
             0
         }
-    }
+    }))
+    .unwrap_or_else(|_| {
+        eprintln!("[mecab-ko] panic in createAnalyzer JNI");
+        0
+    })
 }
 
 fn create_analyzer_impl(env: &mut JNIEnv, config_json: &JString) -> Result<jlong, Error> {
@@ -130,13 +135,17 @@ pub extern "system" fn Java_com_mecab_ko_search_jni_NativeAnalyzer_analyzeText(
     handle: jlong,
     text: JString,
 ) -> jstring {
-    match analyze_text_impl(&mut env, handle, &text) {
+    catch_unwind(AssertUnwindSafe(|| match analyze_text_impl(&mut env, handle, &text) {
         Ok(result) => result,
         Err(e) => {
             let _ = env.throw_new("java/lang/RuntimeException", format!("{e}"));
             JObject::null().into_raw() as jstring
         }
-    }
+    }))
+    .unwrap_or_else(|_| {
+        eprintln!("[mecab-ko] panic in analyzeText JNI");
+        JObject::null().into_raw() as jstring
+    })
 }
 
 fn analyze_text_impl(env: &mut JNIEnv, handle: jlong, text: &JString) -> Result<jstring, Error> {
@@ -183,8 +192,14 @@ pub extern "system" fn Java_com_mecab_ko_search_jni_NativeAnalyzer_destroyAnalyz
     _class: JClass,
     handle: jlong,
 ) {
-    if let Err(e) = destroy_analyzer_impl(handle) {
-        let _ = env.throw_new("java/lang/RuntimeException", format!("{e}"));
+    if catch_unwind(AssertUnwindSafe(|| {
+        if let Err(e) = destroy_analyzer_impl(handle) {
+            let _ = env.throw_new("java/lang/RuntimeException", format!("{e}"));
+        }
+    }))
+    .is_err()
+    {
+        eprintln!("[mecab-ko] panic in destroyAnalyzer JNI");
     }
 }
 
@@ -213,8 +228,14 @@ pub extern "system" fn Java_com_mecab_ko_search_jni_NativeAnalyzer_getVersion(
     env: JNIEnv,
     _class: JClass,
 ) -> jstring {
-    env.new_string(crate::VERSION)
-        .map_or_else(|_| JObject::null().into_raw() as jstring, JString::into_raw)
+    catch_unwind(AssertUnwindSafe(|| {
+        env.new_string(crate::VERSION)
+            .map_or_else(|_| JObject::null().into_raw() as jstring, JString::into_raw)
+    }))
+    .unwrap_or_else(|_| {
+        eprintln!("[mecab-ko] panic in getVersion JNI");
+        JObject::null().into_raw() as jstring
+    })
 }
 
 /// 설정 유효성 검증
@@ -231,7 +252,13 @@ pub extern "system" fn Java_com_mecab_ko_search_jni_NativeAnalyzer_validateConfi
     _class: JClass,
     config_json: JString,
 ) -> bool {
-    validate_config_impl(&mut env, &config_json).is_ok()
+    catch_unwind(AssertUnwindSafe(|| {
+        validate_config_impl(&mut env, &config_json).is_ok()
+    }))
+    .unwrap_or_else(|_| {
+        eprintln!("[mecab-ko] panic in validateConfig JNI");
+        false
+    })
 }
 
 fn validate_config_impl(env: &mut JNIEnv, config_json: &JString) -> Result<(), Error> {
@@ -259,9 +286,15 @@ pub extern "system" fn Java_com_mecab_ko_search_jni_NativeAnalyzer_getDictionary
     env: JNIEnv,
     _class: JClass,
 ) -> jstring {
-    let path = DICTIONARY_PATH.read().clone();
-    env.new_string(path)
-        .map_or_else(|_| JObject::null().into_raw() as jstring, JString::into_raw)
+    catch_unwind(AssertUnwindSafe(|| {
+        let path = DICTIONARY_PATH.read().clone();
+        env.new_string(path)
+            .map_or_else(|_| JObject::null().into_raw() as jstring, JString::into_raw)
+    }))
+    .unwrap_or_else(|_| {
+        eprintln!("[mecab-ko] panic in getDictionaryPath JNI");
+        JObject::null().into_raw() as jstring
+    })
 }
 
 /// 사전 경로 설정
@@ -282,13 +315,19 @@ pub extern "system" fn Java_com_mecab_ko_search_jni_NativeAnalyzer_setDictionary
     _class: JClass,
     path: JString,
 ) -> jboolean {
-    match set_dictionary_path_impl(&mut env, &path) {
-        Ok(()) => 1u8,
-        Err(e) => {
-            let _ = env.throw_new("java/lang/RuntimeException", format!("{e}"));
-            0u8
+    catch_unwind(AssertUnwindSafe(|| {
+        match set_dictionary_path_impl(&mut env, &path) {
+            Ok(()) => 1u8,
+            Err(e) => {
+                let _ = env.throw_new("java/lang/RuntimeException", format!("{e}"));
+                0u8
+            }
         }
-    }
+    }))
+    .unwrap_or_else(|_| {
+        eprintln!("[mecab-ko] panic in setDictionaryPath JNI");
+        0u8
+    })
 }
 
 fn set_dictionary_path_impl(env: &mut JNIEnv, path: &JString) -> Result<(), Error> {

@@ -242,6 +242,67 @@ impl SystemDictionary {
         Self::load_with_options(dicdir, LoadOptions::memory_optimized())
     }
 
+    /// 엔트리 저장소 생성 (lazy / eager 선택)
+    fn build_entry_store<P: AsRef<std::path::Path>>(
+        dicdir: P,
+        options: &LoadOptions,
+    ) -> Result<Arc<dyn EntryStore>> {
+        let dicdir = dicdir.as_ref();
+        if !options.use_lazy_entries {
+            let entries = Self::load_entries(dicdir)?;
+            return Ok(Arc::new(EagerStore::new(entries)));
+        }
+        let entries_path = dicdir.join(ENTRIES_BIN_FILE);
+        if !entries_path.exists() {
+            let entries = Self::load_entries(dicdir)?;
+            return Ok(Arc::new(EagerStore::new(entries)));
+        }
+        match detect_entries_format(&entries_path) {
+            Ok(EntriesFormat::V3) => {
+                match LazyEntriesV3::from_file(&entries_path) {
+                    Ok(lazy) => {
+                        if let Some(cache_size) = options.lazy_cache_size {
+                            lazy.set_cache_size(cache_size);
+                        }
+                        Ok(Arc::new(LazyStoreV3::new(lazy)))
+                    }
+                    Err(e) => {
+                        tracing::warn!(
+                            error = %e,
+                            path = %entries_path.display(),
+                            "LazyEntriesV3 load failed, falling back to eager loading (memory target may be exceeded)"
+                        );
+                        let entries = Self::load_entries(dicdir)?;
+                        Ok(Arc::new(EagerStore::new(entries)))
+                    }
+                }
+            }
+            Ok(EntriesFormat::V2) => {
+                match LazyEntries::from_file(&entries_path) {
+                    Ok(lazy) => {
+                        if let Some(cache_size) = options.lazy_cache_size {
+                            lazy.set_cache_size(cache_size);
+                        }
+                        Ok(Arc::new(LazyStore::new(lazy)))
+                    }
+                    Err(e) => {
+                        tracing::warn!(
+                            error = %e,
+                            path = %entries_path.display(),
+                            "LazyEntries V2 load failed, falling back to eager loading"
+                        );
+                        let entries = Self::load_entries(dicdir)?;
+                        Ok(Arc::new(EagerStore::new(entries)))
+                    }
+                }
+            }
+            Ok(EntriesFormat::V1) | Err(_) => {
+                let entries = Self::load_entries(dicdir)?;
+                Ok(Arc::new(EagerStore::new(entries)))
+            }
+        }
+    }
+
     /// 옵션과 함께 사전 로드
     ///
     /// # Errors
@@ -300,45 +361,7 @@ impl SystemDictionary {
         };
 
         // 엔트리 저장소 생성 (옵션에 따라 Lazy/Eager 선택)
-        let entry_store: Arc<dyn EntryStore> = if options.use_lazy_entries {
-            let entries_path = dicdir.join(ENTRIES_BIN_FILE);
-            if entries_path.exists() {
-                match detect_entries_format(&entries_path) {
-                    Ok(EntriesFormat::V3) => {
-                        if let Ok(lazy) = LazyEntriesV3::from_file(&entries_path) {
-                            if let Some(cache_size) = options.lazy_cache_size {
-                                lazy.set_cache_size(cache_size);
-                            }
-                            Arc::new(LazyStoreV3::new(lazy))
-                        } else {
-                            let entries = Self::load_entries(&dicdir)?;
-                            Arc::new(EagerStore::new(entries))
-                        }
-                    }
-                    Ok(EntriesFormat::V2) => {
-                        if let Ok(lazy) = LazyEntries::from_file(&entries_path) {
-                            if let Some(cache_size) = options.lazy_cache_size {
-                                lazy.set_cache_size(cache_size);
-                            }
-                            Arc::new(LazyStore::new(lazy))
-                        } else {
-                            let entries = Self::load_entries(&dicdir)?;
-                            Arc::new(EagerStore::new(entries))
-                        }
-                    }
-                    Ok(EntriesFormat::V1) | Err(_) => {
-                        let entries = Self::load_entries(&dicdir)?;
-                        Arc::new(EagerStore::new(entries))
-                    }
-                }
-            } else {
-                let entries = Self::load_entries(&dicdir)?;
-                Arc::new(EagerStore::new(entries))
-            }
-        } else {
-            let entries = Self::load_entries(&dicdir)?;
-            Arc::new(EagerStore::new(entries))
-        };
+        let entry_store: Arc<dyn EntryStore> = Self::build_entry_store(&dicdir, &options)?;
 
         Ok(Self {
             dicdir,

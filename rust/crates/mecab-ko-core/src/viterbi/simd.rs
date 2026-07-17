@@ -2,6 +2,12 @@
 //!
 //! 이 모듈은 Viterbi 알고리즘의 핵심 연산을 SIMD로 벡터화합니다.
 //!
+//! # ⚠️ 실험적 기능 (Nightly only)
+//!
+//! 이 모듈은 [`feature(portable_simd)`] nightly 기능에 의존합니다.
+//! `--features simd` 없이 안정 릴리즈 빌드에서는 비활성화됩니다.
+//! SIMD 경로와 scalar fallback의 동치는 별도 property 테스트로 검증합니다.
+//!
 //! # 최적화 전략
 //!
 //! 1. **배치 비용 계산**: 여러 이전 노드의 비용을 동시에 계산
@@ -272,7 +278,7 @@ fn scalar_cost_calculation<C: ConnectionCost>(
             continue;
         }
 
-        let connection = conn_cost.cost(*prev_right_id, left_id);
+        let connection = clamp_oob_cost(conn_cost.cost(*prev_right_id, left_id));
         let total = saturating_add_chain(*prev_cost, connection, word_cost, space_penalty);
 
         if total < best_cost {

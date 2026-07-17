@@ -41,7 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Publishing order: hangul → dict → core → validator → builder → dict-sync → mecab-ko
 
 ### Stats
-- 1,198 tests pass / 0 fail / 18 ignored
+- 1,198 tests (all targets: lib + integration + examples) / 0 fail / 18 ignored
+  - `cargo test --workspace --lib`: 717 lib tests pass (after 2026-06-25 fixes)
+  - Full suite including integration/example tests: 1,198 total
 - corrections/ per-call allocations: 28 → 0
 - clippy: 0 warnings (all targets — lib, tests, examples)
 
