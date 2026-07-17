@@ -534,6 +534,11 @@ impl SystemDictionary {
             .read_exact(&mut magic)
             .map_err(|e| DictError::Format(format!("entries.bin magic: {e}")))?;
 
+        // v3 형식 (MKE3) - LazyEntriesV3 형식
+        if &magic == b"MKE3" {
+            return Self::load_entries_bin_v3(path);
+        }
+
         // v2 형식 (MKE2) - LazyEntries 형식
         if &magic == b"MKE2" {
             return Self::load_entries_bin_v2(path);
@@ -542,7 +547,7 @@ impl SystemDictionary {
         // v1 형식 (MKED)
         if &magic != ENTRIES_MAGIC {
             return Err(DictError::Format(
-                "entries.bin: invalid magic number (expected MKED or MKE2)".into(),
+                "entries.bin: invalid magic number (expected MKED, MKE2 or MKE3)".into(),
             ));
         }
 
@@ -619,6 +624,24 @@ impl SystemDictionary {
 
         for i in 0..count {
             let entry = lazy.get(i as u32)?;
+            entries.push((*entry).clone());
+        }
+
+        Ok(entries)
+    }
+
+    /// v3 형식 (MKE3) 엔트리 파일 로드
+    ///
+    /// `LazyEntriesV3` 형식을 사용하여 모든 엔트리를 eager 로드합니다.
+    fn load_entries_bin_v3(path: &Path) -> Result<Vec<DictEntry>> {
+        let lazy = LazyEntriesV3::from_file(path)?;
+        let count = lazy.len();
+        let mut entries = Vec::with_capacity(count);
+
+        for i in 0..count {
+            let entry = lazy.get(u32::try_from(i).map_err(|_| {
+                DictError::Format(format!("entries.bin v3: index {i} exceeds u32"))
+            })?)?;
             entries.push((*entry).clone());
         }
 
@@ -1312,6 +1335,28 @@ mod tests {
         assert_eq!(loaded[0].feature, "NNG,*,T,안녕,*,*,*,*");
         assert_eq!(loaded[1].surface, "하세요");
         assert_eq!(loaded[2].surface, "감사");
+    }
+
+    #[test]
+    fn test_entries_bin_v3_eager_load() {
+        // dict-build.yml v3 변환 회귀 가드: v3(MKE3)로 저장된 entries.bin을
+        // eager 경로(load_entries_bin)가 읽을 수 있어야 한다.
+        // (builder `info`/convert가 이 경로를 사용 — MKE3 미지원 시 즉시 실패했음)
+        let entries = vec![
+            DictEntry::new("안녕", 1, 1, 100, "NNG,*,T,안녕,*,*,*,*"),
+            DictEntry::new("하세요", 2, 2, 50, "VV,*,F,하세요,*,*,*,*"),
+        ];
+
+        let temp = tempfile::NamedTempFile::new().expect("create temp file");
+        let path = temp.path();
+
+        crate::lazy_entries_v3::save_entries_v3(&entries, path).expect("save v3 should work");
+        let loaded = SystemDictionary::load_entries_bin(path).expect("eager load of MKE3 file");
+
+        assert_eq!(loaded.len(), 2);
+        assert_eq!(loaded[0].surface, "안녕");
+        assert_eq!(loaded[0].feature, "NNG,*,T,안녕,*,*,*,*");
+        assert_eq!(loaded[1].surface, "하세요");
     }
 
     #[test]
